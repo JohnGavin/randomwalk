@@ -1,0 +1,9 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.github$
+^_targets\.R$
+^_targets$
+^\.DS_Store$
+^random_walk\.md$
+^R/setup$
+^R/plans$

@@ -1,0 +1,32 @@
+Package: randomwalk
+Type: Package
+Title: Asynchronous Pixel Walking Simulation with Parallel Processing
+Version: 0.1.0
+Authors@R:
+    person("John", "Gavin", , "john@example.com", role = c("aut", "cre"))
+Description: Implements parallel random walk simulations that create fractal
+    graphs through asynchronous pixel walking on a grid. Features include
+    true asynchronous parallel processing with separate R worker processes,
+    real-time grid state synchronization via DuckDB, comprehensive statistics
+    tracking, and an optional Shiny interface for interactive visualization.
+    Core simulation functions can be used programmatically without the GUI.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Depends:
+    R (>= 4.1.0)
+Imports:
+    dplyr,
+    duckdb,
+    logger,
+    nanonext
+Suggests:
+    shiny,
+    targets,
+    testthat (>= 3.0.0),
+    devtools,
+    usethis,
+    pkgdown,
+    covr
+Config/testthat/edition: 3
