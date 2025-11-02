@@ -7,3 +7,5 @@
 ^random_walk\.md$
 ^R/setup$
 ^R/plans$
+^check_output\.log$
+^default\.nix$
