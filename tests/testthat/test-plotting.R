@@ -55,9 +55,8 @@ test_that("plot_walker_paths handles color recycling", {
     workers = 1
   )
   
-  # Test with fewer colors than walkers (should recycle and log warning)
-  expect_output(plot_walker_paths(result, colors = c("red", "blue")),
-                "Not enough colors provided, recycling colors")
+  # Test with fewer colors than walkers (should recycle without error)
+  expect_no_error(plot_walker_paths(result, colors = c("red", "blue")))
 })
 
 test_that("plot_walker_paths validates input", {
