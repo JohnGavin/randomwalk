@@ -1,0 +1,48 @@
+# Workflow derived from https://github.com/ropensci/rix/tree/main/.github/workflows
+# Builds and tests the Nix environment
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+name: nix-builder
+
+permissions:
+  contents: read
+
+jobs:
+  run-x86_64-linux:
+    name: nix builder for Ubuntu
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Create nix folder to silence warning
+      run: mkdir -p ~/.nix-defexpr/channels
+
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@main
+
+    - uses: cachix/cachix-action@v15
+      with:
+        name: rstats-on-nix
+
+    - name: Run nix-build and nix-shell on default.nix
+      run: |
+        nix-build --quiet default.nix
+        nix-shell --quiet default.nix --run "R --version"
+
+  run-x86_64-darwin:
+    name: nix builder for MacOS X86_64
+    runs-on: macos-14
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@main
+
+    - name: Run nix-build and nix-shell on default.nix
+      run: |
+        nix-build --quiet default.nix
+        nix-shell --quiet default.nix --run "R --version"
