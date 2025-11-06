@@ -33,16 +33,17 @@ jobs:
         nix-build --quiet default.nix
         nix-shell --quiet default.nix --run "R --version"
 
-  run-x86_64-darwin:
-    name: nix builder for MacOS X86_64
-    runs-on: macos-14
-    steps:
-    - uses: actions/checkout@v4
+  # macOS runner commented out to reduce CI time and costs
+  # run-x86_64-darwin:
+  #   name: nix builder for MacOS X86_64
+  #   runs-on: macos-14
+  #   steps:
+  #   - uses: actions/checkout@v4
 
-    - name: Install Nix
-      uses: DeterminateSystems/nix-installer-action@main
+  #   - name: Install Nix
+  #     uses: DeterminateSystems/nix-installer-action@main
 
-    - name: Run nix-build and nix-shell on default.nix
-      run: |
-        nix-build --quiet default.nix
-        nix-shell --quiet default.nix --run "R --version"
+  #   - name: Run nix-build and nix-shell on default.nix
+  #     run: |
+  #       nix-build --quiet default.nix
+  #       nix-shell --quiet default.nix --run "R --version"
