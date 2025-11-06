@@ -17,7 +17,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        # macOS runner commented out to reduce CI time and costs
+        # os: [macos-latest, ubuntu-latest]
+        os: [ubuntu-latest]
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
