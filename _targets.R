@@ -48,6 +48,66 @@ list(
     }
   ),
 
+  # Large simulation for high coverage (25%+)
+  tar_target(
+    name = sim_large,
+    command = {
+      logger::log_info("Running large simulation for high coverage")
+      randomwalk::run_simulation(
+        grid_size = 30,
+        n_walkers = 12,
+        neighborhood = "8-hood",
+        boundary = "wrap",
+        workers = 0,
+        max_steps = 10000
+      )
+    }
+  ),
+
+  # Performance comparison: synchronous
+  tar_target(
+    name = perf_sync,
+    command = {
+      logger::log_info("Running sync performance test")
+      start_time <- Sys.time()
+      result <- randomwalk::run_simulation(
+        grid_size = 25,
+        n_walkers = 8,
+        neighborhood = "8-hood",
+        boundary = "wrap",
+        workers = 0,
+        max_steps = 5000
+      )
+      end_time <- Sys.time()
+      list(
+        result = result,
+        elapsed = as.numeric(difftime(end_time, start_time, units = "secs"))
+      )
+    }
+  ),
+
+  # Performance comparison: asynchronous
+  tar_target(
+    name = perf_async,
+    command = {
+      logger::log_info("Running async performance test")
+      start_time <- Sys.time()
+      result <- randomwalk::run_simulation(
+        grid_size = 25,
+        n_walkers = 8,
+        neighborhood = "8-hood",
+        boundary = "wrap",
+        workers = 4,
+        max_steps = 5000
+      )
+      end_time <- Sys.time()
+      list(
+        result = result,
+        elapsed = as.numeric(difftime(end_time, start_time, units = "secs"))
+      )
+    }
+  ),
+
   # 2. Extract simulation statistics
   tar_target(
     name = stats_small,
@@ -57,6 +117,11 @@ list(
   tar_target(
     name = stats_medium,
     command = sim_medium$statistics
+  ),
+
+  tar_target(
+    name = stats_large,
+    command = sim_large$statistics
   ),
 
   # 3. Create visualization plots
@@ -91,7 +156,36 @@ list(
     }
   ),
 
-  # 4. Session info (Section 10.3 - Additional Statistics)
+  tar_target(
+    name = plot_large_grid,
+    command = {
+      if (requireNamespace("randomwalk", quietly = TRUE) &&
+          exists("plot_grid", where = "package:randomwalk")) {
+        randomwalk::plot_grid(sim_large)
+      } else {
+        ggplot2::ggplot() +
+          ggplot2::annotate("text", x = 0.5, y = 0.5,
+                           label = "Grid visualization not available") +
+          ggplot2::theme_void()
+      }
+    }
+  ),
+
+  # 4. Pipeline visualization
+  tar_target(
+    name = pipeline_network,
+    command = {
+      # Save as static HTML widget that can be embedded
+      vis <- targets::tar_visnetwork(
+        targets_only = TRUE,
+        label = c("time", "size", "branches")
+      )
+      # Return the visNetwork object
+      vis
+    }
+  ),
+
+  # 5. Session info (Section 10.3 - Additional Statistics)
   tar_target(
     name = session_info,
     command = sessionInfo()
