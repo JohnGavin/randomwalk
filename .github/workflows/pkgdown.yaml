@@ -40,6 +40,15 @@ jobs:
           extra-packages: any::pkgdown, local::.
           needs: website
 
+      - name: Run targets pipeline
+        run: |
+          if (file.exists("_targets.R")) {
+            targets::tar_make()
+          } else {
+            message("No _targets.R file found, skipping targets pipeline")
+          }
+        shell: Rscript {0}
+
       - name: Build site
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}

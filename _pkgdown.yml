@@ -12,8 +12,20 @@ home:
 
 navbar:
   structure:
-    left:  [home, reference, news]
+    left:  [home, reference, articles, news]
     right: [search, github]
+  components:
+    articles:
+      text: Articles
+      menu:
+      - text: Telemetry and Pipeline Statistics
+        href: articles/telemetry.html
+
+articles:
+- title: Vignettes
+  navbar: ~
+  contents:
+  - telemetry
 
 footer:
   structure:
