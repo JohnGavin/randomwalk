@@ -25,6 +25,29 @@ library(knitr)
 library(targets)
 library(dplyr)
 library(ggplot2)
+
+# Helper function to format simulation statistics as a nice table
+format_sim_stats <- function(stats) {
+  data.frame(
+    Metric = c(
+      "Total Steps",
+      "Final Black Pixels",
+      "Final Black Percentage",
+      "Grid Size",
+      "Number of Walkers",
+      "Elapsed Time (sec)"
+    ),
+    Value = c(
+      format(stats$total_steps, big.mark = ","),
+      format(stats$final_black_count, big.mark = ","),
+      sprintf("%.2f%%", stats$final_black_percentage),
+      sprintf("%d × %d", stats$grid_size, stats$grid_size),
+      stats$n_walkers,
+      sprintf("%.3f", stats$elapsed_time)
+    ),
+    stringsAsFactors = FALSE
+  )
+}
 ```
 
 # Overview
@@ -56,31 +79,138 @@ The targets pipeline includes example simulations to demonstrate package functio
 
 ## Small Simulation (10×10 grid)
 
+A compact simulation demonstrating basic random walk behavior:
+
 ```{r sim-small-stats}
 stats_small <- tar_read(stats_small)
-if (is.data.frame(stats_small) || is.list(stats_small)) {
-  print(stats_small)
-}
+format_sim_stats(stats_small) %>%
+  kable(caption = "Small Simulation Statistics", align = c("l", "r"))
 ```
 
-```{r plot-small-grid, fig.cap="Small simulation grid visualization"}
+```{r plot-small-grid, fig.cap="Small simulation: Final grid state showing walker paths"}
 tar_read(plot_small_grid)
 ```
 
 ## Medium Simulation (20×20 grid)
 
+A larger simulation with more walkers using 8-connected neighborhood and wrapping boundaries:
+
 ```{r sim-medium-stats}
 stats_medium <- tar_read(stats_medium)
-if (is.data.frame(stats_medium) || is.list(stats_medium)) {
-  print(stats_medium)
-}
+format_sim_stats(stats_medium) %>%
+  kable(caption = "Medium Simulation Statistics", align = c("l", "r"))
 ```
 
-```{r plot-medium-grid, fig.cap="Medium simulation grid visualization"}
+```{r plot-medium-grid, fig.cap="Medium simulation: Complex patterns from 5 walkers"}
 tar_read(plot_medium_grid)
 ```
 
+## Large Simulation (30×30 grid) - High Coverage
+
+This simulation is configured to achieve substantial grid coverage (target: 25%+):
+
+```{r sim-large-stats}
+stats_large <- tar_read(stats_large)
+format_sim_stats(stats_large) %>%
+  kable(caption = "Large Simulation Statistics", align = c("l", "r"))
+```
+
+```{r plot-large-grid, fig.cap="Large simulation: Extensive coverage with 12 walkers", fig.width=10, fig.height=10}
+tar_read(plot_large_grid)
+```
+
+The large simulation demonstrates the package's ability to handle more complex scenarios while maintaining reasonable computation times.
+
+# Performance Comparison: Async vs Sync
+
+This section demonstrates the empirical benefits of asynchronous (parallel) simulation compared to synchronous execution.
+
+## Test Configuration
+
+Both tests run identical simulations (25×25 grid, 8 walkers, 8-hood, wrap boundaries, 5000 max steps):
+- **Synchronous**: `workers = 0` (single-threaded)
+- **Asynchronous**: `workers = 4` (4 parallel workers)
+
+```{r perf-comparison}
+perf_sync <- tar_read(perf_sync)
+perf_async <- tar_read(perf_async)
+
+speedup <- perf_sync$elapsed / perf_async$elapsed
+
+data.frame(
+  Mode = c("Synchronous", "Asynchronous", "Speedup Factor"),
+  `Elapsed Time` = c(
+    sprintf("%.2f sec", perf_sync$elapsed),
+    sprintf("%.2f sec", perf_async$elapsed),
+    sprintf("%.2fx", speedup)
+  ),
+  `Coverage` = c(
+    sprintf("%.2f%%", perf_sync$result$statistics$final_black_percentage),
+    sprintf("%.2f%%", perf_async$result$statistics$final_black_percentage),
+    "—"
+  ),
+  check.names = FALSE
+) %>%
+  kable(caption = "Performance Comparison: Synchronous vs Asynchronous Execution",
+        align = c("l", "r", "r"))
+```
+
+### Performance Visualization
+
+```{r perf-plot, fig.cap="Execution time comparison showing async speedup"}
+perf_data <- data.frame(
+  Mode = c("Sync", "Async"),
+  Time = c(perf_sync$elapsed, perf_async$elapsed)
+)
+
+ggplot(perf_data, aes(x = Mode, y = Time, fill = Mode)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = sprintf("%.2f sec", Time)),
+            vjust = -0.5, size = 5, fontface = "bold") +
+  scale_fill_manual(values = c("Sync" = "#e74c3c", "Async" = "#27ae60")) +
+  labs(
+    title = "Asynchronous vs Synchronous Execution Time",
+    subtitle = sprintf("Speedup: %.2fx faster with parallel workers", speedup),
+    x = NULL,
+    y = "Elapsed Time (seconds)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 14),
+    plot.subtitle = element_text(hjust = 0.5, size = 12, color = "#27ae60"),
+    axis.title.y = element_text(face = "bold"),
+    axis.text.x = element_text(size = 12, face = "bold")
+  )
+```
+
+### Key Benefits of Async Execution
+
+1. **Reduced wall-clock time**: Parallel workers execute walker steps concurrently
+2. **Better resource utilization**: Takes advantage of multi-core processors
+3. **Scalability**: Performance improvement increases with more walkers and larger grids
+4. **Identical results**: Same stochastic behavior, just faster execution
+
 # Pipeline Telemetry
+
+## Pipeline Dependency Network
+
+The targets pipeline structure showing dependencies between computation targets:
+
+```{r pipeline-viz, fig.width=12, fig.height=8, fig.cap="Pipeline dependency graph showing target relationships and execution flow"}
+# Generate pipeline visualization after targets are computed
+# Cannot be stored as a target due to recursion issues
+targets::tar_visnetwork(
+  targets_only = TRUE,
+  label = c("time", "size", "branches")
+)
+```
+
+This visualization shows:
+- **Nodes**: Each target in the pipeline
+- **Edges**: Dependencies between targets
+- **Colors**: Target status (up-to-date, outdated, or failed)
+- **Labels**: Computation time and object size
 
 ## Target Execution Statistics
 

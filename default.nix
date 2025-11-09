@@ -16,6 +16,7 @@ let
       nanonext
       shiny
       targets
+      visNetwork
       pkgdown
       covr
       gert
