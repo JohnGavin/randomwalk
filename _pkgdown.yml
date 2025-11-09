@@ -1,0 +1,21 @@
+url: https://johngavin.github.io/randomwalk/
+
+template:
+  bootstrap: 5
+  bootswatch: cosmo
+
+home:
+  title: randomwalk - Asynchronous Pixel Walking Simulation
+  description: >
+    Parallel random walk simulations that create fractal graphs through
+    asynchronous pixel walking on a grid.
+
+navbar:
+  structure:
+    left:  [home, reference, news]
+    right: [search, github]
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with

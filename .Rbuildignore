@@ -9,3 +9,6 @@
 ^R/plans$
 ^check_output\.log$
 ^default\.nix$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
