@@ -1,0 +1,64 @@
+url: https://johngavin.github.io/randomwalk/
+
+template:
+  bootstrap: 5
+  bootswatch: cosmo
+
+home:
+  title: randomwalk - Asynchronous Pixel Walking Simulation
+  description: >
+    Parallel random walk simulations that create fractal graphs through
+    asynchronous pixel walking on a grid.
+
+navbar:
+  structure:
+    left:  [home, reference, articles, news]
+    right: [search, github]
+  components:
+    articles:
+      text: Articles
+      menu:
+      - text: Telemetry and Pipeline Statistics
+        href: articles/telemetry.html
+
+reference:
+- title: Simulation Functions
+  desc: Core functions for running simulations
+  contents:
+  - run_simulation
+  - run_random_walk_app
+  - run_app_in_bg
+
+- title: Grid Functions
+  desc: Functions for managing simulation grids
+  contents:
+  - starts_with("init_")
+  - starts_with("update_")
+  - starts_with("get_")
+
+- title: Walker Functions
+  desc: Functions for walker behavior
+  contents:
+  - starts_with("walker_")
+  - starts_with("move_")
+
+- title: Plotting Functions
+  desc: Visualization functions
+  contents:
+  - starts_with("plot_")
+
+- title: Package Information
+  desc: Package metadata and help
+  contents:
+  - randomwalk-package
+
+articles:
+- title: Vignettes
+  navbar: ~
+  contents:
+  - telemetry
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with

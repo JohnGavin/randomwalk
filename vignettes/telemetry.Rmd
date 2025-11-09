@@ -1,0 +1,242 @@
+---
+title: "Telemetry and Pipeline Statistics"
+author: "randomwalk package"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Telemetry and Pipeline Statistics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 10,
+  fig.height = 6,
+  collapse = TRUE,
+  comment = "#>"
+)
+
+# Load required packages
+library(targets)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+```
+
+<!-- AUTO-GENERATED FILE: This vignette uses pre-computed targets -->
+<!-- DO NOT EDIT manually. Regenerate using targets::tar_make() -->
+
+# Overview
+
+This vignette presents telemetry statistics and pipeline performance metrics for the `randomwalk` package, following best practices outlined in the package context documentation.
+
+**Note**: All tables, graphs, and statistics in this vignette are pre-computed using the `targets` pipeline and loaded via `tar_read()` or `tar_load()`. This ensures reproducibility and efficient vignette rendering.
+
+# Package Information
+
+Package metadata and version information:
+
+```{r package-info}
+# Load package metadata from targets pipeline
+pkg_info <- tar_read(package_info)
+
+# Display as formatted table
+data.frame(
+  Field = c("Package", "Version", "Title", "Generated"),
+  Value = c(
+    pkg_info$package,
+    pkg_info$version,
+    pkg_info$title,
+    format(pkg_info$date, "%Y-%m-%d")
+  )
+) %>%
+  kable(caption = "Package Metadata")
+```
+
+# Example Simulations
+
+The targets pipeline includes example simulations to demonstrate package functionality and measure performance.
+
+## Small Simulation
+
+A small 10×10 grid simulation with 3 walkers:
+
+```{r sim-small-stats}
+# Load pre-computed statistics
+stats_small <- tar_read(stats_small)
+
+# Display statistics
+if (is.data.frame(stats_small) || is.list(stats_small)) {
+  print(stats_small)
+} else {
+  cat("Statistics available but format not suitable for display\n")
+}
+```
+
+```{r plot-small-grid, fig.cap="Small simulation grid visualization"}
+# Load pre-computed plot
+tar_read(plot_small_grid)
+```
+
+## Medium Simulation
+
+A medium 20×20 grid simulation with 5 walkers:
+
+```{r sim-medium-stats}
+# Load pre-computed statistics
+stats_medium <- tar_read(stats_medium)
+
+# Display statistics
+if (is.data.frame(stats_medium) || is.list(stats_medium)) {
+  print(stats_medium)
+} else {
+  cat("Statistics available but format not suitable for display\n")
+}
+```
+
+```{r plot-medium-grid, fig.cap="Medium simulation grid visualization"}
+# Load pre-computed plot
+tar_read(plot_medium_grid)
+```
+
+# Pipeline Telemetry
+
+## Target Execution Statistics
+
+This section visualizes the targets pipeline performance, showing computation time and memory usage for each target.
+
+### Telemetry Summary Table
+
+```{r telemetry-table}
+# Load telemetry summary from targets pipeline
+telemetry <- tar_read(telemetry_summary)
+
+# Display formatted table
+telemetry %>%
+  select(name, time_formatted, memory_mb, status) %>%
+  rename(
+    "Target Name" = name,
+    "Computation Time" = time_formatted,
+    "Memory (MB)" = memory_mb,
+    "Status" = status
+  ) %>%
+  kable(
+    caption = "Target Pipeline Execution Summary",
+    align = c("l", "r", "r", "c")
+  )
+```
+
+**Key metrics**:
+
+- **Target Name**: The name of each target in the pipeline
+- **Computation Time**: Time taken to execute each target (in seconds)
+- **Memory (MB)**: Memory usage for storing each target's output
+- **Status**: Execution status (success, warning, or error)
+
+### Computation Time by Target
+
+This graph shows which targets take the most time to compute:
+
+```{r plot-timing, fig.cap="Computation time for each target in the pipeline"}
+# Load pre-computed timing plot
+tar_read(plot_pipeline_timing)
+```
+
+Targets with longer computation times may benefit from caching or optimization.
+
+### Memory Usage by Target
+
+This graph shows memory consumption across targets:
+
+```{r plot-memory, fig.cap="Memory usage for each target in the pipeline"}
+# Load pre-computed memory plot
+tar_read(plot_pipeline_memory)
+```
+
+Targets with high memory usage may need data compression or storage optimization.
+
+# System Information
+
+## R Session Information
+
+Complete session information including R version, platform, and loaded packages:
+
+```{r session-info}
+# Load session info from targets pipeline
+sess_info <- tar_read(session_info)
+
+# Display formatted session info
+print(sess_info)
+```
+
+## Git/GitHub Summary
+
+Version control and repository information:
+
+```{r git-info}
+# Load git summary from targets pipeline
+git_info <- tar_read(git_summary)
+
+# Display as formatted table
+data.frame(
+  Field = c("Branch", "Commit", "Remote", "Status"),
+  Value = c(
+    git_info$branch,
+    git_info$commit,
+    basename(git_info$remote),
+    if (length(git_info$status) == 0) "Clean" else "Modified"
+  )
+) %>%
+  kable(caption = "Git Repository Information")
+```
+
+# Pipeline Reproducibility
+
+All objects displayed in this vignette are pre-computed and stored in the targets pipeline. To reproduce these results:
+
+1. Ensure you have the required packages installed (see DESCRIPTION)
+2. Run `targets::tar_make()` to execute the pipeline
+3. Render this vignette to see the updated results
+
+```{r, eval=FALSE}
+# Reproduce the pipeline
+targets::tar_make()
+
+# View the pipeline
+targets::tar_visnetwork()
+
+# Check target status
+targets::tar_meta()
+```
+
+# Coverage Statistics
+
+Code coverage information would be displayed here using the `covr` package. This requires running tests with coverage enabled:
+
+```{r, eval=FALSE}
+# Generate coverage report (not run in vignette)
+coverage <- covr::package_coverage()
+covr::report(coverage)
+```
+
+# Summary
+
+This telemetry vignette provides comprehensive statistics about the `randomwalk` package pipeline:
+
+- **Package metadata**: Version and description information
+- **Example simulations**: Demonstration of package functionality
+- **Pipeline performance**: Execution time and memory usage per target
+- **System information**: R session and platform details
+- **Reproducibility**: Version control and dependency tracking
+
+All statistics are generated automatically from the targets pipeline, ensuring consistency and reproducibility across package builds.
+
+---
+
+*Generated on: `r Sys.time()`*
+
+*Using targets pipeline from: `_targets.R`*
