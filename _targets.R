@@ -91,75 +91,7 @@ list(
     }
   ),
 
-  # 4. Targets pipeline telemetry (Section 10.2 - Required Statistics)
-  tar_target(
-    name = pipeline_meta,
-    command = targets::tar_meta(),
-    cue = tar_cue(mode = "always")
-  ),
-
-  tar_target(
-    name = telemetry_summary,
-    command = {
-      meta <- pipeline_meta
-      meta %>%
-        dplyr::filter(!is.na(seconds)) %>%
-        dplyr::select(name, seconds, bytes, warnings, error) %>%
-        dplyr::mutate(
-          time_formatted = sprintf("%.2f sec", seconds),
-          memory_mb = round(bytes / (1024^2), 2),
-          status = dplyr::case_when(
-            !is.na(error) ~ "error",
-            warnings > 0 ~ "warning",
-            TRUE ~ "success"
-          )
-        ) %>%
-        dplyr::arrange(dplyr::desc(seconds))
-    }
-  ),
-
-  # 5. Create telemetry visualization
-  tar_target(
-    name = plot_pipeline_timing,
-    command = {
-      telemetry_summary %>%
-        dplyr::filter(status == "success") %>%
-        ggplot2::ggplot(ggplot2::aes(x = reorder(name, seconds), y = seconds)) +
-        ggplot2::geom_col(fill = "steelblue") +
-        ggplot2::coord_flip() +
-        ggplot2::labs(
-          title = "Target Pipeline: Computation Time by Target",
-          x = "Target Name",
-          y = "Time (seconds)"
-        ) +
-        ggplot2::theme_minimal() +
-        ggplot2::theme(
-          plot.title = ggplot2::element_text(face = "bold", hjust = 0.5)
-        )
-    }
-  ),
-
-  tar_target(
-    name = plot_pipeline_memory,
-    command = {
-      telemetry_summary %>%
-        dplyr::filter(status == "success", memory_mb > 0) %>%
-        ggplot2::ggplot(ggplot2::aes(x = reorder(name, memory_mb), y = memory_mb)) +
-        ggplot2::geom_col(fill = "coral") +
-        ggplot2::coord_flip() +
-        ggplot2::labs(
-          title = "Target Pipeline: Memory Usage by Target",
-          x = "Target Name",
-          y = "Memory (MB)"
-        ) +
-        ggplot2::theme_minimal() +
-        ggplot2::theme(
-          plot.title = ggplot2::element_text(face = "bold", hjust = 0.5)
-        )
-    }
-  ),
-
-  # 6. Session info (Section 10.3 - Additional Statistics)
+  # 4. Session info (Section 10.3 - Additional Statistics)
   tar_target(
     name = session_info,
     command = sessionInfo()

@@ -89,7 +89,22 @@ This section visualizes the targets pipeline performance, showing computation ti
 ### Telemetry Summary Table
 
 ```{r telemetry-table}
-telemetry <- tar_read(telemetry_summary)
+# Collect telemetry directly from tar_meta() after pipeline completion
+meta <- targets::tar_meta()
+
+telemetry <- meta %>%
+  filter(!is.na(seconds)) %>%
+  select(name, seconds, bytes, warnings, error) %>%
+  mutate(
+    time_formatted = sprintf("%.2f sec", seconds),
+    memory_mb = round(bytes / (1024^2), 2),
+    status = case_when(
+      !is.na(error) ~ "error",
+      warnings > 0 ~ "warning",
+      TRUE ~ "success"
+    )
+  ) %>%
+  arrange(desc(seconds))
 
 telemetry %>%
   select(name, time_formatted, memory_mb, status) %>%
@@ -115,7 +130,20 @@ telemetry %>%
 ### Computation Time by Target
 
 ```{r plot-timing, fig.cap="Computation time for each target in the pipeline"}
-tar_read(plot_pipeline_timing)
+telemetry %>%
+  filter(status == "success") %>%
+  ggplot(aes(x = reorder(name, seconds), y = seconds)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = "Target Pipeline: Computation Time by Target",
+    x = "Target Name",
+    y = "Time (seconds)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
 ```
 
 Targets with longer computation times may benefit from caching or optimization.
@@ -123,7 +151,20 @@ Targets with longer computation times may benefit from caching or optimization.
 ### Memory Usage by Target
 
 ```{r plot-memory, fig.cap="Memory usage for each target in the pipeline"}
-tar_read(plot_pipeline_memory)
+telemetry %>%
+  filter(status == "success", memory_mb > 0) %>%
+  ggplot(aes(x = reorder(name, memory_mb), y = memory_mb)) +
+  geom_col(fill = "coral") +
+  coord_flip() +
+  labs(
+    title = "Target Pipeline: Memory Usage by Target",
+    x = "Target Name",
+    y = "Memory (MB)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
 ```
 
 Targets with high memory usage may need data compression or storage optimization.

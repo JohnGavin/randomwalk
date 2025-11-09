@@ -9,3 +9,6 @@ _targets/
 *.tar.gz
 *.Rcheck/
 inst/doc
+inst/logs/
+pdfs/
+Rplots.pdf
