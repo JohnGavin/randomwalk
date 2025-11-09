@@ -21,37 +21,6 @@ navbar:
       - text: Telemetry and Pipeline Statistics
         href: articles/telemetry.html
 
-reference:
-- title: Simulation Functions
-  desc: Core functions for running simulations
-  contents:
-  - run_simulation
-  - run_random_walk_app
-  - run_app_in_bg
-
-- title: Grid Functions
-  desc: Functions for managing simulation grids
-  contents:
-  - starts_with("init_")
-  - starts_with("update_")
-  - starts_with("get_")
-
-- title: Walker Functions
-  desc: Functions for walker behavior
-  contents:
-  - starts_with("walker_")
-  - starts_with("move_")
-
-- title: Plotting Functions
-  desc: Visualization functions
-  contents:
-  - starts_with("plot_")
-
-- title: Package Information
-  desc: Package metadata and help
-  contents:
-  - randomwalk-package
-
 articles:
 - title: Vignettes
   navbar: ~
