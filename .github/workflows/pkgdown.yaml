@@ -50,7 +50,7 @@ jobs:
 
           # Pre-build vignettes with targets data available
           rmarkdown::render(
-            input = "vignettes/telemetry.Rmd",
+            input = "vignettes/telemetry.qmd",
             output_dir = "vignettes",
             knit_root_dir = getwd()
           )

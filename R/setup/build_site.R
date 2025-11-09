@@ -19,7 +19,7 @@ targets::tar_make(callr_function = NULL)
 # Step 3: Pre-build vignettes
 message("Pre-building vignettes...")
 rmarkdown::render(
-  input = "vignettes/telemetry.Rmd",
+  input = "vignettes/telemetry.qmd",
   output_dir = "vignettes",
   knit_root_dir = getwd()
 )

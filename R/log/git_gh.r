@@ -59,3 +59,67 @@ usethis::pr_push()
 
 # Push to remote
 # gert::git_push()
+
+# ============================================================================
+# Date: 2025-11-09
+# Issue: #14 - Convert to proper formats: telemetry.qmd and rix-generated default.nix
+# Branch: feature/convert-to-proper-formats-14
+# ============================================================================
+
+# Tasks completed:
+# 1. Backed up default.nix as default.R.bak
+# 2. Created default.R with rix::rix() command for randomwalk
+# 3. Converted telemetry.Rmd → telemetry.qmd (Quarto format)
+# 4. Updated YAML header for Quarto (format, execute options)
+# 5. Updated references in build_site.R and pkgdown.yaml
+# 6. Verified cachix is configured in workflows (rstats-on-nix cache)
+
+# Stage changes
+# gert::git_add(c(
+#   "default.R",
+#   "default.R.bak",
+#   "vignettes/telemetry.qmd",
+#   "R/setup/build_site.R",
+#   ".github/workflows/pkgdown.yaml",
+#   "R/log/git_gh.r"
+# ))
+
+# Commit changes
+# gert::git_commit(
+#   message = "Convert to proper formats: Quarto vignette and rix-generated Nix config
+#
+# Issue #14: Follow context.md best practices for file formats
+#
+# **1. Nix Environment Setup**
+# - Backed up current default.nix as default.R.bak
+# - Created default.R with rix::rix() command
+# - Lists all R package dependencies (logger, dplyr, targets, etc.)
+# - Includes system packages (git, gh, quarto, pandoc)
+# - Ready to regenerate default.nix with: Rscript default.R
+#
+# **2. Quarto Vignette Conversion**
+# - Renamed: telemetry.Rmd → telemetry.qmd
+# - Updated YAML header for Quarto format:
+#   - format: html with code-fold, toc
+#   - execute: echo/message/warning settings
+#   - date: today (Quarto syntax)
+# - Updated references in build_site.R and pkgdown.yaml
+#
+# **3. Cachix Verification**
+# - Confirmed cachix IS configured in GitHub workflows
+# - nix-builder: cachix-action@v15 with rstats-on-nix cache
+# - tests-r-via-nix: cachix-action@v14
+# - Speeds up CI by caching Nix builds
+#
+# Per context.md Section 3.1: Use Quarto (.qmd) not rmarkdown (.Rmd)
+# Per user: Use default.R + rix::rix(), not manual default.nix edits
+#
+# Closes #14
+#
+# 🤖 Generated with [Claude Code](https://claude.com/claude-code)
+#
+# Co-Authored-By: Claude <noreply@anthropic.com>"
+# )
+
+# Push to remote
+# gert::git_push()
