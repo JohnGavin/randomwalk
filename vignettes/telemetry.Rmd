@@ -183,14 +183,22 @@ print(sess_info)
 ```{r git-info}
 git_info <- tar_read(git_summary)
 
+# Handle status as potentially multi-line
+status_text <- if (length(git_info$status) == 0) {
+  "Clean"
+} else {
+  paste0(length(git_info$status), " file(s) modified")
+}
+
 data.frame(
   Field = c("Branch", "Commit", "Remote", "Status"),
   Value = c(
     git_info$branch,
     git_info$commit,
     basename(git_info$remote),
-    if (length(git_info$status) == 0) "Clean" else "Modified"
-  )
+    status_text
+  ),
+  stringsAsFactors = FALSE
 ) %>%
   kable(caption = "Git Repository Information")
 ```
