@@ -171,21 +171,7 @@ list(
     }
   ),
 
-  # 4. Pipeline visualization
-  tar_target(
-    name = pipeline_network,
-    command = {
-      # Save as static HTML widget that can be embedded
-      vis <- targets::tar_visnetwork(
-        targets_only = TRUE,
-        label = c("time", "size", "branches")
-      )
-      # Return the visNetwork object
-      vis
-    }
-  ),
-
-  # 5. Session info (Section 10.3 - Additional Statistics)
+  # 4. Session info (Section 10.3 - Additional Statistics)
   tar_target(
     name = session_info,
     command = sessionInfo()
