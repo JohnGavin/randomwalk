@@ -35,7 +35,8 @@ r_pkgs <- c(
   # Documentation
   "pkgdown",
   "knitr",
-  "rmarkdown"
+  "rmarkdown",
+  "quarto"
 ) |>
   unique() |>
   sort()
