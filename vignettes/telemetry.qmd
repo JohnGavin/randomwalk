@@ -1,12 +1,20 @@
 ---
 title: "Telemetry and Pipeline Statistics"
 author: "randomwalk package"
-date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Telemetry and Pipeline Statistics}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+date: today
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
+    toc: true
+    toc-depth: 3
+    number-sections: false
+execute:
+  echo: false
+  message: false
+  warning: false
+  fig-width: 10
+  fig-height: 6
 ---
 
 ```{r setup, include=FALSE}
