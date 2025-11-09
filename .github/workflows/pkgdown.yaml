@@ -55,18 +55,22 @@ jobs:
             knit_root_dir = getwd()
           )
 
-          # Copy pre-built vignette to docs
-          dir.create("docs/articles", recursive = TRUE, showWarnings = FALSE)
-          file.copy(
-            "vignettes/telemetry.html",
-            "docs/articles/telemetry.html",
-            overwrite = TRUE
-          )
+          # Clean any existing site first
+          if (dir.exists("docs")) {
+            pkgdown::clean_site(force = TRUE)
+          }
 
           # Build pkgdown site (skip article building)
           pkgdown::build_reference()
           pkgdown::build_home()
           pkgdown::build_articles_index()
+
+          # Copy pre-built vignette to docs after initial build
+          file.copy(
+            "vignettes/telemetry.html",
+            "docs/articles/telemetry.html",
+            overwrite = TRUE
+          )
         shell: Rscript {0}
 
       - name: Deploy to GitHub pages
