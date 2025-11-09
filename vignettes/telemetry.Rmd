@@ -183,7 +183,10 @@ print(sess_info)
 ```{r git-info}
 git_info <- tar_read(git_summary)
 
-# Handle status as potentially multi-line
+# Handle all fields defensively - ensure single values
+branch_text <- if (length(git_info$branch) > 0) git_info$branch[1] else "unknown"
+commit_text <- if (length(git_info$commit) > 0) git_info$commit[1] else "unknown"
+remote_text <- if (length(git_info$remote) > 0) basename(git_info$remote[1]) else "unknown"
 status_text <- if (length(git_info$status) == 0) {
   "Clean"
 } else {
@@ -192,12 +195,7 @@ status_text <- if (length(git_info$status) == 0) {
 
 data.frame(
   Field = c("Branch", "Commit", "Remote", "Status"),
-  Value = c(
-    git_info$branch,
-    git_info$commit,
-    basename(git_info$remote),
-    status_text
-  ),
+  Value = c(branch_text, commit_text, remote_text, status_text),
   stringsAsFactors = FALSE
 ) %>%
   kable(caption = "Git Repository Information")
