@@ -40,8 +40,37 @@ jobs:
           extra-packages: any::pkgdown, local::.
           needs: website
 
-      - name: Build site
-        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+      - name: Run build script
+        run: |
+          # Load package and run complete build workflow
+          devtools::load_all()
+
+          # Run targets pipeline
+          targets::tar_make(callr_function = NULL)
+
+          # Pre-build vignettes with targets data available
+          rmarkdown::render(
+            input = "vignettes/telemetry.Rmd",
+            output_dir = "vignettes",
+            knit_root_dir = getwd()
+          )
+
+          # Clean any existing site first
+          if (dir.exists("docs")) {
+            pkgdown::clean_site(force = TRUE)
+          }
+
+          # Build pkgdown site (skip article building)
+          pkgdown::build_reference()
+          pkgdown::build_home()
+          pkgdown::build_articles_index()
+
+          # Copy pre-built vignette to docs after initial build
+          file.copy(
+            "vignettes/telemetry.html",
+            "docs/articles/telemetry.html",
+            overwrite = TRUE
+          )
         shell: Rscript {0}
 
       - name: Deploy to GitHub pages
