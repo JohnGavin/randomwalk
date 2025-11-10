@@ -7,9 +7,7 @@
 plot_grid(
   result,
   main = "Random Walk Simulation - Final Grid State",
-  col_palette = c("white", "black"),
-  add_grid = TRUE,
-  grid_col = "gray"
+  col_palette = c("white", "black")
 )
 }
 \arguments{
@@ -19,22 +17,20 @@ plot_grid(
 
 \item{col_palette}{A vector of two colors for white (0) and black (1) pixels.
 Default is c("white", "black")}
-
-\item{add_grid}{Logical indicating whether to add grid lines. Default is TRUE}
-
-\item{grid_col}{Color for grid lines. Default is "gray"}
 }
 \value{
-Invisibly returns NULL. Called for side effect of creating a plot.
+A ggplot2 object that can be displayed or saved
 }
 \description{
 Visualizes the final state of the simulation grid, showing black pixels
-that formed during the random walk simulation.
+that formed during the random walk simulation. Returns a ggplot2 object
+for display via targets pipeline.
 }
 \examples{
 \dontrun{
 result <- run_simulation(grid_size = 20, n_walkers = 8)
-plot_grid(result)
+p <- plot_grid(result)
+print(p)  # Display the plot
 }
 
 }

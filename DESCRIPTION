@@ -24,6 +24,7 @@ Suggests:
     duckdb,
     nanonext,
     shiny,
+    shinytest2,
     targets,
     tarchetypes,
     visNetwork,

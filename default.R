@@ -15,6 +15,7 @@ r_pkgs <- c(
   "ggplot2",
   "nanonext",
   "shiny",
+  "shinytest2",
 
   # Targets pipeline
   "targets",
