@@ -1,52 +1,64 @@
 #' Plot Final Grid State
 #'
 #' Visualizes the final state of the simulation grid, showing black pixels
-#' that formed during the random walk simulation.
+#' that formed during the random walk simulation. Returns a ggplot2 object
+#' for display via targets pipeline.
 #'
 #' @param result A simulation result object returned by \code{\link{run_simulation}}
 #' @param main Character string for the plot title. Default is "Random Walk Simulation - Final Grid State"
 #' @param col_palette A vector of two colors for white (0) and black (1) pixels.
 #'   Default is c("white", "black")
-#' @param add_grid Logical indicating whether to add grid lines. Default is TRUE
-#' @param grid_col Color for grid lines. Default is "gray"
 #'
-#' @return Invisibly returns NULL. Called for side effect of creating a plot.
+#' @return A ggplot2 object that can be displayed or saved
 #'
 #' @examples
 #' \dontrun{
 #' result <- run_simulation(grid_size = 20, n_walkers = 8)
-#' plot_grid(result)
+#' p <- plot_grid(result)
+#' print(p)  # Display the plot
 #' }
 #'
 #' @export
 plot_grid <- function(result,
                       main = "Random Walk Simulation - Final Grid State",
-                      col_palette = c("white", "black"),
-                      add_grid = TRUE,
-                      grid_col = "gray") {
-  
+                      col_palette = c("white", "black")) {
+
   # Validate input
   if (!is.list(result) || !all(c("grid", "statistics") %in% names(result))) {
     logger::log_error("Invalid result object. Must be output from run_simulation()")
     stop("Invalid result object")
   }
-  
+
+  # Convert grid matrix to data frame for ggplot2
   grid_data <- result$grid
   n <- nrow(grid_data)
-  
-  # Create the plot
-  image(1:n, 1:n, grid_data,
-        col = col_palette,
-        xlab = "X", ylab = "Y",
-        main = main,
-        asp = 1)
-  
-  # Add grid lines if requested
-  if (add_grid) {
-    grid(nx = n, ny = n, col = grid_col, lty = 1)
-  }
-  
-  invisible(NULL)
+
+  # Create long format data frame
+  grid_df <- expand.grid(x = 1:n, y = 1:n)
+  grid_df$value <- as.vector(grid_data)
+
+  # Create ggplot2 object
+  p <- ggplot2::ggplot(grid_df, ggplot2::aes(x = x, y = y, fill = factor(value))) +
+    ggplot2::geom_tile(color = "gray90", linewidth = 0.1) +
+    ggplot2::scale_fill_manual(
+      values = stats::setNames(col_palette, c("0", "1")),
+      labels = c("Empty", "Black"),
+      name = "State"
+    ) +
+    ggplot2::coord_fixed() +
+    ggplot2::labs(
+      title = main,
+      x = "X",
+      y = "Y"
+    ) +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"),
+      panel.grid = ggplot2::element_blank(),
+      legend.position = "right"
+    )
+
+  return(p)
 }
 
 

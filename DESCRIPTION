@@ -17,11 +17,11 @@ RoxygenNote: 7.3.3
 Depends:
     R (>= 4.1.0)
 Imports:
-    logger
+    logger,
+    ggplot2
 Suggests:
     dplyr,
     duckdb,
-    ggplot2,
     nanonext,
     shiny,
     targets,

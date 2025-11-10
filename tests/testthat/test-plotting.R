@@ -12,10 +12,9 @@ test_that("plot_grid creates a plot without errors", {
   expect_silent(plot_grid(result))
   
   # Test with custom parameters
-  expect_silent(plot_grid(result, 
+  expect_silent(plot_grid(result,
                           main = "Custom Title",
-                          col_palette = c("lightblue", "darkred"),
-                          add_grid = FALSE))
+                          col_palette = c("lightblue", "darkred")))
 })
 
 test_that("plot_grid validates input", {
@@ -41,9 +40,7 @@ test_that("plot_walker_paths creates a plot without errors", {
   # Test with custom parameters
   expect_silent(plot_walker_paths(result,
                                   main = "Custom Title",
-                                  colors = c("red", "blue", "green"),
-                                  add_grid = FALSE,
-                                  legend = FALSE))
+                                  colors = c("red", "blue", "green")))
 })
 
 test_that("plot_walker_paths handles color recycling", {
