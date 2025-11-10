@@ -63,7 +63,7 @@ rix(
   git_pkgs = NULL,
   project_path = ".",
   overwrite = TRUE,
-  ide = "other"  # Can be changed to "rstudio" or "positron" if desired
+  ide = "none"  # Can be changed to "rstudio" or "positron" if desired
 )
 
 cli::cli_alert_success("Generated default.nix for randomwalk package")

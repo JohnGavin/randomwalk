@@ -125,50 +125,29 @@ list(
   ),
 
   # 3. Create visualization plots
+  # plot_grid() now returns ggplot2 objects that can be properly stored and displayed
   tar_target(
     name = plot_small_grid,
-    command = {
-      if (requireNamespace("randomwalk", quietly = TRUE) &&
-          exists("plot_grid", where = "package:randomwalk")) {
-        randomwalk::plot_grid(sim_small)
-      } else {
-        # Fallback plot if function not available
-        ggplot2::ggplot() +
-          ggplot2::annotate("text", x = 0.5, y = 0.5,
-                           label = "Grid visualization not available") +
-          ggplot2::theme_void()
-      }
-    }
+    command = randomwalk::plot_grid(
+      sim_small,
+      main = "Small Simulation (10×10)"
+    )
   ),
 
   tar_target(
     name = plot_medium_grid,
-    command = {
-      if (requireNamespace("randomwalk", quietly = TRUE) &&
-          exists("plot_grid", where = "package:randomwalk")) {
-        randomwalk::plot_grid(sim_medium)
-      } else {
-        ggplot2::ggplot() +
-          ggplot2::annotate("text", x = 0.5, y = 0.5,
-                           label = "Grid visualization not available") +
-          ggplot2::theme_void()
-      }
-    }
+    command = randomwalk::plot_grid(
+      sim_medium,
+      main = "Medium Simulation (20×20)"
+    )
   ),
 
   tar_target(
     name = plot_large_grid,
-    command = {
-      if (requireNamespace("randomwalk", quietly = TRUE) &&
-          exists("plot_grid", where = "package:randomwalk")) {
-        randomwalk::plot_grid(sim_large)
-      } else {
-        ggplot2::ggplot() +
-          ggplot2::annotate("text", x = 0.5, y = 0.5,
-                           label = "Grid visualization not available") +
-          ggplot2::theme_void()
-      }
-    }
+    command = randomwalk::plot_grid(
+      sim_large,
+      main = "Large Simulation (30×30)"
+    )
   ),
 
   # 4. Session info (Section 10.3 - Additional Statistics)
