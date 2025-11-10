@@ -3,7 +3,7 @@ pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   telemetry: telemetry.html
-last_built: 2025-11-09T19:23Z
+last_built: 2025-11-10T17:07Z
 urls:
   reference: https://johngavin.github.io/randomwalk/reference
   article: https://johngavin.github.io/randomwalk/articles
