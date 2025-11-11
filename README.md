@@ -27,6 +27,20 @@ Asynchronous Pixel Walking Simulation with Parallel Processing
 devtools::install()
 ```
 
+## Interactive Dashboard
+
+Try the simulation directly in your browser (no installation required):
+
+**[Launch Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard.html)**
+
+The dashboard runs entirely in your browser using WebAssembly via [Shinylive](https://posit-dev.github.io/r-shinylive/). Features include:
+
+- Real-time parameter adjustment with sliders and dropdowns
+- Multiple visualization tabs (Grid State, Walker Paths, Statistics, Raw Data)
+- Start points (green circles) and end points (red triangles) on path plots
+- Complete simulation statistics and detailed walker information
+- No R installation or server required
+
 ## Usage
 
 ### Programmatic Usage (No GUI)

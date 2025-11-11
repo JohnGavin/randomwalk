@@ -9,6 +9,9 @@ home:
   description: >
     Parallel random walk simulations that create fractal graphs through
     asynchronous pixel walking on a grid.
+  links:
+  - text: Try Interactive Dashboard
+    href: articles/dashboard.html
 
 navbar:
   structure:
