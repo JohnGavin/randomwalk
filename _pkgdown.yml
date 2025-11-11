@@ -18,6 +18,8 @@ navbar:
     articles:
       text: Articles
       menu:
+      - text: Interactive Dashboard
+        href: articles/dashboard.html
       - text: Telemetry and Pipeline Statistics
         href: articles/telemetry.html
 
@@ -25,6 +27,7 @@ articles:
 - title: Vignettes
   navbar: ~
   contents:
+  - dashboard
   - telemetry
 
 footer:
