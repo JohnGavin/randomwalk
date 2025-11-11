@@ -16,7 +16,7 @@ let
  pkgs = import (fetchTarball "https://github.com/rstats-on-nix/nixpkgs/archive/2025-10-27.tar.gz") {};
  
   rpkgs = builtins.attrValues {
-    inherit (pkgs.rPackages) 
+    inherit (pkgs.rPackages)
       covr
       devtools
       dplyr
@@ -31,6 +31,7 @@ let
       rmarkdown
       roxygen2
       shiny
+      shinylive
       tarchetypes
       targets
       testthat

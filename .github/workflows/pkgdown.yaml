@@ -37,7 +37,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, local::.
+          extra-packages: any::pkgdown, any::shinylive, local::.
           needs: website
 
       - name: Install Quarto shinylive extension
@@ -51,15 +51,9 @@ jobs:
           # Run targets pipeline
           targets::tar_make(callr_function = NULL)
 
-          # Pre-build vignettes with targets data available
+          # Pre-build telemetry vignette with rmarkdown
           rmarkdown::render(
             input = "vignettes/telemetry.qmd",
-            output_dir = "vignettes",
-            knit_root_dir = getwd()
-          )
-
-          rmarkdown::render(
-            input = "vignettes/dashboard.qmd",
             output_dir = "vignettes",
             knit_root_dir = getwd()
           )
@@ -74,19 +68,18 @@ jobs:
           pkgdown::build_home()
           pkgdown::build_articles_index()
 
-          # Copy pre-built vignettes to docs after initial build
+          # Copy pre-built telemetry vignette to docs
           file.copy(
             "vignettes/telemetry.html",
             "docs/articles/telemetry.html",
             overwrite = TRUE
           )
-
-          file.copy(
-            "vignettes/dashboard.html",
-            "docs/articles/dashboard.html",
-            overwrite = TRUE
-          )
         shell: Rscript {0}
+
+      - name: Render dashboard with Quarto
+        run: |
+          quarto render vignettes/dashboard.qmd
+          cp vignettes/dashboard.html docs/articles/dashboard.html
 
       - name: Deploy to GitHub pages
         if: github.event_name != 'pull_request'
