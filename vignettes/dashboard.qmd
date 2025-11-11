@@ -111,7 +111,7 @@ plot_grid(result)
 #| fig-width: 8
 #| fig-height: 8
 
-plot_paths(result)
+plot_walker_paths(result)
 ```
 
 ## Parameter Effects
@@ -303,7 +303,7 @@ list(
     )
   ),
   tar_target(grid_plot, plot_grid(sim_result)),
-  tar_target(paths_plot, plot_paths(sim_result))
+  tar_target(paths_plot, plot_walker_paths(sim_result))
 )
 ```
 
@@ -373,7 +373,7 @@ devtools::test()
 ## Related Documentation
 
 - **Simulation Core**: `?run_simulation` - Main simulation function
-- **Plotting**: `?plot_grid`, `?plot_paths` - Visualization functions
+- **Plotting**: `?plot_grid`, `?plot_walker_paths` - Visualization functions
 - **Modules**: `?run_dashboard` - Dashboard launcher
 - **Package Overview**: `?randomwalk` - Package documentation
 
