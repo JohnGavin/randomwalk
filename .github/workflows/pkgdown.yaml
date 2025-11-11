@@ -40,6 +40,9 @@ jobs:
           extra-packages: any::pkgdown, local::.
           needs: website
 
+      - name: Install Quarto shinylive extension
+        run: quarto add --no-prompt quarto-ext/shinylive
+
       - name: Run build script
         run: |
           # Load package and run complete build workflow
