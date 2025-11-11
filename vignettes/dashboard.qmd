@@ -6,6 +6,8 @@ format:
     code-summary: "Show code"
     toc: true
     toc-depth: 3
+runtime: shiny
+server: shiny
 execute:
   eval: true
   echo: true
@@ -15,349 +17,328 @@ execute:
 
 # Random Walk Simulation Dashboard
 
-This vignette demonstrates the interactive Shiny dashboard for exploring random walk simulations. The dashboard provides a user-friendly interface for configuring simulation parameters, running simulations, and visualizing results.
+This vignette provides an **interactive Shiny application** embedded directly in the page. Use the controls below to configure simulation parameters and visualize results in real-time.
 
-## Overview
+## Interactive Simulation
 
-The dashboard is built using Shiny modules to maintain separation between:
+The dashboard below allows you to:
 
-- **Input controls**: Parameter configuration (grid size, walkers, neighborhood type, etc.)
-- **Simulation engine**: Core random walk logic (independent of GUI)
-- **Output displays**: Visualization and tabulation of results
+- Configure grid size, number of walkers, and other parameters
+- Choose neighborhood type (4-hood or 8-hood) and boundary behavior
+- Run simulations and see results immediately
+- Explore multiple visualization tabs
 
-This modular architecture ensures the simulation code remains reusable outside the dashboard context.
-
-## Features
-
-The dashboard includes:
-
-1. **Parameter Configuration Panel**
-   - Grid size (3-100)
-   - Number of walkers (dynamically limited to 60% of grid)
-   - Neighborhood type (4-hood or 8-hood)
-   - Boundary behavior (terminate or wrap)
-   - Maximum steps per walker
-   - Verbose logging option
-
-2. **Multiple Output Views**
-   - **Grid State**: Visualizes final grid with black pixels
-   - **Walker Paths**: Shows trajectories and termination points
-   - **Statistics**: Detailed metrics and parameter summary
-   - **Raw Data**: Walker-level data and grid information
-
-3. **Interactive Controls**
-   - Run simulation with current parameters
-   - Reset parameters to defaults
-   - Real-time status updates
-   - Progress indicators
-
-## Architecture
-
-### Shiny Modules
-
-The dashboard uses three main Shiny modules:
-
-#### 1. Input Module (`sim_input_ui` / `sim_input_server`)
-
-Handles all parameter inputs and validation:
-
-```{r architecture-input, eval=FALSE}
-# UI creates input controls
-sim_input_ui("inputs")
-
-# Server returns reactive parameters and run trigger
-inputs <- sim_input_server("inputs")
-params <- inputs$params()  # Get current parameters
-run_trigger <- inputs$run_trigger()  # Detect run button clicks
+```{r}
+#| context: setup
+library(randomwalk)
+library(shiny)
+library(ggplot2)
 ```
 
-Key features:
-- Dynamic validation (max walkers updates with grid size)
-- Reset functionality
-- Parameter bundling for simulation
+```{r}
+#| panel: sidebar
 
-#### 2. Output Module (`sim_output_ui` / `sim_output_server`)
-
-Displays simulation results across tabs:
-
-```{r architecture-output, eval=FALSE}
-# UI creates tabbed output display
-sim_output_ui("outputs")
-
-# Server renders plots and tables from simulation result
-sim_output_server("outputs", sim_result)
-```
-
-Displays:
-- Grid visualization using `plot_grid()` (ggplot2)
-- Walker paths using `plot_walker_paths()` (base R)
-- Formatted statistics
-- Data tables
-
-#### 3. Main App (`run_dashboard`)
-
-Orchestrates the modules:
-
-```{r architecture-main, eval=FALSE}
-run_dashboard()
-```
-
-Responsibilities:
-- Combine input and output modules
-- Trigger simulation on button click
-- Handle errors and show notifications
-- Display status messages
-
-### Module Independence
-
-The modules are designed to be independent:
-
-```{r module-independence, eval=FALSE}
-# Simulation code is completely independent
-result <- run_simulation(
-  grid_size = 20,
-  n_walkers = 5,
-  neighborhood = "4-hood",
-  boundary = "terminate"
+sliderInput(
+  "grid_size",
+  "Grid Size:",
+  min = 3,
+  max = 100,
+  value = 20,
+  step = 1
 )
 
-# Can be used in:
-# - Command line scripts
-# - Non-interactive pipelines (targets)
-# - Other Shiny apps
-# - Automated testing
-```
+sliderInput(
+  "n_walkers",
+  "Number of Walkers:",
+  min = 1,
+  max = 10,
+  value = 5,
+  step = 1
+)
 
-## Launching the Dashboard
+selectInput(
+  "neighborhood",
+  "Neighborhood Type:",
+  choices = c("4-hood" = "4-hood", "8-hood" = "8-hood"),
+  selected = "4-hood"
+)
 
-### Interactive Mode
+selectInput(
+  "boundary",
+  "Boundary Behavior:",
+  choices = c("Terminate" = "terminate", "Wrap" = "wrap"),
+  selected = "terminate"
+)
 
-To launch the dashboard interactively:
+sliderInput(
+  "max_steps",
+  "Max Steps:",
+  min = 100,
+  max = 50000,
+  value = 10000,
+  step = 100
+)
 
-```{r launch-interactive, eval=FALSE}
-library(randomwalk)
+checkboxInput(
+  "verbose",
+  "Verbose Output",
+  value = FALSE
+)
 
-# Launch with default options
-run_dashboard()
+hr()
 
-# Launch on specific port
-run_dashboard(options = list(port = 3838))
+actionButton(
+  "run_sim",
+  "Run Simulation",
+  class = "btn-primary",
+  width = "100%"
+)
 
-# Launch and open in browser
-run_dashboard(launch.browser = TRUE)
-```
+actionButton(
+  "reset",
+  "Reset Parameters",
+  class = "btn-secondary",
+  width = "100%",
+  style = "margin-top: 10px;"
+)
 
-### Embedded in Quarto
-
-The dashboard can also be embedded in Quarto documents using the `shiny` runtime:
-
-````markdown
----
-title: "Embedded Dashboard"
-format: html
-server: shiny
----
-
-```{{r}}
-library(randomwalk)
-run_dashboard()
-```
-````
-
-## Example Usage
-
-### Basic Workflow
-
-1. **Configure Parameters**
-   - Adjust grid size (e.g., 30x30)
-   - Set number of walkers (e.g., 10)
-   - Choose neighborhood type (4-hood or 8-hood)
-   - Select boundary behavior
-
-2. **Run Simulation**
-   - Click "Run Simulation"
-   - Wait for completion (progress bar shows activity)
-   - View results across tabs
-
-3. **Explore Results**
-   - **Grid State**: See final pattern of black pixels
-   - **Walker Paths**: Examine individual walker trajectories
-   - **Statistics**: Review performance metrics
-   - **Raw Data**: Inspect detailed walker information
-
-4. **Iterate**
-   - Modify parameters
-   - Run again to compare results
-   - Reset to defaults if needed
-
-### Parameter Effects
-
-#### Grid Size
-
-Larger grids allow for more complex patterns:
-
-- Small (10x10): Quick simulations, simple patterns
-- Medium (30x30): Balanced exploration
-- Large (100x100): Complex fractals, longer runtime
-
-#### Number of Walkers
-
-More walkers create denser patterns:
-
-- Few (1-5): Sparse, distinct paths
-- Many (20+): Dense, interconnected structures
-
-#### Neighborhood Type
-
-Affects movement and collision detection:
-
-- **4-hood**: Cardinal directions only (N, S, E, W)
-- **8-hood**: Includes diagonals (8 possible moves)
-
-#### Boundary Behavior
-
-Controls edge handling:
-
-- **Terminate**: Walkers stop at grid boundaries
-- **Wrap**: Toroidal topology (edges connect)
-
-## Testing
-
-The dashboard modules include comprehensive tests using `shinytest2`:
-
-```{r testing-example, eval=FALSE}
-library(shinytest2)
-
-test_that("Dashboard launches successfully", {
-  app <- AppDriver$new(run_dashboard())
-  expect_true(app$is_alive())
-  app$stop()
+# Update max walkers based on grid size
+observe({
+  max_walkers <- floor(input$grid_size * input$grid_size * 0.6)
+  updateSliderInput(
+    session,
+    "n_walkers",
+    max = max_walkers,
+    value = min(input$n_walkers, max_walkers)
+  )
 })
 
-test_that("Input module validates parameters", {
-  app <- AppDriver$new(run_dashboard())
-
-  # Set large grid
-  app$set_inputs(`inputs-grid_size` = 50)
-
-  # Check max walkers updated
-  max_walkers <- floor(50 * 50 * 0.6)
-  expect_equal(app$get_value(input = "inputs-n_walkers")$max, max_walkers)
-
-  app$stop()
+# Reset button handler
+observeEvent(input$reset, {
+  updateSliderInput(session, "grid_size", value = 20)
+  updateSliderInput(session, "n_walkers", value = 5)
+  updateSelectInput(session, "neighborhood", selected = "4-hood")
+  updateSelectInput(session, "boundary", selected = "terminate")
+  updateSliderInput(session, "max_steps", value = 10000)
+  updateCheckboxInput(session, "verbose", value = FALSE)
 })
 ```
 
-## Performance Considerations
+```{r}
+#| panel: fill
 
-### Simulation Speed
+# Reactive simulation result
+sim_result <- eventReactive(input$run_sim, {
+  withProgress(message = 'Running simulation...', value = 0, {
+    incProgress(0.3, detail = "Setting up grid")
 
-- **Grid size**: O(n²) memory, runtime varies
-- **Number of walkers**: Linear impact on steps
-- **Max steps**: Upper bound on computation
+    result <- run_simulation(
+      grid_size = input$grid_size,
+      n_walkers = input$n_walkers,
+      neighborhood = input$neighborhood,
+      boundary = input$boundary,
+      max_steps = input$max_steps,
+      verbose = input$verbose
+    )
 
-For large simulations (>50x50 grid, >20 walkers):
+    incProgress(0.7, detail = "Complete")
+    result
+  })
+})
 
-- Consider running outside dashboard
-- Use verbose logging to monitor progress
-- Save results for later visualization
+# Create tabset panel for outputs
+tabsetPanel(
+  id = "output_tabs",
+  type = "tabs",
 
-### Dashboard Responsiveness
-
-The dashboard uses synchronous simulation execution:
-
-- UI blocks during simulation
-- Progress bar indicates activity
-- Notifications show start/completion
-
-For async execution, see the advanced vignettes on parallel processing.
-
-## Integration with Targets
-
-Dashboard results can be saved and used in `targets` pipelines:
-
-```{r targets-integration, eval=FALSE}
-# _targets.R
-library(targets)
-library(randomwalk)
-
-tar_plan(
-  # Run simulation (outside dashboard)
-  tar_target(
-    sim_result,
-    run_simulation(grid_size = 30, n_walkers = 10)
+  # Grid State Tab
+  tabPanel(
+    "Grid State",
+    br(),
+    plotOutput("grid_plot", height = "600px")
   ),
 
-  # Create plots (compatible with dashboard views)
-  tar_target(grid_plot, plot_grid(sim_result)),
-  tar_target(paths_plot, plot_walker_paths(sim_result)),
+  # Walker Paths Tab
+  tabPanel(
+    "Walker Paths",
+    br(),
+    plotOutput("paths_plot", height = "600px")
+  ),
 
-  # Generate report including dashboard link
-  tar_quarto(dashboard_doc, "inst/qmd/dashboard.qmd")
+  # Statistics Tab
+  tabPanel(
+    "Statistics",
+    br(),
+    h4("Simulation Statistics"),
+    verbatimTextOutput("stats_text"),
+    hr(),
+    h4("Parameters Used"),
+    tableOutput("params_table")
+  ),
+
+  # Raw Data Tab
+  tabPanel(
+    "Raw Data",
+    br(),
+    h4("Walker Data"),
+    tableOutput("walker_table"),
+    hr(),
+    h4("Grid Information"),
+    verbatimTextOutput("grid_info")
+  )
 )
-```
 
-## Extending the Dashboard
+# Render grid plot
+output$grid_plot <- renderPlot({
+  req(sim_result())
+  plot_grid(sim_result())
+})
 
-### Adding New Outputs
+# Render paths plot
+output$paths_plot <- renderPlot({
+  req(sim_result())
+  plot_paths(sim_result())
+})
 
-To add a new output tab:
+# Render statistics
+output$stats_text <- renderText({
+  req(sim_result())
+  stats <- sim_result()$statistics
+  paste(format_statistics(stats), collapse = "\n")
+})
 
-1. **Modify `sim_output_ui`**:
-```{r extend-ui, eval=FALSE}
-shiny::tabPanel(
-  "New View",
-  shiny::plotOutput(ns("new_plot"))
-)
-```
+# Render parameters table
+output$params_table <- renderTable({
+  req(sim_result())
+  params <- sim_result()$parameters
+  data.frame(
+    Parameter = c("Grid Size", "Walkers", "Neighborhood", "Boundary", "Max Steps"),
+    Value = c(
+      params$grid_size,
+      params$n_walkers,
+      params$neighborhood,
+      params$boundary,
+      params$max_steps
+    )
+  )
+})
 
-2. **Add render function in `sim_output_server`**:
-```{r extend-server, eval=FALSE}
-output$new_plot <- shiny::renderPlot({
-  shiny::req(sim_result())
-  # Custom visualization code
+# Render walker table
+output$walker_table <- renderTable({
+  req(sim_result())
+  walkers <- sim_result()$walkers
+
+  data.frame(
+    Walker = sapply(walkers, function(w) w$id),
+    Steps = sapply(walkers, function(w) w$steps),
+    Final_X = sapply(walkers, function(w) w$pos[1]),
+    Final_Y = sapply(walkers, function(w) w$pos[2]),
+    Status = sapply(walkers, function(w) ifelse(w$active, "Active", "Terminated")),
+    Reason = sapply(walkers, function(w) w$termination_reason)
+  )
+})
+
+# Render grid info
+output$grid_info <- renderText({
+  req(sim_result())
+  grid <- sim_result()$grid
+  stats <- sim_result()$statistics
+
+  paste(
+    sprintf("Grid dimensions: %d x %d", nrow(grid), ncol(grid)),
+    sprintf("Total pixels: %d", nrow(grid) * ncol(grid)),
+    sprintf("Black pixels: %d (%.2f%%)", stats$black_pixels, stats$black_percentage),
+    sprintf("White pixels: %d", nrow(grid) * ncol(grid) - stats$black_pixels),
+    sep = "\n"
+  )
 })
 ```
 
-### Adding New Inputs
+## How to Use
 
-To add a new parameter:
+1. **Adjust Parameters** in the left sidebar:
+   - **Grid Size**: Larger grids create more complex patterns
+   - **Number of Walkers**: More walkers increase coverage
+   - **Neighborhood**: 8-hood creates denser patterns than 4-hood
+   - **Boundary**: Wrap creates toroidal topology, terminate stops at edges
 
-1. **Add input control in `sim_input_ui`**:
-```{r extend-input-ui, eval=FALSE}
-shiny::numericInput(
-  ns("new_param"),
-  "New Parameter:",
-  value = 10
+2. **Click "Run Simulation"** to execute with current parameters
+
+3. **Explore Results** across four tabs:
+   - **Grid State**: Final black pixel pattern
+   - **Walker Paths**: Individual walker trajectories
+   - **Statistics**: Quantitative metrics
+   - **Raw Data**: Detailed walker and grid information
+
+4. **Use "Reset Parameters"** to return to defaults
+
+## Technical Details
+
+### Architecture
+
+The simulation uses a modular architecture:
+
+- **Core Engine** (`run_simulation()`): Pure R logic, no GUI dependencies
+- **Shiny Interface**: This embedded app provides interactive access
+- **Visualization** (`plot_grid()`, `plot_paths()`): Reusable plotting functions
+
+### Parameters
+
+**Grid Size** (3-100): Defines the N×N grid dimensions. Larger grids allow for more complex fractal patterns but take longer to simulate.
+
+**Number of Walkers** (1 to 60% of grid capacity): Each walker performs a random walk until termination. Maximum is dynamically adjusted based on grid size to prevent overcrowding.
+
+**Neighborhood Type**:
+- **4-hood**: Walkers move to 4 adjacent cells (up, down, left, right)
+- **8-hood**: Walkers move to 8 cells (including diagonals)
+
+**Boundary Behavior**:
+- **Terminate**: Walkers stop when reaching grid edge
+- **Wrap**: Edges connect (toroidal topology)
+
+**Max Steps**: Safety limit to prevent infinite loops
+
+### Termination Conditions
+
+Walkers stop when:
+1. Adjacent to a black pixel (deposits own black pixel)
+2. Hitting boundary (if terminate mode)
+3. Reaching maximum steps
+4. No valid moves available
+
+## Performance Notes
+
+- Simulations typically complete in under 1 second for grids up to 50×50
+- Larger grids (75-100) may take several seconds
+- Progress indicator shows simulation status
+- Results are cached until parameters change
+
+## Related Functions
+
+For programmatic use outside this dashboard:
+
+```r
+# Run simulation directly
+result <- run_simulation(
+  grid_size = 30,
+  n_walkers = 10,
+  neighborhood = "8-hood",
+  boundary = "wrap"
 )
+
+# Create visualizations
+plot_grid(result)
+plot_paths(result)
+
+# Access statistics
+result$statistics
+
+# Launch standalone dashboard
+run_dashboard()
 ```
 
-2. **Include in params list in `sim_input_server`**:
-```{r extend-input-server, eval=FALSE}
-list(
-  # ... existing params ...
-  new_param = input$new_param
-)
-```
+## References
 
-3. **Update `run_simulation` to accept new parameter**
-
-## Summary
-
-The Shiny dashboard provides:
-
-- **Accessibility**: No coding required for basic use
-- **Interactivity**: Real-time parameter exploration
-- **Visualization**: Multiple views of results
-- **Modularity**: Reusable components
-- **Independence**: GUI separate from simulation logic
-
-For programmatic use, advanced features, or batch processing, use the core `run_simulation()` function directly.
-
-## See Also
-
-- `?run_dashboard` - Function documentation
-- `?sim_input_server` - Input module details
-- `?sim_output_server` - Output module details
-- `?run_simulation` - Core simulation function
-- `vignette("telemetry")` - Statistical analysis
+- Package documentation: `?run_simulation`
+- Module documentation: `?run_dashboard`
+- Source code: GitHub repository
