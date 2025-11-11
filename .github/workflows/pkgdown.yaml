@@ -55,6 +55,12 @@ jobs:
             knit_root_dir = getwd()
           )
 
+          rmarkdown::render(
+            input = "vignettes/dashboard.qmd",
+            output_dir = "vignettes",
+            knit_root_dir = getwd()
+          )
+
           # Clean any existing site first
           if (dir.exists("docs")) {
             pkgdown::clean_site(force = TRUE)
@@ -65,10 +71,16 @@ jobs:
           pkgdown::build_home()
           pkgdown::build_articles_index()
 
-          # Copy pre-built vignette to docs after initial build
+          # Copy pre-built vignettes to docs after initial build
           file.copy(
             "vignettes/telemetry.html",
             "docs/articles/telemetry.html",
+            overwrite = TRUE
+          )
+
+          file.copy(
+            "vignettes/dashboard.html",
+            "docs/articles/dashboard.html",
             overwrite = TRUE
           )
         shell: Rscript {0}
