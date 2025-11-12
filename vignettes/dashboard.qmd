@@ -28,8 +28,11 @@ webr::mount(
 # Add mounted library to library paths
 .libPaths(c("/randomwalk-lib", .libPaths()))
 
+# Load only shiny at build time (randomwalk loaded at runtime)
 library(shiny)
-library(randomwalk)
+
+# Load randomwalk after mount (using requireNamespace to avoid build-time dependency check)
+requireNamespace("randomwalk", quietly = TRUE)
 
 # UI
 ui <- fluidPage(
@@ -124,7 +127,7 @@ server <- function(input, output, session) {
   # Run simulation using package function
   sim_result <- eventReactive(input$run_sim, {
     withProgress(message = 'Running simulation...', {
-      result <- run_simulation(
+      result <- randomwalk::run_simulation(
         grid_size = input$grid_size,
         n_walkers = input$n_walkers,
         neighborhood = input$neighborhood,
@@ -138,13 +141,13 @@ server <- function(input, output, session) {
   # Grid plot using package function
   output$grid_plot <- renderPlot({
     req(sim_result())
-    plot_grid(sim_result())
+    randomwalk::plot_grid(sim_result())
   })
 
   # Paths plot using package function
   output$paths_plot <- renderPlot({
     req(sim_result())
-    plot_walker_paths(sim_result())
+    randomwalk::plot_walker_paths(sim_result())
   })
 
   # Statistics
