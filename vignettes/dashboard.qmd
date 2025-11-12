@@ -1,6 +1,8 @@
 ---
 title: "Interactive Dashboard"
-format: html
+format:
+  html:
+    embed-resources: false
 filters:
   - shinylive
 ---
