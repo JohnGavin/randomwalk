@@ -40,9 +40,6 @@ jobs:
           extra-packages: any::pkgdown, any::shinylive, local::.
           needs: website
 
-      - name: Install Quarto shinylive extension
-        run: quarto add --no-prompt quarto-ext/shinylive
-
       - name: Run build script
         run: |
           # Load package and run complete build workflow
@@ -76,11 +73,21 @@ jobs:
           )
         shell: Rscript {0}
 
-      - name: Render dashboard with Quarto
+      - name: Export dashboard with R shinylive
         run: |
-          quarto render vignettes/dashboard.qmd
-          cp vignettes/dashboard.html docs/articles/dashboard.html
-          cp -r vignettes/dashboard_files docs/articles/ 2>/dev/null || true
+          # Export Shiny app to Shinylive format using R package
+          shinylive::export(
+            appdir = "inst/shiny/dashboard",
+            destdir = "docs/articles/dashboard"
+          )
+
+          # Copy the exported index.html to dashboard.html for consistent naming
+          file.copy(
+            "docs/articles/dashboard/index.html",
+            "docs/articles/dashboard.html",
+            overwrite = TRUE
+          )
+        shell: Rscript {0}
 
       - name: Deploy to GitHub pages
         if: github.event_name != 'pull_request'

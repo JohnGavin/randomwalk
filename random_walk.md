@@ -73,7 +73,7 @@ Simulation ends when:
 This is NOT a DLA simulation. It is a simple random walk that builds a fractal graph.
 The async simulation is not exact, it is only an approximation, as the update of the global state is only near realtime.
 Every step by every worker should include a check to see if the global state has changed. If so, the local state for that worker should read the global state to update the local cache before proceeding.
-
+The GUI should also access updates about the global state frequently. This should inlcude info to plot the current state of the global state and to updates the statistics.
 
 # Sample output
 
