@@ -17,128 +17,11 @@ Use the controls below to configure simulation parameters and visualize results 
 #| standalone: true
 #| viewerHeight: 800
 
+# Install randomwalk package from GitHub with WebAssembly binaries
+webr::install("randomwalk", repos = "https://johngavin.r-universe.dev")
+
 library(shiny)
-library(ggplot2)
-
-# Simple random walk simulation
-run_simulation <- function(grid_size, n_walkers, neighborhood, boundary, max_steps = 10000) {
-  grid <- matrix(0, nrow = grid_size, ncol = grid_size)
-
-  walkers <- lapply(1:n_walkers, function(id) {
-    list(
-      id = id,
-      pos = c(ceiling(grid_size/2), ceiling(grid_size/2)),
-      path = list(c(ceiling(grid_size/2), ceiling(grid_size/2))),
-      steps = 0,
-      active = TRUE,
-      termination_reason = NA
-    )
-  })
-
-  get_neighbors <- function(pos, type) {
-    if (type == "4-hood") {
-      list(c(pos[1]-1, pos[2]), c(pos[1]+1, pos[2]),
-           c(pos[1], pos[2]-1), c(pos[1], pos[2]+1))
-    } else {
-      list(c(pos[1]-1, pos[2]), c(pos[1]+1, pos[2]),
-           c(pos[1], pos[2]-1), c(pos[1], pos[2]+1),
-           c(pos[1]-1, pos[2]-1), c(pos[1]+1, pos[2]+1),
-           c(pos[1]-1, pos[2]+1), c(pos[1]+1, pos[2]-1))
-    }
-  }
-
-  check_bounds <- function(pos) {
-    if (boundary == "terminate") {
-      pos[1] >= 1 && pos[1] <= grid_size && pos[2] >= 1 && pos[2] <= grid_size
-    } else {
-      TRUE
-    }
-  }
-
-  wrap_position <- function(pos) {
-    if (boundary == "wrap") {
-      pos[1] <- ((pos[1] - 1) %% grid_size) + 1
-      pos[2] <- ((pos[2] - 1) %% grid_size) + 1
-    }
-    pos
-  }
-
-  has_black_neighbor <- function(pos) {
-    neighbors <- get_neighbors(pos, neighborhood)
-    any(sapply(neighbors, function(n) {
-      n <- wrap_position(n)
-      if (n[1] >= 1 && n[1] <= grid_size && n[2] >= 1 && n[2] <= grid_size) {
-        grid[n[1], n[2]] == 1
-      } else {
-        FALSE
-      }
-    }))
-  }
-
-  step <- 0
-  while (any(sapply(walkers, function(w) w$active)) && step < max_steps) {
-    step <- step + 1
-
-    for (i in seq_along(walkers)) {
-      if (!walkers[[i]]$active) next
-
-      pos <- walkers[[i]]$pos
-
-      if (has_black_neighbor(pos)) {
-        grid[pos[1], pos[2]] <- 1
-        walkers[[i]]$active <- FALSE
-        walkers[[i]]$termination_reason <- "black_neighbor"
-        next
-      }
-
-      neighbors <- get_neighbors(pos, neighborhood)
-      valid_neighbors <- Filter(function(n) {
-        n <- wrap_position(n)
-        if (!check_bounds(n)) return(FALSE)
-        n[1] >= 1 && n[1] <= grid_size && n[2] >= 1 && n[2] <= grid_size && grid[n[1], n[2]] == 0
-      }, neighbors)
-
-      if (length(valid_neighbors) == 0) {
-        walkers[[i]]$active <- FALSE
-        walkers[[i]]$termination_reason <- "no_moves"
-        next
-      }
-
-      new_pos <- valid_neighbors[[sample(length(valid_neighbors), 1)]]
-      new_pos <- wrap_position(new_pos)
-
-      if (!check_bounds(new_pos)) {
-        walkers[[i]]$active <- FALSE
-        walkers[[i]]$termination_reason <- "hit_boundary"
-        next
-      }
-
-      walkers[[i]]$pos <- new_pos
-      walkers[[i]]$path <- c(walkers[[i]]$path, list(new_pos))
-      walkers[[i]]$steps <- walkers[[i]]$steps + 1
-    }
-  }
-
-  black_pixels <- sum(grid == 1)
-  list(
-    grid = grid,
-    walkers = walkers,
-    statistics = list(
-      black_pixels = black_pixels,
-      black_percentage = 100 * black_pixels / (grid_size * grid_size),
-      total_walkers = n_walkers,
-      completed_walkers = sum(sapply(walkers, function(w) !w$active)),
-      total_steps = sum(sapply(walkers, function(w) w$steps))
-    ),
-    parameters = list(
-      grid_size = grid_size,
-      n_walkers = n_walkers,
-      neighborhood = neighborhood,
-      boundary = boundary,
-      max_steps = max_steps
-    )
-  )
-}
+library(randomwalk)
 
 # UI
 ui <- fluidPage(
@@ -230,7 +113,7 @@ server <- function(input, output, session) {
     updateSliderInput(session, "max_steps", value = 10000)
   })
 
-  # Run simulation
+  # Run simulation using package function
   sim_result <- eventReactive(input$run_sim, {
     withProgress(message = 'Running simulation...', {
       result <- run_simulation(
@@ -244,59 +127,16 @@ server <- function(input, output, session) {
     })
   })
 
-  # Grid plot
+  # Grid plot using package function
   output$grid_plot <- renderPlot({
     req(sim_result())
-    grid <- sim_result()$grid
-    grid_df <- expand.grid(x = 1:nrow(grid), y = 1:ncol(grid))
-    grid_df$value <- as.vector(grid)
-
-    ggplot(grid_df, aes(x = x, y = y, fill = factor(value))) +
-      geom_tile(color = "gray90", linewidth = 0.2) +
-      scale_fill_manual(values = c("white", "black"), guide = "none") +
-      coord_equal() +
-      labs(title = "Final Grid State", x = NULL, y = NULL) +
-      theme_minimal() +
-      theme(
-        panel.grid = element_blank(),
-        axis.text = element_text(size = 8)
-      )
+    plot_grid(sim_result())
   })
 
-  # Paths plot
+  # Paths plot using package function
   output$paths_plot <- renderPlot({
     req(sim_result())
-    walkers <- sim_result()$walkers
-
-    paths_df <- do.call(rbind, lapply(seq_along(walkers), function(i) {
-      w <- walkers[[i]]
-      if (length(w$path) < 2) return(NULL)
-      path_mat <- do.call(rbind, w$path)
-      data.frame(
-        x = path_mat[, 1],
-        y = path_mat[, 2],
-        walker = factor(i),
-        order = seq_len(nrow(path_mat))
-      )
-    }))
-
-    if (is.null(paths_df) || nrow(paths_df) == 0) {
-      plot.new()
-      text(0.5, 0.5, "No paths to display", cex = 1.5)
-      return()
-    }
-
-    ggplot(paths_df, aes(x = x, y = y, group = walker, color = walker)) +
-      geom_path(alpha = 0.6, linewidth = 0.8) +
-      geom_point(data = subset(paths_df, order == 1),
-                 aes(x = x, y = y), size = 3, shape = 21, fill = "green") +
-      geom_point(data = paths_df[!duplicated(paths_df$walker, fromLast = TRUE), ],
-                 aes(x = x, y = y), size = 3, shape = 24, fill = "red") +
-      coord_equal() +
-      labs(title = "Walker Paths", x = NULL, y = NULL,
-           subtitle = "Green circles = start, Red triangles = end") +
-      theme_minimal() +
-      theme(legend.position = "none")
+    plot_walker_paths(sim_result())
   })
 
   # Statistics
@@ -316,15 +156,15 @@ server <- function(input, output, session) {
   # Parameters table
   output$params_table <- renderTable({
     req(sim_result())
-    params <- sim_result()$parameters
+    result <- sim_result()
     data.frame(
       Parameter = c("Grid Size", "Walkers", "Neighborhood", "Boundary", "Max Steps"),
       Value = c(
-        params$grid_size,
-        params$n_walkers,
-        params$neighborhood,
-        params$boundary,
-        params$max_steps
+        result$grid_size,
+        result$n_walkers,
+        result$neighborhood,
+        result$boundary,
+        input$max_steps
       )
     )
   })
@@ -332,32 +172,30 @@ server <- function(input, output, session) {
   # Walker table
   output$walker_table <- renderTable({
     req(sim_result())
-    walkers <- sim_result()$walkers
+    result <- sim_result()
 
-    data.frame(
-      Walker = sapply(walkers, function(w) w$id),
-      Steps = sapply(walkers, function(w) w$steps),
-      Final_X = sapply(walkers, function(w) w$pos[1]),
-      Final_Y = sapply(walkers, function(w) w$pos[2]),
-      Status = sapply(walkers, function(w) ifelse(w$active, "Active", "Terminated")),
-      Reason = sapply(walkers, function(w)
-        ifelse(is.na(w$termination_reason), "N/A", w$termination_reason))
+    walker_data <- data.frame(
+      Walker = seq_along(result$walker_paths),
+      Steps = sapply(result$walker_paths, function(p) nrow(p)),
+      Final_X = sapply(result$walker_paths, function(p) p[nrow(p), 1]),
+      Final_Y = sapply(result$walker_paths, function(p) p[nrow(p), 2])
     )
+    walker_data
   })
 
   # Grid info
   output$grid_info <- renderText({
     req(sim_result())
-    grid <- sim_result()$grid
-    stats <- sim_result()$statistics
+    result <- sim_result()
+    stats <- result$statistics
 
     paste(
-      sprintf("Grid dimensions: %d x %d", nrow(grid), ncol(grid)),
-      sprintf("Total pixels: %d", nrow(grid) * ncol(grid)),
+      sprintf("Grid dimensions: %d x %d", result$grid_size, result$grid_size),
+      sprintf("Total pixels: %d", result$grid_size * result$grid_size),
       sprintf("Black pixels: %d (%.2f%%)",
               stats$black_pixels, stats$black_percentage),
       sprintf("White pixels: %d",
-              nrow(grid) * ncol(grid) - stats$black_pixels),
+              result$grid_size * result$grid_size - stats$black_pixels),
       sep = "\n"
     )
   })
@@ -372,37 +210,39 @@ shinyApp(ui = ui, server = server)
 2. **Click "Run Simulation"** to execute
 3. **Explore Results** across four tabs:
    - **Grid State**: Final black pixel pattern
-   - **Walker Paths**: Individual walker trajectories with start (green circles) and end (red triangles)
+   - **Walker Paths**: Individual walker trajectories
    - **Statistics**: Quantitative metrics
    - **Raw Data**: Detailed walker and grid information
 
 ## Features
 
 - **Runs entirely in your browser** - No R installation needed
+- **Uses actual package functions** - No code duplication
 - **Interactive controls** - Sliders, dropdowns, and buttons
 - **Real-time visualization** - See results immediately
 - **Multiple output views** - Four tabs with different perspectives
-- **Dynamic validation** - Max walkers adjusts with grid size
 - **WebAssembly powered** - Fast performance using shinylive
 
 ## Technical Details
 
-This dashboard uses [Shinylive](https://posit-dev.github.io/r-shinylive/) to run R and Shiny entirely in your web browser using WebAssembly. No server required!
+This dashboard uses [Shinylive](https://posit-dev.github.io/r-shinylive/) to run R and Shiny entirely in your web browser using WebAssembly. The randomwalk package is installed from GitHub with WebAssembly binaries built automatically on each release.
 
-The simulation implements a random walk algorithm where:
+### Package Functions Used
 
-1. Walkers start at the center of the grid
-2. Each step moves to a random adjacent cell (4-hood or 8-hood)
-3. Walkers terminate when adjacent to a black pixel
-4. Upon termination, the walker deposits a black pixel
-5. Boundary behavior can be "terminate" (stop at edges) or "wrap" (toroidal)
+- `run_simulation()` - Core simulation engine
+- `plot_grid()` - Visualizes final grid state
+- `plot_walker_paths()` - Shows walker trajectories with start/end markers
 
-## Installation for Local Use
+### Installation for Local Use
 
-To run the full-featured version locally with the complete randomwalk package:
+To run the full-featured version locally with additional capabilities:
 
 ```r
 # Install from GitHub
+# install.packages("pak")
+pak::pak("JohnGavin/randomwalk")
+
+# Or use remotes
 # install.packages("remotes")
 remotes::install_github("JohnGavin/randomwalk")
 
@@ -411,7 +251,7 @@ library(randomwalk)
 run_dashboard()
 ```
 
-The local version includes additional features like:
+The local version includes:
 - Parallel processing with multiple workers
 - Database integration for large-scale simulations
 - targets pipeline integration
