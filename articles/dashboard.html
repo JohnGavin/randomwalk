@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.25">
+<meta name="generator" content="quarto-1.8.26">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -66,7 +66,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="dashboard_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="dashboard_files/libs/quarto-html/anchor.min.js"></script>
 <link href="dashboard_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="dashboard_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="dashboard_files/libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="dashboard_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="dashboard_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="dashboard_files/libs/bootstrap/bootstrap-0a61af393cc41664e89a7addda21b354.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
@@ -125,8 +125,11 @@ webr::mount(
 # Add mounted library to library paths
 .libPaths(c("/randomwalk-lib", .libPaths()))
 
+# Load only shiny at build time (randomwalk loaded at runtime)
 library(shiny)
-library(randomwalk)
+
+# Load randomwalk after mount (using requireNamespace to avoid build-time dependency check)
+requireNamespace("randomwalk", quietly = TRUE)
 
 # UI
 ui &lt;- fluidPage(
@@ -221,7 +224,7 @@ server &lt;- function(input, output, session) {
   # Run simulation using package function
   sim_result &lt;- eventReactive(input$run_sim, {
     withProgress(message = 'Running simulation...', {
-      result &lt;- run_simulation(
+      result &lt;- randomwalk::run_simulation(
         grid_size = input$grid_size,
         n_walkers = input$n_walkers,
         neighborhood = input$neighborhood,
@@ -235,13 +238,13 @@ server &lt;- function(input, output, session) {
   # Grid plot using package function
   output$grid_plot &lt;- renderPlot({
     req(sim_result())
-    plot_grid(sim_result())
+    randomwalk::plot_grid(sim_result())
   })
 
   # Paths plot using package function
   output$paths_plot &lt;- renderPlot({
     req(sim_result())
-    plot_walker_paths(sim_result())
+    randomwalk::plot_walker_paths(sim_result())
   })
 
   # Statistics
