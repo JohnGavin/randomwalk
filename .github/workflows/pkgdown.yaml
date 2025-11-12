@@ -80,6 +80,7 @@ jobs:
         run: |
           quarto render vignettes/dashboard.qmd
           cp vignettes/dashboard.html docs/articles/dashboard.html
+          cp -r vignettes/dashboard_files docs/articles/ 2>/dev/null || true
 
       - name: Deploy to GitHub pages
         if: github.event_name != 'pull_request'
