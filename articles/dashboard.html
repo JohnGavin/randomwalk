@@ -116,8 +116,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 #| standalone: true
 #| viewerHeight: 800
 
-# Install randomwalk package from GitHub with WebAssembly binaries
-webr::install("randomwalk", repos = "https://johngavin.r-universe.dev")
+# Mount filesystem image from GitHub release containing randomwalk package
+webr::mount(
+  mountpoint = "/randomwalk-lib",
+  source = "https://github.com/JohnGavin/randomwalk/releases/download/v0.1.0/library.data"
+)
+
+# Add mounted library to library paths
+.libPaths(c("/randomwalk-lib", .libPaths()))
 
 library(shiny)
 library(randomwalk)
