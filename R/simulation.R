@@ -133,6 +133,7 @@ run_simulation <- function(grid_size = 10,
   statistics <- list(
     black_pixels = count_black_pixels(grid),
     black_percentage = get_black_percentage(grid),
+    grid_size = grid_size,
     total_walkers = n_walkers,
     completed_walkers = sum(!sapply(walkers, function(w) w$active)),
     total_steps = sum(walker_steps),

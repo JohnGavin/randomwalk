@@ -8,7 +8,7 @@ library(tarchetypes)
 # Set target options
 tar_option_set(
   packages = c(
-    "randomwalk",
+    "devtools",  # For load_all() in Nix environment
     "dplyr",
     "ggplot2",
     "logger"
@@ -23,6 +23,7 @@ list(
   tar_target(
     name = sim_small,
     command = {
+      devtools::load_all()  # Load package in Nix environment
       logger::log_info("Running small simulation for telemetry")
       randomwalk::run_simulation(
         grid_size = 10,
@@ -37,6 +38,7 @@ list(
   tar_target(
     name = sim_medium,
     command = {
+      devtools::load_all()  # Load package in Nix environment
       logger::log_info("Running medium simulation for telemetry")
       randomwalk::run_simulation(
         grid_size = 20,
@@ -49,17 +51,21 @@ list(
   ),
 
   # Large simulation for high coverage (25%+)
+  # With 30x30 = 900 pixels, need ~225 black pixels for 25% coverage
+  # Each walker typically creates 1 black pixel before terminating (touches black neighbor)
+  # Therefore need 250-300 walkers to ensure >225 black pixels
   tar_target(
     name = sim_large,
     command = {
-      logger::log_info("Running large simulation for high coverage")
+      devtools::load_all()  # Load package in Nix environment
+      logger::log_info("Running large simulation for high coverage (target: 25%+ black pixels)")
       randomwalk::run_simulation(
         grid_size = 30,
-        n_walkers = 12,
+        n_walkers = 300,  # Need many walkers since each creates ~1 black pixel
         neighborhood = "8-hood",
         boundary = "wrap",
         workers = 0,
-        max_steps = 10000
+        max_steps = 10000  # Per-walker step limit (safety)
       )
     }
   ),
@@ -68,6 +74,7 @@ list(
   tar_target(
     name = perf_sync,
     command = {
+      devtools::load_all()  # Load package in Nix environment
       logger::log_info("Running sync performance test")
       start_time <- Sys.time()
       result <- randomwalk::run_simulation(
@@ -90,6 +97,7 @@ list(
   tar_target(
     name = perf_async,
     command = {
+      devtools::load_all()  # Load package in Nix environment
       logger::log_info("Running async performance test")
       start_time <- Sys.time()
       result <- randomwalk::run_simulation(
@@ -128,26 +136,35 @@ list(
   # plot_grid() now returns ggplot2 objects that can be properly stored and displayed
   tar_target(
     name = plot_small_grid,
-    command = randomwalk::plot_grid(
-      sim_small,
-      main = "Small Simulation (10×10)"
-    )
+    command = {
+      devtools::load_all()  # Load package in Nix environment
+      randomwalk::plot_grid(
+        sim_small,
+        main = "Small Simulation (10×10)"
+      )
+    }
   ),
 
   tar_target(
     name = plot_medium_grid,
-    command = randomwalk::plot_grid(
-      sim_medium,
-      main = "Medium Simulation (20×20)"
-    )
+    command = {
+      devtools::load_all()  # Load package in Nix environment
+      randomwalk::plot_grid(
+        sim_medium,
+        main = "Medium Simulation (20×20)"
+      )
+    }
   ),
 
   tar_target(
     name = plot_large_grid,
-    command = randomwalk::plot_grid(
-      sim_large,
-      main = "Large Simulation (30×30)"
-    )
+    command = {
+      devtools::load_all()  # Load package in Nix environment
+      randomwalk::plot_grid(
+        sim_large,
+        main = "Large Simulation (30×30)"
+      )
+    }
   ),
 
   # 4. Session info (Section 10.3 - Additional Statistics)

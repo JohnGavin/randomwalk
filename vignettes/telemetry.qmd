@@ -34,8 +34,53 @@ library(targets)
 library(dplyr)
 library(ggplot2)
 
+# Set targets store path and script path to project root
+# When pkgdown renders vignettes, it may change working directory
+if (!dir.exists("_targets")) {
+  # Try parent directory (when rendering from vignettes/)
+  if (dir.exists("../_targets")) {
+    targets::tar_config_set(store = "../_targets", script = "../_targets.R")
+  }
+}
+
 # Helper function to format simulation statistics as a nice table
 format_sim_stats <- function(stats) {
+  # Validate that n_walkers/total_walkers exists and is positive
+  n_walkers_value <- if (!is.null(stats$total_walkers) && is.numeric(stats$total_walkers)) {
+    stopifnot("Number of walkers must be positive" = stats$total_walkers > 0)
+    as.integer(stats$total_walkers)
+  } else if (!is.null(stats$n_walkers) && is.numeric(stats$n_walkers)) {
+    stopifnot("Number of walkers must be positive" = stats$n_walkers > 0)
+    as.integer(stats$n_walkers)
+  } else {
+    stop("Statistics must contain total_walkers or n_walkers field")
+  }
+
+  # Get the correct field names for black pixels
+  black_count <- if (!is.null(stats$black_pixels)) {
+    stats$black_pixels
+  } else if (!is.null(stats$final_black_count)) {
+    stats$final_black_count
+  } else {
+    NA
+  }
+
+  black_pct <- if (!is.null(stats$black_percentage)) {
+    stats$black_percentage
+  } else if (!is.null(stats$final_black_percentage)) {
+    stats$final_black_percentage
+  } else {
+    NA
+  }
+
+  elapsed <- if (!is.null(stats$elapsed_time_secs)) {
+    stats$elapsed_time_secs
+  } else if (!is.null(stats$elapsed_time)) {
+    stats$elapsed_time
+  } else {
+    NA
+  }
+
   data.frame(
     Metric = c(
       "Total Steps",
@@ -47,11 +92,11 @@ format_sim_stats <- function(stats) {
     ),
     Value = c(
       format(stats$total_steps, big.mark = ","),
-      format(stats$final_black_count, big.mark = ","),
-      sprintf("%.2f%%", stats$final_black_percentage),
+      format(black_count, big.mark = ","),
+      sprintf("%.2f%%", black_pct),
       sprintf("%d × %d", stats$grid_size, stats$grid_size),
-      stats$n_walkers,
-      sprintf("%.3f", stats$elapsed_time)
+      as.character(n_walkers_value),
+      sprintf("%.3f", elapsed)
     ),
     stringsAsFactors = FALSE
   )
@@ -115,19 +160,28 @@ tar_read(plot_medium_grid)
 
 ## Large Simulation (30×30 grid) - High Coverage
 
-This simulation is configured to achieve substantial grid coverage (target: 25%+):
+This simulation is configured to achieve substantial grid coverage (target: >25% black pixels).
+With a 30×30 grid (900 total pixels), this requires approximately 225+ black pixels.
+
+Since walkers terminate when they touch a black neighbor, each walker typically creates 1 black pixel before stopping.
+Therefore, to achieve >225 black pixels, the simulation uses 300 walkers.
 
 ```{r sim-large-stats}
 stats_large <- tar_read(stats_large)
+
+# Verify coverage meets target
+coverage_pct <- stats_large$black_percentage
+stopifnot("Large simulation must achieve >25% coverage" = coverage_pct > 25)
+
 format_sim_stats(stats_large) %>%
   kable(caption = "Large Simulation Statistics", align = c("l", "r"))
 ```
 
-```{r plot-large-grid, fig.cap="Large simulation: Extensive coverage with 12 walkers", fig.width=10, fig.height=10}
+```{r plot-large-grid, fig.cap="Large simulation: Extensive coverage with 300 walkers showing >25% black pixels", fig.width=10, fig.height=10}
 tar_read(plot_large_grid)
 ```
 
-The large simulation demonstrates the package's ability to handle more complex scenarios while maintaining reasonable computation times.
+The large simulation demonstrates the package's ability to handle many walkers simultaneously. The final grid state should show substantial black pixel coverage across the grid (>25%), with walkers terminating when they encounter black neighbors in the 8-connected neighborhood.
 
 # Performance Comparison: Async vs Sync
 
