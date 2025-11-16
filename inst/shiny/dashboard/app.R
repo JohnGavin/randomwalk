@@ -1,5 +1,17 @@
+# Mount WebAssembly file system from GitHub release
+# The wasm-release.yaml workflow builds library.data and attaches to releases
+webr::mount(
+  mountpoint = "/randomwalk-lib",
+  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
+)
+
+# Add mounted library to library paths
+.libPaths(c("/randomwalk-lib", .libPaths()))
+
 # Load required packages
 library(shiny)
+
+# Load randomwalk from mounted library
 library(randomwalk)
 
 # UI

@@ -34,10 +34,11 @@ Use the controls below to configure simulation parameters and visualize results 
 #| standalone: true
 #| viewerHeight: 900
 
-# Mount filesystem image from GitHub release containing randomwalk package
+# Mount WebAssembly file system from GitHub release
+# The wasm-release.yaml workflow builds library.data and attaches to releases
 webr::mount(
   mountpoint = "/randomwalk-lib",
-  source = "https://github.com/JohnGavin/randomwalk/releases/download/v0.1.0/library.data"
+  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
 )
 
 # Add mounted library to library paths
@@ -47,13 +48,11 @@ webr::mount(
 library(shiny)
 library(ggplot2)
 
-# Load randomwalk package after mount
-requireNamespace("randomwalk", quietly = TRUE)
+# Load randomwalk from mounted library
+library(randomwalk)
 
 # Define UI
 ui <- fluidPage(
-  theme = bslib::bs_theme(version = 5, bootswatch = "cosmo"),
-
   titlePanel("Random Walk Simulation Dashboard"),
 
   sidebarLayout(
