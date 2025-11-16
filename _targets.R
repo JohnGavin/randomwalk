@@ -204,5 +204,36 @@ list(
              remote = "unknown", status = "Git not available")
       })
     }
+  ),
+
+  # 9. Build dashboard vignette
+  tar_target(
+    name = dashboard_vignette,
+    command = {
+      devtools::load_all() # Load package in Nix environment
+      logger::log_info("Rendering dashboard vignette")
+      quarto::quarto_render("inst/qmd/dashboard.qmd", output_format = "html")
+      "inst/qmd/dashboard.html" # Return path to rendered HTML
+    },
+    format = "file"
   )
+
+  # 10. Telemetry summary for vignette
+  # Collects metadata from targets pipeline for reporting
+  tar_target(
+    name = telemetry_summary,
+    command = {
+      # Get targets meta information
+      meta <- targets::tar_meta()
+      
+      # Format time and size
+      meta %>%
+        dplyr::mutate(
+          time_formatted = sprintf("%.2f", seconds),
+          memory_mb = round(bytes / 1024^2, 2),
+          status = ifelse(is.na(error), "success", "error")
+        ) %>%
+        dplyr::select(name, time_formatted, memory_mb, status)
+    }
+  ),
 )

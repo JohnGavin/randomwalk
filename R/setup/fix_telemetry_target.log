@@ -1,0 +1,4 @@
+INFO [2025-11-16 14:46:33] Starting telemetry target fix
+INFO [2025-11-16 14:46:33] Read 220 lines from _targets.R
+INFO [2025-11-16 14:46:33] Added telemetry_summary target to _targets.R
+INFO [2025-11-16 14:46:33] Telemetry target fix completed successfully
