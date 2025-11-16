@@ -2,6 +2,10 @@
 title: "Interactive Dashboard"
 format:
   html:
+    code-fold: true
+    code-summary: "Show code"
+    toc: true
+    toc-depth: 3
     embed-resources: false
 filters:
   - shinylive
@@ -11,259 +15,645 @@ filters:
 
 This vignette provides a **fully interactive Shiny application** that runs directly in your browser using WebAssembly. No R installation or server required!
 
+## Overview
+
+The dashboard demonstrates the interactive capabilities of the `randomwalk` package through a browser-based Shiny application. The simulation runs entirely client-side using WebAssembly technology.
+
+### Key Features
+
+- **Parameter Configuration**: Adjust grid size, number of walkers, neighborhood type, and boundary behavior
+- **Real-time Visualization**: View grid state, walker paths, and statistics as tabs
+- **No Server Required**: Runs entirely in your browser via WebAssembly
+- **Package Integration**: Uses the actual `randomwalk` package functions
+
 ## Interactive Dashboard
 
 Use the controls below to configure simulation parameters and visualize results in real-time:
 
 ```{shinylive-r}
 #| standalone: true
-#| viewerHeight: 800
+#| viewerHeight: 900
 
-# Mount filesystem image from GitHub release containing randomwalk package
+# Mount WebAssembly file system from GitHub release
+# The wasm-release.yaml workflow builds library.data and attaches to releases
 webr::mount(
   mountpoint = "/randomwalk-lib",
-  source = "https://github.com/JohnGavin/randomwalk/releases/download/v0.1.0/library.data"
+  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
 )
 
 # Add mounted library to library paths
 .libPaths(c("/randomwalk-lib", .libPaths()))
 
-# Load only shiny at build time (randomwalk loaded at runtime)
+# Load required packages
 library(shiny)
+library(ggplot2)
 
-# Load randomwalk after mount (using requireNamespace to avoid build-time dependency check)
-requireNamespace("randomwalk", quietly = TRUE)
+# Load randomwalk from mounted library
+library(randomwalk)
 
-# UI
+# Define UI
 ui <- fluidPage(
   titlePanel("Random Walk Simulation Dashboard"),
 
   sidebarLayout(
+    # Sidebar with input controls
     sidebarPanel(
       width = 3,
+
       h4("Simulation Parameters"),
-
-      sliderInput("grid_size", "Grid Size:",
-                  min = 5, max = 50, value = 20, step = 1),
-
-      sliderInput("n_walkers", "Number of Walkers:",
-                  min = 1, max = 20, value = 5, step = 1),
-
-      selectInput("neighborhood", "Neighborhood Type:",
-                  choices = c("4-hood" = "4-hood", "8-hood" = "8-hood"),
-                  selected = "4-hood"),
-
-      selectInput("boundary", "Boundary Behavior:",
-                  choices = c("Terminate" = "terminate", "Wrap" = "wrap"),
-                  selected = "terminate"),
-
-      sliderInput("max_steps", "Max Steps:",
-                  min = 1000, max = 20000, value = 10000, step = 1000),
+      p("Configure the random walk simulation parameters below."),
 
       hr(),
 
-      actionButton("run_sim", "Run Simulation",
-                   class = "btn-primary", width = "100%"),
+      sliderInput(
+        "grid_size",
+        "Grid Size:",
+        min = 5,
+        max = 50,
+        value = 20,
+        step = 1,
+        ticks = FALSE
+      ),
+      helpText("Size of the square grid (5-50)"),
 
-      actionButton("reset", "Reset Parameters",
-                   class = "btn-secondary", width = "100%",
-                   style = "margin-top: 10px;")
+      sliderInput(
+        "n_walkers",
+        "Number of Walkers:",
+        min = 1,
+        max = 20,
+        value = 5,
+        step = 1,
+        ticks = FALSE
+      ),
+      helpText("Number of simultaneous random walkers (1-20)"),
+
+      selectInput(
+        "neighborhood",
+        "Neighborhood Type:",
+        choices = c(
+          "4-neighborhood (N, S, E, W)" = "4-hood",
+          "8-neighborhood (incl. diagonals)" = "8-hood"
+        ),
+        selected = "4-hood"
+      ),
+      helpText("Movement options: cardinal directions only or including diagonals"),
+
+      selectInput(
+        "boundary",
+        "Boundary Behavior:",
+        choices = c(
+          "Terminate at edge" = "terminate",
+          "Wrap around (torus)" = "wrap"
+        ),
+        selected = "terminate"
+      ),
+      helpText("What happens when walkers reach the grid edge"),
+
+      sliderInput(
+        "max_steps",
+        "Max Steps per Walker:",
+        min = 1000,
+        max = 20000,
+        value = 10000,
+        step = 1000,
+        ticks = FALSE
+      ),
+      helpText("Maximum steps before walker stops (1k-20k)"),
+
+      hr(),
+
+      actionButton(
+        "run_sim",
+        "Run Simulation",
+        class = "btn-primary btn-lg",
+        width = "100%",
+        icon = icon("play")
+      ),
+
+      br(), br(),
+
+      actionButton(
+        "reset",
+        "Reset to Defaults",
+        class = "btn-secondary",
+        width = "100%",
+        icon = icon("rotate-left")
+      ),
+
+      hr(),
+
+      # Status display
+      div(
+        id = "status_box",
+        style = "padding: 10px; border-radius: 5px; background-color: #f8f9fa;",
+        h5("Status", style = "margin-top: 0;"),
+        textOutput("status_text")
+      )
     ),
 
+    # Main panel with tabbed output
     mainPanel(
       width = 9,
 
       tabsetPanel(
         id = "output_tabs",
+        type = "pills",
 
-        tabPanel("Grid State",
-                 br(),
-                 plotOutput("grid_plot", height = "600px")),
+        # Grid State Tab
+        tabPanel(
+          "Grid State",
+          icon = icon("table-cells"),
+          br(),
+          h4("Final Grid Visualization"),
+          p("Black squares represent pixels visited by random walkers."),
+          plotOutput("grid_plot", height = "600px"),
+          hr(),
+          p(class = "text-muted", "Generated using plot_grid() from the randomwalk package")
+        ),
 
-        tabPanel("Walker Paths",
-                 br(),
-                 plotOutput("paths_plot", height = "600px")),
+        # Walker Paths Tab
+        tabPanel(
+          "Walker Paths",
+          icon = icon("route"),
+          br(),
+          h4("Individual Walker Trajectories"),
+          p("Green squares mark starting positions, red squares show where walkers terminated."),
+          plotOutput("paths_plot", height = "600px"),
+          hr(),
+          p(class = "text-muted", "Generated using plot_walker_paths() from the randomwalk package")
+        ),
 
-        tabPanel("Statistics",
-                 br(),
-                 h4("Simulation Statistics"),
-                 verbatimTextOutput("stats_text"),
-                 hr(),
-                 h4("Parameters Used"),
-                 tableOutput("params_table")),
+        # Statistics Tab
+        tabPanel(
+          "Statistics",
+          icon = icon("chart-line"),
+          br(),
+          h4("Simulation Metrics"),
+          tableOutput("stats_table"),
+          hr(),
+          h5("Coverage Analysis"),
+          p(textOutput("coverage_analysis")),
+          hr(),
+          h5("Walker Summary"),
+          tableOutput("walker_summary")
+        ),
 
-        tabPanel("Raw Data",
-                 br(),
-                 h4("Walker Data"),
-                 tableOutput("walker_table"),
-                 hr(),
-                 h4("Grid Information"),
-                 verbatimTextOutput("grid_info"))
+        # Raw Data Tab
+        tabPanel(
+          "Raw Data",
+          icon = icon("database"),
+          br(),
+          h4("Detailed Walker Information"),
+          p("Complete data for each walker in the simulation."),
+          dataTableOutput("walker_data"),
+          hr(),
+          h4("Grid Information"),
+          tableOutput("grid_info")
+        ),
+
+        # About Tab
+        tabPanel(
+          "About",
+          icon = icon("info-circle"),
+          br(),
+          h4("About This Dashboard"),
+          p("This interactive dashboard demonstrates the randomwalk package capabilities using Shinylive and WebAssembly."),
+
+          h5("How It Works"),
+          tags$ul(
+            tags$li("The dashboard runs entirely in your browser - no R server needed"),
+            tags$li("Uses WebAssembly to run R code client-side"),
+            tags$li("Loads the randomwalk package from R-Universe"),
+            tags$li("All simulations are computed on-demand in real-time")
+          ),
+
+          h5("Architecture"),
+          tags$ul(
+            tags$li(strong("Input Module:"), " Parameter controls with dynamic validation"),
+            tags$li(strong("Simulation Engine:"), " Core random walk logic from randomwalk package"),
+            tags$li(strong("Output Module:"), " Multiple visualization and data views")
+          ),
+
+          h5("References"),
+          tags$ul(
+            tags$li(tags$a(href = "https://github.com/JohnGavin/randomwalk", "randomwalk GitHub Repository")),
+            tags$li(tags$a(href = "https://posit-dev.github.io/r-shinylive/", "Shinylive Documentation")),
+            tags$li(tags$a(href = "https://johngavin.r-universe.dev", "R-Universe Package Repository"))
+          )
+        )
       )
     )
   )
 )
 
-# Server
+# Define server logic
 server <- function(input, output, session) {
 
-  # Update max walkers based on grid size
-  observe({
-    max_walkers <- floor(input$grid_size * input$grid_size * 0.3)
-    updateSliderInput(session, "n_walkers",
-                     max = max_walkers,
-                     value = min(input$n_walkers, max_walkers))
+  # Reactive value to store simulation result
+  sim_result <- reactiveVal(NULL)
+
+  # Reactive value for status messages
+  status_msg <- reactiveVal("Ready to run simulation")
+
+  # Run simulation when button clicked
+  observeEvent(input$run_sim, {
+    status_msg("Running simulation...")
+
+    tryCatch({
+      # Validate inputs
+      if (input$n_walkers > (0.6 * input$grid_size^2)) {
+        showNotification(
+          "Too many walkers for grid size. Maximum is 60% of grid cells.",
+          type = "warning",
+          duration = 5
+        )
+        status_msg("Error: Too many walkers for grid size")
+        return(NULL)
+      }
+
+      # Run the simulation using randomwalk package
+      result <- randomwalk::run_simulation(
+        grid_size = input$grid_size,
+        n_walkers = input$n_walkers,
+        neighborhood = input$neighborhood,
+        boundary = input$boundary,
+        max_steps = input$max_steps,
+        verbose = FALSE
+      )
+
+      # Store result
+      sim_result(result)
+
+      # Update status
+      status_msg(sprintf(
+        "Simulation complete! %d steps, %.1f%% coverage",
+        result$statistics$total_steps,
+        result$statistics$black_percentage
+      ))
+
+      # Show success notification
+      showNotification(
+        "Simulation completed successfully!",
+        type = "message",
+        duration = 3
+      )
+
+    }, error = function(e) {
+      status_msg(paste("Error:", e$message))
+      showNotification(
+        paste("Simulation failed:", e$message),
+        type = "error",
+        duration = 10
+      )
+    })
   })
 
-  # Reset button
+  # Reset parameters
   observeEvent(input$reset, {
     updateSliderInput(session, "grid_size", value = 20)
     updateSliderInput(session, "n_walkers", value = 5)
     updateSelectInput(session, "neighborhood", selected = "4-hood")
     updateSelectInput(session, "boundary", selected = "terminate")
     updateSliderInput(session, "max_steps", value = 10000)
+    status_msg("Parameters reset to defaults")
+
+    showNotification(
+      "Parameters reset to default values",
+      type = "message",
+      duration = 2
+    )
   })
 
-  # Run simulation using package function
-  sim_result <- eventReactive(input$run_sim, {
-    withProgress(message = 'Running simulation...', {
-      result <- randomwalk::run_simulation(
-        grid_size = input$grid_size,
-        n_walkers = input$n_walkers,
-        neighborhood = input$neighborhood,
-        boundary = input$boundary,
-        max_steps = input$max_steps
-      )
-      result
-    })
+  # Render status text
+  output$status_text <- renderText({
+    status_msg()
   })
 
-  # Grid plot using package function
+  # Render grid plot
   output$grid_plot <- renderPlot({
     req(sim_result())
     randomwalk::plot_grid(sim_result())
   })
 
-  # Paths plot using package function
+  # Render walker paths plot
   output$paths_plot <- renderPlot({
     req(sim_result())
     randomwalk::plot_walker_paths(sim_result())
   })
 
-  # Statistics
-  output$stats_text <- renderText({
+  # Render statistics table
+  output$stats_table <- renderTable({
     req(sim_result())
     stats <- sim_result()$statistics
-    paste(
-      sprintf("Black Pixels: %d (%.2f%%)",
-              stats$black_pixels, stats$black_percentage),
-      sprintf("Total Walkers: %d", stats$total_walkers),
-      sprintf("Completed Walkers: %d", stats$completed_walkers),
-      sprintf("Total Steps: %d", stats$total_steps),
-      sep = "\n"
-    )
-  })
 
-  # Parameters table
-  output$params_table <- renderTable({
-    req(sim_result())
-    result <- sim_result()
     data.frame(
-      Parameter = c("Grid Size", "Walkers", "Neighborhood", "Boundary", "Max Steps"),
+      Metric = c(
+        "Total Steps",
+        "Final Black Pixels",
+        "Final Black Percentage",
+        "Grid Size",
+        "Number of Walkers",
+        "Elapsed Time (sec)"
+      ),
       Value = c(
-        result$grid_size,
-        result$n_walkers,
-        result$neighborhood,
-        result$boundary,
-        input$max_steps
+        format(stats$total_steps, big.mark = ","),
+        format(stats$black_pixels, big.mark = ","),
+        sprintf("%.2f%%", stats$black_percentage),
+        sprintf("%d × %d", stats$grid_size, stats$grid_size),
+        stats$total_walkers,
+        sprintf("%.3f", stats$elapsed_time_secs)
       )
     )
-  })
+  }, striped = TRUE, hover = TRUE, bordered = TRUE)
 
-  # Walker table
-  output$walker_table <- renderTable({
+  # Coverage analysis text
+  output$coverage_analysis <- renderText({
     req(sim_result())
-    result <- sim_result()
+    stats <- sim_result()$statistics
 
-    walker_data <- data.frame(
-      Walker = seq_along(result$walker_paths),
-      Steps = sapply(result$walker_paths, function(p) nrow(p)),
-      Final_X = sapply(result$walker_paths, function(p) p[nrow(p), 1]),
-      Final_Y = sapply(result$walker_paths, function(p) p[nrow(p), 2])
-    )
-    walker_data
-  })
+    total_cells <- stats$grid_size^2
+    black_cells <- stats$black_pixels
+    coverage_pct <- stats$black_percentage
 
-  # Grid info
-  output$grid_info <- renderText({
-    req(sim_result())
-    result <- sim_result()
-    stats <- result$statistics
-
-    paste(
-      sprintf("Grid dimensions: %d x %d", result$grid_size, result$grid_size),
-      sprintf("Total pixels: %d", result$grid_size * result$grid_size),
-      sprintf("Black pixels: %d (%.2f%%)",
-              stats$black_pixels, stats$black_percentage),
-      sprintf("White pixels: %d",
-              result$grid_size * result$grid_size - stats$black_pixels),
-      sep = "\n"
+    sprintf(
+      "The simulation covered %d out of %d grid cells (%.2f%%). On average, %.1f steps were taken per black pixel created.",
+      black_cells,
+      total_cells,
+      coverage_pct,
+      stats$total_steps / black_cells
     )
   })
+
+  # Walker summary table
+  output$walker_summary <- renderTable({
+    req(sim_result())
+    walkers <- sim_result()$walkers
+
+    data.frame(
+      Statistic = c(
+        "Total Walkers",
+        "Average Steps",
+        "Min Steps",
+        "Max Steps",
+        "Terminated Walkers",
+        "Active Walkers"
+      ),
+      Value = c(
+        nrow(walkers),
+        round(mean(walkers$steps), 1),
+        min(walkers$steps),
+        max(walkers$steps),
+        sum(walkers$terminated),
+        sum(!walkers$terminated)
+      )
+    )
+  }, striped = TRUE, hover = TRUE, bordered = TRUE)
+
+  # Walker data table
+  output$walker_data <- renderDataTable({
+    req(sim_result())
+    walkers <- sim_result()$walkers
+
+    # Format for display
+    walkers_display <- data.frame(
+      Walker = walkers$walker_id,
+      Steps = walkers$steps,
+      Start_X = walkers$start_x,
+      Start_Y = walkers$start_y,
+      End_X = walkers$end_x,
+      End_Y = walkers$end_y,
+      Terminated = ifelse(walkers$terminated, "Yes", "No")
+    )
+
+    walkers_display
+  }, options = list(
+    pageLength = 10,
+    scrollX = TRUE,
+    dom = 'tip'
+  ))
+
+  # Grid info table
+  output$grid_info <- renderTable({
+    req(sim_result())
+    stats <- sim_result()$statistics
+
+    data.frame(
+      Property = c(
+        "Grid Dimensions",
+        "Total Cells",
+        "Black Cells",
+        "White Cells",
+        "Neighborhood Type",
+        "Boundary Behavior"
+      ),
+      Value = c(
+        sprintf("%d × %d", stats$grid_size, stats$grid_size),
+        format(stats$grid_size^2, big.mark = ","),
+        format(stats$black_pixels, big.mark = ","),
+        format(stats$grid_size^2 - stats$black_pixels, big.mark = ","),
+        input$neighborhood,
+        input$boundary
+      )
+    )
+  }, striped = TRUE, hover = TRUE, bordered = TRUE)
 }
 
+# Run the application
 shinyApp(ui = ui, server = server)
 ```
 
-## How to Use
+## Architecture
 
-1. **Adjust Parameters** in the left sidebar
-2. **Click "Run Simulation"** to execute
-3. **Explore Results** across four tabs:
-   - **Grid State**: Final black pixel pattern
-   - **Walker Paths**: Individual walker trajectories
-   - **Statistics**: Quantitative metrics
-   - **Raw Data**: Detailed walker and grid information
+The dashboard uses a modular architecture that separates concerns:
 
-## Features
+### Input Controls
 
-- **Runs entirely in your browser** - No R installation needed
-- **Uses actual package functions** - No code duplication
-- **Interactive controls** - Sliders, dropdowns, and buttons
-- **Real-time visualization** - See results immediately
-- **Multiple output views** - Four tabs with different perspectives
-- **WebAssembly powered** - Fast performance using shinylive
+- **Grid Size**: 5-50 cells per side
+- **Number of Walkers**: 1-20 simultaneous walkers (max 60% of grid cells)
+- **Neighborhood Type**: 4-neighborhood (cardinal) or 8-neighborhood (including diagonals)
+- **Boundary Behavior**: Terminate at edges or wrap around (torus topology)
+- **Max Steps**: 1,000-20,000 steps per walker
+
+### Simulation Engine
+
+The core simulation uses the `randomwalk::run_simulation()` function, which:
+
+1. Initializes the grid and walkers
+2. Moves each walker one step at a time in round-robin fashion
+3. Records pixel visits and walker statistics
+4. Returns comprehensive results including final grid state and walker paths
+
+### Output Views
+
+#### Grid State
+Visualizes the final state of the grid showing all visited pixels (black) using `plot_grid()`.
+
+#### Walker Paths
+Shows individual trajectories with starting positions (green) and termination points (red) using `plot_walker_paths()`.
+
+#### Statistics
+Displays detailed metrics including:
+- Total steps taken
+- Grid coverage (absolute and percentage)
+- Timing information
+- Walker-level summaries
+
+#### Raw Data
+Provides complete walker-level information and grid properties for detailed analysis.
+
+## Usage Examples
+
+### Basic Exploration
+
+1. Start with default parameters (20×20 grid, 5 walkers)
+2. Click "Run Simulation"
+3. Explore different tabs to see results
+
+### Comparing Neighborhoods
+
+1. Run simulation with 4-neighborhood
+2. Note the coverage percentage
+3. Reset and change to 8-neighborhood
+4. Compare how diagonal movement affects patterns
+
+### Boundary Effects
+
+1. Try "terminate" boundary with small grid (10×10)
+2. Observe walkers stopping at edges
+3. Switch to "wrap" boundary
+4. See how torus topology affects exploration
+
+### Coverage Analysis
+
+1. Use large grid (40×40) with few walkers (3)
+2. Note low coverage percentage
+3. Increase walkers to 15
+4. Observe improved coverage
+
+## Integration with Targets Pipeline
+
+For batch processing or reproducible research, the simulation functions can be integrated with the `targets` package:
+
+```r
+# _targets.R
+library(targets)
+library(randomwalk)
+
+tar_plan(
+  # Define parameter sets
+  tar_target(
+    param_grid,
+    expand.grid(
+      grid_size = c(20, 30),
+      n_walkers = c(5, 10),
+      neighborhood = c("4-hood", "8-hood")
+    )
+  ),
+
+  # Run simulations
+  tar_target(
+    sim_results,
+    purrr::pmap(param_grid, ~run_simulation(
+      grid_size = ..1,
+      n_walkers = ..2,
+      neighborhood = ..3
+    )),
+    pattern = map(param_grid)
+  ),
+
+  # Generate plots
+  tar_target(
+    plots,
+    purrr::map(sim_results, plot_grid),
+    pattern = map(sim_results)
+  )
+)
+```
 
 ## Technical Details
 
-This dashboard uses [Shinylive](https://posit-dev.github.io/r-shinylive/) to run R and Shiny entirely in your web browser using WebAssembly. The randomwalk package is installed from GitHub with WebAssembly binaries built automatically on each release.
+### WebAssembly Deployment
 
-### Package Functions Used
+The dashboard runs through this architecture:
 
-- `run_simulation()` - Core simulation engine
-- `plot_grid()` - Visualizes final grid state
-- `plot_walker_paths()` - Shows walker trajectories with start/end markers
+1. **Package Source**: GitHub repository (`JohnGavin/randomwalk`)
+2. **WebAssembly Compilation**: R-Universe automatically compiles to WebAssembly
+3. **Binary Distribution**: Hosted at `johngavin.r-universe.dev`
+4. **Dashboard HTML**: Built by pkgdown and hosted on GitHub Pages
+5. **Client-Side Execution**: Browser loads HTML, fetches WebAssembly binaries, runs locally
 
-### Installation for Local Use
+No R server is required - everything runs in your browser!
 
-To run the full-featured version locally with additional capabilities:
+### Performance Considerations
+
+- Larger grids (>40×40) may take longer to render
+- More walkers increase computation time linearly
+- Higher max_steps increase computation time proportionally
+- WebAssembly performance is typically 2-3× slower than native R
+
+### Browser Compatibility
+
+The dashboard requires a modern browser with WebAssembly support:
+- Chrome/Edge 57+
+- Firefox 52+
+- Safari 11+
+
+## Extending the Dashboard
+
+The modular architecture makes it easy to extend:
+
+### Adding New Parameters
+
+To add a new simulation parameter:
+
+1. Add input control in sidebar
+2. Pass to `run_simulation()` call
+3. Update documentation
+
+### Adding New Visualizations
+
+To add new output tabs:
+
+1. Create new `tabPanel()` in UI
+2. Add corresponding `render*()` function in server
+3. Use simulation result data to generate visualization
+
+### Custom Analysis
+
+The simulation results include all necessary data for custom analysis:
 
 ```r
-# Install from GitHub
-# install.packages("pak")
-pak::pak("JohnGavin/randomwalk")
+# Access in server function
+observeEvent(input$run_sim, {
+  result <- randomwalk::run_simulation(...)
 
-# Or use remotes
-# install.packages("remotes")
-remotes::install_github("JohnGavin/randomwalk")
+  # Custom analysis
+  walkers <- result$walkers
+  grid <- result$final_grid
+  stats <- result$statistics
 
-# Launch the dashboard
-library(randomwalk)
-run_dashboard()
+  # Your custom code here
+})
 ```
 
-The local version includes:
-- Parallel processing with multiple workers
-- Database integration for large-scale simulations
-- targets pipeline integration
-- Extended parameter ranges
+## See Also
+
+- `vignette("telemetry")` - Pipeline statistics and performance metrics
+- `?run_simulation` - Core simulation function documentation
+- `?plot_grid` - Grid visualization function
+- `?plot_walker_paths` - Path visualization function
+- [randomwalk GitHub](https://github.com/JohnGavin/randomwalk) - Source code and development
+- [R-Universe](https://johngavin.r-universe.dev) - Package binaries and WebAssembly builds
+
+## Summary
+
+This dashboard provides:
+
+- **Accessibility**: No coding required for basic exploration
+- **Interactivity**: Real-time parameter adjustment and visualization
+- **Education**: Visual understanding of random walk behavior
+- **Research**: Foundation for parameter exploration and hypothesis testing
+- **Modularity**: Clean separation between GUI and simulation logic
+- **Portability**: Runs entirely in browser with no server requirements
+
+The simulation engine remains completely independent from the GUI, allowing the same functions to be used in scripts, pipelines, and other applications.
