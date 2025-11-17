@@ -77,6 +77,22 @@ jobs:
           # )
         shell: Rscript {0}
 
+      - name: Download WebAssembly library from latest release
+        if: github.event_name != 'pull_request'
+        run: |
+          # Create directory for wasm files
+          mkdir -p docs/wasm
+
+          # Download library.data and library.js.metadata from latest release
+          # These files will be served from the same origin as the dashboard
+          # avoiding CORS issues
+          gh release download --repo JohnGavin/randomwalk \
+            --pattern "library.data" \
+            --pattern "library.js.metadata" \
+            --dir docs/wasm
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Export dashboard with R shinylive
         run: |
           # Export Shiny app to Shinylive format using R package

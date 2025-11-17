@@ -1,8 +1,9 @@
-# Mount WebAssembly file system from GitHub release
-# The wasm-release.yaml workflow builds library.data and attaches to releases
+# Mount WebAssembly file system from same-origin (avoids CORS issues)
+# The pkgdown workflow downloads library.data from releases to docs/wasm/
+# This allows the dashboard to load it from the same domain (johngavin.github.io)
 webr::mount(
   mountpoint = "/randomwalk-lib",
-  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
+  source = "/randomwalk/wasm/library.data"
 )
 
 # Add mounted library to library paths
