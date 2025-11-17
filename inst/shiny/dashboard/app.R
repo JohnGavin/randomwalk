@@ -9,6 +9,9 @@ webr::mount(
 # Add mounted library to library paths
 .libPaths(c("/randomwalk-lib", .libPaths()))
 
+# Install munsell from webR repository (needed by ggplot2 for plots)
+webr::install("munsell")
+
 # Load required packages
 library(shiny)
 
