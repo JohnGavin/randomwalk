@@ -9,10 +9,12 @@ webr::mount(
 # Add mounted library to library paths
 .libPaths(c("/randomwalk-lib", .libPaths()))
 
-# Install ggplot2 and all its dependencies from webR repository
+# Install ggplot2 dependencies explicitly from webR repository
 # Use /tmp for installation since it's writable
-# This ensures all plotting dependencies (munsell, tibble, scales, etc.) are available
-webr::install("ggplot2", lib = "/tmp/webr-libs")
+# Installing dependencies first ensures they're available when ggplot2 loads
+webr::install(c("munsell", "colorspace", "farver", "labeling", "viridisLite",
+                 "RColorBrewer", "scales", "tibble", "ggplot2"),
+               lib = "/tmp/webr-libs")
 
 # Add the tmp library to the path
 .libPaths(c("/tmp/webr-libs", .libPaths()))
