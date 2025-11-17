@@ -18,9 +18,9 @@ Depends:
     R (>= 4.1.0)
 Imports:
     logger,
-    ggplot2,
-    munsell
+    ggplot2
 Suggests:
+    munsell,
     dplyr,
     duckdb,
     nanonext,
