@@ -31,7 +31,7 @@ devtools::install()
 
 Try the simulation directly in your browser (no installation required):
 
-**[Launch Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard.html)**
+**[Launch Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard/)**
 
 The dashboard runs entirely in your browser using WebAssembly via [Shinylive](https://posit-dev.github.io/r-shinylive/). Features include:
 

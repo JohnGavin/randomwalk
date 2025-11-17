@@ -80,17 +80,15 @@ jobs:
       - name: Export dashboard with R shinylive
         run: |
           # Export Shiny app to Shinylive format using R package
+          # This creates docs/articles/dashboard/ with all shinylive assets
           shinylive::export(
             appdir = "inst/shiny/dashboard",
             destdir = "docs/articles/dashboard"
           )
 
-          # Copy the exported index.html to dashboard.html for consistent naming
-          file.copy(
-            "docs/articles/dashboard/index.html",
-            "docs/articles/dashboard.html",
-            overwrite = TRUE
-          )
+          # Don't copy index.html - keep dashboard in its own folder
+          # Users will access it at /articles/dashboard/ not /articles/dashboard.html
+          # This ensures relative paths to ./shinylive/ work correctly
         shell: Rscript {0}
 
       - name: Deploy to GitHub pages
