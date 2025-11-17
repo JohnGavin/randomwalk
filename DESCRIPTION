@@ -1,7 +1,7 @@
 Package: randomwalk
 Type: Package
 Title: Asynchronous Pixel Walking Simulation with Parallel Processing
-Version: 0.1.0
+Version: 1.0.0
 Authors@R:
     person("John", "Gavin", , "john@example.com", role = c("aut", "cre"))
 Description: Implements parallel random walk simulations that create fractal
