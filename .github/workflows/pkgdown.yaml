@@ -95,6 +95,11 @@ jobs:
 
       - name: Export dashboard with R shinylive
         run: |
+          # Clean destination directory to avoid cached/stale files
+          if (dir.exists("docs/articles/dashboard")) {
+            unlink("docs/articles/dashboard", recursive = TRUE)
+          }
+
           # Export Shiny app to Shinylive format using R package
           # This creates docs/articles/dashboard/ with all shinylive assets
           shinylive::export(
