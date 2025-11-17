@@ -1,0 +1,18 @@
+INFO [2025-11-16 14:41:34] Starting PR creation process
+INFO [2025-11-16 14:41:34] Working directory: /Users/johngavin/docs_gh/claude_rix/random_walk
+INFO [2025-11-16 14:41:34] Current branch: fix/shinylive-dashboard
+INFO [2025-11-16 14:41:34] Upstream: origin/fix/shinylive-dashboard
+INFO [2025-11-16 14:41:34] Git status - Modified files: 9
+INFO [2025-11-16 14:41:34] Git status - Untracked files: 14
+INFO [2025-11-16 14:41:34] PR body loaded from R/setup/pr_body.md
+INFO [2025-11-16 14:41:34] PR Title: Move vignettes to standard location and update Shinylive dashboard
+INFO [2025-11-16 14:41:34] Base branch: main
+INFO [2025-11-16 14:41:34] Head branch: fix/shinylive-dashboard
+INFO [2025-11-16 14:41:34] Branch fix/shinylive-dashboard already exists on remote
+INFO [2025-11-16 14:41:34] Remote URL: https://github.com/JohnGavin/randomwalk.git
+INFO [2025-11-16 14:41:34] Repository: JohnGavin/randomwalk
+INFO [2025-11-16 14:41:34] Checking for existing PRs...
+INFO [2025-11-16 14:41:35] Creating pull request...
+INFO [2025-11-16 14:41:36] ✅ Successfully created PR #19
+INFO [2025-11-16 14:41:36] PR URL: https://github.com/JohnGavin/randomwalk/pull/19
+ERROR [2025-11-16 14:41:36] Failed to create PR: could not find function "%+%"

@@ -1,0 +1,36 @@
+INFO [2025-11-16 14:42:42] Starting PR #19 monitoring
+INFO [2025-11-16 14:42:42] Fetching PR #19 status...
+INFO [2025-11-16 14:42:43] Fetching check runs...
+INFO [2025-11-16 14:42:43] pkgdown: in_progress
+INFO [2025-11-16 14:42:43] nix builder for Ubuntu: in_progress
+INFO [2025-11-16 14:42:43] devtools_test (ubuntu-latest): in_progress
+INFO [2025-11-16 14:42:43] Checks in progress
+INFO [2025-11-16 14:42:43] Monitoring complete
+INFO [2025-11-16 14:42:43] Status saved to R/setup/pr_19_status.rds
+INFO [2025-11-16 14:45:37] Starting PR #19 monitoring
+INFO [2025-11-16 14:45:37] Fetching PR #19 status...
+INFO [2025-11-16 14:45:38] Fetching check runs...
+INFO [2025-11-16 14:45:38] pkgdown: completed (failure)
+INFO [2025-11-16 14:45:38] nix builder for Ubuntu: completed (success)
+INFO [2025-11-16 14:45:38] devtools_test (ubuntu-latest): completed (success)
+WARN [2025-11-16 14:45:38] Some checks failed
+INFO [2025-11-16 14:45:38] Monitoring complete
+INFO [2025-11-16 14:45:38] Status saved to R/setup/pr_19_status.rds
+INFO [2025-11-16 14:47:48] Starting PR #19 monitoring
+INFO [2025-11-16 14:47:48] Fetching PR #19 status...
+INFO [2025-11-16 14:47:48] Fetching check runs...
+INFO [2025-11-16 14:47:48] pkgdown: in_progress
+INFO [2025-11-16 14:47:48] nix builder for Ubuntu: in_progress
+INFO [2025-11-16 14:47:48] devtools_test (ubuntu-latest): in_progress
+INFO [2025-11-16 14:47:48] Checks in progress
+INFO [2025-11-16 14:47:48] Monitoring complete
+INFO [2025-11-16 14:47:48] Status saved to R/setup/pr_19_status.rds
+INFO [2025-11-16 14:50:20] Starting PR #19 monitoring
+INFO [2025-11-16 14:50:20] Fetching PR #19 status...
+INFO [2025-11-16 14:50:20] Fetching check runs...
+INFO [2025-11-16 14:50:21] pkgdown: completed (failure)
+INFO [2025-11-16 14:50:21] nix builder for Ubuntu: completed (success)
+INFO [2025-11-16 14:50:21] devtools_test (ubuntu-latest): completed (success)
+WARN [2025-11-16 14:50:21] Some checks failed
+INFO [2025-11-16 14:50:21] Monitoring complete
+INFO [2025-11-16 14:50:21] Status saved to R/setup/pr_19_status.rds

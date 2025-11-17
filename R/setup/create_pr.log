@@ -1,0 +1,259 @@
+2025-11-16 14:20:39: PR Creation Log for Vignette Reorganization
+2025-11-16 14:20:39: ================================================
+2025-11-16 14:20:39: 
+2025-11-16 14:20:39: Repository: JohnGavin/randomwalk
+2025-11-16 14:20:39: Branch: fix/shinylive-dashboard
+2025-11-16 14:20:39: Commit: 3f8a5cf - Move vignettes to standard R package location and update dashboard
+2025-11-16 14:20:39: Author: John Gavin <john.b.gavin@gmail.com>
+2025-11-16 14:20:39: Date: 2025-11-16 14:08:37 +0000
+2025-11-16 14:20:39: 
+2025-11-16 14:20:39: PR Title: Move vignettes to standard location and update Shinylive dashboard
+2025-11-16 14:20:39: PR Body: Saved to R/setup/pr_body.md
+2025-11-16 14:20:39: 
+2025-11-16 14:20:39: Files changed in commit:
+ .gitignore                                         |     2 +-
+ DESCRIPTION                                        |     2 +-
+ R-UNIVERSE-SETUP.md                                |   110 -
+ R/simulation.R                                     |     6 +-
+ _quarto.yml                                        |     9 +
+ _targets.R                                         |    12 +
+ default.R                                          |     4 +-
+ default.nix                                        |     6 +-
+ inst/qmd/dashboard.qmd                             |   363 -
+ man/run_simulation.Rd                              |     6 +-
+ prompt_gui.md                                      |    16 +-
+ random_walk.md                                     |   119 -
+ vignettes/dashboard.html                           |  1217 +
+ vignettes/dashboard.qmd                            |   687 +-
+ ...tstrap-b232414f0569882df4359abfb7cfba3f.min.css |    12 +
+ .../libs/bootstrap/bootstrap-icons.css             |  2078 +
+ .../libs/bootstrap/bootstrap-icons.woff            |   Bin 0 -> 176200 bytes
+ .../libs/bootstrap/bootstrap.min.js                |     7 +
+ .../libs/clipboard/clipboard.min.js                |     7 +
+ .../quarto-contrib/shinylive-0.9.1/shinylive-sw.js |  2375 ++
+ .../shinylive-0.9.1/shinylive/Editor.css           |   498 +
+ .../shinylive-0.9.1/shinylive/Editor.js            | 41470 +++++++++++++++++++
+ .../SourceSansPro-Regular.otf-PVQ5ZP77.woff2       |   Bin 0 -> 102552 bytes
+ .../shinylive-0.9.1/shinylive/browser-OYYBATHK.js  |    17 +
+ .../shinylive-0.9.1/shinylive/browser-YJT5PK6V.js  |     3 +
+ .../shinylive-0.9.1/shinylive/chunk-O5P2LFOG.js    |    72 +
+ .../shinylive-0.9.1/shinylive/chunk-PHWSSKUM.js    |  3578 ++
+ .../shinylive-0.9.1/shinylive/load-shinylive-sw.js |    43 +
+ .../shinylive-0.9.1/shinylive/lzstring-worker.js   |   510 +
+ .../shinylive-0.9.1/shinylive/pyodide-worker.js    |  3025 ++
+ .../shinylive-0.9.1/shinylive/run-python-blocks.js |  2827 ++
+ .../shinylive-0.9.1/shinylive/shinylive.css        |  1242 +
+ .../shinylive-0.9.1/shinylive/shinylive.js         | 36146 ++++++++++++++++
+ .../shinylive-0.9.1/shinylive/style-resets.css     |    71 +
+ .../shinylive-0.9.1/shinylive/webr/R.bin.js        |  2061 +
+ .../shinylive-0.9.1/shinylive/webr/R.bin.js.bak    |  2061 +
+ .../shinylive-0.9.1/shinylive/webr/R.bin.wasm      |   Bin 0 -> 11329715 bytes
+ .../shinylive-0.9.1/shinylive/webr/esbuild.d.ts    |     1 +
+ .../shinylive-0.9.1/shinylive/webr/libRblas.so     |   Bin 0 -> 178577 bytes
+ .../shinylive-0.9.1/shinylive/webr/libRlapack.so   |   Bin 0 -> 1715259 bytes
+ .../shinylive-0.9.1/shinylive/webr/library.data.gz |   Bin 0 -> 13382502 bytes
+ .../shinylive/webr/library.js.metadata             |     1 +
+ .../packages/RColorBrewer/RColorBrewer_1.1-3.tgz   |   Bin 0 -> 25384 bytes
+ .../shinylive/webr/packages/S7/S7_0.2.0.tgz        |   Bin 0 -> 216000 bytes
+ .../webr/packages/farver/farver_2.1.2.tgz          |   Bin 0 -> 1311148 bytes
+ .../webr/packages/ggplot2/ggplot2_3.5.2.tgz        |   Bin 0 -> 4188673 bytes
+ .../webr/packages/gtable/gtable_0.3.6.tgz          |   Bin 0 -> 177854 bytes
+ .../webr/packages/isoband/isoband_0.2.7.tgz        |   Bin 0 -> 1611696 bytes
+ .../webr/packages/labeling/labeling_0.4.3.tgz      |   Bin 0 -> 40461 bytes
+ .../shinylive/webr/packages/metadata.rds           |   Bin 0 -> 773 bytes
+ .../webr/packages/scales/scales_1.3.0.tgz          |   Bin 0 -> 512986 bytes
+ .../shinylive/webr/packages/vctrs/vctrs_0.6.5.tgz  |   Bin 0 -> 928374 bytes
+ .../packages/viridisLite/viridisLite_0.4.2.tgz     |   Bin 0 -> 1293388 bytes
+ .../shinylive-0.9.1/shinylive/webr/repl/App.d.ts   |    19 +
+ .../shinylive/webr/repl/components/Editor.d.ts     |    49 +
+ .../shinylive/webr/repl/components/Files.d.ts      |    19 +
+ .../shinylive/webr/repl/components/Plot.d.ts       |     9 +
+ .../shinylive/webr/repl/components/Terminal.d.ts   |    10 +
+ .../shinylive/webr/repl/components/utils.d.ts      |    11 +
+ .../shinylive/webr/tests/packages/webr.test.d.ts   |     1 +
+ .../tests/webR/chan/channel-postmessage.test.d.ts  |     1 +
+ .../shinylive/webr/tests/webR/console.test.d.ts    |     1 +
+ .../shinylive/webr/tests/webR/error.test.d.ts      |     1 +
+ .../shinylive/webr/tests/webR/mount.test.d.ts      |     1 +
+ .../shinylive/webr/tests/webR/proxy.test.d.ts      |     1 +
+ .../shinylive/webr/tests/webR/robj.test.d.ts       |     1 +
+ .../shinylive/webr/tests/webR/utils.test.d.ts      |     1 +
+ .../shinylive/webr/tests/webR/webr-main.test.d.ts  |     1 +
+ .../shinylive/webr/tests/webR/webr-r.test.d.ts     |     1 +
+ .../webr/tests/webR/webr-worker.test.d.ts          |     1 +
+ .../shinylive/webr/vfs/etc/fonts/fonts.conf        |    42 +
+ .../shinylive/webr/vfs/usr/lib/R/doc.data.gz       |   Bin 0 -> 3717112 bytes
+ .../shinylive/webr/vfs/usr/lib/R/doc.js.metadata   |     1 +
+ .../webr/vfs/usr/lib/R/library/base/demo.data.gz   |   Bin 0 -> 4463 bytes
+ .../vfs/usr/lib/R/library/base/demo.js.metadata    |     1 +
+ .../webr/vfs/usr/lib/R/library/base/help.data.gz   |   Bin 0 -> 2537101 bytes
+ .../vfs/usr/lib/R/library/base/help.js.metadata    |     1 +
+ .../webr/vfs/usr/lib/R/library/base/html.data.gz   |   Bin 0 -> 20691 bytes
+ .../vfs/usr/lib/R/library/base/html.js.metadata    |     1 +
+ .../vfs/usr/lib/R/library/compiler/help.data.gz    |   Bin 0 -> 10157 bytes
+ .../usr/lib/R/library/compiler/help.js.metadata    |     1 +
+ .../vfs/usr/lib/R/library/compiler/html.data.gz    |   Bin 0 -> 1096 bytes
+ .../usr/lib/R/library/compiler/html.js.metadata    |     1 +
+ .../vfs/usr/lib/R/library/compiler/tests.data.gz   |   Bin 0 -> 5512 bytes
+ .../usr/lib/R/library/compiler/tests.js.metadata   |     1 +
+ .../vfs/usr/lib/R/library/datasets/help.data.gz    |   Bin 0 -> 229085 bytes
+ .../usr/lib/R/library/datasets/help.js.metadata    |     1 +
+ .../vfs/usr/lib/R/library/datasets/html.data.gz    |   Bin 0 -> 4212 bytes
+ .../usr/lib/R/library/datasets/html.js.metadata    |     1 +
+ .../vfs/usr/lib/R/library/grDevices/afm.data.gz    |   Bin 0 -> 953823 bytes
+ .../usr/lib/R/library/grDevices/afm.js.metadata    |     1 +
+ .../vfs/usr/lib/R/library/grDevices/demo.data.gz   |   Bin 0 -> 2513 bytes
+ .../usr/lib/R/library/grDevices/demo.js.metadata   |     1 +
+ .../vfs/usr/lib/R/library/grDevices/enc.data.gz    |   Bin 0 -> 4263 bytes
+ .../usr/lib/R/library/grDevices/enc.js.metadata    |     1 +
+ .../vfs/usr/lib/R/library/grDevices/fonts.data.gz  |   Bin 0 -> 273155 bytes
+ .../usr/lib/R/library/grDevices/fonts.js.metadata  |     1 +
+ .../vfs/usr/lib/R/library/grDevices/help.data.gz   |   Bin 0 -> 444721 bytes
+ .../usr/lib/R/library/grDevices/help.js.metadata   |     1 +
+ .../vfs/usr/lib/R/library/grDevices/html.data.gz   |   Bin 0 -> 4050 bytes
+ .../usr/lib/R/library/grDevices/html.js.metadata   |     1 +
+ .../vfs/usr/lib/R/library/grDevices/libs.data.gz   |   Bin 0 -> 1625426 bytes
+ .../usr/lib/R/library/grDevices/libs.js.metadata   |     1 +
+ .../vfs/usr/lib/R/library/grDevices/tests.data.gz  |   Bin 0 -> 73187 bytes
+ .../usr/lib/R/library/grDevices/tests.js.metadata  |     1 +
+ .../vfs/usr/lib/R/library/graphics/demo.data.gz    |   Bin 0 -> 13103 bytes
+ .../usr/lib/R/library/graphics/demo.js.metadata    |     1 +
+ .../vfs/usr/lib/R/library/graphics/help.data.gz    |   Bin 0 -> 543527 bytes
+ .../usr/lib/R/library/graphics/help.js.metadata    |     1 +
+ .../vfs/usr/lib/R/library/graphics/html.data.gz    |   Bin 0 -> 2848 bytes
+ .../usr/lib/R/library/graphics/html.js.metadata    |     1 +
+ .../webr/vfs/usr/lib/R/library/grid/doc.data.gz    |   Bin 0 -> 647443 bytes
+ .../vfs/usr/lib/R/library/grid/doc.js.metadata     |     1 +
+ .../webr/vfs/usr/lib/R/library/grid/help.data.gz   |   Bin 0 -> 340141 bytes
+ .../vfs/usr/lib/R/library/grid/help.js.metadata    |     1 +
+ .../webr/vfs/usr/lib/R/library/grid/html.data.gz   |   Bin 0 -> 4779 bytes
+ .../vfs/usr/lib/R/library/grid/html.js.metadata    |     1 +
+ .../webr/vfs/usr/lib/R/library/grid/tests.data.gz  |   Bin 0 -> 26830 bytes
+ .../vfs/usr/lib/R/library/grid/tests.js.metadata   |     1 +
+ .../vfs/usr/lib/R/library/methods/help.data.gz     |   Bin 0 -> 554045 bytes
+ .../vfs/usr/lib/R/library/methods/help.js.metadata |     1 +
+ .../vfs/usr/lib/R/library/methods/html.data.gz     |   Bin 0 -> 5158 bytes
+ .../vfs/usr/lib/R/library/methods/html.js.metadata |     1 +
+ .../vfs/usr/lib/R/library/methods/tests.data.gz    |   Bin 0 -> 10233 bytes
+ .../usr/lib/R/library/methods/tests.js.metadata    |     1 +
+ .../webr/vfs/usr/lib/R/library/parallel.data.gz    |   Bin 0 -> 281851 bytes
+ .../vfs/usr/lib/R/library/parallel.js.metadata     |     1 +
+ .../vfs/usr/lib/R/library/splines/help.data.gz     |   Bin 0 -> 43126 bytes
+ .../vfs/usr/lib/R/library/splines/help.js.metadata |     1 +
+ .../vfs/usr/lib/R/library/splines/html.data.gz     |   Bin 0 -> 1419 bytes
+ .../vfs/usr/lib/R/library/splines/html.js.metadata |     1 +
+ .../vfs/usr/lib/R/library/splines/tests.data.gz    |   Bin 0 -> 5390 bytes
+ .../usr/lib/R/library/splines/tests.js.metadata    |     1 +
+ .../webr/vfs/usr/lib/R/library/stats/demo.data.gz  |   Bin 0 -> 4061 bytes
+ .../vfs/usr/lib/R/library/stats/demo.js.metadata   |     1 +
+ .../webr/vfs/usr/lib/R/library/stats/help.data.gz  |   Bin 0 -> 1728279 bytes
+ .../vfs/usr/lib/R/library/stats/help.js.metadata   |     1 +
+ .../webr/vfs/usr/lib/R/library/stats/html.data.gz  |   Bin 0 -> 10989 bytes
+ .../vfs/usr/lib/R/library/stats/html.js.metadata   |     1 +
+ .../webr/vfs/usr/lib/R/library/stats/tests.data.gz |   Bin 0 -> 57970 bytes
+ .../vfs/usr/lib/R/library/stats/tests.js.metadata  |     1 +
+ .../webr/vfs/usr/lib/R/library/stats4/help.data.gz |   Bin 0 -> 37660 bytes
+ .../vfs/usr/lib/R/library/stats4/help.js.metadata  |     1 +
+ .../webr/vfs/usr/lib/R/library/stats4/html.data.gz |   Bin 0 -> 1392 bytes
+ .../vfs/usr/lib/R/library/stats4/html.js.metadata  |     1 +
+ .../vfs/usr/lib/R/library/stats4/tests.data.gz     |   Bin 0 -> 279 bytes
+ .../vfs/usr/lib/R/library/stats4/tests.js.metadata |     1 +
+ .../webr/vfs/usr/lib/R/library/tcltk.data.gz       |   Bin 0 -> 130941 bytes
+ .../webr/vfs/usr/lib/R/library/tcltk.js.metadata   |     1 +
+ .../webr/vfs/usr/lib/R/library/tools/help.data.gz  |   Bin 0 -> 290191 bytes
+ .../vfs/usr/lib/R/library/tools/help.js.metadata   |     1 +
+ .../webr/vfs/usr/lib/R/library/tools/html.data.gz  |   Bin 0 -> 3941 bytes
+ .../vfs/usr/lib/R/library/tools/html.js.metadata   |     1 +
+ .../webr/vfs/usr/lib/R/library/tools/tests.data.gz |   Bin 0 -> 3716 bytes
+ .../vfs/usr/lib/R/library/tools/tests.js.metadata  |     1 +
+ .../vfs/usr/lib/R/library/translations.data.gz     |   Bin 0 -> 3053640 bytes
+ .../vfs/usr/lib/R/library/translations.js.metadata |     1 +
+ .../vfs/usr/lib/R/library/translations/DESCRIPTION |     7 +
+ .../webr/vfs/usr/lib/R/library/utils/doc.data.gz   |   Bin 0 -> 166530 bytes
+ .../vfs/usr/lib/R/library/utils/doc.js.metadata    |     1 +
+ .../webr/vfs/usr/lib/R/library/utils/help.data.gz  |   Bin 0 -> 858569 bytes
+ .../vfs/usr/lib/R/library/utils/help.js.metadata   |     1 +
+ .../webr/vfs/usr/lib/R/library/utils/html.data.gz  |   Bin 0 -> 6923 bytes
+ .../vfs/usr/lib/R/library/utils/html.js.metadata   |     1 +
+ .../webr/vfs/usr/lib/R/library/utils/misc.data.gz  |   Bin 0 -> 161 bytes
+ .../vfs/usr/lib/R/library/utils/misc.js.metadata   |     1 +
+ .../webr/vfs/usr/lib/R/library/utils/tests.data.gz |   Bin 0 -> 4480 bytes
+ .../vfs/usr/lib/R/library/utils/tests.js.metadata  |     1 +
+ .../webr/vfs/usr/lib/R/library/webr/help.data.gz   |   Bin 0 -> 54257 bytes
+ .../vfs/usr/lib/R/library/webr/help.js.metadata    |     1 +
+ .../webr/vfs/usr/lib/R/library/webr/html.data.gz   |   Bin 0 -> 1533 bytes
+ .../vfs/usr/lib/R/library/webr/html.js.metadata    |     1 +
+ .../shinylive/webr/vfs/usr/lib/R/share.data.gz     |   Bin 0 -> 333772 bytes
+ .../shinylive/webr/vfs/usr/lib/R/share.js.metadata |     1 +
+ .../shinylive/webr/vfs/usr/lib/R/tests.data.gz     |   Bin 0 -> 882766 bytes
+ .../shinylive/webr/vfs/usr/lib/R/tests.js.metadata |     1 +
+ .../webr/vfs/usr/share/fonts/NotoSans-Bold.ttf     |   Bin 0 -> 419112 bytes
+ .../vfs/usr/share/fonts/NotoSans-BoldItalic.ttf    |   Bin 0 -> 434972 bytes
+ .../webr/vfs/usr/share/fonts/NotoSans-Italic.ttf   |   Bin 0 -> 434796 bytes
+ .../webr/vfs/usr/share/fonts/NotoSans-Regular.ttf  |   Bin 0 -> 418820 bytes
+ .../webr/vfs/usr/share/fonts/NotoSansMono-Bold.ttf |   Bin 0 -> 387484 bytes
+ .../vfs/usr/share/fonts/NotoSansMono-Regular.ttf   |   Bin 0 -> 388660 bytes
+ .../webr/vfs/usr/share/fonts/NotoSerif-Bold.ttf    |   Bin 0 -> 497856 bytes
+ .../vfs/usr/share/fonts/NotoSerif-BoldItalic.ttf   |   Bin 0 -> 517616 bytes
+ .../webr/vfs/usr/share/fonts/NotoSerif-Italic.ttf  |   Bin 0 -> 514648 bytes
+ .../webr/vfs/usr/share/fonts/NotoSerif-Regular.ttf |   Bin 0 -> 494504 bytes
+ .../shinylive/webr/vfs/usr/share/gdal.data.gz      |   Bin 0 -> 348461 bytes
+ .../shinylive/webr/vfs/usr/share/gdal.js.metadata  |     1 +
+ .../shinylive/webr/vfs/usr/share/proj.data.gz      |   Bin 0 -> 1705325 bytes
+ .../shinylive/webr/vfs/usr/share/proj.js.metadata  |     1 +
+ .../shinylive/webr/vfs/usr/share/udunits.data.gz   |   Bin 0 -> 16775 bytes
+ .../webr/vfs/usr/share/udunits.js.metadata         |     1 +
+ ...3830d5c3ddfd5cd38a049b759396e72e-le32d8.cache-7 |   Bin 0 -> 14080 bytes
+ .../webr/vfs/var/cache/fontconfig/CACHEDIR.TAG     |     4 +
+ .../shinylive/webr/webR/chan/channel-common.d.ts   |    21 +
+ .../webr/webR/chan/channel-postmessage.d.ts        |    27 +
+ .../shinylive/webr/webR/chan/channel-service.d.ts  |    31 +
+ .../shinylive/webr/webR/chan/channel-shared.d.ts   |    26 +
+ .../shinylive/webr/webR/chan/channel.d.ts          |    44 +
+ .../shinylive/webr/webR/chan/message.d.ts          |    50 +
+ .../shinylive/webr/webR/chan/queue.d.ts            |    17 +
+ .../shinylive/webr/webR/chan/serviceworker.d.ts    |     6 +
+ .../shinylive/webr/webR/chan/task-common.d.ts      |    17 +
+ .../shinylive/webr/webR/chan/task-main.d.ts        |    15 +
+ .../shinylive/webr/webR/chan/task-worker.d.ts      |    42 +
+ .../shinylive/webr/webR/compat.d.ts                |     2 +
+ .../shinylive/webr/webR/config.d.ts                |     3 +
+ .../shinylive/webr/webR/console.d.ts               |    72 +
+ .../shinylive/webr/webR/emscripten.d.ts            |   154 +
+ .../shinylive-0.9.1/shinylive/webr/webR/error.d.ts |    26 +
+ .../shinylive-0.9.1/shinylive/webr/webR/mount.d.ts |    21 +
+ .../shinylive/webr/webR/payload.d.ts               |    47 +
+ .../shinylive-0.9.1/shinylive/webr/webR/proxy.d.ts |   120 +
+ .../shinylive/webr/webR/robj-main.d.ts             |   113 +
+ .../shinylive/webr/webR/robj-worker.d.ts           |   263 +
+ .../shinylive-0.9.1/shinylive/webr/webR/robj.d.ts  |   115 +
+ .../shinylive/webr/webR/utils-r.d.ts               |    25 +
+ .../shinylive-0.9.1/shinylive/webr/webR/utils.d.ts |    14 +
+ .../shinylive/webr/webR/webr-chan.d.ts             |   234 +
+ .../shinylive/webr/webR/webr-main.d.ts             |   340 +
+ .../shinylive/webr/webR/webr-worker.d.ts           |     1 +
+ .../shinylive/webr/webr-serviceworker.js           |  2838 ++
+ .../shinylive/webr/webr-serviceworker.js.map       |     7 +
+ .../shinylive/webr/webr-serviceworker.mjs          |  2842 ++
+ .../shinylive/webr/webr-serviceworker.mjs.map      |     7 +
+ .../shinylive-0.9.1/shinylive/webr/webr-worker.js  |  9495 +++++
+ .../shinylive/webr/webr-worker.js.map              |     7 +
+ .../shinylive-0.9.1/shinylive/webr/webr.cjs        |     4 +
+ .../shinylive-0.9.1/shinylive/webr/webr.cjs.map    |     7 +
+ .../shinylive-0.9.1/shinylive/webr/webr.mjs        |     4 +
+ .../shinylive-0.9.1/shinylive/webr/webr.mjs.map    |     7 +
+ .../shinylive-quarto-css/shinylive-quarto.css      |    34 +
+ .../dashboard_files/libs/quarto-html/anchor.min.js |     9 +
+ .../dashboard_files/libs/quarto-html/popper.min.js |     6 +
+ ...ghlighting-c8ad9e5dbd60b7b70b38521ab19b7da4.css |   236 +
+ .../dashboard_files/libs/quarto-html/quarto.js     |   845 +
+ .../libs/quarto-html/tabsets/tabsets.js            |    95 +
+ .../dashboard_files/libs/quarto-html/tippy.css     |     1 +
+ .../libs/quarto-html/tippy.umd.min.js              |     2 +
+ vignettes/telemetry.html                           |   743 -
+ vignettes/telemetry.qmd                            |   346 +-
+ 241 files changed, 118505 insertions(+), 1776 deletions(-)
+2025-11-16 14:20:39: 
+2025-11-16 14:20:39: PR URL: https://github.com/JohnGavin/randomwalk/pull/new/fix/shinylive-dashboard
+2025-11-16 14:20:39: 
+2025-11-16 14:20:39: ================================================
