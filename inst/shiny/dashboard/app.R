@@ -149,14 +149,15 @@ server <- function(input, output, session) {
   output$params_table <- renderTable({
     req(sim_result())
     result <- sim_result()
+    params <- result$parameters
     data.frame(
       Parameter = c("Grid Size", "Walkers", "Neighborhood", "Boundary", "Max Steps"),
       Value = c(
-        result$grid_size,
-        result$n_walkers,
-        result$neighborhood,
-        result$boundary,
-        input$max_steps
+        params$grid_size,
+        params$n_walkers,
+        params$neighborhood,
+        params$boundary,
+        params$max_steps
       )
     )
   })
@@ -180,14 +181,15 @@ server <- function(input, output, session) {
     req(sim_result())
     result <- sim_result()
     stats <- result$statistics
+    grid_size <- stats$grid_size
 
     paste(
-      sprintf("Grid dimensions: %d x %d", result$grid_size, result$grid_size),
-      sprintf("Total pixels: %d", result$grid_size * result$grid_size),
+      sprintf("Grid dimensions: %d x %d", grid_size, grid_size),
+      sprintf("Total pixels: %d", grid_size * grid_size),
       sprintf("Black pixels: %d (%.2f%%)",
               stats$black_pixels, stats$black_percentage),
       sprintf("White pixels: %d",
-              result$grid_size * result$grid_size - stats$black_pixels),
+              grid_size * grid_size - stats$black_pixels),
       sep = "\n"
     )
   })
