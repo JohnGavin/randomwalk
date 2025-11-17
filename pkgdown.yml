@@ -4,7 +4,7 @@ pkgdown_sha: ~
 articles:
   dashboard: dashboard.html
   telemetry: telemetry.html
-last_built: 2025-11-17T21:18Z
+last_built: 2025-11-17T21:32Z
 urls:
   reference: https://johngavin.github.io/randomwalk/reference
   article: https://johngavin.github.io/randomwalk/articles
