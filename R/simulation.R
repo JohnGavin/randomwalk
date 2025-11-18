@@ -266,7 +266,7 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
       result <- controller$pop(scale = TRUE)
 
       if (!is.null(result) && !is.null(result$result)) {
-        walker <- result$result[[1]]
+        walker <- result$result  # crew returns the walker directly
         completed_walkers[[walker$id]] <- walker
 
         # Update grid with terminated walker
