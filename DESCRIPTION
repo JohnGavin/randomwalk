@@ -36,6 +36,7 @@ Suggests:
     usethis,
     pkgdown,
     covr,
+    bench,
     knitr,
     rmarkdown,
     quarto
