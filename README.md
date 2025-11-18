@@ -77,10 +77,7 @@ result$walker_paths   # Walker trajectories
 library(randomwalk)
 
 # Launch the Shiny app
-run_random_walk_app()
-
-# Or run in background to free up console
-bg_process <- run_app_in_bg()
+run_dashboard()
 ```
 
 ## Simulation Parameters

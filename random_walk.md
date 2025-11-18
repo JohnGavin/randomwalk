@@ -83,8 +83,7 @@ Database: DuckDB in-memory
 Communication: nanonext pub/sub + push/pull
 
 === USAGE ===
-Standard mode: shinyApp(ui = ui, server = server)
-Background mode: bg_process <- run_app_in_bg()
+Standard mode: run_dashboard()
 
 
 === EXAMPLE SIMULATION OUTPUT ===
@@ -103,8 +102,7 @@ Neighborhood: 4-hood
 Boundary: terminate
 
 === READY TO LAUNCH ===
-Execute: shinyApp(ui = ui, server = server)
-or for background: bg_process <- run_app_in_bg()
+Execute: run_dashboard()
 
 Example first simulation step:
 [14:23:15] STEP 1: Active=8, Black=1
