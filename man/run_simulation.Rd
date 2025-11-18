@@ -25,7 +25,8 @@ Must be between 1 and 60\% of grid size.}
 \item{boundary}{Character. Either "terminate" or "wrap". Default "terminate".}
 
 \item{workers}{Integer. Number of parallel workers (0 = synchronous). Default 0.
-Note: Async implementation not yet available in this version.}
+For async mode, use 2-4 workers for medium grids, 4-8 for large grids.
+Requires crew and nanonext packages.}
 
 \item{max_steps}{Integer. Maximum steps per walker before forced termination.
 Default 10000.}
