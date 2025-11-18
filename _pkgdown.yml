@@ -11,7 +11,7 @@ home:
     asynchronous pixel walking on a grid.
   links:
   - text: Try Interactive Dashboard
-    href: articles/dashboard.html
+    href: articles/dashboard/
 
 navbar:
   structure:
@@ -22,7 +22,7 @@ navbar:
       text: Articles
       menu:
       - text: Interactive Dashboard
-        href: articles/dashboard.html
+        href: articles/dashboard/
       - text: Telemetry and Pipeline Statistics
         href: articles/telemetry.html
 
