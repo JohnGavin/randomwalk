@@ -8,12 +8,13 @@ library(rix)
 r_pkgs <- c(
   # Core dependencies (from DESCRIPTION Imports)
   "logger",
+  "ggplot2",
+  "crew",
+  "nanonext",
 
   # Suggested packages for functionality
   "dplyr",
   "duckdb",
-  "ggplot2",
-  "nanonext",
   "shiny",
   "shinytest2",
 

@@ -1,7 +1,7 @@
 Package: randomwalk
 Type: Package
 Title: Asynchronous Pixel Walking Simulation with Parallel Processing
-Version: 1.0.0
+Version: 2.0.0.9000
 Authors@R:
     person("John", "Gavin", , "john@example.com", role = c("aut", "cre"))
 Description: Implements parallel random walk simulations that create fractal
@@ -18,12 +18,13 @@ Depends:
     R (>= 4.1.0)
 Imports:
     logger,
-    ggplot2
+    ggplot2,
+    crew,
+    nanonext
 Suggests:
     munsell,
     dplyr,
     duckdb,
-    nanonext,
     shiny,
     shinylive,
     shinytest2,
