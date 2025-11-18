@@ -235,7 +235,8 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
 
       # Push task to crew (async, non-blocking)
       controller$push(
-        command = worker_run_walker(
+        name = paste0("walker_", walker$id),
+        command = randomwalk::worker_run_walker(
           walker = walker,
           grid_state = grid_state,
           pub_address = pub_address,
@@ -250,7 +251,8 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
           neighborhood = neighborhood,
           boundary = boundary,
           max_steps = max_steps
-        )
+        ),
+        packages = "randomwalk"  # Ensure randomwalk package is loaded in worker
       )
     }
 
