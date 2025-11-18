@@ -302,6 +302,12 @@
 <p><strong>Our Documentation</strong>: - All .md files in project root - R/setup/ for command logs</p>
 </div>
 <div class="section level2">
+<h2 id="future-development-v200-async">Future Development: v2.0.0 Async<a class="anchor" aria-label="anchor" href="#future-development-v200-async"></a></h2>
+<p><strong>Status</strong>: Planned and tracked in GitHub <strong>Main Issue</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/20" class="external-link">#20</a> - Implement Async/Parallel Simulation Framework</p>
+<p>v2.0.0 will add async/parallel simulation using crew + nanonext: - <strong>Phase 1</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/21" class="external-link">#21</a> - Minimal Async (2 weeks) - <strong>Phase 2</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/22" class="external-link">#22</a> - State Sync (1 week) - <strong>Phase 3</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/23" class="external-link">#23</a> - Optimization (1-2 weeks) - <strong>Phase 4</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/24" class="external-link">#24</a> - Testing &amp; Docs (1 week)</p>
+<p><strong>Technical Details</strong>: See <code>V2_ASYNC_PLAN.md</code> for complete implementation plan <strong>Timeline</strong>: 6 weeks total <strong>Expected Speedup</strong>: 1.8-2.0x (2 workers), 3.0-3.5x (4 workers), 4.0-5.0x (8 workers)</p>
+</div>
+<div class="section level2">
 <h2 id="notes-for-claude">Notes for Claude<a class="anchor" aria-label="anchor" href="#notes-for-claude"></a></h2>
 <ul><li>
 <strong>Always check git status first</strong> when resuming</li>
@@ -319,11 +325,18 @@
 <strong>Use R packages for git</strong>: gert, gh, usethis (commands in R/setup/)</li>
 <li>
 <strong>Backup exists</strong> if something goes wrong</li>
+<li>
+<strong>v2.0.0 async work</strong> is tracked in GitHub issues #20-24, not markdown TODOs</li>
 </ul></div>
 <div class="section level2">
 <h2 id="session-summary-november-17-2024">Session Summary (November 17, 2024)<a class="anchor" aria-label="anchor" href="#session-summary-november-17-2024"></a></h2>
 <p>This was a successful debugging and deployment session that: 1. Fixed the final missing package issue (tibble) 2. Resolved Shinylive export caching problem 3. Created v1.0.0 release 4. Cleaned and organized the project 5. Created comprehensive documentation</p>
 <p>The dashboard is now production-ready and fully functional. Future work can focus on features or improvements rather than deployment issues.</p>
+</div>
+<div class="section level2">
+<h2 id="session-summary-november-18-2024">Session Summary (November 18, 2024)<a class="anchor" aria-label="anchor" href="#session-summary-november-18-2024"></a></h2>
+<p>Cleanup and issue tracking session: 1. ✅ Created GitHub issues for v2.0.0 async implementation - Main issue: #20 (parent tracking issue) - Phase 1: #21 (Minimal Async - 2 weeks) - Phase 2: #22 (State Synchronization - 1 week) - Phase 3: #23 (Optimization - 1-2 weeks) - Phase 4: #24 (Testing &amp; Documentation - 1 week) 2. ✅ Deleted 5 obsolete markdown files: - DEPLOYMENT_STATUS.md (superseded by DASHBOARD_COMPLETE.md) - MERGE_INSTRUCTIONS.md (PR #19 already merged) - DASHBOARD_FIX.md (superseded by DASHBOARD_COMPLETE.md) - DASHBOARD_FIX_FINAL.md (duplicate) - SUMMARY.md (historical, Nov 13) 3. ✅ Updated cross-references: - V2_ASYNC_PLAN.md now links to GitHub issues #20-24 - CLAUDE_CONTEXT.md documents v2.0.0 planning - All future work tracked in GitHub, not markdown TODOs</p>
+<p><strong>Result</strong>: Clean project with all future work properly tracked in GitHub issues.</p>
 </div>
 </div>
 

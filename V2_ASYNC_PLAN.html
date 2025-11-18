@@ -37,7 +37,12 @@
 
 <div id="v200-async-implementation-plan" class="section level1">
 
-<p><strong>Status</strong>: Planning Phase <strong>Target</strong>: Implement true async/parallel random walk simulation <strong>Approach</strong>: Simplified architecture without DuckDB</p>
+<p><strong>Status</strong>: Tracked in GitHub Issues <strong>GitHub Issue</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/20" class="external-link">#20 - v2.0.0: Implement Async/Parallel Simulation Framework</a> <strong>Target</strong>: Implement true async/parallel random walk simulation <strong>Approach</strong>: Simplified architecture without DuckDB</p>
+<div class="section level2">
+<h2 id="implementation-tracking">Implementation Tracking<a class="anchor" aria-label="anchor" href="#implementation-tracking"></a></h2>
+<p>This plan is now tracked in GitHub issues: - <strong>Main Issue</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/20" class="external-link">#20</a> - v2.0.0 Async Framework - <strong>Phase 1</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/21" class="external-link">#21</a> - Minimal Async Implementation (2 weeks) - <strong>Phase 2</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/22" class="external-link">#22</a> - State Synchronization (1 week) - <strong>Phase 3</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/23" class="external-link">#23</a> - Optimization (1-2 weeks) - <strong>Phase 4</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/24" class="external-link">#24</a> - Testing &amp; Documentation (1 week)</p>
+<p><strong>This document serves as the detailed technical reference for the implementation.</strong></p>
+</div>
 <div class="section level2">
 <h2 id="decision-simplified-architecture">Decision: Simplified Architecture<a class="anchor" aria-label="anchor" href="#decision-simplified-architecture"></a></h2>
 <p>After analysis, we’ve decided to implement async mode <strong>without DuckDB</strong> for v2.0.0.</p>
