@@ -33,10 +33,14 @@ cd random_walk
 ### Key Files and Locations
 
 **Documentation**:
-- `DASHBOARD_COMPLETE.md` - Complete dashboard deployment journey (7 issues fixed)
-- `CORS_FIX.md` - CORS issue details and solution
 - `README.md` - Package documentation
+- `archive/` - Historical documentation (DASHBOARD_COMPLETE, FIXES_APPLIED, etc.)
 - `R/setup/` - Development workflow scripts for reproducibility
+- **Wiki** (https://github.com/JohnGavin/randomwalk/wiki) - Comprehensive guides:
+  - Troubleshooting Nix Environment
+  - Working with Claude Across Sessions
+  - Using Gemini CLI for Large Codebases
+  - Deploying Shinylive Dashboards
 
 **Package Structure**:
 - `R/` - Core R package functions
@@ -52,6 +56,8 @@ cd random_walk
 
 - **Repository**: https://github.com/JohnGavin/randomwalk
 - **Dashboard**: https://johngavin.github.io/randomwalk/articles/dashboard/
+- **Documentation**: https://johngavin.github.io/randomwalk/
+- **Wiki**: https://github.com/JohnGavin/randomwalk/wiki
 - **Releases**: https://github.com/JohnGavin/randomwalk/releases
 - **Workflows**: https://github.com/JohnGavin/randomwalk/actions
 - **Latest Release**: https://github.com/JohnGavin/randomwalk/releases/tag/v1.0.0
@@ -132,6 +138,10 @@ When resuming work on this project:
 1. Change to `/Users/johngavin/docs_gh/claude_rix/random_walk`
 2. Run `git status` to check current state
 3. Run `git pull` to get latest changes
-4. Read `DASHBOARD_COMPLETE.md` for complete deployment history
+4. Check `archive/` for historical documentation if needed
 5. All development workflow scripts are in `R/setup/` for reference
 6. Dashboard is live and working at the URL above
+7. For troubleshooting, see the [Wiki](https://github.com/JohnGavin/randomwalk/wiki):
+   - [Nix environment issues](https://github.com/JohnGavin/randomwalk/wiki/Troubleshooting-Nix-Environment)
+   - [Session continuity](https://github.com/JohnGavin/randomwalk/wiki/Working-with-Claude-Across-Sessions)
+   - [Dashboard deployment](https://github.com/JohnGavin/randomwalk/wiki/Deploying-Shinylive-Dashboards)

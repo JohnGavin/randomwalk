@@ -2,6 +2,14 @@
 
 Asynchronous Pixel Walking Simulation with Parallel Processing
 
+## 🚀 Quick Links
+
+- **📊 [Live Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard/)** - Try the simulation in your browser (no installation needed)
+- **📚 [Package Documentation](https://johngavin.github.io/randomwalk/)** - Full API reference and vignettes
+- **📖 [Wiki](https://github.com/JohnGavin/randomwalk/wiki)** - How-to guides, troubleshooting, and deployment docs
+- **🐙 [GitHub Repository](https://github.com/JohnGavin/randomwalk)** - Source code and issues
+- **🏷️ [Latest Release](https://github.com/JohnGavin/randomwalk/releases/latest)** - Download and release notes
+
 ## Overview
 
 `randomwalk` implements parallel random walk simulations that create fractal graphs through asynchronous pixel walking on a grid. This is NOT a DLA (Diffusion-Limited Aggregation) simulation, but a simple random walk that builds fractal-like patterns.
@@ -91,6 +99,23 @@ See `vignettes/` for detailed documentation on:
 - Performance tuning
 - Architecture details
 - Telemetry statistics
+
+## 📖 Documentation & Resources
+
+### Wiki Guides
+
+Visit the [project wiki](https://github.com/JohnGavin/randomwalk/wiki) for comprehensive guides:
+
+- **[Troubleshooting Nix Environment](https://github.com/JohnGavin/randomwalk/wiki/Troubleshooting-Nix-Environment)** - Solutions for nix environment degradation during long development sessions
+- **[Working with Claude Across Sessions](https://github.com/JohnGavin/randomwalk/wiki/Working-with-Claude-Across-Sessions)** - How to preserve context when using Claude Code
+- **[Using Gemini CLI for Large Codebases](https://github.com/JohnGavin/randomwalk/wiki/Using-Gemini-CLI-for-Large-Codebases)** - Leverage Gemini's large context window for codebase analysis
+- **[Deploying Shinylive Dashboards](https://github.com/JohnGavin/randomwalk/wiki/Deploying-Shinylive-Dashboards)** - Complete deployment guide with solutions to common issues
+
+### Additional Resources
+
+- [Project Info](PROJECT_INFO.md) - Quick reference with restore instructions
+- [R/setup/](R/setup/) - Development workflow scripts for reproducibility
+- [.github/workflows/](.github/workflows/) - CI/CD workflow configurations
 
 ## License
 
