@@ -1,8 +1,20 @@
 # v2.0.0 Async Implementation Plan
 
-**Status**: Planning Phase
+**Status**: Tracked in GitHub Issues
+**GitHub Issue**: [#20 - v2.0.0: Implement Async/Parallel Simulation Framework](https://github.com/JohnGavin/randomwalk/issues/20)
 **Target**: Implement true async/parallel random walk simulation
 **Approach**: Simplified architecture without DuckDB
+
+## Implementation Tracking
+
+This plan is now tracked in GitHub issues:
+- **Main Issue**: [#20](https://github.com/JohnGavin/randomwalk/issues/20) - v2.0.0 Async Framework
+- **Phase 1**: [#21](https://github.com/JohnGavin/randomwalk/issues/21) - Minimal Async Implementation (2 weeks)
+- **Phase 2**: [#22](https://github.com/JohnGavin/randomwalk/issues/22) - State Synchronization (1 week)
+- **Phase 3**: [#23](https://github.com/JohnGavin/randomwalk/issues/23) - Optimization (1-2 weeks)
+- **Phase 4**: [#24](https://github.com/JohnGavin/randomwalk/issues/24) - Testing & Documentation (1 week)
+
+**This document serves as the detailed technical reference for the implementation.**
 
 ## Decision: Simplified Architecture
 

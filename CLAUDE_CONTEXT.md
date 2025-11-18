@@ -259,6 +259,21 @@ This project uses a Nix environment (see `/Users/johngavin/docs_gh/rix.setup/`):
 - All .md files in project root
 - R/setup/ for command logs
 
+## Future Development: v2.0.0 Async
+
+**Status**: Planned and tracked in GitHub
+**Main Issue**: [#20](https://github.com/JohnGavin/randomwalk/issues/20) - Implement Async/Parallel Simulation Framework
+
+v2.0.0 will add async/parallel simulation using crew + nanonext:
+- **Phase 1**: [#21](https://github.com/JohnGavin/randomwalk/issues/21) - Minimal Async (2 weeks)
+- **Phase 2**: [#22](https://github.com/JohnGavin/randomwalk/issues/22) - State Sync (1 week)
+- **Phase 3**: [#23](https://github.com/JohnGavin/randomwalk/issues/23) - Optimization (1-2 weeks)
+- **Phase 4**: [#24](https://github.com/JohnGavin/randomwalk/issues/24) - Testing & Docs (1 week)
+
+**Technical Details**: See `V2_ASYNC_PLAN.md` for complete implementation plan
+**Timeline**: 6 weeks total
+**Expected Speedup**: 1.8-2.0x (2 workers), 3.0-3.5x (4 workers), 4.0-5.0x (8 workers)
+
 ## Notes for Claude
 
 - **Always check git status first** when resuming
@@ -269,6 +284,7 @@ This project uses a Nix environment (see `/Users/johngavin/docs_gh/rix.setup/`):
 - **Explicit dependency installation** is intentional (issue #6 fix)
 - **Use R packages for git**: gert, gh, usethis (commands in R/setup/)
 - **Backup exists** if something goes wrong
+- **v2.0.0 async work** is tracked in GitHub issues #20-24, not markdown TODOs
 
 ## Session Summary (November 17, 2024)
 
@@ -280,3 +296,25 @@ This was a successful debugging and deployment session that:
 5. Created comprehensive documentation
 
 The dashboard is now production-ready and fully functional. Future work can focus on features or improvements rather than deployment issues.
+
+## Session Summary (November 18, 2024)
+
+Cleanup and issue tracking session:
+1. ✅ Created GitHub issues for v2.0.0 async implementation
+   - Main issue: #20 (parent tracking issue)
+   - Phase 1: #21 (Minimal Async - 2 weeks)
+   - Phase 2: #22 (State Synchronization - 1 week)
+   - Phase 3: #23 (Optimization - 1-2 weeks)
+   - Phase 4: #24 (Testing & Documentation - 1 week)
+2. ✅ Deleted 5 obsolete markdown files:
+   - DEPLOYMENT_STATUS.md (superseded by DASHBOARD_COMPLETE.md)
+   - MERGE_INSTRUCTIONS.md (PR #19 already merged)
+   - DASHBOARD_FIX.md (superseded by DASHBOARD_COMPLETE.md)
+   - DASHBOARD_FIX_FINAL.md (duplicate)
+   - SUMMARY.md (historical, Nov 13)
+3. ✅ Updated cross-references:
+   - V2_ASYNC_PLAN.md now links to GitHub issues #20-24
+   - CLAUDE_CONTEXT.md documents v2.0.0 planning
+   - All future work tracked in GitHub, not markdown TODOs
+
+**Result**: Clean project with all future work properly tracked in GitHub issues.
