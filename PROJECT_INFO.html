@@ -61,7 +61,7 @@
 </div>
 <div class="section level3">
 <h3 id="key-files-and-locations">Key Files and Locations<a class="anchor" aria-label="anchor" href="#key-files-and-locations"></a></h3>
-<p><strong>Documentation</strong>: - <code>DASHBOARD_COMPLETE.md</code> - Complete dashboard deployment journey (7 issues fixed) - <code>CORS_FIX.md</code> - CORS issue details and solution - <code>README.md</code> - Package documentation - <code>R/setup/</code> - Development workflow scripts for reproducibility</p>
+<p><strong>Documentation</strong>: - <code>README.md</code> - Package documentation - <code>archive/</code> - Historical documentation (DASHBOARD_COMPLETE, FIXES_APPLIED, etc.) - <code>R/setup/</code> - Development workflow scripts for reproducibility - <strong>Wiki</strong> (<a href="https://github.com/JohnGavin/randomwalk/wiki" class="external-link uri">https://github.com/JohnGavin/randomwalk/wiki</a>) - Comprehensive guides: - Troubleshooting Nix Environment - Working with Claude Across Sessions - Using Gemini CLI for Large Codebases - Deploying Shinylive Dashboards</p>
 <p><strong>Package Structure</strong>: - <code>R/</code> - Core R package functions - <code>inst/shiny/dashboard/</code> - Shinylive dashboard app - <code>.github/workflows/</code> - CI/CD workflows (pkgdown, wasm-release) - <code>tests/</code> - Test suite</p>
 <p><strong>Key Workflows</strong>: - <code>pkgdown.yaml</code> - Builds and deploys documentation + dashboard - <code>wasm-release.yaml</code> - Builds WebAssembly library for browser</p>
 </div>
@@ -73,6 +73,12 @@
 </li>
 <li>
 <strong>Dashboard</strong>: <a href="https://johngavin.github.io/randomwalk/articles/dashboard/" class="uri">https://johngavin.github.io/randomwalk/articles/dashboard/</a>
+</li>
+<li>
+<strong>Documentation</strong>: <a href="https://johngavin.github.io/randomwalk/" class="uri">https://johngavin.github.io/randomwalk/</a>
+</li>
+<li>
+<strong>Wiki</strong>: <a href="https://github.com/JohnGavin/randomwalk/wiki" class="external-link uri">https://github.com/JohnGavin/randomwalk/wiki</a>
 </li>
 <li>
 <strong>Releases</strong>: <a href="https://github.com/JohnGavin/randomwalk/releases" class="external-link uri">https://github.com/JohnGavin/randomwalk/releases</a>
@@ -147,7 +153,7 @@
 </div>
 <div class="section level2">
 <h2 id="notes-for-claude">Notes for Claude<a class="anchor" aria-label="anchor" href="#notes-for-claude"></a></h2>
-<p>When resuming work on this project: 1. Change to <code>/Users/johngavin/docs_gh/claude_rix/random_walk</code> 2. Run <code>git status</code> to check current state 3. Run <code>git pull</code> to get latest changes 4. Read <code>DASHBOARD_COMPLETE.md</code> for complete deployment history 5. All development workflow scripts are in <code>R/setup/</code> for reference 6. Dashboard is live and working at the URL above</p>
+<p>When resuming work on this project: 1. Change to <code>/Users/johngavin/docs_gh/claude_rix/random_walk</code> 2. Run <code>git status</code> to check current state 3. Run <code>git pull</code> to get latest changes 4. Check <code>archive/</code> for historical documentation if needed 5. All development workflow scripts are in <code>R/setup/</code> for reference 6. Dashboard is live and working at the URL above 7. For troubleshooting, see the <a href="https://github.com/JohnGavin/randomwalk/wiki" class="external-link">Wiki</a>: - <a href="https://github.com/JohnGavin/randomwalk/wiki/Troubleshooting-Nix-Environment" class="external-link">Nix environment issues</a> - <a href="https://github.com/JohnGavin/randomwalk/wiki/Working-with-Claude-Across-Sessions" class="external-link">Session continuity</a> - <a href="https://github.com/JohnGavin/randomwalk/wiki/Deploying-Shinylive-Dashboards" class="external-link">Dashboard deployment</a></p>
 </div>
 </div>
 
