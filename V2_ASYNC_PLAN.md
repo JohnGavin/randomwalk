@@ -9,10 +9,12 @@
 
 This plan is now tracked in GitHub issues:
 - **Main Issue**: [#20](https://github.com/JohnGavin/randomwalk/issues/20) - v2.0.0 Async Framework
-- **Phase 1**: [#21](https://github.com/JohnGavin/randomwalk/issues/21) - Minimal Async Implementation (2 weeks)
-- **Phase 2**: [#22](https://github.com/JohnGavin/randomwalk/issues/22) - State Synchronization (1 week)
-- **Phase 3**: [#23](https://github.com/JohnGavin/randomwalk/issues/23) - Optimization (1-2 weeks)
-- **Phase 4**: [#24](https://github.com/JohnGavin/randomwalk/issues/24) - Testing & Documentation (1 week)
+- **Phase 1**: [#21](https://github.com/JohnGavin/randomwalk/issues/21) - Minimal Async Implementation
+- **Phase 2**: [#22](https://github.com/JohnGavin/randomwalk/issues/22) - State Synchronization
+- **Phase 3**: [#23](https://github.com/JohnGavin/randomwalk/issues/23) - Optimization
+- **Phase 4**: [#24](https://github.com/JohnGavin/randomwalk/issues/24) - Testing & Documentation
+
+**Note**: Phases are logical organization, not time estimates. Implementation proceeds as tasks are completed.
 
 **This document serves as the detailed technical reference for the implementation.**
 
@@ -532,15 +534,15 @@ print(results[, c("expression", "median", "speedup")])
 - ✅ Documentation complete
 - ✅ Vignette with examples
 
-## Timeline
+## Implementation Phases
 
-| Phase | Duration | Deliverable |
-|-------|----------|-------------|
-| Phase 1 | 2 weeks | Basic async (1.5x speedup) |
-| Phase 2 | 1 week | State sync (2.5x speedup) |
-| Phase 3 | 2 weeks | Optimization (4x speedup) |
-| Phase 4 | 1 week | Testing & docs |
-| **Total** | **6 weeks** | **v2.0.0 release** |
+| Phase | Deliverable |
+|-------|-------------|
+| Phase 1 | Basic async (1.5x speedup) |
+| Phase 2 | State sync (2.5x speedup) |
+| Phase 3 | Optimization (4x speedup) |
+| Phase 4 | Testing & docs |
+| **Complete** | **v2.0.0 release** |
 
 ## Future Considerations (v3.0.0+)
 

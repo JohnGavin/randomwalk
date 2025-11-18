@@ -265,13 +265,13 @@ This project uses a Nix environment (see `/Users/johngavin/docs_gh/rix.setup/`):
 **Main Issue**: [#20](https://github.com/JohnGavin/randomwalk/issues/20) - Implement Async/Parallel Simulation Framework
 
 v2.0.0 will add async/parallel simulation using crew + nanonext:
-- **Phase 1**: [#21](https://github.com/JohnGavin/randomwalk/issues/21) - Minimal Async (2 weeks)
-- **Phase 2**: [#22](https://github.com/JohnGavin/randomwalk/issues/22) - State Sync (1 week)
-- **Phase 3**: [#23](https://github.com/JohnGavin/randomwalk/issues/23) - Optimization (1-2 weeks)
-- **Phase 4**: [#24](https://github.com/JohnGavin/randomwalk/issues/24) - Testing & Docs (1 week)
+- **Phase 1**: [#21](https://github.com/JohnGavin/randomwalk/issues/21) - Minimal Async
+- **Phase 2**: [#22](https://github.com/JohnGavin/randomwalk/issues/22) - State Sync
+- **Phase 3**: [#23](https://github.com/JohnGavin/randomwalk/issues/23) - Optimization
+- **Phase 4**: [#24](https://github.com/JohnGavin/randomwalk/issues/24) - Testing & Docs
 
+**Note**: Phases are logical organization. Implementation proceeds as tasks are completed.
 **Technical Details**: See `V2_ASYNC_PLAN.md` for complete implementation plan
-**Timeline**: 6 weeks total
 **Expected Speedup**: 1.8-2.0x (2 workers), 3.0-3.5x (4 workers), 4.0-5.0x (8 workers)
 
 ## Notes for Claude
