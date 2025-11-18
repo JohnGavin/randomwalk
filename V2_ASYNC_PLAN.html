@@ -40,7 +40,8 @@
 <p><strong>Status</strong>: Tracked in GitHub Issues <strong>GitHub Issue</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/20" class="external-link">#20 - v2.0.0: Implement Async/Parallel Simulation Framework</a> <strong>Target</strong>: Implement true async/parallel random walk simulation <strong>Approach</strong>: Simplified architecture without DuckDB</p>
 <div class="section level2">
 <h2 id="implementation-tracking">Implementation Tracking<a class="anchor" aria-label="anchor" href="#implementation-tracking"></a></h2>
-<p>This plan is now tracked in GitHub issues: - <strong>Main Issue</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/20" class="external-link">#20</a> - v2.0.0 Async Framework - <strong>Phase 1</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/21" class="external-link">#21</a> - Minimal Async Implementation (2 weeks) - <strong>Phase 2</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/22" class="external-link">#22</a> - State Synchronization (1 week) - <strong>Phase 3</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/23" class="external-link">#23</a> - Optimization (1-2 weeks) - <strong>Phase 4</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/24" class="external-link">#24</a> - Testing &amp; Documentation (1 week)</p>
+<p>This plan is now tracked in GitHub issues: - <strong>Main Issue</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/20" class="external-link">#20</a> - v2.0.0 Async Framework - <strong>Phase 1</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/21" class="external-link">#21</a> - Minimal Async Implementation - <strong>Phase 2</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/22" class="external-link">#22</a> - State Synchronization - <strong>Phase 3</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/23" class="external-link">#23</a> - Optimization - <strong>Phase 4</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/24" class="external-link">#24</a> - Testing &amp; Documentation</p>
+<p><strong>Note</strong>: Phases are logical organization, not time estimates. Implementation proceeds as tasks are completed.</p>
 <p><strong>This document serves as the detailed technical reference for the implementation.</strong></p>
 </div>
 <div class="section level2">
@@ -452,24 +453,18 @@
 </ul></div>
 </div>
 <div class="section level2">
-<h2 id="timeline">Timeline<a class="anchor" aria-label="anchor" href="#timeline"></a></h2>
+<h2 id="implementation-phases-1">Implementation Phases<a class="anchor" aria-label="anchor" href="#implementation-phases-1"></a></h2>
 <table class="table"><thead><tr class="header"><th>Phase</th>
-<th>Duration</th>
 <th>Deliverable</th>
 </tr></thead><tbody><tr class="odd"><td>Phase 1</td>
-<td>2 weeks</td>
 <td>Basic async (1.5x speedup)</td>
 </tr><tr class="even"><td>Phase 2</td>
-<td>1 week</td>
 <td>State sync (2.5x speedup)</td>
 </tr><tr class="odd"><td>Phase 3</td>
-<td>2 weeks</td>
 <td>Optimization (4x speedup)</td>
 </tr><tr class="even"><td>Phase 4</td>
-<td>1 week</td>
 <td>Testing &amp; docs</td>
-</tr><tr class="odd"><td><strong>Total</strong></td>
-<td><strong>6 weeks</strong></td>
+</tr><tr class="odd"><td><strong>Complete</strong></td>
 <td><strong>v2.0.0 release</strong></td>
 </tr></tbody></table></div>
 <div class="section level2">
