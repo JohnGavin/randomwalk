@@ -3,7 +3,6 @@
 
 test_that("create_controller initializes crew workers", {
   skip_if_not_installed("crew")
-  skip_if_not_installed("nanonext")
 
   controller <- create_controller(n_workers = 2)
 
@@ -16,36 +15,22 @@ test_that("create_controller initializes crew workers", {
 
 
 test_that("create_pub_socket creates nanonext socket", {
-  skip_if_not_installed("nanonext")
+  skip("Nanonext sockets no longer used - async uses static snapshots")
 
-  socket <- create_pub_socket(port = 5556)  # Different port to avoid conflicts
-
-  expect_s3_class(socket, "nanoSocket")
-  expect_true(!is.null(socket))
-
-  # Clean up
-  nanonext::close(socket)
+  # Legacy test - kept for reference but skipped
+  # nanonext pub/sub removed due to serialization issues with crew
 })
 
-
 test_that("broadcast_update sends messages correctly", {
-  skip_if_not_installed("nanonext")
+  skip("Nanonext broadcasting no longer used - async uses static snapshots")
 
-  socket <- create_pub_socket(port = 5557)
-
-  # Should not error
-  expect_silent({
-    broadcast_update(socket, position = c(5, 10), version = 42)
-  })
-
-  # Clean up
-  nanonext::close(socket)
+  # Legacy test - kept for reference but skipped
+  # nanonext pub/sub removed due to serialization issues with crew
 })
 
 
 test_that("cleanup_async handles NULL inputs gracefully", {
   skip_if_not_installed("crew")
-  skip_if_not_installed("nanonext")
 
   # Should not error with NULL inputs
   expect_silent(cleanup_async(NULL, NULL))
@@ -76,7 +61,6 @@ test_that("get_black_pixels_list converts grid correctly", {
 
 test_that("async simulation runs with 2 workers on small grid", {
   skip_if_not_installed("crew")
-  skip_if_not_installed("nanonext")
   skip_on_cran()  # Skip on CRAN (async tests can be flaky in CI)
 
   # Small test simulation
@@ -117,9 +101,8 @@ test_that("async simulation runs with 2 workers on small grid", {
 })
 
 
-test_that("async mode produces similar results to sync mode", {
+test_that("async mode completes successfully (may differ from sync)", {
   skip_if_not_installed("crew")
-  skip_if_not_installed("nanonext")
   skip_on_cran()
 
   set.seed(123)
@@ -146,23 +129,30 @@ test_that("async mode produces similar results to sync mode", {
     verbose = FALSE
   )
 
-  # Results should be similar (not exactly equal due to async timing)
-  # But black pixel count should be within reasonable range
-
+  # Both modes should complete all walkers
   expect_equal(result_sync$statistics$completed_walkers, 5)
   expect_equal(result_async$statistics$completed_walkers, 5)
 
-  # Black pixels should be close (allow 20% difference due to random seed + async timing)
-  black_diff <- abs(
-    result_sync$statistics$black_pixels - result_async$statistics$black_pixels
-  )
-  black_avg <- (result_sync$statistics$black_pixels + result_async$statistics$black_pixels) / 2
+  # Note: Async mode uses static grid snapshot (no real-time sync)
+  # Workers don't see other walkers' terminations, so results may differ
+  # This is expected behavior with the simplified architecture
 
-  expect_true(black_diff / black_avg < 0.3,
+  # Both should produce at least some black pixels
+  expect_true(result_sync$statistics$black_pixels > 0)
+  expect_true(result_async$statistics$black_pixels > 0)
+
+  # Results should be in a reasonable range (not wildly different)
+  # Allow up to 3x difference since workers operate independently
+  ratio <- max(
+    result_sync$statistics$black_pixels / result_async$statistics$black_pixels,
+    result_async$statistics$black_pixels / result_sync$statistics$black_pixels
+  )
+  expect_true(ratio < 3,
     info = sprintf(
-      "Black pixels too different: sync=%d, async=%d",
+      "Results differ: sync=%d, async=%d (ratio=%.2f)",
       result_sync$statistics$black_pixels,
-      result_async$statistics$black_pixels
+      result_async$statistics$black_pixels,
+      ratio
     )
   )
 })
@@ -170,7 +160,6 @@ test_that("async mode produces similar results to sync mode", {
 
 test_that("async simulation handles single worker correctly", {
   skip_if_not_installed("crew")
-  skip_if_not_installed("nanonext")
   skip_on_cran()
 
   result <- run_simulation(
@@ -189,7 +178,6 @@ test_that("async simulation handles single worker correctly", {
 
 test_that("async simulation with 8-hood neighborhood works", {
   skip_if_not_installed("crew")
-  skip_if_not_installed("nanonext")
   skip_on_cran()
 
   result <- run_simulation(
@@ -208,7 +196,6 @@ test_that("async simulation with 8-hood neighborhood works", {
 
 test_that("async simulation with wrap boundary works", {
   skip_if_not_installed("crew")
-  skip_if_not_installed("nanonext")
   skip_on_cran()
 
   result <- run_simulation(
@@ -308,7 +295,6 @@ test_that("check_termination_cached enforces max_steps", {
 
 test_that("async simulation statistics are complete", {
   skip_if_not_installed("crew")
-  skip_if_not_installed("nanonext")
   skip_on_cran()
 
   result <- run_simulation(
