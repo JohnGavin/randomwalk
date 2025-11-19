@@ -21,8 +21,10 @@ navbar:
     articles:
       text: Articles
       menu:
-      - text: Interactive Dashboard
+      - text: Interactive Dashboard (Sync)
         href: articles/dashboard/
+      - text: Async/Parallel Dashboard
+        href: articles/dashboard_async/
       - text: Telemetry and Pipeline Statistics
         href: articles/telemetry.html
 
@@ -31,6 +33,7 @@ articles:
   navbar: ~
   contents:
   - dashboard
+  - dashboard_async
   - telemetry
 
 footer:
