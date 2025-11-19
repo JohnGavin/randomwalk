@@ -95,7 +95,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Export dashboard with R shinylive
+      - name: Export sync dashboard with R shinylive
         run: |
           # Clean destination directory to avoid cached/stale files
           if (dir.exists("docs/articles/dashboard")) {
@@ -114,30 +114,19 @@ jobs:
           # This ensures relative paths to ./shinylive/ work correctly
         shell: Rscript {0}
 
-      - name: Install Quarto shinylive extension
+      - name: Export async dashboard with R shinylive
         run: |
-          # Remove existing extension if present (from repo)
-          rm -rf _extensions/quarto-ext/shinylive
-          # Install fresh copy of shinylive extension
-          quarto add quarto-ext/shinylive --no-prompt
-          # Verify extension was installed
-          ls -la _extensions/quarto-ext/
+          # Clean destination directory
+          if (dir.exists("docs/articles/dashboard_async")) {
+            unlink("docs/articles/dashboard_async", recursive = TRUE)
+          }
 
-      - name: Render async dashboard vignette
-        run: |
-          # Render using Quarto CLI (not R package) to properly process shinylive extension
-          quarto render vignettes/dashboard_async.qmd --to html
-
-          # Create destination directory
-          mkdir -p docs/articles/dashboard_async
-
-          # Copy rendered HTML to docs/articles/
-          cp vignettes/dashboard_async.html docs/articles/dashboard_async/index.html
-
-          # Copy shinylive assets if generated
-          if [ -d "vignettes/dashboard_async_files" ]; then
-            cp -r vignettes/dashboard_async_files docs/articles/dashboard_async/
-          fi
+          # Export async Shiny app to Shinylive format
+          shinylive::export(
+            appdir = "inst/shiny/dashboard_async",
+            destdir = "docs/articles/dashboard_async"
+          )
+        shell: Rscript {0}
 
       - name: Deploy to GitHub pages
         if: github.event_name != 'pull_request'
