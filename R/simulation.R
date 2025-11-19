@@ -237,9 +237,11 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
       # Note: Pass functions as globals since installed package lacks async functions
       controller$push(
         name = paste0("walker_", walker$id),
-        command = worker_run_walker(
-          walker, grid_state, pub_address, neighborhood, boundary, max_steps
-        ),
+        command = {
+          worker_run_walker(
+            walker, grid_state, pub_address, neighborhood, boundary, max_steps
+          )
+        },
         data = list(
           walker = walker,
           grid_state = grid_state,
@@ -281,10 +283,15 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
         # crew returns a data frame where result$result[[1]] contains the returned value
         walker <- result$result[[1]]
 
+        # Debug: Log walker structure before validation
+        logger::log_debug("Walker class: {class(walker)}, typeof: {typeof(walker)}, is.list: {is.list(walker)}")
+        logger::log_debug("Walker structure: {paste(capture.output(str(walker, max.level = 1)), collapse = '; ')}")
+
         # Validate walker structure
-        if (is.null(walker) || is.null(walker$id)) {
+        if (is.null(walker) || !is.list(walker) || is.null(walker$id)) {
           logger::log_error("Invalid walker structure returned from crew worker")
-          logger::log_debug("Result structure: {paste(capture.output(str(result)), collapse = '; ')}")
+          logger::log_error("Result status: {result$status}, error: {if(!is.null(result$error)) result$error else 'none'}")
+          logger::log_debug("Full result: {paste(capture.output(str(result)), collapse = '; ')}")
           next
         }
 
