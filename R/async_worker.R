@@ -315,38 +315,37 @@ check_termination_cached <- function(walker, black_pixels, neighborhood,
 #' @seealso \code{\link{worker_step_walker}}, \code{\link{worker_init}}
 #'
 #' @export
-worker_run_walker <- function(walker, grid_state, pub_address,
+worker_run_walker <- function(walker, grid_state, pub_address = NULL,
                                 neighborhood = "4-hood",
                                 boundary = "terminate",
                                 max_steps = 10000L) {
-  # Initialize worker
-  worker_state <- worker_init(pub_address)
+  # Simplified version without nanonext sockets
+  # Workers operate on a static snapshot of black pixels
+  # This avoids socket serialization issues with crew
 
-  # Initialize worker cache with current black pixels
-  for (pos_str in names(grid_state$black_pixels)) {
-    worker_state$cache$black_pixels[[pos_str]] <- grid_state$black_pixels[[pos_str]]
-  }
-  worker_state$cache$version <- grid_state$version
+  black_pixels <- grid_state$black_pixels
+  grid_size <- grid_state$grid_size
 
   # Run walker until termination
   while (walker$active) {
-    walker <- worker_step_walker(
+    # Move walker one step
+    walker <- step_walker(walker, neighborhood, boundary)
+
+    if (!walker$active) {
+      break  # Hit boundary
+    }
+
+    # Check termination using black pixel snapshot
+    walker <- check_termination_cached(
       walker = walker,
-      grid_state = grid_state,
-      worker_state = worker_state,
+      black_pixels = black_pixels,
       neighborhood = neighborhood,
       boundary = boundary,
+      grid_size = grid_size,
       max_steps = max_steps
     )
   }
 
-  # Clean up worker socket
-  tryCatch({
-    close(worker_state$socket)
-  }, error = function(e) {
-    logger::log_warn("Error closing worker socket: {e$message}")
-  })
-
-  # Return terminated walker
+  # Return terminated walker (no socket cleanup needed)
   walker
 }

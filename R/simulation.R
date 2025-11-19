@@ -209,12 +209,10 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
 
   # Initialize async resources
   controller <- NULL
-  pub_socket <- NULL
 
   tryCatch({
-    # Create controller and publisher socket
+    # Create controller (no nanonext socket needed)
     controller <- create_controller(n_workers)
-    pub_socket <- create_pub_socket(port = 5555)
 
     # Prepare grid state for workers
     grid_state <- list(
@@ -224,9 +222,6 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
       grid_size = nrow(grid)
     )
 
-    # Publisher address for workers
-    pub_address <- "tcp://127.0.0.1:5555"
-
     # Push all walker tasks to crew
     logger::log_info("Pushing {length(walkers)} walker tasks to crew")
 
@@ -235,35 +230,31 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
 
       # Push task to crew (async, non-blocking)
       # Note: Pass functions as globals since installed package lacks async functions
+      # Workers operate on static grid_state snapshot (no real-time sync)
       controller$push(
         name = paste0("walker_", walker$id),
         command = {
           worker_run_walker(
-            walker, grid_state, pub_address, neighborhood, boundary, max_steps
+            walker, grid_state, NULL, neighborhood, boundary, max_steps
           )
         },
         data = list(
           walker = walker,
           grid_state = grid_state,
-          pub_address = pub_address,
           neighborhood = neighborhood,
           boundary = boundary,
           max_steps = max_steps
         ),
         globals = list(
-          # Pass all functions needed by worker
-          # Note: Functions modified to call nanonext functions without namespace prefix
-          # This works because nanonext package loaded via packages parameter below
+          # Pass all functions needed by worker (no nanonext functions)
           worker_run_walker = worker_run_walker,
-          worker_init = worker_init,
-          worker_step_walker = worker_step_walker,
           check_termination_cached = check_termination_cached,
           get_neighbors = get_neighbors,
           is_within_bounds = is_within_bounds,
           wrap_position = wrap_position,
           step_walker = step_walker
         ),
-        packages = c("nanonext", "logger")  # nanonext functions called without prefix
+        packages = c("logger")  # No nanonext needed
       )
     }
 
@@ -313,12 +304,10 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
         if (!walker$active && walker$termination_reason != "hit_boundary") {
           grid <- set_pixel_black(grid, walker$pos, boundary)
 
-          # Broadcast update to workers
+          # Note: No broadcasting needed - workers operate on static snapshot
           grid_state$version <- grid_state$version + 1L
           pos_key <- paste(walker$pos, collapse = ",")
           grid_state$black_pixels[[pos_key]] <- walker$pos
-
-          broadcast_update(pub_socket, walker$pos, grid_state$version)
 
           logger::log_debug(
             "Walker {walker$id} terminated: {walker$termination_reason} at ({walker$pos[1]}, {walker$pos[2]}) after {walker$steps} steps"
@@ -372,8 +361,8 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
     )
 
   }, finally = {
-    # Always clean up resources
-    cleanup_async(controller, pub_socket)
+    # Always clean up resources (no socket to clean)
+    cleanup_async(controller, NULL)
   })
 }
 
