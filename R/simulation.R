@@ -234,10 +234,10 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
       walker <- walkers[[i]]
 
       # Push task to crew (async, non-blocking)
-      # Note: command references variable names that are provided in data list
+      # Note: Pass functions as globals since installed package lacks async functions
       controller$push(
         name = paste0("walker_", walker$id),
-        command = randomwalk::worker_run_walker(
+        command = worker_run_walker(
           walker, grid_state, pub_address, neighborhood, boundary, max_steps
         ),
         data = list(
@@ -248,7 +248,18 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
           boundary = boundary,
           max_steps = max_steps
         ),
-        packages = "randomwalk"  # Ensure randomwalk package is loaded in worker
+        globals = list(
+          # Pass all functions needed by worker
+          worker_run_walker = worker_run_walker,
+          worker_init = worker_init,
+          worker_step_walker = worker_step_walker,
+          check_termination_cached = check_termination_cached,
+          get_neighbors = get_neighbors,
+          is_within_bounds = is_within_bounds,
+          wrap_position = wrap_position,
+          step_walker = step_walker
+        ),
+        packages = c("nanonext", "logger")  # Only need dependencies, not randomwalk
       )
     }
 
