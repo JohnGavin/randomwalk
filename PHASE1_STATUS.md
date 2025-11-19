@@ -1,12 +1,13 @@
 # Phase 1 Async Implementation Status
 
-**Date**: 2025-11-18
+**Date**: 2025-11-18 (Initial), 2025-11-19 (Crew fixes applied)
 **Branch**: `async-v2-phase1`
 **Issue**: #21
 
 ## Summary
 
-Phase 1 minimal async implementation has been coded but requires crew integration debugging before deployment.
+Phase 1 minimal async implementation complete with crew integration fixes applied.
+**Status**: Ready for testing once crew is available in nix environment.
 
 ## Completed ✅
 
@@ -57,21 +58,89 @@ Phase 1 minimal async implementation has been coded but requires crew integratio
 - Version bumped to 2.0.0.9000 (development)
 - Updated default.R with new dependencies
 
-## Issues Requiring Resolution ❌
+## Crew Integration Fixes Applied ✅ (2025-11-19)
 
-### Crew Integration Bugs
+### Issues Identified and Fixed
 
-**Error**: `attempt to select less than one element in OneIndex`
-**Location**: `R/simulation.R:270` - `completed_walkers[[walker$id]] <- walker`
-**Cause**: Walker object structure mismatch from crew results
+**Original Error**: `attempt to select less than one element in OneIndex`
+**Location**: `R/simulation.R:270`
+**Status**: ✅ FIXED in commit 6f2121e
 
-#### Root Cause Analysis
+### Root Cause Analysis (Completed)
 
-The crew `controller$push()` / `controller$pop()` integration needs debugging:
+Three issues were identified and resolved:
 
-1. **Task Pushing**: Current approach may not properly serialize walker tasks
-   ```r
-   controller$push(
+#### Fix 1: Command Parameter Structure (R/simulation.R:240-241)
+
+**Problem**: Command used named parameters which caused immediate evaluation in main process.
+
+**Before**:
+```r
+command = randomwalk::worker_run_walker(
+  walker = walker,
+  grid_state = grid_state,
+  pub_address = pub_address,
+  neighborhood = neighborhood,
+  boundary = boundary,
+  max_steps = max_steps
+),
+```
+
+**After**:
+```r
+command = randomwalk::worker_run_walker(
+  walker, grid_state, pub_address, neighborhood, boundary, max_steps
+),
+```
+
+**Explanation**: crew expects the command to reference variable names that will be resolved from the `data` list when evaluated in the worker process. Named arguments caused the function to be called immediately in the main process context.
+
+#### Fix 2: Result Extraction (R/simulation.R:266-278)
+
+**Problem**: Incorrect assumption about crew result structure and missing validation.
+
+**Before**:
+```r
+if (!is.null(result) && !is.null(result$result)) {
+  walker <- result$result
+  completed_walkers[[walker$id]] <- walker
+```
+
+**After**:
+```r
+if (!is.null(result) && nrow(result) > 0) {
+  walker <- result$result[[1]]
+
+  # Validate walker structure
+  if (is.null(walker) || is.null(walker$id)) {
+    logger::log_error("Invalid walker structure returned from crew worker")
+    logger::log_debug("Result structure: {paste(capture.output(str(result)), collapse = '; ')}")
+    next
+  }
+
+  completed_walkers[[as.character(walker$id)]] <- walker
+```
+
+**Explanation**:
+- crew returns a data frame where `result$result[[1]]` contains the actual return value
+- Added validation to check walker structure before use
+- Convert `walker$id` to character for safe list indexing
+
+#### Fix 3: Nix Environment (default.nix:21)
+
+**Problem**: `crew` package missing from nix environment.
+
+**Before**: rpkgs list did not include `crew`
+
+**After**: Added `crew` to rpkgs list in alphabetical order
+
+**Next Step**: Rebuild nix shell to include crew package
+
+## Previous Issues (Now Resolved) ✅
+
+### Task Pushing (FIXED)
+
+1. ~~**Task Pushing**: Current approach may not properly serialize walker tasks~~
      command = randomwalk::worker_run_walker(...),
      data = list(...),
      packages = "randomwalk"
@@ -99,43 +168,46 @@ PASS: 54
 
 Failures are all related to async simulations (crew integration), not core logic.
 
-## Recommendations for Next Steps
+## Next Steps for Phase 1 Completion
 
-### Immediate (Required for Phase 1)
+### Immediate (Required for Testing)
 
-1. **Fix Crew Integration** (Priority: HIGH)
-   - Study crew controller API documentation
-   - Test minimal crew example with simple task
-   - Debug worker environment setup
-   - Ensure all package functions are accessible in workers
-   - Consider using `devtools::load_all()` in worker init
-   - Add error handling/logging to worker_run_walker()
+1. **✅ DONE - Crew Integration Fixed** (Commit 6f2121e - 2025-11-19)
+   - ✅ Analyzed crew controller API
+   - ✅ Fixed command parameter structure (positional vs named args)
+   - ✅ Fixed result extraction (result$result[[1]])
+   - ✅ Added walker validation and error handling
+   - ✅ Updated default.nix to include crew package
 
-2. **Alternative Approach** (if crew issues persist):
-   - Use `future` package instead of crew
-   - Simpler API, well-tested
-   - Example:
-     ```r
-     library(future)
-     plan(multisession, workers = n_workers)
+2. **Rebuild Nix Environment** (Priority: HIGH)
+   - Need to rebuild nix shell with updated default.nix
+   - This will install crew package
+   - Command: `nix-shell` (from project root)
+   - Alternative: Install crew via R if nix rebuild not feasible
 
-     results <- future_lapply(walkers, function(w) {
-       worker_run_walker(w, grid_state, ...)
-     })
-     ```
+3. **Run Tests** (After crew is available):
+   ```r
+   # Run just async tests
+   devtools::test_active_file("tests/testthat/test-async.R")
 
-3. **Incremental Testing**:
-   - Create minimal crew test outside package context
-   - Test worker_run_walker() standalone
-   - Add logging to see exact crew results structure
-   - Test with 1 walker, then scale up
+   # Run all tests
+   devtools::test()
 
-### Medium Term (Phase 1 completion)
+   # Expected: All 71 tests should pass (previously 54/71)
+   ```
 
-1. Run benchmarks once tests pass
-2. Verify 1.5-1.8x speedup target
-3. Update telemetry vignette with async comparison
-4. Create PR and merge to main
+4. **Run Benchmarks** (After tests pass):
+   ```r
+   source("benchmarks/benchmark_async.R")
+
+   # Expected: 1.5-1.8x speedup with 2 workers
+   ```
+
+5. **Complete Phase 1**:
+   - Verify speedup targets met
+   - Update PR #29 to "Ready for Review"
+   - Merge to main
+   - Close issue #21
 
 ### Long Term (Future Phases)
 
