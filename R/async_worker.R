@@ -37,12 +37,11 @@ worker_init <- function(pub_address) {
   logger::log_info("Worker initializing with publisher at {pub_address}")
 
   # Create subscriber socket
-  # Note: When used in crew workers, nanonext package loaded via packages parameter
-  # so we can call nano() directly without namespace prefix
-  socket <- nano("sub", dial = pub_address)
+  # Note: Always use nanonext:: prefix to ensure function is found in worker
+  socket <- nanonext::nano("sub", dial = pub_address)
 
   # Subscribe to all messages
-  subscribe(socket, "")
+  nanonext::subscribe(socket, "")
 
   # Wait briefly for connection
   Sys.sleep(0.1)
@@ -94,7 +93,7 @@ worker_init <- function(pub_address) {
 #' @export
 worker_check_updates <- function(worker_state) {
   # Non-blocking receive
-  result <- recv(
+  result <- nanonext::recv(
     worker_state$socket,
     mode = "raw",
     block = FALSE
@@ -342,7 +341,7 @@ worker_run_walker <- function(walker, grid_state, pub_address,
 
   # Clean up worker socket
   tryCatch({
-    close(worker_state$socket)
+    nanonext::close(worker_state$socket)
   }, error = function(e) {
     logger::log_warn("Error closing worker socket: {e$message}")
   })
