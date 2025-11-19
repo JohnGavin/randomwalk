@@ -116,8 +116,12 @@ jobs:
 
       - name: Install Quarto shinylive extension
         run: |
-          # Install extension at project root so it's available for all qmd files
+          # Remove existing extension if present (from repo)
+          rm -rf _extensions/quarto-ext/shinylive
+          # Install fresh copy of shinylive extension
           quarto add quarto-ext/shinylive --no-prompt
+          # Verify extension was installed
+          ls -la _extensions/quarto-ext/
 
       - name: Render async dashboard vignette
         run: |
