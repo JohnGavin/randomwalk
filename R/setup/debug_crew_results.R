@@ -5,9 +5,14 @@
 
 library(crew)
 library(logger)
+library(nanonext)
 
-# Load package from source (not installed version)
-devtools::load_all(quiet = TRUE)
+# Source the modified functions directly (since we can't use devtools::load_all in Rscript)
+# Normally would use devtools::load_all() but that requires devtools
+source("R/walker.R")
+source("R/grid.R")
+source("R/async_worker.R")
+source("R/async_controller.R")
 
 log_threshold(TRACE)
 

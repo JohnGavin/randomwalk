@@ -250,6 +250,8 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
         ),
         globals = list(
           # Pass all functions needed by worker
+          # Note: Functions modified to call nanonext functions without namespace prefix
+          # This works because nanonext package loaded via packages parameter below
           worker_run_walker = worker_run_walker,
           worker_init = worker_init,
           worker_step_walker = worker_step_walker,
@@ -259,7 +261,7 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
           wrap_position = wrap_position,
           step_walker = step_walker
         ),
-        packages = c("nanonext", "logger")  # Only need dependencies, not randomwalk
+        packages = c("nanonext", "logger")  # nanonext functions called without prefix
       )
     }
 
