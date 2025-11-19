@@ -234,15 +234,11 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
       walker <- walkers[[i]]
 
       # Push task to crew (async, non-blocking)
+      # Note: command references variable names that are provided in data list
       controller$push(
         name = paste0("walker_", walker$id),
         command = randomwalk::worker_run_walker(
-          walker = walker,
-          grid_state = grid_state,
-          pub_address = pub_address,
-          neighborhood = neighborhood,
-          boundary = boundary,
-          max_steps = max_steps
+          walker, grid_state, pub_address, neighborhood, boundary, max_steps
         ),
         data = list(
           walker = walker,
@@ -267,9 +263,19 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
       # Pop completed tasks (blocking wait)
       result <- controller$pop(scale = TRUE)
 
-      if (!is.null(result) && !is.null(result$result)) {
-        walker <- result$result  # crew returns the walker directly
-        completed_walkers[[walker$id]] <- walker
+      if (!is.null(result) && nrow(result) > 0) {
+        # Extract walker from crew result
+        # crew returns a data frame where result$result[[1]] contains the returned value
+        walker <- result$result[[1]]
+
+        # Validate walker structure
+        if (is.null(walker) || is.null(walker$id)) {
+          logger::log_error("Invalid walker structure returned from crew worker")
+          logger::log_debug("Result structure: {paste(capture.output(str(result)), collapse = '; ')}")
+          next
+        }
+
+        completed_walkers[[as.character(walker$id)]] <- walker
 
         # Update grid with terminated walker
         if (!walker$active && walker$termination_reason != "hit_boundary") {

@@ -18,6 +18,7 @@ let
   rpkgs = builtins.attrValues {
     inherit (pkgs.rPackages)
       covr
+      crew
       devtools
       dplyr
       duckdb
