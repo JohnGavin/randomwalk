@@ -274,7 +274,19 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
     n_total <- length(walkers)
     n_completed <- 0
 
+    # Timeout configuration: 30 seconds per walker
+    timeout_secs <- 30 * n_total
+    start_time <- Sys.time()
+
     while (n_completed < n_total) {
+      # Check timeout
+      elapsed_secs <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+      if (elapsed_secs > timeout_secs) {
+        logger::log_error("Async simulation timeout after {round(elapsed_secs, 1)}s ({n_completed}/{n_total} completed)")
+        logger::log_error("Workers may have failed - check GitHub Actions logs for crew worker errors")
+        stop("Async simulation timeout: workers failed to complete within ", timeout_secs, " seconds")
+      }
+
       # Pop completed tasks (blocking wait)
       result <- controller$pop(scale = TRUE)
 
