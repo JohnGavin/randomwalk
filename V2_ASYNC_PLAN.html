@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">randomwalk</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,7 +18,8 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="articles/dashboard/">Interactive Dashboard</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="articles/dashboard/">Interactive Dashboard (Sync)</a></li>
+    <li><a class="dropdown-item" href="articles/dashboard_async/">Async/Parallel Dashboard</a></li>
     <li><a class="dropdown-item" href="articles/telemetry.html">Telemetry and Pipeline Statistics</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -111,7 +112,7 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://wlandau.github.io/crew/" class="external-link">crew</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Create worker pool</span></span>
-<span><span class="va">controller</span> <span class="op">&lt;-</span> <span class="fu">crew_controller_local</span><span class="op">(</span></span>
+<span><span class="va">controller</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://wlandau.github.io/crew/reference/crew_controller_local.html" class="external-link">crew_controller_local</a></span><span class="op">(</span></span>
 <span>  name <span class="op">=</span> <span class="st">"random_walk_workers"</span>,</span>
 <span>  workers <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>  seconds_idle <span class="op">=</span> <span class="fl">300</span>  <span class="co"># Keep alive for 5 minutes</span></span>
@@ -142,14 +143,14 @@
 <div class="section level3">
 <h3 id="phase-1-minimal-async-1-2-weeks">Phase 1: Minimal Async (1-2 weeks)<a class="anchor" aria-label="anchor" href="#phase-1-minimal-async-1-2-weeks"></a></h3>
 <p><strong>Goal</strong>: Get basic parallel execution working</p>
-<p><strong>Tasks</strong>: - [ ] Add crew to Imports in DESCRIPTION - [ ] Add nanonext to Imports in DESCRIPTION - [ ] Create <code>R/async_controller.R</code>: - <code>create_controller()</code> - Initialize crew controller - <code>create_pub_socket()</code> - Set up nanonext publisher - <code>cleanup_async()</code> - Shutdown workers and sockets - [ ] Create <code>R/async_worker.R</code>: - <code>worker_init()</code> - Initialize worker with sub socket - <code>worker_step_walker()</code> - Execute walker step - <code>worker_check_updates()</code> - Check for grid updates - [ ] Modify <code>R/simulation.R</code>: - Add <code>if (workers &gt; 0)</code> branch for async mode - Keep existing sync code for <code>workers = 0</code> - [ ] Add tests in <code>tests/testthat/test-async.R</code>: - Test controller startup/shutdown - Test job distribution - Test basic 2-worker simulation</p>
+<p><strong>Tasks</strong>: - [ ] Add crew to Imports in DESCRIPTION - [ ] Add nanonext to Imports in DESCRIPTION - [ ] Create <code>R/async_controller.R</code>: - <code><a href="reference/create_controller.html">create_controller()</a></code> - Initialize crew controller - <code><a href="reference/create_pub_socket.html">create_pub_socket()</a></code> - Set up nanonext publisher - <code><a href="reference/cleanup_async.html">cleanup_async()</a></code> - Shutdown workers and sockets - [ ] Create <code>R/async_worker.R</code>: - <code><a href="reference/worker_init.html">worker_init()</a></code> - Initialize worker with sub socket - <code><a href="reference/worker_step_walker.html">worker_step_walker()</a></code> - Execute walker step - <code><a href="reference/worker_check_updates.html">worker_check_updates()</a></code> - Check for grid updates - [ ] Modify <code>R/simulation.R</code>: - Add <code>if (workers &gt; 0)</code> branch for async mode - Keep existing sync code for <code>workers = 0</code> - [ ] Add tests in <code>tests/testthat/test-async.R</code>: - Test controller startup/shutdown - Test job distribution - Test basic 2-worker simulation</p>
 <p><strong>Deliverable</strong>: Basic parallel execution (no optimization)</p>
 <p><strong>Expected Speedup</strong>: 1.5-1.8x with 2 workers</p>
 </div>
 <div class="section level3">
 <h3 id="phase-2-state-synchronization-1-week">Phase 2: State Synchronization (1 week)<a class="anchor" aria-label="anchor" href="#phase-2-state-synchronization-1-week"></a></h3>
 <p><strong>Goal</strong>: Implement efficient grid state updates</p>
-<p><strong>Tasks</strong>: - [ ] Create <code>R/grid_state.R</code>: - <code>create_grid_env()</code> - Initialize shared environment - <code>update_pixel()</code> - Mark pixel black, increment version - <code>broadcast_update()</code> - Send via nanonext - <code>get_black_neighbors()</code> - Fast neighbor lookup - [ ] Implement worker cache: - <code>worker_cache$black_pixels</code> - Local copy - <code>worker_cache$version</code> - Track state version - <code>refresh_cache()</code> - Pull updates when version mismatch - [ ] Add cache invalidation: - Workers check version before each step - Refresh only if outdated - Batch multiple updates</p>
+<p><strong>Tasks</strong>: - [ ] Create <code>R/grid_state.R</code>: - <code>create_grid_env()</code> - Initialize shared environment - <code>update_pixel()</code> - Mark pixel black, increment version - <code><a href="reference/broadcast_update.html">broadcast_update()</a></code> - Send via nanonext - <code>get_black_neighbors()</code> - Fast neighbor lookup - [ ] Implement worker cache: - <code>worker_cache$black_pixels</code> - Local copy - <code>worker_cache$version</code> - Track state version - <code>refresh_cache()</code> - Pull updates when version mismatch - [ ] Add cache invalidation: - Workers check version before each step - Refresh only if outdated - Batch multiple updates</p>
 <p><strong>Deliverable</strong>: Workers stay synchronized with &lt;10ms lag</p>
 <p><strong>Expected Speedup</strong>: 1.7-2.0x with 2 workers, 2.5-3.0x with 4 workers</p>
 </div>
@@ -260,7 +261,7 @@
 <span><span class="va">worker_step_walker</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">walker</span>, <span class="va">neighborhood</span>, <span class="va">boundary</span>,</span>
 <span>                                <span class="va">grid_env</span>, <span class="va">worker</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># Check for updates before step</span></span>
-<span>  <span class="va">worker</span> <span class="op">&lt;-</span> <span class="fu">worker_check_updates</span><span class="op">(</span><span class="va">worker</span>, <span class="va">grid_env</span><span class="op">)</span></span>
+<span>  <span class="va">worker</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/worker_check_updates.html">worker_check_updates</a></span><span class="op">(</span><span class="va">worker</span>, <span class="va">grid_env</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="co"># Move walker</span></span>
 <span>  <span class="va">walker</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/step_walker.html">step_walker</a></span><span class="op">(</span><span class="va">walker</span>, <span class="va">neighborhood</span>, <span class="va">boundary</span><span class="op">)</span></span>
@@ -277,7 +278,7 @@
 <span>    <span class="co"># Update global state</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="fu">update_pixel</span><span class="op">(</span><span class="va">grid_env</span>, <span class="va">walker</span><span class="op">$</span><span class="va">pos</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>      <span class="co"># Broadcast update</span></span>
-<span>      <span class="fu">broadcast_update</span><span class="op">(</span><span class="va">pub_socket</span>, <span class="va">walker</span><span class="op">$</span><span class="va">pos</span>, <span class="va">grid_env</span><span class="op">$</span><span class="va">version</span><span class="op">)</span></span>
+<span>      <span class="fu"><a href="reference/broadcast_update.html">broadcast_update</a></span><span class="op">(</span><span class="va">pub_socket</span>, <span class="va">walker</span><span class="op">$</span><span class="va">pos</span>, <span class="va">grid_env</span><span class="op">$</span><span class="va">version</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span>  <span class="op">}</span></span>
 <span></span>
@@ -340,27 +341,27 @@
 <code class="sourceCode R"><span><span class="co"># tests/testthat/test-async.R</span></span>
 <span></span>
 <span><span class="fu">test_that</span><span class="op">(</span><span class="st">"controller starts and stops"</span>, <span class="op">{</span></span>
-<span>  <span class="va">controller</span> <span class="op">&lt;-</span> <span class="fu">create_controller</span><span class="op">(</span>workers <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="va">controller</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_controller.html">create_controller</a></span><span class="op">(</span>workers <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span>  <span class="fu">expect_true</span><span class="op">(</span><span class="va">controller</span><span class="op">$</span><span class="va">started</span><span class="op">)</span></span>
 <span></span>
-<span>  <span class="fu">cleanup_async</span><span class="op">(</span><span class="va">controller</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="reference/cleanup_async.html">cleanup_async</a></span><span class="op">(</span><span class="va">controller</span><span class="op">)</span></span>
 <span>  <span class="fu">expect_false</span><span class="op">(</span><span class="va">controller</span><span class="op">$</span><span class="va">started</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">test_that</span><span class="op">(</span><span class="st">"workers receive broadcasts"</span>, <span class="op">{</span></span>
 <span>  <span class="va">grid_env</span> <span class="op">&lt;-</span> <span class="fu">create_grid_env</span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
-<span>  <span class="va">pub_socket</span> <span class="op">&lt;-</span> <span class="fu">create_pub_socket</span><span class="op">(</span><span class="fl">5555</span><span class="op">)</span></span>
+<span>  <span class="va">pub_socket</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_pub_socket.html">create_pub_socket</a></span><span class="op">(</span><span class="fl">5555</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="co"># Simulate worker</span></span>
-<span>  <span class="va">worker</span> <span class="op">&lt;-</span> <span class="fu">worker_init</span><span class="op">(</span><span class="st">"tcp://127.0.0.1:5555"</span><span class="op">)</span></span>
+<span>  <span class="va">worker</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/worker_init.html">worker_init</a></span><span class="op">(</span><span class="st">"tcp://127.0.0.1:5555"</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="co"># Broadcast update</span></span>
-<span>  <span class="fu">broadcast_update</span><span class="op">(</span><span class="va">pub_socket</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">5</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="reference/broadcast_update.html">broadcast_update</a></span><span class="op">(</span><span class="va">pub_socket</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">5</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.1</span><span class="op">)</span>  <span class="co"># Allow time for message</span></span>
 <span></span>
 <span>  <span class="co"># Worker should receive</span></span>
-<span>  <span class="va">worker</span> <span class="op">&lt;-</span> <span class="fu">worker_check_updates</span><span class="op">(</span><span class="va">worker</span>, <span class="va">grid_env</span><span class="op">)</span></span>
+<span>  <span class="va">worker</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/worker_check_updates.html">worker_check_updates</a></span><span class="op">(</span><span class="va">worker</span>, <span class="va">grid_env</span><span class="op">)</span></span>
 <span>  <span class="fu">expect_equal</span><span class="op">(</span><span class="va">worker</span><span class="op">$</span><span class="va">cache</span><span class="op">$</span><span class="va">version</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -402,7 +403,7 @@
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bench.r-lib.org/" class="external-link">bench</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">bench</span><span class="fu">::</span><span class="fu">mark</span><span class="op">(</span></span>
+<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">bench</span><span class="fu">::</span><span class="fu"><a href="https://bench.r-lib.org/reference/mark.html" class="external-link">mark</a></span><span class="op">(</span></span>
 <span>  sync <span class="op">=</span> <span class="fu"><a href="reference/run_simulation.html">run_simulation</a></span><span class="op">(</span>grid_size <span class="op">=</span> <span class="fl">100</span>, n_walkers <span class="op">=</span> <span class="fl">20</span>, workers <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span>
 <span>  async_2 <span class="op">=</span> <span class="fu"><a href="reference/run_simulation.html">run_simulation</a></span><span class="op">(</span>grid_size <span class="op">=</span> <span class="fl">100</span>, n_walkers <span class="op">=</span> <span class="fl">20</span>, workers <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  async_4 <span class="op">=</span> <span class="fu"><a href="reference/run_simulation.html">run_simulation</a></span><span class="op">(</span>grid_size <span class="op">=</span> <span class="fl">100</span>, n_walkers <span class="op">=</span> <span class="fl">20</span>, workers <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>,</span>
