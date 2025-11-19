@@ -112,6 +112,37 @@ jobs:
           # This ensures relative paths to ./shinylive/ work correctly
         shell: Rscript {0}
 
+      - name: Render async dashboard vignette
+        run: |
+          # Render dashboard_async.qmd using quarto package
+          # The shinylive filter will process the embedded shinylive code blocks
+          quarto::quarto_render(
+            input = "vignettes/dashboard_async.qmd",
+            output_format = "html",
+            output_file = "dashboard_async.html"
+          )
+
+          # Create destination directory
+          dir.create("docs/articles/dashboard_async", recursive = TRUE, showWarnings = FALSE)
+
+          # Copy rendered HTML to docs/articles/
+          file.copy(
+            "vignettes/dashboard_async.html",
+            "docs/articles/dashboard_async/index.html",
+            overwrite = TRUE
+          )
+
+          # Copy any shinylive assets if they were generated
+          if (dir.exists("vignettes/dashboard_async_files")) {
+            file.copy(
+              "vignettes/dashboard_async_files",
+              "docs/articles/dashboard_async/",
+              recursive = TRUE,
+              overwrite = TRUE
+            )
+          }
+        shell: Rscript {0}
+
       - name: Deploy to GitHub pages
         if: github.event_name != 'pull_request'
         uses: JamesIves/github-pages-deploy-action@v4.4.1
