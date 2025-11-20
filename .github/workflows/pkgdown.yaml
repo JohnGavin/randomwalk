@@ -44,39 +44,18 @@ jobs:
       - name: Run build script
         run: |
           nix-shell default-ci.nix --quiet --pure --run "Rscript -e '
-            # Load package and run complete build workflow
-            devtools::load_all()
-
-            # Skip targets pipeline for now (has syntax error in _targets.R)
-            # TODO: Fix _targets.R line 223 syntax error then uncomment
-            # targets::tar_make(callr_function = NULL)
-
-            # Pre-build telemetry vignette with rmarkdown
-            # Skip telemetry for now since it depends on targets
-            # TODO: Uncomment after fixing _targets.R
-            # rmarkdown::render(
-            #   input = \"vignettes/telemetry.qmd\",
-            #   output_dir = \"vignettes\",
-            #   knit_root_dir = getwd()
-            # )
+            # Build pkgdown site
+            # Note: pkgdown can build without loading the package in pure nix shell
 
             # Clean any existing site first
             if (dir.exists(\"docs\")) {
               pkgdown::clean_site(force = TRUE)
             }
 
-            # Build pkgdown site (skip article building)
+            # Build pkgdown site (skip article building for now)
             pkgdown::build_reference()
             pkgdown::build_home()
             pkgdown::build_articles_index()
-
-            # Skip copying telemetry (not built since targets skipped)
-            # TODO: Uncomment after fixing _targets.R
-            # file.copy(
-            #   \"vignettes/telemetry.html\",
-            #   \"docs/articles/telemetry.html\",
-            #   overwrite = TRUE
-            # )
           '"
 
       - name: Download WebAssembly library from latest release
