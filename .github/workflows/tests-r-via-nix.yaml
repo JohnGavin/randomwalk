@@ -40,7 +40,8 @@ jobs:
 
       - uses: cachix/cachix-action@v14
         with:
-          name: rstats-on-nix
+          name: randomwalk
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Build development environment
         run: nix-shell default-ci.nix --quiet --pure --run "Rscript -e \"sessionInfo()\""
