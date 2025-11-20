@@ -28,10 +28,10 @@ jobs:
       with:
         name: rstats-on-nix
 
-    - name: Run nix-build and nix-shell on default.nix
+    - name: Run nix-build and nix-shell on default-ci.nix
       run: |
-        nix-build --quiet default.nix
-        nix-shell --quiet default.nix --run "R --version"
+        nix-build --quiet default-ci.nix
+        nix-shell --quiet default-ci.nix --run "R --version"
 
   # macOS runner commented out to reduce CI time and costs
   # run-x86_64-darwin:
@@ -43,7 +43,7 @@ jobs:
   #   - name: Install Nix
   #     uses: DeterminateSystems/nix-installer-action@main
 
-  #   - name: Run nix-build and nix-shell on default.nix
+  #   - name: Run nix-build and nix-shell on default-ci.nix
   #     run: |
-  #       nix-build --quiet default.nix
-  #       nix-shell --quiet default.nix --run "R --version"
+  #       nix-build --quiet default-ci.nix
+  #       nix-shell --quiet default-ci.nix --run "R --version"
