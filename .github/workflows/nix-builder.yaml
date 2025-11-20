@@ -26,7 +26,7 @@ jobs:
 
     - uses: cachix/cachix-action@v15
       with:
-        name: randomwalk
+        name: johngavin
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
     - name: Run nix-build and nix-shell on default-ci.nix

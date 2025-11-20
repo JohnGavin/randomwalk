@@ -29,55 +29,55 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: r-lib/actions/setup-pandoc@v2
+      - name: Create nix folder to silence warning
+        run: mkdir -p ~/.nix-defexpr/channels
 
-      - uses: quarto-dev/quarto-actions/setup@v2
-
-      - uses: r-lib/actions/setup-r@v2
+      - uses: cachix/install-nix-action@v31
         with:
-          use-public-rspm: true
+          nix_path: nixpkgs=https://github.com/rstats-on-nix/nixpkgs/archive/refs/heads/r-daily.tar.gz
 
-      - uses: r-lib/actions/setup-r-dependencies@v2
+      - uses: cachix/cachix-action@v15
         with:
-          extra-packages: any::pkgdown, any::shinylive, local::.
-          needs: website
+          name: johngavin
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Run build script
         run: |
-          # Load package and run complete build workflow
-          devtools::load_all()
+          nix-shell default-ci.nix --quiet --pure --run "Rscript -e '
+            # Load package and run complete build workflow
+            devtools::load_all()
 
-          # Skip targets pipeline for now (has syntax error in _targets.R)
-          # TODO: Fix _targets.R line 223 syntax error then uncomment
-          # targets::tar_make(callr_function = NULL)
+            # Skip targets pipeline for now (has syntax error in _targets.R)
+            # TODO: Fix _targets.R line 223 syntax error then uncomment
+            # targets::tar_make(callr_function = NULL)
 
-          # Pre-build telemetry vignette with rmarkdown
-          # Skip telemetry for now since it depends on targets
-          # TODO: Uncomment after fixing _targets.R
-          # rmarkdown::render(
-          #   input = "vignettes/telemetry.qmd",
-          #   output_dir = "vignettes",
-          #   knit_root_dir = getwd()
-          # )
+            # Pre-build telemetry vignette with rmarkdown
+            # Skip telemetry for now since it depends on targets
+            # TODO: Uncomment after fixing _targets.R
+            # rmarkdown::render(
+            #   input = \"vignettes/telemetry.qmd\",
+            #   output_dir = \"vignettes\",
+            #   knit_root_dir = getwd()
+            # )
 
-          # Clean any existing site first
-          if (dir.exists("docs")) {
-            pkgdown::clean_site(force = TRUE)
-          }
+            # Clean any existing site first
+            if (dir.exists(\"docs\")) {
+              pkgdown::clean_site(force = TRUE)
+            }
 
-          # Build pkgdown site (skip article building)
-          pkgdown::build_reference()
-          pkgdown::build_home()
-          pkgdown::build_articles_index()
+            # Build pkgdown site (skip article building)
+            pkgdown::build_reference()
+            pkgdown::build_home()
+            pkgdown::build_articles_index()
 
-          # Skip copying telemetry (not built since targets skipped)
-          # TODO: Uncomment after fixing _targets.R
-          # file.copy(
-          #   "vignettes/telemetry.html",
-          #   "docs/articles/telemetry.html",
-          #   overwrite = TRUE
-          # )
-        shell: Rscript {0}
+            # Skip copying telemetry (not built since targets skipped)
+            # TODO: Uncomment after fixing _targets.R
+            # file.copy(
+            #   \"vignettes/telemetry.html\",
+            #   \"docs/articles/telemetry.html\",
+            #   overwrite = TRUE
+            # )
+          '"
 
       - name: Download WebAssembly library from latest release
         if: github.event_name != 'pull_request'
@@ -97,36 +97,38 @@ jobs:
 
       - name: Export sync dashboard with R shinylive
         run: |
-          # Clean destination directory to avoid cached/stale files
-          if (dir.exists("docs/articles/dashboard")) {
-            unlink("docs/articles/dashboard", recursive = TRUE)
-          }
+          nix-shell default-ci.nix --quiet --pure --run "Rscript -e '
+            # Clean destination directory to avoid cached/stale files
+            if (dir.exists(\"docs/articles/dashboard\")) {
+              unlink(\"docs/articles/dashboard\", recursive = TRUE)
+            }
 
-          # Export Shiny app to Shinylive format using R package
-          # This creates docs/articles/dashboard/ with all shinylive assets
-          shinylive::export(
-            appdir = "inst/shiny/dashboard",
-            destdir = "docs/articles/dashboard"
-          )
+            # Export Shiny app to Shinylive format using R package
+            # This creates docs/articles/dashboard/ with all shinylive assets
+            shinylive::export(
+              appdir = \"inst/shiny/dashboard\",
+              destdir = \"docs/articles/dashboard\"
+            )
 
-          # Don't copy index.html - keep dashboard in its own folder
-          # Users will access it at /articles/dashboard/ not /articles/dashboard.html
-          # This ensures relative paths to ./shinylive/ work correctly
-        shell: Rscript {0}
+            # Don'\''t copy index.html - keep dashboard in its own folder
+            # Users will access it at /articles/dashboard/ not /articles/dashboard.html
+            # This ensures relative paths to ./shinylive/ work correctly
+          '"
 
       - name: Export async dashboard with R shinylive
         run: |
-          # Clean destination directory
-          if (dir.exists("docs/articles/dashboard_async")) {
-            unlink("docs/articles/dashboard_async", recursive = TRUE)
-          }
+          nix-shell default-ci.nix --quiet --pure --run "Rscript -e '
+            # Clean destination directory
+            if (dir.exists(\"docs/articles/dashboard_async\")) {
+              unlink(\"docs/articles/dashboard_async\", recursive = TRUE)
+            }
 
-          # Export async Shiny app to Shinylive format
-          shinylive::export(
-            appdir = "inst/shiny/dashboard_async",
-            destdir = "docs/articles/dashboard_async"
-          )
-        shell: Rscript {0}
+            # Export async Shiny app to Shinylive format
+            shinylive::export(
+              appdir = \"inst/shiny/dashboard_async\",
+              destdir = \"docs/articles/dashboard_async\"
+            )
+          '"
 
       - name: Deploy to GitHub pages
         if: github.event_name != 'pull_request'
