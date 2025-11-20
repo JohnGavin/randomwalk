@@ -43,9 +43,10 @@ jobs:
 
       - name: Run build script
         run: |
-          nix-shell default-ci.nix --quiet --pure --run "Rscript -e '
+          nix-shell default-ci.nix --quiet --run "Rscript -e '
             # Build pkgdown site
-            # Note: pkgdown can build without loading the package in pure nix shell
+            # Note: Removed --pure flag to allow pkgdown to download external assets
+            # (JS/CSS from CDNs like cdnjs.cloudflare.com)
 
             # Clean any existing site first
             if (dir.exists(\"docs\")) {
@@ -76,7 +77,7 @@ jobs:
 
       - name: Export sync dashboard with R shinylive
         run: |
-          nix-shell default-ci.nix --quiet --pure --run "Rscript -e '
+          nix-shell default-ci.nix --quiet --run "Rscript -e '
             # Clean destination directory to avoid cached/stale files
             if (dir.exists(\"docs/articles/dashboard\")) {
               unlink(\"docs/articles/dashboard\", recursive = TRUE)
@@ -96,7 +97,7 @@ jobs:
 
       - name: Export async dashboard with R shinylive
         run: |
-          nix-shell default-ci.nix --quiet --pure --run "Rscript -e '
+          nix-shell default-ci.nix --quiet --run "Rscript -e '
             # Clean destination directory
             if (dir.exists(\"docs/articles/dashboard_async\")) {
               unlink(\"docs/articles/dashboard_async\", recursive = TRUE)
