@@ -24,11 +24,12 @@ The async dashboard demonstrates the **parallel processing capabilities** of the
 
 ### Key Features
 
-- **Parallel Execution**: Choose 0-4 workers for sync or async mode
+- **Parallel Execution**: Choose 0-12 workers for sync or async mode
 - **Performance Metrics**: Compare execution time with different worker counts
 - **Real-time Visualization**: View grid state, walker paths, and statistics
 - **No Server Required**: Runs entirely in your browser via WebAssembly
 - **Package Integration**: Uses the actual `randomwalk` package async functions
+- **Flexible Parameters**: Grid sizes from 20x20 to 400x400, dynamic walker constraints
 
 ### Async vs Sync Mode
 
@@ -44,10 +45,19 @@ The async dashboard extends the sync dashboard with parallel processing capabili
 
 ### Async Parameters
 
-**Number of Workers**: 0-4 workers
+**Number of Workers**: 0-12 workers
 - 0 workers = Sync mode (baseline for comparison)
 - 1+ workers = Async mode (parallel execution)
 - More workers may improve performance (up to CPU core limit)
+
+**Grid Size**: 20-400 (in steps of 20)
+- Smaller grids (20-100): Fast simulations for quick testing
+- Medium grids (100-200): Balanced performance and coverage
+- Large grids (200-400): Stress testing and performance evaluation
+
+**Number of Walkers**: Dynamically constrained to 70% of grid pixels
+- Automatically adjusts maximum based on selected grid size
+- Prevents overcrowding and ensures simulation quality
 
 ### Async Execution Model
 
@@ -72,22 +82,24 @@ The Performance tab shows:
 
 1. **Baseline**: Run with `workers = 0` (sync mode)
 2. **Note timing**: Check elapsed time in Performance tab
-3. **Scale up**: Increase workers to 2, then 4
+3. **Scale up**: Increase workers to 2, 4, 8, or 12
 4. **Compare**: Observe speedup in Performance tab
+5. **Test large grids**: Try 200x200 or 400x400 with 8-12 workers
 
 ### Optimal Worker Count
 
-- **Small simulations**: 1-2 workers (overhead dominates)
-- **Medium simulations**: 2-4 workers (good speedup)
-- **Large simulations**: 4+ workers (max speedup)
+- **Small simulations** (20-100 grid): 1-2 workers (overhead dominates)
+- **Medium simulations** (100-200 grid): 2-4 workers (good speedup)
+- **Large simulations** (200-400 grid): 4-12 workers (max speedup)
 - **Rule of thumb**: Don't exceed number of CPU cores
 
 ### Expected Results
 
 - **Sync vs Async**: Results may differ (static snapshots)
-- **Speedup**: Typically 1.5-2x with 2 workers
-- **Variability**: Speedup depends on walker termination patterns
+- **Speedup**: Typically 1.5-2x with 2 workers, up to 3-4x with 8-12 workers
+- **Variability**: Speedup depends on walker termination patterns and grid size
 - **Overhead**: Some overhead from worker management
+- **Large grids**: Better parallelization efficiency with more workers
 
 ## Technical Details
 
