@@ -42,12 +42,12 @@ ui <- fluidPage(
 
       hr(),
 
-      # ASYNC PARAMETER - Number of workers
+      # ASYNC PARAMETER - Number of workers (EXPANDED RANGE per issue #33)
       sliderInput(
         "workers",
         "Number of Workers:",
         min = 0,
-        max = 4,
+        max = 12,
         value = 2,
         step = 1,
         ticks = FALSE
@@ -55,30 +55,30 @@ ui <- fluidPage(
       helpText(
         HTML("<b>0 = Sync mode</b> (sequential)<br>",
              "<b>1+ = Async mode</b> (parallel)<br>",
-             "More workers may improve performance")
+             "More workers may improve performance (0-12)")
       ),
 
       sliderInput(
         "grid_size",
         "Grid Size:",
-        min = 5,
-        max = 50,
-        value = 20,
-        step = 1,
+        min = 20,
+        max = 400,
+        value = 100,
+        step = 20,
         ticks = FALSE
       ),
-      helpText("Size of the square grid (5-50)"),
+      helpText("Size of the square grid (20-400 in steps of 20)"),
 
       sliderInput(
         "n_walkers",
         "Number of Walkers:",
         min = 1,
-        max = 20,
+        max = 100,  # Will be constrained dynamically to 70% of grid pixels
         value = 6,
         step = 1,
         ticks = FALSE
       ),
-      helpText("Number of simultaneous random walkers (1-20)"),
+      helpText(HTML("Number of simultaneous random walkers<br><em>Max: 70% of grid pixels</em>")),
 
       selectInput(
         "neighborhood",
@@ -271,6 +271,17 @@ server <- function(input, output, session) {
   # Reactive value for status messages
   status_msg <- reactiveVal("Ready to run simulation")
 
+  # Dynamic walker constraint (issue #33): Limit to 70% of grid pixels
+  observe({
+    max_walkers <- floor(0.7 * input$grid_size^2)
+    updateSliderInput(
+      session,
+      "n_walkers",
+      max = max_walkers,
+      value = min(input$n_walkers, max_walkers)
+    )
+  })
+
   # Run simulation when button clicked
   observeEvent(input$run_sim, {
     mode_text <- if (input$workers == 0) "sync" else sprintf("async (%d workers)", input$workers)
@@ -328,10 +339,10 @@ server <- function(input, output, session) {
     })
   })
 
-  # Reset parameters
+  # Reset parameters (UPDATED defaults per issue #33)
   observeEvent(input$reset, {
     updateSliderInput(session, "workers", value = 2)
-    updateSliderInput(session, "grid_size", value = 20)
+    updateSliderInput(session, "grid_size", value = 100)  # Changed from 20
     updateSliderInput(session, "n_walkers", value = 6)
     updateSelectInput(session, "neighborhood", selected = "4-hood")
     updateSelectInput(session, "boundary", selected = "terminate")
@@ -499,7 +510,7 @@ server <- function(input, output, session) {
     )
   }, striped = TRUE, hover = TRUE, bordered = TRUE)
 
-  # Walker data table
+  # Walker data table (FIXED End_X/End_Y extraction per issue #33)
   output$walker_data <- renderDataTable({
     req(sim_result())
     walkers <- sim_result()$walkers
@@ -510,17 +521,30 @@ server <- function(input, output, session) {
       Steps = sapply(walkers, function(w) w$steps),
       Start_X = sapply(walkers, function(w) w$path[[1]][1]),
       Start_Y = sapply(walkers, function(w) w$path[[1]][2]),
-      End_X = sapply(walkers, function(w) tail(w$path[[1]], 1)[1]),
-      End_Y = sapply(walkers, function(w) tail(w$path[[1]], 1)[2]),
-      Active = sapply(walkers, function(w) ifelse(w$active, "Yes", "No")),
-      Reason = sapply(walkers, function(w) w$termination_reason)
+      # FIX: Extract last position correctly from path matrix
+      End_X = sapply(walkers, function(w) {
+        path <- w$path[[1]]
+        if (is.matrix(path)) path[nrow(path), 1] else path[length(path)]
+      }),
+      End_Y = sapply(walkers, function(w) {
+        path <- w$path[[1]]
+        if (is.matrix(path)) path[nrow(path), 2] else path[length(path)]
+      }),
+      Active = factor(sapply(walkers, function(w) ifelse(w$active, "Yes", "No")),
+                     levels = c("Yes", "No")),
+      Reason = factor(sapply(walkers, function(w) w$termination_reason))
     )
 
     walkers_display
-  }, options = list(
+  },
+  filter = 'top',  # IMPROVED: Built-in filters at top per issue #33
+  options = list(
     pageLength = 10,
     scrollX = TRUE,
-    dom = 'tip'
+    autoWidth = TRUE,
+    columnDefs = list(
+      list(className = 'dt-center', targets = c(0, 1, 2, 3, 4, 5, 6, 7))
+    )
   ))
 
   # Grid info table
