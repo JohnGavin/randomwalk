@@ -88,19 +88,20 @@ jobs:
       - name: Export async dashboard with R shinylive
         run: |
           export R_LIBS_USER=$HOME/R_libs
-          nix-shell default-ci.nix --keep R_LIBS_USER --quiet --run "Rscript -e '
-            # Clean destination directory to avoid cached/stale files
-            if (dir.exists(\"docs/articles/dashboard_async\")) {
-              unlink(\"docs/articles/dashboard_async\", recursive = TRUE)
-            }
-
-            # Export async Shiny app to Shinylive format
-            # This will include the updated parameters from PR #36 (issue #33)
-            shinylive::export(
-              appdir = \"inst/shiny/dashboard_async\",
-              destdir = \"docs/articles/dashboard_async\"
-            )
-          '"
+           nix-shell default-ci.nix --keep R_LIBS_USER --quiet --run "Rscript -e '\
+             Sys.setenv(R_LIBS_USER = paste0(Sys.getenv(\"HOME\"), \"/R_libs\"))\
+             # Clean destination directory to avoid cached/stale files\
+             if (dir.exists(\\\"docs/articles/dashboard_async\\\")) {\
+               unlink(\\\"docs/articles/dashboard_async\\\", recursive = TRUE)\
+             }\
+\
+             # Export async Shiny app to Shinylive format\
+             # This will include the updated parameters from PR #36 (issue #33)\
+             shinylive::export(\
+               appdir = \\\"inst/shiny/dashboard_async\\\",\
+               destdir = \\\"docs/articles/dashboard_async\\\"\
+             )\
+           '\"
 
       - name: Deploy to GitHub pages
         if: github.event_name != 'pull_request'
