@@ -77,9 +77,13 @@ jobs:
 
       # Install randomwalk package so shinylive::export() can load it
       # This solves the chicken-and-egg problem from PR #34
+      # Install to a user-writable location since Nix store is read-only
       - name: Install randomwalk package
         run: |
-          nix-shell default-ci.nix --quiet --run "R CMD INSTALL ."
+          mkdir -p $HOME/R_libs
+          nix-shell default-ci.nix --quiet --run "R CMD INSTALL --library=$HOME/R_libs ."
+        env:
+          R_LIBS_USER: ${{ env.HOME }}/R_libs
 
       # Export async dashboard with R shinylive (re-enabled for issue #37)
       - name: Export async dashboard with R shinylive
@@ -97,6 +101,8 @@ jobs:
               destdir = \"docs/articles/dashboard_async\"
             )
           '"
+        env:
+          R_LIBS_USER: ${{ env.HOME }}/R_libs
 
       - name: Deploy to GitHub pages
         if: github.event_name != 'pull_request'
