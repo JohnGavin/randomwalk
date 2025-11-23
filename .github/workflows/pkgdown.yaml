@@ -82,13 +82,13 @@ jobs:
         run: |
           mkdir -p $HOME/R_libs
           export R_LIBS_USER=$HOME/R_libs
-          nix-shell default-ci.nix --quiet --run "R CMD INSTALL --library=$HOME/R_libs ."
+          nix-shell default-ci.nix --keep R_LIBS_USER --quiet --run "R CMD INSTALL --library=$HOME/R_libs ."
 
       # Export async dashboard with R shinylive (re-enabled for issue #37)
       - name: Export async dashboard with R shinylive
         run: |
           export R_LIBS_USER=$HOME/R_libs
-          nix-shell default-ci.nix --quiet --run "Rscript -e '
+          nix-shell default-ci.nix --keep R_LIBS_USER --quiet --run "Rscript -e '
             # Clean destination directory to avoid cached/stale files
             if (dir.exists(\"docs/articles/dashboard_async\")) {
               unlink(\"docs/articles/dashboard_async\", recursive = TRUE)
