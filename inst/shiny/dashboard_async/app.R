@@ -218,6 +218,23 @@ ui <- fluidPage(
           tableOutput("grid_info")
         ),
 
+        # Debug/Logs Tab
+        tabPanel(
+          "Debug Logs",
+          icon = icon("bug"),
+          br(),
+          h4("Debug Information"),
+          p("Real-time logs to help diagnose issues with the dashboard."),
+          hr(),
+          h5("Event Log"),
+          verbatimTextOutput("debug_log"),
+          hr(),
+          h5("Current State"),
+          verbatimTextOutput("debug_state"),
+          hr(),
+          actionButton("clear_log", "Clear Log", class = "btn-secondary")
+        ),
+
         # About Tab
         tabPanel(
           "About",
@@ -271,6 +288,21 @@ server <- function(input, output, session) {
   # Reactive value for status messages
   status_msg <- reactiveVal("Ready to run simulation")
 
+  # Debug log reactive values
+  debug_log_entries <- reactiveVal(character(0))
+
+  # Helper function to add log entry
+  add_log <- function(msg) {
+    timestamp <- format(Sys.time(), "%H:%M:%S")
+    new_entry <- paste0("[", timestamp, "] ", msg)
+    current_log <- debug_log_entries()
+    debug_log_entries(c(current_log, new_entry))
+    cat(new_entry, "\n")  # Also print to R console
+  }
+
+  # Log app startup
+  add_log("Dashboard initialized")
+
   # Dynamic walker constraint (issue #33): Limit to 70% of grid pixels
   observe({
     max_walkers <- floor(0.7 * input$grid_size^2)
@@ -284,12 +316,19 @@ server <- function(input, output, session) {
 
   # Run simulation when button clicked
   observeEvent(input$run_sim, {
+    add_log("=== RUN SIMULATION CLICKED ===")
+    add_log(sprintf("Parameters: grid=%d, walkers=%d, workers=%d, neighborhood=%s, boundary=%s, max_steps=%d",
+                    input$grid_size, input$n_walkers, input$workers,
+                    input$neighborhood, input$boundary, input$max_steps))
+
     mode_text <- if (input$workers == 0) "sync" else sprintf("async (%d workers)", input$workers)
     status_msg(sprintf("Running simulation in %s mode...", mode_text))
+    add_log(sprintf("Mode: %s", mode_text))
 
     tryCatch({
       # Validate inputs
       if (input$n_walkers > (0.6 * input$grid_size^2)) {
+        add_log("ERROR: Too many walkers for grid size")
         showNotification(
           "Too many walkers for grid size. Maximum is 60% of grid cells.",
           type = "warning",
@@ -299,7 +338,10 @@ server <- function(input, output, session) {
         return(NULL)
       }
 
+      add_log("Validation passed, starting simulation...")
+
       # Run the simulation using randomwalk package with workers parameter
+      add_log("Calling randomwalk::run_simulation()...")
       result <- randomwalk::run_simulation(
         grid_size = input$grid_size,
         n_walkers = input$n_walkers,
@@ -309,6 +351,12 @@ server <- function(input, output, session) {
         max_steps = input$max_steps,
         verbose = FALSE
       )
+
+      add_log("Simulation completed successfully")
+      add_log(sprintf("Total steps: %d, Black pixels: %d (%.1f%%)",
+                      result$statistics$total_steps,
+                      result$statistics$black_pixels,
+                      result$statistics$black_percentage))
 
       # Store result
       sim_result(result)
@@ -330,6 +378,8 @@ server <- function(input, output, session) {
       )
 
     }, error = function(e) {
+      add_log(sprintf("ERROR in simulation: %s", e$message))
+      add_log(sprintf("Error traceback: %s", paste(capture.output(traceback()), collapse = "\n")))
       status_msg(paste("Error:", e$message))
       showNotification(
         paste("Simulation failed:", e$message),
@@ -341,6 +391,9 @@ server <- function(input, output, session) {
 
   # Reset parameters (UPDATED defaults per issue #33)
   observeEvent(input$reset, {
+    add_log("=== RESET BUTTON CLICKED ===")
+    add_log("Resetting parameters to defaults: workers=2, grid=100, walkers=6")
+
     updateSliderInput(session, "workers", value = 2)
     updateSliderInput(session, "grid_size", value = 100)  # Changed from 20
     updateSliderInput(session, "n_walkers", value = 6)
@@ -348,6 +401,8 @@ server <- function(input, output, session) {
     updateSelectInput(session, "boundary", selected = "terminate")
     updateSliderInput(session, "max_steps", value = 10000)
     status_msg("Parameters reset to defaults")
+
+    add_log("Parameters reset complete")
 
     showNotification(
       "Parameters reset to default values",
@@ -359,6 +414,45 @@ server <- function(input, output, session) {
   # Render status text
   output$status_text <- renderText({
     status_msg()
+  })
+
+  # Debug log output
+  output$debug_log <- renderText({
+    log_entries <- debug_log_entries()
+    if (length(log_entries) == 0) {
+      return("No log entries yet. Click 'Run Simulation' or 'Reset to Defaults' to see logs.")
+    }
+    paste(log_entries, collapse = "\n")
+  })
+
+  # Debug state output
+  output$debug_state <- renderText({
+    paste(
+      "=== CURRENT PARAMETERS ===",
+      sprintf("Workers: %d", input$workers),
+      sprintf("Grid Size: %d x %d", input$grid_size, input$grid_size),
+      sprintf("Walkers: %d", input$n_walkers),
+      sprintf("Neighborhood: %s", input$neighborhood),
+      sprintf("Boundary: %s", input$boundary),
+      sprintf("Max Steps: %d", input$max_steps),
+      "",
+      "=== SIMULATION STATUS ===",
+      sprintf("Status: %s", status_msg()),
+      sprintf("Result stored: %s", if (is.null(sim_result())) "No" else "Yes"),
+      "",
+      "=== ENVIRONMENT INFO ===",
+      sprintf("R version: %s", R.version.string),
+      sprintf("Running in WebR: %s", if (exists("webr")) "Yes" else "Unknown"),
+      sprintf("randomwalk package loaded: %s", "randomwalk" %in% loadedNamespaces()),
+      sprintf("Session start: %s", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
+      sep = "\n"
+    )
+  })
+
+  # Clear log button
+  observeEvent(input$clear_log, {
+    add_log("Log cleared by user")
+    debug_log_entries(character(0))
   })
 
   # ASYNC PERFORMANCE TABLE
