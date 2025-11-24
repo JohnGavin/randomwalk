@@ -213,7 +213,7 @@ ui <- fluidPage(
           br(),
           h4("Detailed Walker Information"),
           p("Complete data for each walker in the simulation."),
-          dataTableOutput("walker_data"),
+          tableOutput("walker_data"),
           hr(),
           h4("Grid Information"),
           tableOutput("grid_info")
@@ -626,8 +626,8 @@ server <- function(input, output, session) {
     )
   }, striped = TRUE, hover = TRUE, bordered = TRUE)
 
-  # Walker data table (FIXED End_X/End_Y extraction per issue #33)
-  output$walker_data <- renderDataTable({
+  # Walker data table
+  output$walker_data <- renderTable({
     req(sim_result())
     walkers <- sim_result()$walkers
 
@@ -637,7 +637,7 @@ server <- function(input, output, session) {
       Steps = sapply(walkers, function(w) w$steps),
       Start_X = sapply(walkers, function(w) w$path[[1]][1]),
       Start_Y = sapply(walkers, function(w) w$path[[1]][2]),
-      # FIX: Extract last position correctly from path matrix
+      # Extract last position correctly from path matrix
       End_X = sapply(walkers, function(w) {
         path <- w$path[[1]]
         if (is.matrix(path)) path[nrow(path), 1] else path[length(path)]
@@ -646,22 +646,12 @@ server <- function(input, output, session) {
         path <- w$path[[1]]
         if (is.matrix(path)) path[nrow(path), 2] else path[length(path)]
       }),
-      Active = factor(sapply(walkers, function(w) ifelse(w$active, "Yes", "No")),
-                     levels = c("Yes", "No")),
-      Reason = factor(sapply(walkers, function(w) w$termination_reason))
+      Active = sapply(walkers, function(w) ifelse(w$active, "Yes", "No")),
+      Reason = sapply(walkers, function(w) w$termination_reason)
     )
 
     walkers_display
-  },
-  filter = 'top',  # IMPROVED: Built-in filters at top per issue #33
-  options = list(
-    pageLength = 10,
-    scrollX = TRUE,
-    autoWidth = TRUE,
-    columnDefs = list(
-      list(className = 'dt-center', targets = c(0, 1, 2, 3, 4, 5, 6, 7))
-    )
-  ))
+  })
 
   # Grid info table
   output$grid_info <- renderTable({
