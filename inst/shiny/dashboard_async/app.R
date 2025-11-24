@@ -297,14 +297,15 @@ server <- function(input, output, session) {
   debug_log_entries <- reactiveVal(character(0))
   cat("✓ debug_log_entries created\n")
 
-  # Helper function to add log entry (SIMPLIFIED - no isolate initially)
+  # Helper function to add log entry
+  # CRITICAL: Use isolate() to prevent reactive dependency loop
   add_log <- function(msg) {
     tryCatch({
       timestamp <- format(Sys.time(), "%H:%M:%S")
       new_entry <- paste0("[", timestamp, "] ", msg)
       cat("LOG:", new_entry, "\n")  # Print to R console
-      # Try to update reactive value
-      current <- debug_log_entries()
+      # Use isolate() to read current entries without creating reactive dependency
+      current <- isolate(debug_log_entries())
       debug_log_entries(c(current, new_entry))
     }, error = function(e) {
       cat("ERROR in add_log:", e$message, "\n")
