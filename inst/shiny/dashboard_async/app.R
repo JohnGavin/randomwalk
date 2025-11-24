@@ -316,7 +316,7 @@ server <- function(input, output, session) {
   observe({
     cat(">> observe() for startup running\n")
     add_log("Dashboard initialized - server is running!")
-  }, once = TRUE)  # Run once on startup
+  })
   cat("✓ Startup observe() registered\n")
 
   # Dynamic walker constraint (issue #33): Limit to 70% of grid pixels
