@@ -295,13 +295,15 @@ server <- function(input, output, session) {
   add_log <- function(msg) {
     timestamp <- format(Sys.time(), "%H:%M:%S")
     new_entry <- paste0("[", timestamp, "] ", msg)
-    current_log <- debug_log_entries()
+    current_log <- isolate(debug_log_entries())
     debug_log_entries(c(current_log, new_entry))
     cat(new_entry, "\n")  # Also print to R console
   }
 
-  # Log app startup
-  add_log("Dashboard initialized")
+  # Log app startup (wrapped in observe to create reactive context)
+  observe({
+    add_log("Dashboard initialized")
+  }, once = TRUE, priority = 1000)  # Run once, with high priority
 
   # Dynamic walker constraint (issue #33): Limit to 70% of grid pixels
   observe({
