@@ -12,3 +12,6 @@
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^archive$
+^CLAUDE_CONTEXT\.md$
+^PROJECT_INFO\.md$

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Rscript:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)",
+      "Bash(curl:*)",
+      "Bash(git pull:*)",
+      "WebFetch(domain:johngavin.github.io)",
+      "Bash(/nix/store/1xqc4nc97vwmx6dqrk0zns79xncb5chw-git-2.51.0/bin/git checkout main)",
+      "Bash(/nix/store/1xqc4nc97vwmx6dqrk0zns79xncb5chw-git-2.51.0/bin/git pull origin main)",
+      "Bash(export PATH=\"/nix/store/r8cyixxcjrlss1pb1k439b26ywbwb166-git-minimal-2.51.0/bin:$PATH\":*)",
+      "Bash(git --version:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
