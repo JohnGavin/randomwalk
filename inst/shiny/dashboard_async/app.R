@@ -283,28 +283,41 @@ ui <- fluidPage(
 # Define server logic
 server <- function(input, output, session) {
 
+  cat("=== SERVER FUNCTION STARTED ===\n")
+
   # Reactive value to store simulation result
   sim_result <- reactiveVal(NULL)
+  cat("✓ sim_result created\n")
 
   # Reactive value for status messages
   status_msg <- reactiveVal("Ready to run simulation")
+  cat("✓ status_msg created\n")
 
   # Debug log reactive values
   debug_log_entries <- reactiveVal(character(0))
+  cat("✓ debug_log_entries created\n")
 
-  # Helper function to add log entry
+  # Helper function to add log entry (SIMPLIFIED - no isolate initially)
   add_log <- function(msg) {
-    timestamp <- format(Sys.time(), "%H:%M:%S")
-    new_entry <- paste0("[", timestamp, "] ", msg)
-    current_log <- isolate(debug_log_entries())
-    debug_log_entries(c(current_log, new_entry))
-    cat(new_entry, "\n")  # Also print to R console
+    tryCatch({
+      timestamp <- format(Sys.time(), "%H:%M:%S")
+      new_entry <- paste0("[", timestamp, "] ", msg)
+      cat("LOG:", new_entry, "\n")  # Print to R console
+      # Try to update reactive value
+      current <- debug_log_entries()
+      debug_log_entries(c(current, new_entry))
+    }, error = function(e) {
+      cat("ERROR in add_log:", e$message, "\n")
+    })
   }
+  cat("✓ add_log function created\n")
 
   # Log app startup (wrapped in observe to create reactive context)
   observe({
-    add_log("Dashboard initialized")
+    cat(">> observe() for startup running\n")
+    add_log("Dashboard initialized - server is running!")
   }, once = TRUE, priority = 1000)  # Run once, with high priority
+  cat("✓ Startup observe() registered\n")
 
   # Dynamic walker constraint (issue #33): Limit to 70% of grid pixels
   observe({
@@ -317,12 +330,14 @@ server <- function(input, output, session) {
     )
   })
 
+  cat("✓ observeEvent(run_sim) registered\n")
+
   # Run simulation when button clicked
   observeEvent(input$run_sim, {
+    cat("!!! RUN SIMULATION BUTTON CLICKED !!!\n")
     add_log("=== RUN SIMULATION CLICKED ===")
-    add_log(sprintf("Parameters: grid=%d, walkers=%d, workers=%d, neighborhood=%s, boundary=%s, max_steps=%d",
-                    input$grid_size, input$n_walkers, input$workers,
-                    input$neighborhood, input$boundary, input$max_steps))
+    add_log(sprintf("Parameters: grid=%d, walkers=%d, workers=%d",
+                    input$grid_size, input$n_walkers, input$workers))
 
     mode_text <- if (input$workers == 0) "sync" else sprintf("async (%d workers)", input$workers)
     status_msg(sprintf("Running simulation in %s mode...", mode_text))
@@ -392,8 +407,11 @@ server <- function(input, output, session) {
     })
   })
 
+  cat("✓ observeEvent(reset) registered\n")
+
   # Reset parameters (UPDATED defaults per issue #33)
   observeEvent(input$reset, {
+    cat("!!! RESET BUTTON CLICKED !!!\n")
     add_log("=== RESET BUTTON CLICKED ===")
     add_log("Resetting parameters to defaults: workers=2, grid=100, walkers=6")
 
