@@ -97,9 +97,13 @@ jobs:
 
             # Export async Shiny app to Shinylive format
             # This will include the updated parameters from PR #36 (issue #33)
+            # Note: wasm_packages excludes randomwalk since we provide it via GitHub release
             shinylive::export(
               appdir = \"inst/shiny/dashboard_async\",
-              destdir = \"docs/articles/dashboard_async\"
+              destdir = \"docs/articles/dashboard_async\",
+              wasm_packages = list(
+                exclude = c(\"randomwalk\")
+              )
             )
           '"
 
