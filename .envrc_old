@@ -1,0 +1,9 @@
+# Load Nix environment (impure by default, which is OK for direnv)
+use nix default.nix
+
+# Explicitly keep/set important variables
+export GITHUB_PAT="${GITHUB_PAT:-}"
+export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}"
+export NIXPKGS_ALLOW_BROKEN=1
+export NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1
+export NIXPKGS_ALLOW_UNFREE=1
