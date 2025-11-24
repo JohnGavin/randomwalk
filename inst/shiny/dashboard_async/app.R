@@ -138,6 +138,7 @@ ui <- fluidPage(
         id = "status_box",
         style = "padding: 10px; border-radius: 5px; background-color: #f8f9fa;",
         h5("Status", style = "margin-top: 0;"),
+        p("✅ APP LOADED - UI IS WORKING", style = "color: green; font-weight: bold;"),
         textOutput("status_text")
       )
     ),
