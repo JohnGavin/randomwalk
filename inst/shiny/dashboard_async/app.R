@@ -133,13 +133,30 @@ ui <- fluidPage(
 
       hr(),
 
-      # Status display
+      # Status display with progress indicator
       div(
         id = "status_box",
         style = "padding: 10px; border-radius: 5px; background-color: #f8f9fa;",
         h5("Status", style = "margin-top: 0;"),
         p("✅ APP LOADED - UI IS WORKING", style = "color: green; font-weight: bold;"),
-        textOutput("status_text")
+        textOutput("status_text"),
+        br(),
+        # Progress indicator (hidden by default)
+        conditionalPanel(
+          condition = "output.show_progress",
+          div(
+            style = "margin-top: 10px;",
+            tags$div(
+              class = "progress",
+              tags$div(
+                class = "progress-bar progress-bar-striped progress-bar-animated",
+                role = "progressbar",
+                style = "width: 100%",
+                "Running simulation..."
+              )
+            )
+          )
+        )
       )
     ),
 
@@ -186,6 +203,19 @@ ui <- fluidPage(
           br(),
           h4("Individual Walker Trajectories"),
           p("Green squares mark starting positions, red squares show where walkers terminated."),
+
+          # Path limit slider
+          sliderInput(
+            "max_paths",
+            "Maximum paths to display:",
+            min = 1,
+            max = 51,
+            value = 6,
+            step = 5,
+            ticks = FALSE
+          ),
+          helpText("Limit displayed paths to avoid visual clutter with many walkers. Slider range: 1-51."),
+
           plotOutput("paths_plot", height = "600px"),
           hr(),
           p(class = "text-muted", "Generated using plot_walker_paths() from the randomwalk package")
@@ -213,6 +243,25 @@ ui <- fluidPage(
           br(),
           h4("Detailed Walker Information"),
           p("Complete data for each walker in the simulation."),
+
+          # Pagination controls
+          fluidRow(
+            column(3,
+              selectInput(
+                "page_size",
+                "Rows per page:",
+                choices = c(10, 25, 50, 100, "All"),
+                selected = 10
+              )
+            ),
+            column(3,
+              uiOutput("page_nav")
+            ),
+            column(6,
+              textOutput("row_info")
+            )
+          ),
+
           tableOutput("walker_data"),
           hr(),
           h4("Grid Information"),
@@ -264,9 +313,14 @@ ui <- fluidPage(
           tags$ul(
             tags$li(tags$b("Pro:"), " Faster execution with multiple workers"),
             tags$li(tags$b("Pro:"), " Simple, reliable architecture"),
+            tags$li(tags$b("Pro:"), " Visual progress indicator during execution"),
             tags$li(tags$b("Con:"), " Results may differ from sync mode (acceptable)"),
             tags$li(tags$b("Con:"), " Workers don't see real-time updates from other workers")
           ),
+
+          h5("Progress Monitoring"),
+          p("The dashboard includes a visual progress indicator that shows when simulations are running. ",
+            "Future enhancements will include detailed task-level progress monitoring with completed/total walker counts."),
 
           h5("References"),
           tags$ul(
@@ -292,6 +346,14 @@ server <- function(input, output, session) {
   # Reactive value for status messages
   status_msg <- reactiveVal("Ready to run simulation")
   cat("✓ status_msg created\n")
+
+  # Reactive value to control progress indicator visibility
+  show_progress_flag <- reactiveVal(FALSE)
+  cat("✓ show_progress_flag created\n")
+
+  # Pagination state
+  current_page <- reactiveVal(1)
+  cat("✓ current_page created\n")
 
   # Debug log reactive values
   debug_log_entries <- reactiveVal(character(0))
@@ -331,6 +393,13 @@ server <- function(input, output, session) {
     )
   })
 
+  # Reset pagination when page size changes or new simulation completes
+  observe({
+    input$page_size
+    sim_result()
+    current_page(1)
+  })
+
   cat("✓ observeEvent(run_sim) registered\n")
 
   # Run simulation when button clicked
@@ -344,10 +413,14 @@ server <- function(input, output, session) {
     status_msg(sprintf("Running simulation in %s mode...", mode_text))
     add_log(sprintf("Mode: %s", mode_text))
 
+    # Show progress indicator
+    show_progress_flag(TRUE)
+
     tryCatch({
       # Validate inputs
       if (input$n_walkers > (0.6 * input$grid_size^2)) {
         add_log("ERROR: Too many walkers for grid size")
+        show_progress_flag(FALSE)  # Hide progress on validation error
         showNotification(
           "Too many walkers for grid size. Maximum is 60% of grid cells.",
           type = "warning",
@@ -380,6 +453,9 @@ server <- function(input, output, session) {
       # Store result
       sim_result(result)
 
+      # Hide progress indicator on success
+      show_progress_flag(FALSE)
+
       # Update status
       status_msg(sprintf(
         "Simulation complete (%s mode)! %d steps, %.1f%% coverage in %.2fs",
@@ -397,6 +473,9 @@ server <- function(input, output, session) {
       )
 
     }, error = function(e) {
+      # Hide progress indicator on error
+      show_progress_flag(FALSE)
+
       add_log(sprintf("ERROR in simulation: %s", e$message))
       add_log(sprintf("Error traceback: %s", paste(capture.output(traceback()), collapse = "\n")))
       status_msg(paste("Error:", e$message))
@@ -438,6 +517,74 @@ server <- function(input, output, session) {
     status_msg()
   })
 
+  # Control progress indicator visibility
+  output$show_progress <- reactive({
+    show_progress_flag()
+  })
+  outputOptions(output, "show_progress", suspendWhenHidden = FALSE)
+
+  # Page navigation buttons
+  output$page_nav <- renderUI({
+    req(sim_result())
+    walkers <- sim_result()$walkers
+
+    page_size <- if (input$page_size == "All") Inf else as.numeric(input$page_size)
+    total_pages <- ceiling(length(walkers) / page_size)
+
+    if (total_pages <= 1) {
+      return(NULL)  # No pagination needed
+    }
+
+    fluidRow(
+      column(6,
+        actionButton("prev_page", "Previous", class = "btn-sm",
+                     disabled = if (current_page() == 1) "" else NULL)
+      ),
+      column(6,
+        actionButton("next_page", "Next", class = "btn-sm",
+                     disabled = if (current_page() >= total_pages) "" else NULL)
+      )
+    )
+  })
+
+  # Row information text
+  output$row_info <- renderText({
+    req(sim_result())
+    walkers <- sim_result()$walkers
+    total_rows <- length(walkers)
+
+    page_size <- if (input$page_size == "All") Inf else as.numeric(input$page_size)
+
+    if (page_size >= total_rows) {
+      sprintf("Showing all %d walkers", total_rows)
+    } else {
+      start <- (current_page() - 1) * page_size + 1
+      end <- min(start + page_size - 1, total_rows)
+      sprintf("Showing walkers %d-%d of %d (Page %d of %d)",
+              start, end, total_rows,
+              current_page(), ceiling(total_rows / page_size))
+    }
+  })
+
+  # Previous page button
+  observeEvent(input$prev_page, {
+    if (current_page() > 1) {
+      current_page(current_page() - 1)
+    }
+  })
+
+  # Next page button
+  observeEvent(input$next_page, {
+    req(sim_result())
+    walkers <- sim_result()$walkers
+    page_size <- if (input$page_size == "All") Inf else as.numeric(input$page_size)
+    total_pages <- ceiling(length(walkers) / page_size)
+
+    if (current_page() < total_pages) {
+      current_page(current_page() + 1)
+    }
+  })
+
   # Debug log output
   output$debug_log <- renderText({
     log_entries <- debug_log_entries()
@@ -449,7 +596,7 @@ server <- function(input, output, session) {
 
   # Debug state output
   output$debug_state <- renderText({
-    paste(
+    base_info <- paste(
       "=== CURRENT PARAMETERS ===",
       sprintf("Workers: %d", input$workers),
       sprintf("Grid Size: %d x %d", input$grid_size, input$grid_size),
@@ -458,10 +605,30 @@ server <- function(input, output, session) {
       sprintf("Boundary: %s", input$boundary),
       sprintf("Max Steps: %d", input$max_steps),
       "",
+      "=== UI CONTROLS ===",
+      sprintf("Page Size: %s rows per page", input$page_size),
+      sprintf("Current Page: %d", current_page()),
+      sprintf("Max Paths Displayed: %d", input$max_paths),
+      "",
       "=== SIMULATION STATUS ===",
       sprintf("Status: %s", status_msg()),
       sprintf("Result stored: %s", if (is.null(sim_result())) "No" else "Yes"),
-      "",
+      sep = "\n"
+    )
+
+    if (!is.null(sim_result())) {
+      walkers <- sim_result()$walkers
+      base_info <- paste(
+        base_info,
+        sprintf("Total walkers in result: %d", length(walkers)),
+        sprintf("Walkers being displayed in paths: %d", min(input$max_paths, length(walkers))),
+        "",
+        sep = "\n"
+      )
+    }
+
+    paste(
+      base_info,
       "=== ENVIRONMENT INFO ===",
       sprintf("R version: %s", R.version.string),
       sprintf("Running in WebR: %s", if (exists("webr")) "Yes" else "Unknown"),
@@ -554,10 +721,23 @@ server <- function(input, output, session) {
     randomwalk::plot_grid(sim_result())
   })
 
-  # Render walker paths plot
+  # Render walker paths plot with path limit slider
   output$paths_plot <- renderPlot({
     req(sim_result())
-    randomwalk::plot_walker_paths(sim_result())
+    result <- sim_result()
+
+    # Limit to first N walkers based on slider
+    max_display <- min(input$max_paths, length(result$walkers))
+
+    if (max_display < length(result$walkers)) {
+      # Create a copy of result with limited walkers
+      result_limited <- result
+      result_limited$walkers <- result$walkers[1:max_display]
+      randomwalk::plot_walker_paths(result_limited)
+    } else {
+      # Show all walkers
+      randomwalk::plot_walker_paths(result)
+    }
   })
 
   # Render statistics table
@@ -626,7 +806,7 @@ server <- function(input, output, session) {
     )
   }, striped = TRUE, hover = TRUE, bordered = TRUE)
 
-  # Walker data table
+  # Walker data table with pagination
   output$walker_data <- renderTable({
     req(sim_result())
     walkers <- sim_result()$walkers
@@ -650,7 +830,18 @@ server <- function(input, output, session) {
       Reason = sapply(walkers, function(w) w$termination_reason)
     )
 
-    walkers_display
+    # Apply pagination
+    page_size <- if (input$page_size == "All") Inf else as.numeric(input$page_size)
+
+    if (page_size >= nrow(walkers_display)) {
+      # Show all rows
+      walkers_display
+    } else {
+      # Show current page
+      start_row <- (current_page() - 1) * page_size + 1
+      end_row <- min(start_row + page_size - 1, nrow(walkers_display))
+      walkers_display[start_row:end_row, ]
+    }
   })
 
   # Grid info table
