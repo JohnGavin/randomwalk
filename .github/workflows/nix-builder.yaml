@@ -35,6 +35,13 @@ jobs:
         nix-build --quiet default-ci.nix
         nix-shell --quiet default-ci.nix --run "R --version"
 
+    - name: Selectively push randomwalk to cachix
+      run: |
+        # Find and push only randomwalk and btw packages to cachix
+        nix-store -qR --include-outputs $(nix-instantiate default-ci.nix) | \
+          grep -E 'randomwalk|btw' | \
+          cachix push johngavin
+
   # macOS runner commented out to reduce CI time and costs
   # run-x86_64-darwin:
   #   name: nix builder for MacOS X86_64

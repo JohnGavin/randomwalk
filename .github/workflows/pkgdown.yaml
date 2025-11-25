@@ -40,7 +40,7 @@ jobs:
         with:
           name: johngavin
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-          skipPush: true  # Don't push standard R packages to johngavin cachix
+          skipPush: true  # Manual selective push below
 
       - name: Run build script
         run: |
@@ -106,6 +106,13 @@ jobs:
               wasm_packages = FALSE
             )
           '"
+
+      - name: Selectively push randomwalk to cachix
+        run: |
+          # Find and push only randomwalk and btw packages to cachix
+          nix-store -qR --include-outputs $(nix-instantiate default-ci.nix) | \
+            grep -E 'randomwalk|btw' | \
+            cachix push johngavin
 
       - name: Deploy to GitHub pages
         if: github.event_name != 'pull_request'

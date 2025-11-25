@@ -42,10 +42,17 @@ jobs:
         with:
           name: johngavin
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-          skipPush: true  # Don't push standard R packages to johngavin cachix
+          skipPush: true  # Manual selective push below
 
       - name: Build development environment
         run: nix-shell default-ci.nix --quiet --pure --run "Rscript -e \"sessionInfo()\""
 
       - name: Run devtools::test() via nix-shell
         run: nix-shell default-ci.nix --quiet --pure --run "Rscript -e \"devtools::test(stop_on_failure = TRUE)\""
+
+      - name: Selectively push randomwalk to cachix
+        run: |
+          # Find and push only randomwalk and btw packages to cachix
+          nix-store -qR --include-outputs $(nix-instantiate default-ci.nix) | \
+            grep -E 'randomwalk|btw' | \
+            cachix push johngavin
