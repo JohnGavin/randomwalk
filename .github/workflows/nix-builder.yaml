@@ -28,6 +28,7 @@ jobs:
       with:
         name: johngavin
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+        skipPush: true  # Don't push standard R packages to johngavin cachix
 
     - name: Run nix-build and nix-shell on default-ci.nix
       run: |

@@ -42,6 +42,7 @@ jobs:
         with:
           name: johngavin
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          skipPush: true  # Don't push standard R packages to johngavin cachix
 
       - name: Build development environment
         run: nix-shell default-ci.nix --quiet --pure --run "Rscript -e \"sessionInfo()\""
