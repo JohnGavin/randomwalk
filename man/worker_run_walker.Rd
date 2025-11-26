@@ -7,7 +7,7 @@
 worker_run_walker(
   walker,
   grid_state,
-  pub_address,
+  pub_address = NULL,
   neighborhood = "4-hood",
   boundary = "terminate",
   max_steps = 10000L
