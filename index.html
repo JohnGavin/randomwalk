@@ -176,9 +176,65 @@
 </ul>
 </div>
 <div class="section level2">
-<h2 id="development">Development<a class="anchor" aria-label="anchor" href="#development"></a>
+<h2 id="books-vignettes--documentation">📚 Vignettes &amp; Documentation<a class="anchor" aria-label="anchor" href="#books-vignettes--documentation"></a>
 </h2>
-<p>See <code>vignettes/</code> for detailed documentation on: - Usage examples - Performance tuning - Architecture details - Telemetry statistics</p>
+<p>The package includes comprehensive vignettes for different use cases:</p>
+<div class="section level3">
+<h3 id="interactive-dashboard-video_game">
+<strong><a href="https://johngavin.github.io/randomwalk/articles/dashboard.html">Interactive Dashboard</a></strong> 🎮<a class="anchor" aria-label="anchor" href="#interactive-dashboard-video_game"></a>
+</h3>
+<p>Browser-based Shiny application running entirely client-side via WebAssembly. Features real-time parameter adjustment, multiple visualization tabs, and complete simulation statistics - no R installation required.</p>
+</div>
+<div class="section level3">
+<h3 id="asyncparallel-simulation-dashboard-zap">
+<strong><a href="https://johngavin.github.io/randomwalk/articles/dashboard_async.html">Async/Parallel Simulation Dashboard</a></strong> ⚡<a class="anchor" aria-label="anchor" href="#asyncparallel-simulation-dashboard-zap"></a>
+</h3>
+<p>Advanced dashboard demonstrating parallel processing with 0-12 workers using the <code>crew</code> package. Compare performance metrics between sync and async modes, with grid sizes from 20×20 to 400×400.</p>
+</div>
+<div class="section level3">
+<h3 id="telemetry-and-pipeline-statistics-bar_chart">
+<strong><a href="https://johngavin.github.io/randomwalk/articles/telemetry.html">Telemetry and Pipeline Statistics</a></strong> 📊<a class="anchor" aria-label="anchor" href="#telemetry-and-pipeline-statistics-bar_chart"></a>
+</h3>
+<p>Package performance metrics, targets pipeline visualization, git history, test coverage statistics, and session information. All data pre-computed using the <code>targets</code> package for reproducibility.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="file_folder-package-structure">📁 Package Structure<a class="anchor" aria-label="anchor" href="#file_folder-package-structure"></a>
+</h2>
+<pre><code>randomwalk/
+├── R/                          # Core package code
+│   ├── simulation.R           # Main simulation functions
+│   ├── walker.R               # Walker movement logic
+│   ├── grid.R                 # Grid management
+│   ├── plotting.R             # Visualization functions
+│   ├── async_controller.R     # Crew controller management
+│   ├── async_worker.R         # Worker process functions
+│   ├── shiny_modules.R        # Shiny UI/server modules
+│   ├── setup/                 # Development workflow scripts
+│   ├── log/                   # Git/GitHub operation logs
+│   └── plans/                 # Targets pipeline plans
+│
+├── inst/                      # Installed package files
+│   ├── shiny/                 # Shiny dashboard applications
+│   │   ├── dashboard/         # Sync dashboard
+│   │   └── dashboard_async/   # Async dashboard
+│   ├── docs/                  # Additional documentation
+│   │   └── DEVELOPMENT_WORKFLOW.md
+│   └── qmd/                   # Source Quarto documents
+│
+├── vignettes/                 # Package vignettes
+│   ├── dashboard.qmd          # Interactive dashboard vignette
+│   ├── dashboard_async.qmd    # Async dashboard vignette
+│   └── telemetry.qmd          # Telemetry statistics vignette
+│
+├── tests/                     # Test suite
+│   └── testthat/              # testthat unit tests
+│
+├── man/                       # Generated documentation
+├── _targets.R                 # Targets pipeline definition
+├── _pkgdown.yml               # pkgdown configuration
+├── default-ci.nix             # Nix environment for CI
+└── default.nix                # Nix environment for development</code></pre>
 </div>
 <div class="section level2">
 <h2 id="open_book-documentation--resources">📖 Documentation &amp; Resources<a class="anchor" aria-label="anchor" href="#open_book-documentation--resources"></a>
@@ -203,6 +259,8 @@
 </h3>
 <ul>
 <li>
+<strong><a href="inst/docs/DEVELOPMENT_WORKFLOW.html">Development Workflow Guide</a></strong> - Complete guide for developing the randomwalk package in the nix environment</li>
+<li>
 <a href="PROJECT_INFO.html">Project Info</a> - Quick reference with restore instructions</li>
 <li>
 <a href="R/setup/">R/setup/</a> - Development workflow scripts for reproducibility</li>
@@ -214,7 +272,7 @@
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
 </h2>
-<p>MIT # Trigger CI to verify selective caching</p>
+<p>MIT</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
