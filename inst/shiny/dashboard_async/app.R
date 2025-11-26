@@ -113,6 +113,16 @@ ui <- fluidPage(
 
       hr(),
 
+      # Memory estimate display
+      div(
+        id = "memory_estimate",
+        style = "padding: 10px; border-radius: 5px; background-color: #f0f0f0; margin-bottom: 15px;",
+        h5("Memory Estimate", style = "margin-top: 0;"),
+        textOutput("memory_estimate"),
+        helpText(HTML("<b>WebR limit:</b> ~1 GB for simulation data<br>",
+                     "<em>Large simulations may fail in browser</em>"))
+      ),
+
       actionButton(
         "run_sim",
         "Run Simulation",
@@ -322,11 +332,65 @@ ui <- fluidPage(
           p("The dashboard includes a visual progress indicator that shows when simulations are running. ",
             "Future enhancements will include detailed task-level progress monitoring with completed/total walker counts."),
 
+          hr(),
+
+          h5("WebR Memory Limitations"),
+          p(strong("Important:"), " This dashboard runs entirely in your browser using WebAssembly (WebR), which has memory constraints."),
+          tags$ul(
+            tags$li(strong("Browser memory limit:"), " ~2-4 GB per browser tab"),
+            tags$li(strong("Safe simulation limit:"), " Keep estimated memory under ~1-1.5 GB"),
+            tags$li(strong("Memory estimation:"), " Displayed above the 'Run Simulation' button"),
+            tags$li(strong("Path storage dominates:"), " walkers × max_steps × 16 bytes")
+          ),
+
+          h5("Recommended Safe Parameters"),
+          tags$table(
+            class = "table table-sm table-bordered",
+            style = "max-width: 600px;",
+            tags$thead(
+              tags$tr(
+                tags$th("Grid Size"),
+                tags$th("Max Walkers"),
+                tags$th("Max Steps"),
+                tags$th("Est. Memory"),
+                tags$th("Status")
+              )
+            ),
+            tags$tbody(
+              tags$tr(
+                tags$td("100"),
+                tags$td("5,000"),
+                tags$td("10,000"),
+                tags$td("~760 MB"),
+                tags$td(tags$span(style = "color: green;", "✅ Safe"))
+              ),
+              tags$tr(
+                tags$td("200"),
+                tags$td("10,000"),
+                tags$td("10,000"),
+                tags$td("~1,520 MB"),
+                tags$td(tags$span(style = "color: orange;", "⚠️ High"))
+              ),
+              tags$tr(
+                tags$td("400"),
+                tags$td("32,000"),
+                tags$td("10,000"),
+                tags$td("~4,880 MB"),
+                tags$td(tags$span(style = "color: red;", "❌ Blocked"))
+              )
+            )
+          ),
+
+          p(strong("For large simulations:"), " Install the randomwalk package locally and run in RStudio instead of WebR."),
+
+          hr(),
+
           h5("References"),
           tags$ul(
             tags$li(tags$a(href = "https://github.com/JohnGavin/randomwalk", "randomwalk GitHub Repository")),
             tags$li(tags$a(href = "https://wlandau.github.io/crew/", "crew: A Distributed Worker Launcher")),
-            tags$li(tags$a(href = "https://posit-dev.github.io/r-shinylive/", "Shinylive Documentation"))
+            tags$li(tags$a(href = "https://posit-dev.github.io/r-shinylive/", "Shinylive Documentation")),
+            tags$li(tags$a(href = "https://github.com/JohnGavin/randomwalk/issues/43", "Issue #43: WebR Memory Limits"))
           )
         )
       )
@@ -393,6 +457,33 @@ server <- function(input, output, session) {
     )
   })
 
+  # Memory estimate (issue #43): Calculate estimated memory usage
+  output$memory_estimate <- renderText({
+    # Calculate memory components (in MB)
+    path_mb <- (input$n_walkers * input$max_steps * 2 * 8) / (1024^2)
+    grid_mb <- (input$grid_size^2 * 8) / (1024^2)
+    overhead_mb <- 50  # Estimated overhead for worker copies, etc.
+    total_mb <- path_mb + grid_mb + overhead_mb
+
+    # Determine status
+    if (total_mb > 1500) {
+      status <- "❌ Too high - will fail!"
+      color <- "color: #d32f2f; font-weight: bold;"
+    } else if (total_mb > 1000) {
+      status <- "⚠️ High risk"
+      color <- "color: #f57c00; font-weight: bold;"
+    } else if (total_mb > 700) {
+      status <- "⚠️ Caution"
+      color <- "color: #ffa726;"
+    } else {
+      status <- "✅ OK"
+      color <- "color: #388e3c; font-weight: bold;"
+    }
+
+    # Format output
+    sprintf("Estimated: %.0f MB %s", total_mb, status)
+  })
+
   # Reset pagination when page size changes or new simulation completes
   observe({
     input$page_size
@@ -428,6 +519,44 @@ server <- function(input, output, session) {
         )
         status_msg("Error: Too many walkers for grid size")
         return(NULL)
+      }
+
+      # Memory validation (issue #43): Prevent OOM errors in WebR
+      path_mb <- (input$n_walkers * input$max_steps * 2 * 8) / (1024^2)
+      grid_mb <- (input$grid_size^2 * 8) / (1024^2)
+      total_mb <- path_mb + grid_mb + 50  # +50 MB overhead
+
+      webr_safe_limit_mb <- 1500  # Conservative limit for WebR
+
+      if (total_mb > webr_safe_limit_mb) {
+        error_msg <- sprintf(
+          "Memory estimate (%.0f MB) exceeds WebR safe limit (~%d MB). Reduce grid size, walkers, or max steps.",
+          total_mb,
+          webr_safe_limit_mb
+        )
+        add_log(paste("ERROR:", error_msg))
+        show_progress_flag(FALSE)  # Hide progress on validation error
+        showNotification(
+          error_msg,
+          type = "error",
+          duration = 10
+        )
+        status_msg(paste("Error:", error_msg))
+        return(NULL)
+      }
+
+      # Warning for high memory usage
+      if (total_mb > 1000) {
+        warning_msg <- sprintf(
+          "Memory estimate (%.0f MB) is high. Simulation may be slow or fail in WebR.",
+          total_mb
+        )
+        add_log(paste("WARNING:", warning_msg))
+        showNotification(
+          warning_msg,
+          type = "warning",
+          duration = 5
+        )
       }
 
       add_log("Validation passed, starting simulation...")
