@@ -89,13 +89,57 @@ run_dashboard()
 - **Workers**: Number of parallel R processes (0-16, default 1)
 - **Refresh Rate**: UI update interval in seconds (1-60, default 4)
 
-## Development
+## 📚 Vignettes & Documentation
 
-See `vignettes/` for detailed documentation on:
-- Usage examples
-- Performance tuning
-- Architecture details
-- Telemetry statistics
+The package includes comprehensive vignettes for different use cases:
+
+### **[Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard.html)** 🎮
+Browser-based Shiny application running entirely client-side via WebAssembly. Features real-time parameter adjustment, multiple visualization tabs, and complete simulation statistics - no R installation required.
+
+### **[Async/Parallel Simulation Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_async.html)** ⚡
+Advanced dashboard demonstrating parallel processing with 0-12 workers using the `crew` package. Compare performance metrics between sync and async modes, with grid sizes from 20×20 to 400×400.
+
+### **[Telemetry and Pipeline Statistics](https://johngavin.github.io/randomwalk/articles/telemetry.html)** 📊
+Package performance metrics, targets pipeline visualization, git history, test coverage statistics, and session information. All data pre-computed using the `targets` package for reproducibility.
+
+## 📁 Package Structure
+
+```
+randomwalk/
+├── R/                          # Core package code
+│   ├── simulation.R           # Main simulation functions
+│   ├── walker.R               # Walker movement logic
+│   ├── grid.R                 # Grid management
+│   ├── plotting.R             # Visualization functions
+│   ├── async_controller.R     # Crew controller management
+│   ├── async_worker.R         # Worker process functions
+│   ├── shiny_modules.R        # Shiny UI/server modules
+│   ├── setup/                 # Development workflow scripts
+│   ├── log/                   # Git/GitHub operation logs
+│   └── plans/                 # Targets pipeline plans
+│
+├── inst/                      # Installed package files
+│   ├── shiny/                 # Shiny dashboard applications
+│   │   ├── dashboard/         # Sync dashboard
+│   │   └── dashboard_async/   # Async dashboard
+│   ├── docs/                  # Additional documentation
+│   │   └── DEVELOPMENT_WORKFLOW.md
+│   └── qmd/                   # Source Quarto documents
+│
+├── vignettes/                 # Package vignettes
+│   ├── dashboard.qmd          # Interactive dashboard vignette
+│   ├── dashboard_async.qmd    # Async dashboard vignette
+│   └── telemetry.qmd          # Telemetry statistics vignette
+│
+├── tests/                     # Test suite
+│   └── testthat/              # testthat unit tests
+│
+├── man/                       # Generated documentation
+├── _targets.R                 # Targets pipeline definition
+├── _pkgdown.yml               # pkgdown configuration
+├── default-ci.nix             # Nix environment for CI
+└── default.nix                # Nix environment for development
+```
 
 ## 📖 Documentation & Resources
 
@@ -110,6 +154,7 @@ Visit the [project wiki](https://github.com/JohnGavin/randomwalk/wiki) for compr
 
 ### Additional Resources
 
+- **[Development Workflow Guide](inst/docs/DEVELOPMENT_WORKFLOW.md)** - Complete guide for developing the randomwalk package in the nix environment
 - [Project Info](PROJECT_INFO.md) - Quick reference with restore instructions
 - [R/setup/](R/setup/) - Development workflow scripts for reproducibility
 - [.github/workflows/](.github/workflows/) - CI/CD workflow configurations
@@ -117,4 +162,3 @@ Visit the [project wiki](https://github.com/JohnGavin/randomwalk/wiki) for compr
 ## License
 
 MIT
-# Trigger CI to verify selective caching
