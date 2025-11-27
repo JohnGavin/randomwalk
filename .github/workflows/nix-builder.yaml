@@ -34,31 +34,19 @@ jobs:
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
         skipPush: true  # Don't push standard R packages to johngavin cachix
 
-    - name: Build Nix Environment
+    - name: Build Nix Environment (CI dependencies)
       run: |
         nix-build --quiet default-ci.nix
         nix-shell --quiet default-ci.nix --run "R --version"
 
-    - name: Build and Install randomwalk Package
+    - name: Build randomwalk Package as Nix Derivation
       run: |
-        nix-shell default-ci.nix --run "R CMD INSTALL ."
+        nix-build --quiet package.nix
 
-    - name: Run Targets Pipeline (if exists)
+    - name: Push randomwalk Derivation to Cachix
       run: |
-        nix-shell default-ci.nix --run "
-          if [ -f '_targets.R' ]; then
-            R -e 'targets::tar_make()'
-          else
-            echo 'No _targets.R file found, skipping targets pipeline'
-          fi
-        "
-
-    - name: Selectively push randomwalk to cachix
-      run: |
-        # Find and push only randomwalk and btw packages to cachix
-        nix-store -qR --include-outputs $(nix-instantiate default-ci.nix) | \
-          grep -E 'randomwalk|btw' | \
-          cachix push johngavin
+        # Push the randomwalk package derivation and all its dependencies
+        nix-store -qR --include-outputs result | cachix push johngavin
 
   # macOS runner commented out to reduce CI time and costs
   # run-x86_64-darwin:
