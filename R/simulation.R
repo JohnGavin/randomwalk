@@ -14,6 +14,11 @@
 #' @param max_steps Integer. Maximum steps per walker before forced termination.
 #'   Default 10000.
 #' @param verbose Logical. If TRUE, enables detailed logging. Default FALSE.
+#' @param validate_strict Logical. If TRUE, validation errors stop simulation.
+#'   If FALSE, they only log warnings. Default FALSE. Tests should use TRUE.
+#' @param validate_percent Numeric. Validate grid every X% of walkers complete.
+#'   Default 5 (validates every 5% = 20 times total). Set to 0 to disable
+#'   periodic validation (only validates at end). Minimum interval is 1 walker.
 #'
 #' @return A list with components:
 #'   \describe{
@@ -37,7 +42,9 @@ run_simulation <- function(grid_size = 10,
                             boundary = "terminate",
                             workers = 0,
                             max_steps = 10000L,
-                            verbose = FALSE) {
+                            verbose = FALSE,
+                            validate_strict = FALSE,
+                            validate_percent = 5) {
 
   # Input validation
   if (grid_size < 3) {
@@ -93,7 +100,9 @@ run_simulation <- function(grid_size = 10,
       neighborhood = neighborhood,
       boundary = boundary,
       max_steps = max_steps,
-      start_time = start_time
+      start_time = start_time,
+      validate_strict = validate_strict,
+      validate_percent = validate_percent
     )
 
     # Unpack results
@@ -104,9 +113,14 @@ run_simulation <- function(grid_size = 10,
   } else {
     # === SYNC MODE (original implementation) ===
 
+    # Calculate validation interval based on percentage
+    validate_interval <- max(1, round(n_walkers * validate_percent / 100))
+    logger::log_debug("Validation interval: every {validate_interval} walkers ({validate_percent}%)")
+
     # Run simulation loop
     total_steps <- 0
     step_count <- 0
+    completed_count <- 0
 
     while (any(sapply(walkers, function(w) w$active))) {
     step_count <- step_count + 1
@@ -128,6 +142,19 @@ run_simulation <- function(grid_size = 10,
       if (!walker$active && walker$termination_reason != "hit_boundary") {
         grid <- set_pixel_black(grid, walker$pos, boundary)
         logger::log_debug("Walker {walker$id} terminated: {walker$termination_reason} at ({walker$pos[1]}, {walker$pos[2]}) after {walker$steps} steps")
+
+        # Increment completed count
+        completed_count <- completed_count + 1
+
+        # Periodic validation based on completed walker count
+        if (validate_percent > 0 && completed_count %% validate_interval == 0) {
+          logger::log_trace("Running grid validation at {completed_count}/{n_walkers} walkers ({round(completed_count/n_walkers*100, 1)}%)")
+          validate_no_isolated_pixels(
+            grid,
+            neighborhood = neighborhood,
+            strict = validate_strict
+          )
+        }
       }
 
       walkers[[i]] <- walker
@@ -149,6 +176,14 @@ run_simulation <- function(grid_size = 10,
     logger::log_info("=== SIMULATION COMPLETE ===")
     logger::log_info("Total steps: {total_steps}")
     logger::log_info("Elapsed time: {round(elapsed_time, 2)} seconds")
+
+    # Final validation
+    logger::log_info("Running final grid validation")
+    validate_no_isolated_pixels(
+      grid,
+      neighborhood = neighborhood,
+      strict = validate_strict
+    )
 
     # Collect statistics
     walker_steps <- sapply(walkers, function(w) w$steps)
@@ -204,8 +239,14 @@ run_simulation <- function(grid_size = 10,
 #'
 #' @keywords internal
 run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
-                                   boundary, max_steps, start_time) {
+                                   boundary, max_steps, start_time,
+                                   validate_strict, validate_percent) {
   logger::log_info("Starting async simulation with {n_workers} workers")
+
+  # Calculate validation interval based on percentage
+  n_total <- length(walkers)
+  validate_interval <- max(1, round(n_total * validate_percent / 100))
+  logger::log_debug("Validation interval: every {validate_interval} walkers ({validate_percent}%)")
 
   # Initialize async resources
   controller <- NULL
@@ -316,6 +357,16 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
 
         n_completed <- n_completed + 1
 
+        # Periodic validation based on completed count
+        if (validate_percent > 0 && n_completed %% validate_interval == 0) {
+          logger::log_trace("Running grid validation at {n_completed}/{n_total} walkers ({round(n_completed/n_total*100, 1)}%)")
+          validate_no_isolated_pixels(
+            grid,
+            neighborhood = neighborhood,
+            strict = validate_strict
+          )
+        }
+
         # Log progress
         if (n_completed %% 5 == 0 || n_completed == n_total) {
           black_count <- count_black_pixels(grid)
@@ -333,6 +384,14 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
 
     logger::log_info("=== ASYNC SIMULATION COMPLETE ===")
     logger::log_info("Elapsed time: {round(elapsed_time, 2)} seconds")
+
+    # Final validation
+    logger::log_info("Running final grid validation")
+    validate_no_isolated_pixels(
+      grid,
+      neighborhood = neighborhood,
+      strict = validate_strict
+    )
 
     # Collect statistics
     walker_steps <- sapply(completed_walkers, function(w) w$steps)
