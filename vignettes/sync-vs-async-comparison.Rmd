@@ -137,8 +137,10 @@ sim_async_4 <- run_simulation(grid_size = GRID_SIZE, n_walkers = N_WALKERS, work
 timing_comparison <- tibble::tibble(
   workers = c(0, 1, 2, 4),
   simulation = c("Sync (workers=0)", "Async 1 worker", "Async 2 workers", "Async 4 workers"),
-  elapsed_time = c(sim_sync$elapsed_time, sim_async_1$elapsed_time,
-                   sim_async_2$elapsed_time, sim_async_4$elapsed_time)
+  elapsed_time = c(sim_sync$statistics$elapsed_time_secs,
+                   sim_async_1$statistics$elapsed_time_secs,
+                   sim_async_2$statistics$elapsed_time_secs,
+                   sim_async_4$statistics$elapsed_time_secs)
 ) |>
   mutate(
     speedup = elapsed_time[1] / elapsed_time,
