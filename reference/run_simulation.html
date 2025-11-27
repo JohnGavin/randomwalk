@@ -53,7 +53,9 @@ This is the main entry point for running simulations programmatically.</p>
 <span>  boundary <span class="op">=</span> <span class="st">"terminate"</span>,</span>
 <span>  workers <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  max_steps <span class="op">=</span> <span class="fl">10000L</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  validate_strict <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  validate_percent <span class="op">=</span> <span class="fl">5</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -91,6 +93,17 @@ Default 10000.</p></dd>
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Logical. If TRUE, enables detailed logging. Default FALSE.</p></dd>
+
+
+<dt id="arg-validate-strict">validate_strict<a class="anchor" aria-label="anchor" href="#arg-validate-strict"></a></dt>
+<dd><p>Logical. If TRUE, validation errors stop simulation.
+If FALSE, they only log warnings. Default FALSE. Tests should use TRUE.</p></dd>
+
+
+<dt id="arg-validate-percent">validate_percent<a class="anchor" aria-label="anchor" href="#arg-validate-percent"></a></dt>
+<dd><p>Numeric. Validate grid every X% of walkers complete.
+Default 5 (validates every 5% = 20 times total). Set to 0 to disable
+periodic validation (only validates at end). Minimum interval is 1 walker.</p></dd>
 
 </dl></div>
     <div class="section level2">
