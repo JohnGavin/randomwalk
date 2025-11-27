@@ -23,3 +23,8 @@ shinylive-sw.js
 install_deps.R
 merge_pr.sh
 .envrc
+
+# Nix artifacts
+result
+$WRAPPER_SCRIPT
+$WRAPPER_DIR
