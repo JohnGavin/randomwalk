@@ -11,7 +11,9 @@ run_simulation_async(
   neighborhood,
   boundary,
   max_steps,
-  start_time
+  start_time,
+  validate_strict,
+  validate_percent
 )
 }
 \arguments{

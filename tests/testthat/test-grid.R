@@ -94,3 +94,86 @@ test_that("get_black_percentage calculates correctly", {
   grid[1:10, 1:5] <- 1  # Half the grid
   expect_equal(get_black_percentage(grid), 50)
 })
+
+# ===================================================================
+# Isolated Pixel Validation Tests
+# ===================================================================
+
+test_that("validate_no_isolated_pixels detects isolated pixel", {
+  grid <- initialize_grid(10, center_black = FALSE)
+
+  # Create two isolated pixels (not adjacent)
+  grid[3, 3] <- 1
+  grid[7, 7] <- 1
+
+  # Should return FALSE (not valid)
+  expect_false(validate_no_isolated_pixels(grid, strict = FALSE))
+
+  # Should throw error in strict mode
+  expect_error(
+    validate_no_isolated_pixels(grid, strict = TRUE),
+    "isolated black pixel"
+  )
+})
+
+test_that("validate_no_isolated_pixels passes with connected pixels", {
+  grid <- initialize_grid(10, center_black = FALSE)
+
+  # Create connected line of black pixels
+  grid[5, 5:7] <- 1
+
+  # Should return TRUE (all pixels have neighbors)
+  expect_true(validate_no_isolated_pixels(grid, neighborhood = "4-hood"))
+  expect_true(validate_no_isolated_pixels(grid, neighborhood = "8-hood"))
+})
+
+test_that("validate_no_isolated_pixels handles empty grid", {
+  grid <- initialize_grid(10, center_black = FALSE)
+
+  # Empty grid (all white) should error/warn about no black pixels
+  expect_false(validate_no_isolated_pixels(grid, strict = FALSE))
+
+  # Should throw error in strict mode about zero black pixels
+  expect_error(
+    validate_no_isolated_pixels(grid, strict = TRUE),
+    "no black pixels"
+  )
+})
+
+test_that("validate_no_isolated_pixels handles single pixel", {
+  grid <- initialize_grid(10, center_black = TRUE)
+
+  # Single center pixel is valid (initial state before any walker terminates)
+  expect_true(validate_no_isolated_pixels(grid, strict = FALSE))
+})
+
+test_that("validate_no_isolated_pixels respects neighborhood mode", {
+  grid <- initialize_grid(10, center_black = FALSE)
+
+  # Create diagonal pattern (5,5) and (6,6)
+  grid[5, 5] <- 1
+  grid[6, 6] <- 1
+
+  # 4-hood: diagonal pixels are isolated
+  expect_false(validate_no_isolated_pixels(grid, neighborhood = "4-hood"))
+
+  # 8-hood: diagonal pixels are neighbors
+  expect_true(validate_no_isolated_pixels(grid, neighborhood = "8-hood"))
+})
+
+test_that("validate_no_isolated_pixels detects multiple isolated pixels", {
+  grid <- initialize_grid(10, center_black = FALSE)
+
+  # Create 3 isolated pixels
+  grid[2, 2] <- 1
+  grid[5, 5] <- 1
+  grid[8, 8] <- 1
+
+  expect_false(validate_no_isolated_pixels(grid, strict = FALSE))
+
+  # Error message should mention all 3
+  expect_error(
+    validate_no_isolated_pixels(grid, strict = TRUE),
+    "3 isolated"
+  )
+})

@@ -11,7 +11,9 @@ run_simulation(
   boundary = "terminate",
   workers = 0,
   max_steps = 10000L,
-  verbose = FALSE
+  verbose = FALSE,
+  validate_strict = FALSE,
+  validate_percent = 5
 )
 }
 \arguments{
@@ -32,6 +34,13 @@ Requires crew and nanonext packages.}
 Default 10000.}
 
 \item{verbose}{Logical. If TRUE, enables detailed logging. Default FALSE.}
+
+\item{validate_strict}{Logical. If TRUE, validation errors stop simulation.
+If FALSE, they only log warnings. Default FALSE. Tests should use TRUE.}
+
+\item{validate_percent}{Numeric. Validate grid every X\% of walkers complete.
+Default 5 (validates every 5\% = 20 times total). Set to 0 to disable
+periodic validation (only validates at end). Minimum interval is 1 walker.}
 }
 \value{
 A list with components:

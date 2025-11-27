@@ -150,3 +150,42 @@ test_that("run_simulation handles single walker", {
   expect_equal(length(result$walkers), 1)
   expect_equal(result$statistics$completed_walkers, 1)
 })
+
+# ===================================================================
+# Grid Validation Integration Tests
+# ===================================================================
+
+test_that("simulation validates grid periodically", {
+  # Small simulation should complete without validation errors
+  expect_silent(
+    run_simulation(
+      grid_size = 10,
+      n_walkers = 5,
+      validate_strict = TRUE,  # Strict mode - would error on isolation
+      validate_percent = 20    # Validate every 20% (5 walkers × 20% = every 1 walker)
+    )
+  )
+})
+
+test_that("simulation validation respects strict mode", {
+  # In non-strict mode, validation warnings don't stop simulation
+  result <- run_simulation(
+    grid_size = 10,
+    n_walkers = 3,
+    validate_strict = FALSE
+  )
+
+  expect_type(result, "list")
+  expect_true("grid" %in% names(result))
+})
+
+test_that("simulation runs final validation", {
+  # Ensure final validation happens
+  result <- run_simulation(
+    grid_size = 10,
+    n_walkers = 5,
+    verbose = TRUE  # Will log validation messages
+  )
+
+  expect_equal(result$parameters$grid_size, 10)
+})

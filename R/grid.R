@@ -160,3 +160,102 @@ count_black_pixels <- function(grid) {
 get_black_percentage <- function(grid) {
   (count_black_pixels(grid) / length(grid)) * 100
 }
+
+#' Validate Grid State for Isolated Pixels
+#'
+#' Checks that no black pixel is completely isolated (has no black neighbors).
+#' An isolated pixel indicates a bug in the simulation logic. Also validates
+#' that the grid has at least one black pixel, as the number of black pixels
+#' should increase monotonically from the initial center pixel.
+#'
+#' @param grid Numeric matrix representing the grid.
+#' @param neighborhood Character, "4-hood" or "8-hood" for neighbor checking.
+#'   Default is "4-hood".
+#' @param strict Logical, if TRUE throws error on isolation, if FALSE logs
+#'   warning. Default FALSE.
+#'
+#' @return Logical, TRUE if valid (no isolated pixels), FALSE otherwise.
+#'
+#' @examples
+#' grid <- initialize_grid(10)
+#' validate_no_isolated_pixels(grid)  # TRUE for single center pixel initially
+#'
+#' # Create invalid grid with isolated pixel
+#' bad_grid <- initialize_grid(10, center_black = FALSE)
+#' bad_grid[3, 3] <- 1
+#' validate_no_isolated_pixels(bad_grid)  # FALSE - isolated pixel
+#'
+#' @export
+validate_no_isolated_pixels <- function(grid, neighborhood = "4-hood", strict = FALSE) {
+  # Get all black pixel positions
+  black_positions <- which(grid == 1, arr.ind = TRUE)
+
+  # Grid should always have at least 1 black pixel (center initialization)
+  # If there are no black pixels, this is a serious bug
+  if (nrow(black_positions) == 0) {
+    msg <- "Grid has no black pixels - this should never happen (monotonically increasing)"
+    logger::log_error(msg)
+    if (strict) {
+      stop(msg)
+    }
+    return(FALSE)
+  }
+
+  # If only 1 black pixel exists (initial center pixel before any walker terminates),
+  # this is valid - skip validation until walkers complete
+  if (nrow(black_positions) == 1) {
+    logger::log_trace("Only 1 black pixel (initial state), skipping isolation check")
+    return(TRUE)
+  }
+
+  n <- nrow(grid)
+  isolated_pixels <- list()
+
+  for (i in seq_len(nrow(black_positions))) {
+    pos <- black_positions[i, ]
+
+    # Get neighbors for this position
+    neighbors <- get_neighbors(pos, neighborhood)
+
+    # Check if any neighbor is black
+    has_black_neighbor <- FALSE
+    for (neighbor_pos in neighbors) {
+      # Check bounds
+      if (is_within_bounds(neighbor_pos, n)) {
+        if (grid[neighbor_pos[1], neighbor_pos[2]] == 1) {
+          has_black_neighbor <- TRUE
+          break
+        }
+      }
+    }
+
+    # If no black neighbors, this pixel is isolated
+    if (!has_black_neighbor) {
+      isolated_pixels <- c(isolated_pixels, list(pos))
+    }
+  }
+
+  # Handle isolated pixels
+  if (length(isolated_pixels) > 0) {
+    positions_str <- paste(
+      sapply(isolated_pixels, function(p) sprintf("(%d,%d)", p[1], p[2])),
+      collapse = ", "
+    )
+
+    msg <- sprintf(
+      "Found %d isolated black pixel(s) with no black neighbors: %s",
+      length(isolated_pixels),
+      positions_str
+    )
+
+    if (strict) {
+      logger::log_error(msg)
+      stop(msg)
+    } else {
+      logger::log_warn(msg)
+      return(FALSE)
+    }
+  }
+
+  return(TRUE)
+}
