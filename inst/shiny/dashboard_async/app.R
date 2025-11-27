@@ -113,6 +113,20 @@ ui <- fluidPage(
 
       hr(),
 
+      # VALIDATION CONTROL - Strict mode for isolated pixel detection
+      checkboxInput(
+        "validate_strict",
+        "Strict Validation (stop on isolated pixels)",
+        value = FALSE
+      ),
+      helpText(
+        HTML("<b>OFF:</b> Warn about isolated pixels, continue simulation<br>",
+             "<b>ON:</b> Stop simulation immediately if isolated pixel detected<br>",
+             "<em>Isolated pixels indicate simulation bugs</em>")
+      ),
+
+      hr(),
+
       # Memory estimate display
       div(
         id = "memory_estimate",
@@ -563,6 +577,7 @@ server <- function(input, output, session) {
 
       # Run the simulation using randomwalk package with workers parameter
       add_log("Calling randomwalk::run_simulation()...")
+      add_log(sprintf("Validation mode: %s", if(input$validate_strict) "STRICT (stop on error)" else "WARNING (continue)"))
       result <- randomwalk::run_simulation(
         grid_size = input$grid_size,
         n_walkers = input$n_walkers,
@@ -570,6 +585,7 @@ server <- function(input, output, session) {
         neighborhood = input$neighborhood,
         boundary = input$boundary,
         max_steps = input$max_steps,
+        validate_strict = input$validate_strict,  # VALIDATION CONTROL
         verbose = FALSE
       )
 
@@ -630,6 +646,7 @@ server <- function(input, output, session) {
     updateSelectInput(session, "neighborhood", selected = "4-hood")
     updateSelectInput(session, "boundary", selected = "terminate")
     updateSliderInput(session, "max_steps", value = 10000)
+    updateCheckboxInput(session, "validate_strict", value = FALSE)  # Validation mode
     status_msg("Parameters reset to defaults")
 
     add_log("Parameters reset complete")
@@ -733,6 +750,7 @@ server <- function(input, output, session) {
       sprintf("Neighborhood: %s", input$neighborhood),
       sprintf("Boundary: %s", input$boundary),
       sprintf("Max Steps: %d", input$max_steps),
+      sprintf("Validation Mode: %s", if(input$validate_strict) "STRICT (stop on error)" else "WARNING (continue)"),
       "",
       "=== UI CONTROLS ===",
       sprintf("Page Size: %s rows per page", input$page_size),
