@@ -107,23 +107,61 @@ All simulations below use identical parameters and random seed for reproducibili
 
 ```{r setup}
 library(randomwalk)
-library(targets)
 library(dplyr)
 library(knitr)
+library(ggplot2)
 
-# Load pre-computed results from targets
-tar_load(comparison_results)
-tar_load(timing_comparison)
-tar_load(grid_comparison)
-tar_load(plot_timing)
-tar_load(plot_speedup)
-tar_load(plot_grids)
+# Simulation parameters
+GRID_SIZE <- 50
+N_WALKERS <- 20
+SEED <- 42
+```
+
+### Running the Comparison
+
+```{r run-simulations, cache=TRUE}
+# Run identical simulations with different worker configs
+set.seed(SEED)
+sim_sync <- run_simulation(grid_size = GRID_SIZE, n_walkers = N_WALKERS, workers = 0, validate_percent = 0)
+
+set.seed(SEED)
+sim_async_1 <- run_simulation(grid_size = GRID_SIZE, n_walkers = N_WALKERS, workers = 1, validate_percent = 0)
+
+set.seed(SEED)
+sim_async_2 <- run_simulation(grid_size = GRID_SIZE, n_walkers = N_WALKERS, workers = 2, validate_percent = 0)
+
+set.seed(SEED)
+sim_async_4 <- run_simulation(grid_size = GRID_SIZE, n_walkers = N_WALKERS, workers = 4, validate_percent = 0)
+
+# Create timing comparison
+timing_comparison <- tibble::tibble(
+  workers = c(0, 1, 2, 4),
+  simulation = c("Sync (workers=0)", "Async 1 worker", "Async 2 workers", "Async 4 workers"),
+  elapsed_time = c(sim_sync$elapsed_time, sim_async_1$elapsed_time,
+                   sim_async_2$elapsed_time, sim_async_4$elapsed_time)
+) |>
+  mutate(
+    speedup = elapsed_time[1] / elapsed_time,
+    efficiency = speedup / pmax(workers, 1),
+    efficiency_pct = sprintf("%.1f%%", efficiency * 100)
+  )
+
+# Grid comparison
+grid_comparison <- tibble::tibble(
+  workers = c(0, 1, 2, 4),
+  simulation = c("Sync", "Async-1", "Async-2", "Async-4"),
+  black_pixels = c(sum(sim_sync$grid == 1), sum(sim_async_1$grid == 1),
+                   sum(sim_async_2$grid == 1), sum(sim_async_4$grid == 1)),
+  coverage_pct = sprintf("%.2f%%", black_pixels / (GRID_SIZE^2) * 100)
+)
 ```
 
 ### Timing Results
 
 ```{r timing-table}
-comparison_results |>
+timing_comparison |>
+  select(workers, simulation, elapsed_time, speedup, efficiency_pct) |>
+  mutate(across(c(elapsed_time, speedup), ~sprintf("%.3f", .x))) |>
   kable(
     col.names = c("Workers", "Mode", "Time (s)", "Speedup", "Efficiency"),
     align = c("c", "l", "r", "r", "r"),
@@ -134,7 +172,18 @@ comparison_results |>
 ### Execution Time by Worker Count
 
 ```{r timing-plot, fig.cap="Execution time decreases with more workers, but workers=1 shows async overhead"}
-plot_timing
+ggplot(timing_comparison, aes(x = factor(workers), y = elapsed_time)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = sprintf("%.2fs", elapsed_time)),
+            vjust = -0.5, size = 3.5) +
+  labs(
+    title = "Execution Time by Worker Configuration",
+    subtitle = sprintf("Grid: %dx%d, Walkers: %d, Seed: %d", GRID_SIZE, GRID_SIZE, N_WALKERS, SEED),
+    x = "Number of Workers",
+    y = "Elapsed Time (seconds)"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold"))
 ```
 
 **Key Observations**:
@@ -146,7 +195,19 @@ plot_timing
 ### Speedup Analysis
 
 ```{r speedup-plot, fig.cap="Speedup relative to synchronous mode (workers=0 baseline)"}
-plot_speedup
+timing_comparison |>
+  filter(workers > 0) |>
+  ggplot(aes(x = factor(workers), y = speedup)) +
+  geom_col(fill = "darkgreen") +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "red") +
+  geom_text(aes(label = sprintf("%.2fx", speedup)),
+            vjust = -0.5, size = 3.5) +
+  labs(
+    title = "Speedup Relative to Synchronous Mode (workers=0)",
+    x = "Number of Workers",
+    y = "Speedup (times faster)"
+  ) +
+  theme_minimal()
 ```
 
 **Interpretation**:
@@ -171,7 +232,46 @@ Note: Small variations in black pixel counts occur because async workers may ter
 ### Visual Comparison: Fractal Patterns
 
 ```{r grid-plot, fig.width=10, fig.height=8, fig.cap="Similar fractal patterns emerge regardless of execution mode"}
-plot_grids
+# Helper function
+grid_to_df <- function(grid, mode_label) {
+  data.frame(
+    x = rep(1:nrow(grid), each = ncol(grid)),
+    y = rep(1:ncol(grid), nrow(grid)),
+    value = as.vector(t(grid)),
+    mode = mode_label
+  )
+}
+
+# Combine grids
+grid_data <- bind_rows(
+  grid_to_df(sim_sync$grid, "workers=0 (Sync)"),
+  grid_to_df(sim_async_1$grid, "workers=1 (Async)"),
+  grid_to_df(sim_async_2$grid, "workers=2"),
+  grid_to_df(sim_async_4$grid, "workers=4")
+)
+
+# Plot
+ggplot(grid_data, aes(x = x, y = y, fill = factor(value))) +
+  geom_tile() +
+  scale_fill_manual(
+    values = c("0" = "white", "1" = "black"),
+    labels = c("Unvisited", "Visited"),
+    name = "State"
+  ) +
+  facet_wrap(~ mode, ncol = 2) +
+  coord_equal() +
+  labs(
+    title = "Fractal Patterns: Sync vs Async Modes",
+    subtitle = "Notice similar patterns despite different execution architectures"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    plot.title = element_text(face = "bold"),
+    strip.text = element_text(face = "bold")
+  )
 ```
 
 **Fractal Similarity in Action**:
@@ -259,18 +359,13 @@ These overheads are **fixed costs** that become negligible as simulation size in
 
 ## Reproducibility
 
-All results in this vignette are generated via `targets` pipeline:
+All results in this vignette are:
+- ✅ Generated from identical simulation parameters
+- ✅ Using same random seed across modes (SEED = 42)
+- ✅ Cached via chunk option `cache=TRUE`
+- ✅ Automatically rebuilt when code changes
 
-```{r eval=FALSE}
-# From R/tar_plans/plan_sync_async_comparison.R
-targets::tar_make()
-```
-
-This ensures:
-- ✅ Identical simulation parameters
-- ✅ Same random seed across modes
-- ✅ Automatic rebuilds when code changes
-- ✅ Cacheable results
+For production workflows, use the targets plan in `R/tar_plans/plan_sync_async_comparison.R`
 
 ## Summary
 
