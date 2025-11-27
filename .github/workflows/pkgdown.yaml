@@ -38,7 +38,11 @@ jobs:
 
       - uses: cachix/cachix-action@v15
         with:
-          name: johngavin
+          name: rstats-on-nix  # Public R packages cache - check this FIRST
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: johngavin  # Project-specific cache - check this SECOND
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
           skipPush: true  # Manual selective push below
 
