@@ -259,3 +259,64 @@ validate_no_isolated_pixels <- function(grid, neighborhood = "4-hood", strict = 
 
   return(TRUE)
 }
+
+
+#' Validate Termination Position
+#'
+#' Checks if a position is valid for termination (has at least one black neighbor
+#' or is the initial center pixel). Used in async mode to prevent isolated pixels
+#' when workers operate on stale grid snapshots.
+#'
+#' @param pos Integer vector of length 2 (row, col). Position to validate.
+#' @param grid Numeric matrix. Current grid state.
+#' @param neighborhood Character. "4-hood" or "8-hood". Default "4-hood".
+#'
+#' @return Logical. TRUE if position is valid for termination, FALSE otherwise.
+#'
+#' @details
+#' A termination position is valid if:
+#' 1. The position itself is already black (touching black), OR
+#' 2. The position has at least one black neighbor
+#'
+#' This prevents the creation of isolated black pixels in async mode where
+#' workers may have stale grid snapshots.
+#'
+#' @examples
+#' grid <- initialize_grid(10)
+#' # Center (5,5) is black, so (5,6) has a black neighbor
+#' validate_termination_position(c(5, 6), grid, "4-hood")  # TRUE
+#' # Position (1,1) is far from center - no black neighbors
+#' validate_termination_position(c(1, 1), grid, "4-hood")  # FALSE
+#'
+#' @seealso \code{\link{validate_no_isolated_pixels}}
+#'
+#' @export
+validate_termination_position <- function(pos, grid, neighborhood = "4-hood") {
+  n <- nrow(grid)
+
+  # Check if position itself is black (touching black pixel)
+  if (grid[pos[1], pos[2]] == 1) {
+    logger::log_trace("Position ({pos[1]}, {pos[2]}) is valid: already black")
+    return(TRUE)
+  }
+
+  # Check if position has at least one black neighbor
+  neighbors <- get_neighbors(pos, neighborhood)
+
+  for (neighbor_pos in neighbors) {
+    if (is_within_bounds(neighbor_pos, n)) {
+      if (grid[neighbor_pos[1], neighbor_pos[2]] == 1) {
+        logger::log_trace(
+          "Position ({pos[1]}, {pos[2]}) is valid: has black neighbor at ({neighbor_pos[1]}, {neighbor_pos[2]})"
+        )
+        return(TRUE)
+      }
+    }
+  }
+
+  # No black neighbors found - this would create an isolated pixel
+  logger::log_warn(
+    "Position ({pos[1]}, {pos[2]}) is INVALID: would create isolated pixel (no black neighbors in {neighborhood})"
+  )
+  return(FALSE)
+}
