@@ -24,8 +24,8 @@ should increase monotonically from the initial center pixel."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/dashboard/">Interactive Dashboard (Sync)</a></li>
-    <li><a class="dropdown-item" href="../articles/dashboard_async/">Async/Parallel Dashboard</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/dashboard.html">Interactive Dashboard (Sync)</a></li>
+    <li><a class="dropdown-item" href="../articles/dashboard_async.html">Async/Parallel Dashboard</a></li>
     <li><a class="dropdown-item" href="../articles/telemetry.html">Telemetry and Pipeline Statistics</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -81,13 +81,13 @@ warning. Default FALSE.</p></dd>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="initialize_grid.html">initialize_grid</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2025-11-28 10:13:56] Initializing grid of size 10x10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2025-11-28 10:18:41] Initializing grid of size 10x10</span>
 <span class="r-in"><span><span class="fu">validate_no_isolated_pixels</span><span class="op">(</span><span class="va">grid</span><span class="op">)</span>  <span class="co"># TRUE for single center pixel initially</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Create invalid grid with isolated pixel</span></span></span>
 <span class="r-in"><span><span class="va">bad_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="initialize_grid.html">initialize_grid</a></span><span class="op">(</span><span class="fl">10</span>, center_black <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2025-11-28 10:13:56] Initializing grid of size 10x10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2025-11-28 10:18:41] Initializing grid of size 10x10</span>
 <span class="r-in"><span><span class="va">bad_grid</span><span class="op">[</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span></span></span>
 <span class="r-in"><span><span class="fu">validate_no_isolated_pixels</span><span class="op">(</span><span class="va">bad_grid</span><span class="op">)</span>  <span class="co"># FALSE - isolated pixel</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
