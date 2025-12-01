@@ -20,8 +20,11 @@ NC='\033[0m' # No Color
 if git diff --cached --name-only | grep -q '^DESCRIPTION$'; then
   echo -e "${YELLOW}🔍 DESCRIPTION changed - regenerating nix files...${NC}"
 
-  # Run the nix generation script
-  if Rscript -e "source('R/setup/generate_nix_files.R'); generate_all_nix_files(verify = FALSE)" 2>&1 | tee /tmp/nix_gen.log; then
+  # Run the nix generation script (capture return code)
+  Rscript -e "source('R/setup/generate_nix_files.R'); generate_all_nix_files(verify = FALSE)" > /tmp/nix_gen.log 2>&1
+  EXIT_CODE=$?
+
+  if [ $EXIT_CODE -eq 0 ]; then
     echo -e "${GREEN}✅ Nix files regenerated successfully${NC}"
 
     # Stage the updated nix files
