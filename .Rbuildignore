@@ -15,3 +15,4 @@
 ^archive$
 ^CLAUDE_CONTEXT\.md$
 ^PROJECT_INFO\.md$
+^hooks$
