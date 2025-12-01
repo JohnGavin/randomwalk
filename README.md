@@ -1,5 +1,9 @@
 # randomwalk
 
+[![R-CMD-check](https://github.com/JohnGavin/randomwalk/workflows/R-tests-via-nix/badge.svg)](https://github.com/JohnGavin/randomwalk/actions)
+[![pkgdown](https://github.com/JohnGavin/randomwalk/workflows/pkgdown/badge.svg)](https://github.com/JohnGavin/randomwalk/actions)
+[![Nix](https://github.com/JohnGavin/randomwalk/workflows/nix-builder/badge.svg)](https://github.com/JohnGavin/randomwalk/actions)
+
 Asynchronous Pixel Walking Simulation with Parallel Processing
 
 ## 🚀 Quick Links
@@ -93,10 +97,10 @@ run_dashboard()
 
 The package includes comprehensive vignettes for different use cases:
 
-### **[Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard.html)** 🎮
+### **[Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard/)** 🎮
 Browser-based Shiny application running entirely client-side via WebAssembly. Features real-time parameter adjustment, multiple visualization tabs, and complete simulation statistics - no R installation required.
 
-### **[Async/Parallel Simulation Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_async.html)** ⚡
+### **[Async/Parallel Simulation Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_async/)** ⚡
 Advanced dashboard demonstrating parallel processing with 0-12 workers using the `crew` package. Compare performance metrics between sync and async modes, with grid sizes from 20×20 to 400×400.
 
 ### **[Telemetry and Pipeline Statistics](https://johngavin.github.io/randomwalk/articles/telemetry.html)** 📊
