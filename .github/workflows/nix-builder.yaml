@@ -24,6 +24,9 @@ jobs:
     - name: Install Nix
       uses: DeterminateSystems/nix-installer-action@main
 
+    - name: Enable Magic Nix Cache
+      uses: DeterminateSystems/magic-nix-cache-action@main
+
     - uses: cachix/cachix-action@v15
       with:
         name: rstats-on-nix  # Public R packages cache - check this FIRST

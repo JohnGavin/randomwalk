@@ -36,6 +36,17 @@ jobs:
         with:
           nix_path: nixpkgs=https://github.com/rstats-on-nix/nixpkgs/archive/refs/heads/r-daily.tar.gz
 
+      - name: Enable Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Cache R libraries
+        uses: actions/cache@v4
+        with:
+          path: ~/R_libs
+          key: r-libs-${{ runner.os }}-${{ hashFiles('DESCRIPTION') }}
+          restore-keys: |
+            r-libs-${{ runner.os }}-
+
       - uses: cachix/cachix-action@v15
         with:
           name: rstats-on-nix  # Public R packages cache - check this FIRST
