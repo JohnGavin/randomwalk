@@ -102,6 +102,31 @@ Advanced dashboard demonstrating parallel processing with 0-12 workers using the
 ### **[Telemetry and Pipeline Statistics](https://johngavin.github.io/randomwalk/articles/telemetry.html)** 📊
 Package performance metrics, targets pipeline visualization, git history, test coverage statistics, and session information. All data pre-computed using the `targets` package for reproducibility.
 
+## 📋 Essential Documentation
+
+Key documentation for development and deployment workflows:
+
+- **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Complete deployment workflow (GitHub Actions → GitHub Pages)
+  - Step-by-step deployment process
+  - Verification methods and troubleshooting
+  - Session management and recovery
+  - Tag-based version management
+
+- **[Cachix Workflow](docs/CACHIX_WORKFLOW.md)** - Binary cache management with rix
+  - Layered cache approach (cache.nixos.org → rstats-on-nix → johngavin)
+  - Automatic garbage collection
+  - Package pinning strategy
+
+- **[Issues Grouped by Difficulty](ISSUES_GROUPED.md)** - All open GitHub issues organized by:
+  - Group 1: Documentation (⭐ Easiest)
+  - Group 2: Workflow Improvements (⭐⭐ Medium)
+  - Group 3: Testing/CI (⭐⭐⭐ Medium-Hard)
+  - Group 4: Features (⭐⭐⭐⭐⭐ Hardest)
+
+- **[Recent Changes Summary](docs/SUMMARY.md)** - December 2025 cachix workflow updates
+
+- **[Documentation Consolidation Report](docs/CONSOLIDATION_SUMMARY.md)** - 78% reduction in markdown files
+
 ## 📁 Package Structure
 
 ```
