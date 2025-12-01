@@ -106,13 +106,13 @@ Package performance metrics, targets pipeline visualization, git history, test c
 
 Key documentation for development and deployment workflows:
 
-- **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Complete deployment workflow (GitHub Actions → GitHub Pages)
+- **[Deployment Guide](inst/docs/DEPLOYMENT_GUIDE.md)** - Complete deployment workflow (GitHub Actions → GitHub Pages)
   - Step-by-step deployment process
   - Verification methods and troubleshooting
   - Session management and recovery
   - Tag-based version management
 
-- **[Cachix Workflow](docs/CACHIX_WORKFLOW.md)** - Binary cache management with rix
+- **[Cachix Workflow](inst/docs/CACHIX_WORKFLOW.md)** - Binary cache management with rix
   - Layered cache approach (cache.nixos.org → rstats-on-nix → johngavin)
   - Automatic garbage collection
   - Package pinning strategy
@@ -123,9 +123,9 @@ Key documentation for development and deployment workflows:
   - Group 3: Testing/CI (⭐⭐⭐ Medium-Hard)
   - Group 4: Features (⭐⭐⭐⭐⭐ Hardest)
 
-- **[Recent Changes Summary](docs/SUMMARY.md)** - December 2025 cachix workflow updates
+- **[Recent Changes Summary](inst/docs/SUMMARY.md)** - December 2025 cachix workflow updates
 
-- **[Documentation Consolidation Report](docs/CONSOLIDATION_SUMMARY.md)** - 78% reduction in markdown files
+- **[Documentation Consolidation Report](inst/docs/CONSOLIDATION_SUMMARY.md)** - 78% reduction in markdown files
 
 ## 📁 Package Structure
 
