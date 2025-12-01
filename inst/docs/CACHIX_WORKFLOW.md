@@ -104,6 +104,183 @@ Cachix will:
 3. Delete oldest **unpinned** paths when needed
 4. Keep **pinned** paths forever
 
+---
+
+## Real-World Example: randomwalk Package
+
+### First-Time Push Walkthrough
+
+```bash
+# Navigate to project
+cd /Users/johngavin/docs_gh/claude_rix/random_walk
+
+# Step 1: Verify you're in nix shell
+which nix-build
+# Output: /nix/store/.../nix-2.x.x/bin/nix-build ✓
+
+# Step 2: Build package
+nix-build package.nix
+
+# Output shows building process:
+# building '/nix/store/xxx-r-randomwalk-2.0.0.9000.drv'...
+# /nix/store/yyy-r-randomwalk-2.0.0.9000
+
+# Step 3: Inspect what will be pushed (the closure)
+nix-store -qR ./result | wc -l
+# Output: 247 paths
+
+# See some dependencies that will be included:
+nix-store -qR ./result | grep -E "r-(randomwalk|ggplot2|logger|crew|nanonext)"
+# /nix/store/aaa-r-randomwalk-2.0.0.9000
+# /nix/store/bbb-r-ggplot2-3.5.1
+# /nix/store/ccc-r-logger-0.4.0
+# /nix/store/ddd-r-crew-0.10.5
+# /nix/store/eee-r-nanonext-1.5.1
+
+# Step 4: Push to cachix (all 247 paths will be uploaded)
+cachix push johngavin ./result
+# Compressing and pushing 247 paths to johngavin.cachix.org
+# [========================================] 100%
+# All done! ✓
+
+# Step 5: Pin only randomwalk (protect from GC)
+PKG_VERSION=$(grep "^Version:" DESCRIPTION | awk '{print $2}')
+STORE_PATH=$(readlink -f ./result)
+cachix pin johngavin "randomwalk-v${PKG_VERSION}" "$STORE_PATH" --keep-forever
+# Created pin randomwalk-v2.0.0.9000 ✓
+
+# Step 6: Verify cache contents
+cachix cache johngavin --list | head -20
+# Shows randomwalk + dependencies
+
+# Step 7: Check pins
+cachix pin johngavin --list
+# randomwalk-v2.0.0.9000 (keep forever)
+```
+
+### What Just Happened?
+
+**Cache State After Push:**
+- ✅ randomwalk v2.0.0.9000 (pinned - will never be deleted)
+- ⚠️ ggplot2, logger, crew, nanonext, etc. (unpinned - will be GC'd when storage limit reached)
+- 📊 Total: ~247 store paths pushed
+
+**User Experience When Pulling:**
+```bash
+# Another developer running: nix-shell default.nix
+
+# Nix checks caches in order:
+# 1. cache.nixos.org → finds system packages, base R
+# 2. rstats-on-nix.cachix.org → finds ggplot2, logger, crew
+# 3. johngavin.cachix.org → finds randomwalk ✓
+
+# Result: Only randomwalk is downloaded from johngavin cache!
+# Dependencies come from upstream (faster, no duplication)
+```
+
+---
+
+## Troubleshooting
+
+### Issue 1: "Why is ggplot2 in my cache?"
+
+**Q:** I see `r-ggplot2-3.5.1` in my johngavin cache search results, but ggplot2 is already on rstats-on-nix. Why?
+
+**A:** This is **expected behavior**! When you push randomwalk, cachix uploads the entire closure (package + all dependencies). This cannot be prevented—it's fundamental to how Nix binary caches work.
+
+**Why it's not a problem:**
+- Users pulling randomwalk will still get ggplot2 from `rstats-on-nix.cachix.org` (faster, upstream)
+- Your cache's ggplot2 copy is just storage overhead (~100MB)
+- Automatic GC will eventually delete it when your cache reaches 85% storage
+
+**Solution:** Do nothing! This is correct rix behavior. If you want, you can manually delete duplicate R packages via the web UI, but GC will handle it automatically.
+
+### Issue 2: "Push failed with authentication error"
+
+**Symptom:**
+```bash
+cachix push johngavin ./result
+# Error: Authentication required
+```
+
+**Cause:** Cachix auth token not configured or expired.
+
+**Fix:**
+```bash
+# Get token from https://app.cachix.org/personal-auth-tokens
+cachix authtoken <your-token-here>
+
+# Verify
+cachix cache johngavin --list
+# Should show cache contents ✓
+```
+
+### Issue 3: "Pin failed: store path not found"
+
+**Symptom:**
+```bash
+cachix pin johngavin randomwalk-v2.0.0 /nix/store/xxx
+# Error: Store path not found in cache
+```
+
+**Cause:** You tried to pin before pushing to cachix.
+
+**Fix:** Always push BEFORE pinning:
+```bash
+# Correct order:
+cachix push johngavin ./result    # FIRST: push
+cachix pin johngavin ...           # THEN: pin
+```
+
+### Issue 4: "Cache is full, GC not triggering"
+
+**Q:** My cache shows 4.8GB / 5GB used, but GC hasn't run yet. Why?
+
+**A:** GC triggers at **85% of limit** (4.25GB for 5GB tier). At 4.8GB (96%), it should trigger soon.
+
+**Check:**
+1. Visit https://app.cachix.org/garbage-collection
+2. Look for your cache in deletion queue
+3. If not present, GC will trigger within 24 hours of crossing 85%
+
+**Emergency fix (if urgent):**
+```bash
+# Manually delete unpinned paths via web UI:
+# 1. Go to https://app.cachix.org/cache/johngavin
+# 2. Search for "r-ggplot2" or "r-dplyr" (common dependencies)
+# 3. Delete old unpinned versions
+# 4. Check usage drops below 85%
+```
+
+### Issue 5: "Users complaining about slow downloads"
+
+**Q:** Users say downloading from johngavin cache is slow. What's wrong?
+
+**A:** Check if they're actually using the layered cache approach:
+
+```bash
+# In their nix configuration, should have:
+substituters = [
+  "https://cache.nixos.org"
+  "https://rstats-on-nix.cachix.org"
+  "https://johngavin.cachix.org"
+]
+```
+
+**Diagnosis:**
+```bash
+# Check what cache served each dependency:
+nix-store --verify --check-contents /nix/store/xxx-r-randomwalk
+# Look for "Downloaded from" messages
+
+# If showing "johngavin.cachix.org" for ggplot2/dplyr:
+# → They're missing rstats-on-nix in substituters list
+```
+
+**Fix:** Update their `default.nix` to use proper cache layering (see rix documentation).
+
+---
+
 ## Storage Management
 
 ### Current Setup
