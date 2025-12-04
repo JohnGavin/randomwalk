@@ -69,9 +69,10 @@ jobs:
               pkgdown::clean_site(force = TRUE)
             }
 
-            # Build pkgdown site (skip article building for now)
+            # Build pkgdown site
             pkgdown::build_reference()
             pkgdown::build_home()
+            pkgdown::build_articles()  # Build all vignettes including dashboard_async
             pkgdown::build_articles_index()
           '"
 
