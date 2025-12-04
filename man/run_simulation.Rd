@@ -10,6 +10,7 @@ run_simulation(
   neighborhood = "4-hood",
   boundary = "terminate",
   workers = 0,
+  sync_mode = "static",
   max_steps = 10000L,
   verbose = FALSE,
   validate_strict = FALSE,
@@ -29,6 +30,12 @@ Must be between 1 and 60\% of grid size.}
 \item{workers}{Integer. Number of parallel workers (0 = synchronous). Default 0.
 For async mode, use 2-4 workers for medium grids, 4-8 for large grids.
 Requires crew and nanonext packages.}
+
+\item{sync_mode}{Character. Grid synchronization mode for async simulations.
+Options: "static" (default, workers receive frozen grid snapshot) or
+"dynamic" (workers receive real-time grid updates via broadcasting, enables
+collision detection). Only applies when workers > 0. Dynamic mode requires
+nanonext package and has ~10-15\% performance overhead.}
 
 \item{max_steps}{Integer. Maximum steps per walker before forced termination.
 Default 10000.}
