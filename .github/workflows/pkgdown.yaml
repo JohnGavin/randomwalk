@@ -75,6 +75,12 @@ jobs:
             pkgdown::build_articles_index()
           '"
 
+      - name: Push dev environment to cachix
+        run: |
+          echo "Pushing default-ci.nix environment to johngavin cachix..."
+          nix-store -qR --include-outputs $(nix-instantiate default-ci.nix) | cachix push johngavin
+          echo "✓ Dev environment cached successfully"
+
       - name: Download WebAssembly library from latest release
         if: github.event_name != 'pull_request'
         run: |

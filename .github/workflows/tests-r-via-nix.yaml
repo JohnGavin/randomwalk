@@ -54,6 +54,12 @@ jobs:
       - name: Build development environment
         run: nix-shell default-ci.nix --quiet --pure --run "Rscript -e \"sessionInfo()\""
 
+      - name: Push dev environment to cachix
+        run: |
+          echo "Pushing default-ci.nix environment to johngavin cachix..."
+          nix-store -qR --include-outputs $(nix-instantiate default-ci.nix) | cachix push johngavin
+          echo "✓ Dev environment cached successfully"
+
       - name: Run devtools::test() via nix-shell
         run: nix-shell default-ci.nix --quiet --pure --run "Rscript -e \"devtools::test(stop_on_failure = TRUE)\""
 
