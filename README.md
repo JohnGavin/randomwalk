@@ -104,28 +104,22 @@ Package performance metrics, targets pipeline visualization, git history, test c
 
 ## 📋 Essential Documentation
 
-Key documentation for development and deployment workflows:
+Package-specific development and deployment documentation:
 
-- **[Deployment Guide](inst/docs/DEPLOYMENT_GUIDE.md)** - Complete deployment workflow (GitHub Actions → GitHub Pages)
-  - Step-by-step deployment process
-  - Verification methods and troubleshooting
-  - Session management and recovery
+- **[Deployment Guide](inst/docs/DEPLOYMENT_GUIDE.md)** - Deploy randomwalk to GitHub Pages
+  - GitHub Actions workflow configuration
+  - Verification and troubleshooting steps
   - Tag-based version management
 
-- **[Cachix Workflow](inst/docs/CACHIX_WORKFLOW.md)** - Binary cache management with rix
-  - Layered cache approach (cache.nixos.org → rstats-on-nix → johngavin)
-  - Automatic garbage collection
-  - Package pinning strategy
+- **[Issues Grouped by Difficulty](ISSUES_GROUPED.md)** - Organized roadmap of open issues
+  - Quick wins (⭐) to major features (⭐⭐⭐⭐⭐)
+  - Estimated effort and dependencies
+  - Prioritized implementation order
 
-- **[Issues Grouped by Difficulty](ISSUES_GROUPED.md)** - All open GitHub issues organized by:
-  - Group 1: Documentation (⭐ Easiest)
-  - Group 2: Workflow Improvements (⭐⭐ Medium)
-  - Group 3: Testing/CI (⭐⭐⭐ Medium-Hard)
-  - Group 4: Features (⭐⭐⭐⭐⭐ Hardest)
-
-- **[Recent Changes Summary](inst/docs/SUMMARY.md)** - December 2025 cachix workflow updates
-
-- **[Documentation Consolidation Report](inst/docs/CONSOLIDATION_SUMMARY.md)** - 78% reduction in markdown files
+- **[Development Workflow](inst/docs/DEVELOPMENT_WORKFLOW.md)** - Package development in Nix
+  - 9-step workflow (issue → PR → merge)
+  - Testing and documentation requirements
+  - Session logging for reproducibility
 
 ## 📁 Package Structure
 
@@ -138,51 +132,43 @@ randomwalk/
 │   ├── plotting.R             # Visualization functions
 │   ├── async_controller.R     # Crew controller management
 │   ├── async_worker.R         # Worker process functions
-│   ├── shiny_modules.R        # Shiny UI/server modules
-│   ├── setup/                 # Development workflow scripts
-│   ├── log/                   # Git/GitHub operation logs
-│   └── plans/                 # Targets pipeline plans
+│   └── shiny_modules.R        # Shiny UI/server modules
 │
 ├── inst/                      # Installed package files
 │   ├── shiny/                 # Shiny dashboard applications
 │   │   ├── dashboard/         # Sync dashboard
 │   │   └── dashboard_async/   # Async dashboard
 │   ├── docs/                  # Additional documentation
-│   │   └── DEVELOPMENT_WORKFLOW.md
 │   └── qmd/                   # Source Quarto documents
 │
 ├── vignettes/                 # Package vignettes
-│   ├── dashboard.qmd          # Interactive dashboard vignette
-│   ├── dashboard_async.qmd    # Async dashboard vignette
-│   └── telemetry.qmd          # Telemetry statistics vignette
+│   ├── dashboard.qmd          # Interactive dashboard
+│   ├── dashboard_async.qmd    # Async/parallel dashboard
+│   └── telemetry.qmd          # Telemetry statistics
 │
-├── tests/                     # Test suite
-│   └── testthat/              # testthat unit tests
-│
+├── tests/testthat/            # Test suite
 ├── man/                       # Generated documentation
-├── _targets.R                 # Targets pipeline definition
-├── _pkgdown.yml               # pkgdown configuration
-├── default-ci.nix             # Nix environment for CI
-└── default.nix                # Nix environment for development
+└── _targets.R                 # Targets pipeline definition
 ```
 
 ## 📖 Documentation & Resources
 
-### Wiki Guides
+### Package-Specific Documentation
 
-Visit the [project wiki](https://github.com/JohnGavin/randomwalk/wiki) for comprehensive guides:
+- **[Package Wiki](https://github.com/JohnGavin/randomwalk/wiki)** - Guides specific to the randomwalk package:
+  - [Deploying Shinylive Dashboards](https://github.com/JohnGavin/randomwalk/wiki/Deploying-Shinylive-Dashboards) - Deploy random walk dashboards to GitHub Pages
 
-- **[Troubleshooting Nix Environment](https://github.com/JohnGavin/randomwalk/wiki/Troubleshooting-Nix-Environment)** - Solutions for nix environment degradation during long development sessions
-- **[Working with Claude Across Sessions](https://github.com/JohnGavin/randomwalk/wiki/Working-with-Claude-Across-Sessions)** - How to preserve context when using Claude Code
-- **[Using Gemini CLI for Large Codebases](https://github.com/JohnGavin/randomwalk/wiki/Using-Gemini-CLI-for-Large-Codebases)** - Leverage Gemini's large context window for codebase analysis
-- **[Deploying Shinylive Dashboards](https://github.com/JohnGavin/randomwalk/wiki/Deploying-Shinylive-Dashboards)** - Complete deployment guide with solutions to common issues
+- **[Project Info](PROJECT_INFO.md)** - Quick reference and restore instructions
+- **[R/setup/](R/setup/)** - Documented workflow scripts for reproducibility
 
-### Additional Resources
+### General Development Setup
 
-- **[Development Workflow Guide](inst/docs/DEVELOPMENT_WORKFLOW.md)** - Complete guide for developing the randomwalk package in the nix environment
-- [Project Info](PROJECT_INFO.md) - Quick reference with restore instructions
-- [R/setup/](R/setup/) - Development workflow scripts for reproducibility
-- [.github/workflows/](.github/workflows/) - CI/CD workflow configurations
+For general development setup, Nix environment troubleshooting, and cross-project workflows, see the **[claude_rix wiki](https://github.com/JohnGavin/claude_rix/wiki)**:
+  - Troubleshooting Nix Environment
+  - Working with Claude Across Sessions
+  - Using Gemini CLI for Large Codebases
+  - Cachix Workflow and Binary Cache Management
+  - General R Package Development Guides
 
 ## License
 
