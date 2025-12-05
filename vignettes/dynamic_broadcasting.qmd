@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
   fig.width = 10,
   fig.height = 6
 )
-library(randomwalk)
+# Note: library(randomwalk) not needed - vignette is documentation only
 ```
 
 # Dynamic Grid State Broadcasting
