@@ -67,7 +67,7 @@ simulate_walker_dynamic <- function(walker_id,
     # ───────────────────────────────────────────────────────────
     # STEP 2: Check neighbors for black pixels
     # ───────────────────────────────────────────────────────────
-    neighbors <- get_neighbors(position, grid_size, neighborhood)
+    neighbors <- get_neighbors_bounded(position, grid_size, neighborhood)
 
     has_black_neighbor <- any(sapply(neighbors, function(pos) {
       if (pos[1] < 1 || pos[1] > grid_size || pos[2] < 1 || pos[2] > grid_size) {
@@ -147,7 +147,7 @@ simulate_walker_dynamic <- function(walker_id,
 #' @param neighborhood Character "4-hood" or "8-hood"
 #' @return List of neighbor positions
 #' @keywords internal
-get_neighbors <- function(position, grid_size, neighborhood) {
+get_neighbors_bounded <- function(position, grid_size, neighborhood) {
   x <- position[1]
   y <- position[2]
 
