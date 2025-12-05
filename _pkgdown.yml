@@ -25,6 +25,8 @@ navbar:
         href: articles/dashboard.html
       - text: Async/Parallel Dashboard
         href: articles/dashboard_async.html
+      - text: Dynamic Grid Broadcasting
+        href: articles/dynamic_broadcasting.html
       - text: Telemetry and Pipeline Statistics
         href: articles/telemetry.html
 
@@ -34,6 +36,7 @@ articles:
   contents:
   - dashboard
   - dashboard_async
+  - dynamic_broadcasting
   - telemetry
 
 footer:

@@ -11,6 +11,11 @@
 #' @param workers Integer. Number of parallel workers (0 = synchronous). Default 0.
 #'   For async mode, use 2-4 workers for medium grids, 4-8 for large grids.
 #'   Requires crew and nanonext packages.
+#' @param sync_mode Character. Grid synchronization mode for async simulations.
+#'   Options: "static" (default, workers receive frozen grid snapshot) or
+#'   "dynamic" (workers receive real-time grid updates via broadcasting, enables
+#'   collision detection). Only applies when workers > 0. Dynamic mode requires
+#'   nanonext package and has ~10-15% performance overhead.
 #' @param max_steps Integer. Maximum steps per walker before forced termination.
 #'   Default 10000.
 #' @param verbose Logical. If TRUE, enables detailed logging. Default FALSE.
@@ -41,6 +46,7 @@ run_simulation <- function(grid_size = 10,
                             neighborhood = "4-hood",
                             boundary = "terminate",
                             workers = 0,
+                            sync_mode = "static",
                             max_steps = 10000L,
                             verbose = FALSE,
                             validate_strict = FALSE,
@@ -64,6 +70,17 @@ run_simulation <- function(grid_size = 10,
     stop("boundary must be 'terminate' or 'wrap'")
   }
 
+  if (!sync_mode %in% c("static", "dynamic")) {
+    stop("sync_mode must be 'static' or 'dynamic'")
+  }
+
+  # Validate dynamic mode requirements
+  if (sync_mode == "dynamic" && workers > 0) {
+    if (!requireNamespace("nanonext", quietly = TRUE)) {
+      stop("sync_mode='dynamic' requires the 'nanonext' package. Install with: install.packages('nanonext')")
+    }
+  }
+
   # Set logging level
   if (verbose) {
     logger::log_threshold(logger::TRACE)
@@ -74,7 +91,11 @@ run_simulation <- function(grid_size = 10,
   logger::log_info("Walkers: {n_walkers}")
   logger::log_info("Neighborhood: {neighborhood}")
   logger::log_info("Boundary: {boundary}")
-  mode_str <- if (workers > 0) sprintf("Asynchronous (%d workers)", workers) else "Synchronous"
+  mode_str <- if (workers > 0) {
+    sprintf("Asynchronous (%d workers, sync_mode=%s)", workers, sync_mode)
+  } else {
+    "Synchronous"
+  }
   logger::log_info("Mode: {mode_str}")
 
   start_time <- Sys.time()
@@ -93,17 +114,33 @@ run_simulation <- function(grid_size = 10,
   # Choose async or sync mode
   if (workers > 0) {
     # === ASYNC MODE ===
-    result <- run_simulation_async(
-      grid = grid,
-      walkers = walkers,
-      n_workers = workers,
-      neighborhood = neighborhood,
-      boundary = boundary,
-      max_steps = max_steps,
-      start_time = start_time,
-      validate_strict = validate_strict,
-      validate_percent = validate_percent
-    )
+    if (sync_mode == "dynamic") {
+      # Dynamic broadcasting mode - walkers can collide
+      result <- run_simulation_async_dynamic(
+        grid = grid,
+        walkers = walkers,
+        n_workers = workers,
+        neighborhood = neighborhood,
+        boundary = boundary,
+        max_steps = max_steps,
+        start_time = start_time,
+        validate_strict = validate_strict,
+        validate_percent = validate_percent
+      )
+    } else {
+      # Static snapshot mode - frozen grid
+      result <- run_simulation_async(
+        grid = grid,
+        walkers = walkers,
+        n_workers = workers,
+        neighborhood = neighborhood,
+        boundary = boundary,
+        max_steps = max_steps,
+        start_time = start_time,
+        validate_strict = validate_strict,
+        validate_percent = validate_percent
+      )
+    }
 
     # Unpack results
     grid <- result$grid
@@ -436,6 +473,235 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
 }
 
 
+#' Run Async Simulation with Dynamic Broadcasting (Internal)
+#'
+#' Internal function that executes async simulation with real-time grid
+#' synchronization via nanonext pub/sub pattern. Workers receive broadcasts
+#' of new black pixels, enabling collision detection.
+#'
+#' @param grid Numeric matrix. Initialized grid.
+#' @param walkers List. Created walker objects.
+#' @param n_workers Integer. Number of crew workers.
+#' @param neighborhood Character. "4-hood" or "8-hood".
+#' @param boundary Character. "terminate" or "wrap".
+#' @param max_steps Integer. Maximum steps limit.
+#' @param start_time POSIXct. Simulation start time.
+#' @param validate_strict Logical. Strict validation mode.
+#' @param validate_percent Numeric. Validation frequency.
+#'
+#' @return List with grid, walkers, and statistics (including collision counts).
+#'
+#' @keywords internal
+run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
+                                           boundary, max_steps, start_time,
+                                           validate_strict, validate_percent) {
+  logger::log_info("Starting async simulation with dynamic broadcasting ({n_workers} workers)")
+
+  # Calculate validation interval
+  n_total <- length(walkers)
+  validate_interval <- max(1, round(n_total * validate_percent / 100))
+  logger::log_debug("Validation interval: every {validate_interval} walkers ({validate_percent}%)")
+
+  # Initialize resources
+  controller <- NULL
+  pub_socket <- NULL
+  port <- 5555
+
+  tryCatch({
+    # Initialize publisher socket
+    pub_socket <- init_publisher_socket(port = port)
+    logger::log_info("Publisher socket initialized on port {port}")
+
+    # Create crew controller
+    controller <- create_controller(n_workers)
+    logger::log_info("Crew controller started with {n_workers} workers")
+
+    # Push all walker tasks
+    logger::log_info("Pushing {length(walkers)} walker tasks to crew")
+
+    for (i in seq_along(walkers)) {
+      walker <- walkers[[i]]
+
+      # Workers will initialize their own subscriber sockets
+      # (sockets can't be serialized, so workers create their own)
+      controller$push(
+        name = paste0("walker_", walker$id),
+        command = {
+          # Initialize subscriber socket in worker
+          sub_socket <- init_subscriber_socket(
+            host = "localhost",
+            port = port
+          )
+
+          # Run walker with dynamic broadcasting
+          result <- simulate_walker_dynamic(
+            walker_id = walker$id,
+            initial_grid = initial_grid,
+            pub_socket = pub_socket,
+            sub_socket = sub_socket,
+            grid_size = grid_size,
+            neighborhood = neighborhood,
+            boundary = boundary,
+            max_steps = max_steps
+          )
+
+          # Cleanup
+          close_sockets(sub_socket)
+
+          result
+        },
+        data = list(
+          walker = walker,
+          initial_grid = grid,
+          grid_size = nrow(grid),
+          port = port,
+          neighborhood = neighborhood,
+          boundary = boundary,
+          max_steps = max_steps
+        ),
+        globals = list(
+          # Pass functions needed by worker
+          init_subscriber_socket = init_subscriber_socket,
+          simulate_walker_dynamic = simulate_walker_dynamic,
+          update_grid_from_broadcasts = update_grid_from_broadcasts,
+          broadcast_black_pixel = broadcast_black_pixel,
+          close_sockets = close_sockets,
+          get_neighbors = get_neighbors,
+          choose_next_position = choose_next_position,
+          is_boundary = is_boundary,
+          handle_boundary = handle_boundary,
+          sample_start_position = sample_start_position
+        ),
+        packages = c("logger", "nanonext")
+      )
+    }
+
+    logger::log_info("All tasks pushed to crew, waiting for completion")
+
+    # Poll for completed tasks
+    completed_walkers <- list()
+    n_completed <- 0
+
+    # Timeout: 60 seconds per walker (dynamic mode is slower)
+    timeout_secs <- 60 * n_total
+    start_time_loop <- Sys.time()
+
+    while (n_completed < n_total) {
+      # Check timeout
+      elapsed_secs <- as.numeric(difftime(Sys.time(), start_time_loop, units = "secs"))
+      if (elapsed_secs > timeout_secs) {
+        logger::log_error("Async simulation timeout after {round(elapsed_secs, 1)}s ({n_completed}/{n_total} completed)")
+        stop("Async simulation timeout: workers failed to complete within ", timeout_secs, " seconds")
+      }
+
+      # Pop completed tasks (blocking wait)
+      result <- controller$pop(scale = TRUE)
+
+      if (!is.null(result) && nrow(result) > 0) {
+        # Extract walker from crew result
+        walker_result <- result$result[[1]]
+
+        # Validate walker structure
+        if (is.null(walker_result) || !is.list(walker_result) || is.null(walker_result$walker_id)) {
+          logger::log_error("Invalid walker structure returned from crew worker")
+          logger::log_error("Result status: {result$status}, error: {if(!is.null(result$error)) result$error else 'none'}")
+          next
+        }
+
+        completed_walkers[[as.character(walker_result$walker_id)]] <- walker_result
+
+        # Update grid if walker created black pixel
+        if (walker_result$black_pixel_created) {
+          pos <- walker_result$position
+
+          # Validate position is valid
+          if (!is.null(pos) && length(pos) == 2) {
+            grid <- set_pixel_black(grid, pos, boundary)
+
+            logger::log_debug(
+              "Walker {walker_result$walker_id} terminated: {walker_result$status} at ({pos[1]}, {pos[2]}) after {walker_result$steps} steps"
+            )
+          }
+        }
+
+        n_completed <- n_completed + 1
+
+        # Periodic validation
+        if (validate_percent > 0 && n_completed %% validate_interval == 0) {
+          logger::log_trace("Running grid validation at {n_completed}/{n_total} walkers ({round(n_completed/n_total*100, 1)}%)")
+          validate_no_isolated_pixels(
+            grid,
+            neighborhood = neighborhood,
+            strict = validate_strict
+          )
+        }
+
+        # Log progress
+        if (n_completed %% 5 == 0 || n_completed == n_total) {
+          black_count <- count_black_pixels(grid)
+          collisions <- sum(sapply(completed_walkers, function(w) w$status == "black_neighbor_detected"))
+          logger::log_info("Completed: {n_completed}/{n_total}, Black: {black_count}, Collisions: {collisions}")
+        }
+      }
+
+      # Brief sleep
+      Sys.sleep(0.01)
+    }
+
+    # Calculate statistics
+    end_time <- Sys.time()
+    elapsed_time <- as.numeric(difftime(end_time, start_time, units = "secs"))
+
+    logger::log_info("=== ASYNC SIMULATION COMPLETE ===")
+    logger::log_info("Elapsed time: {round(elapsed_time, 2)} seconds")
+
+    # Final validation
+    logger::log_info("Running final grid validation")
+    validate_no_isolated_pixels(
+      grid,
+      neighborhood = neighborhood,
+      strict = validate_strict
+    )
+
+    # Collect statistics
+    walker_steps <- sapply(completed_walkers, function(w) w$steps)
+    termination_statuses <- sapply(completed_walkers, function(w) w$status)
+
+    # Count collisions
+    collision_count <- sum(termination_statuses == "black_neighbor_detected")
+
+    statistics <- list(
+      black_pixels = count_black_pixels(grid),
+      black_percentage = get_black_percentage(grid),
+      grid_size = nrow(grid),
+      total_walkers = n_total,
+      completed_walkers = n_completed,
+      total_steps = sum(walker_steps),
+      min_steps = min(walker_steps),
+      max_steps = max(walker_steps),
+      mean_steps = mean(walker_steps),
+      median_steps = median(walker_steps),
+      percentile_25 = quantile(walker_steps, 0.25),
+      percentile_75 = quantile(walker_steps, 0.75),
+      elapsed_time_secs = elapsed_time,
+      termination_reasons = table(termination_statuses),
+      collisions_detected = collision_count,  # NEW for dynamic mode
+      sync_mode = "dynamic"  # NEW for identification
+    )
+
+    list(
+      grid = grid,
+      walkers = completed_walkers,
+      statistics = statistics
+    )
+
+  }, finally = {
+    # Clean up resources
+    cleanup_async(controller, pub_socket)
+  })
+}
+
+
 #' Get Black Pixels as Named List
 #'
 #' Converts grid matrix to a named list of black pixel positions.
@@ -473,7 +739,7 @@ get_black_pixels_list <- function(grid) {
 #'
 #' @export
 format_statistics <- function(stats) {
-  c(
+  base_stats <- c(
     "=== SIMULATION STATISTICS ===",
     sprintf("Black Pixels: %d (%.2f%%)", stats$black_pixels, stats$black_percentage),
     sprintf("Walkers: %d completed", stats$completed_walkers),
@@ -482,7 +748,23 @@ format_statistics <- function(stats) {
             stats$min_steps, stats$median_steps, stats$mean_steps, stats$max_steps),
     sprintf("Percentiles: 25th=%.0f, 75th=%.0f",
             stats$percentile_25, stats$percentile_75),
-    sprintf("Elapsed Time: %.2f seconds", stats$elapsed_time_secs),
+    sprintf("Elapsed Time: %.2f seconds", stats$elapsed_time_secs)
+  )
+
+  # Add collision statistics if present (dynamic mode)
+  if (!is.null(stats$collisions_detected)) {
+    collision_rate <- (stats$collisions_detected / stats$completed_walkers) * 100
+    base_stats <- c(
+      base_stats,
+      sprintf("Collisions Detected: %d (%.1f%% of walkers)",
+              stats$collisions_detected, collision_rate),
+      sprintf("Sync Mode: %s", stats$sync_mode)
+    )
+  }
+
+  # Add termination reasons
+  c(
+    base_stats,
     "Termination Reasons:",
     paste(names(stats$termination_reasons), stats$termination_reasons, sep = ": ", collapse = "\n")
   )

@@ -206,6 +206,165 @@ list(
     }
   ),
 
+  # ============================================================================
+  # Dynamic Broadcasting Simulations (Issue #51)
+  # ============================================================================
+
+  # Small dynamic simulation (500 steps) - Quick demonstration
+  tar_target(
+    name = sim_dynamic_small,
+    command = {
+      devtools::load_all()
+      logger::log_info("Running small dynamic broadcasting simulation")
+      randomwalk::run_simulation(
+        grid_size = 50,
+        n_walkers = 10,
+        workers = 2,
+        sync_mode = "dynamic",
+        max_steps = 500,
+        neighborhood = "4-hood",
+        boundary = "terminate"
+      )
+    }
+  ),
+
+  # Medium dynamic simulation (4000 steps) - Balanced performance
+  tar_target(
+    name = sim_dynamic_medium,
+    command = {
+      devtools::load_all()
+      logger::log_info("Running medium dynamic broadcasting simulation")
+      randomwalk::run_simulation(
+        grid_size = 100,
+        n_walkers = 20,
+        workers = 4,
+        sync_mode = "dynamic",
+        max_steps = 4000,
+        neighborhood = "4-hood",
+        boundary = "terminate"
+      )
+    }
+  ),
+
+  # Large dynamic simulation (12000 steps) - Stress test
+  tar_target(
+    name = sim_dynamic_large,
+    command = {
+      devtools::load_all()
+      logger::log_info("Running large dynamic broadcasting simulation")
+      randomwalk::run_simulation(
+        grid_size = 200,
+        n_walkers = 50,
+        workers = 8,
+        sync_mode = "dynamic",
+        max_steps = 12000,
+        neighborhood = "4-hood",
+        boundary = "terminate"
+      )
+    }
+  ),
+
+  # Static mode comparisons (for vignette analysis)
+  tar_target(
+    name = sim_static_small,
+    command = {
+      devtools::load_all()
+      logger::log_info("Running small static simulation (comparison)")
+      randomwalk::run_simulation(
+        grid_size = 50,
+        n_walkers = 10,
+        workers = 2,
+        sync_mode = "static",
+        max_steps = 500,
+        neighborhood = "4-hood",
+        boundary = "terminate"
+      )
+    }
+  ),
+
+  tar_target(
+    name = sim_static_medium,
+    command = {
+      devtools::load_all()
+      logger::log_info("Running medium static simulation (comparison)")
+      randomwalk::run_simulation(
+        grid_size = 100,
+        n_walkers = 20,
+        workers = 4,
+        sync_mode = "static",
+        max_steps = 4000,
+        neighborhood = "4-hood",
+        boundary = "terminate"
+      )
+    }
+  ),
+
+  tar_target(
+    name = sim_static_large,
+    command = {
+      devtools::load_all()
+      logger::log_info("Running large static simulation (comparison)")
+      randomwalk::run_simulation(
+        grid_size = 200,
+        n_walkers = 50,
+        workers = 8,
+        sync_mode = "static",
+        max_steps = 12000,
+        neighborhood = "4-hood",
+        boundary = "terminate"
+      )
+    }
+  ),
+
+  # Comparison plots
+  tar_target(
+    name = plot_dynamic_small,
+    command = {
+      devtools::load_all()
+      randomwalk::plot_grid(
+        sim_dynamic_small,
+        main = "Dynamic Broadcasting - Small (50×50, 500 steps)"
+      )
+    }
+  ),
+
+  tar_target(
+    name = plot_static_small,
+    command = {
+      devtools::load_all()
+      randomwalk::plot_grid(
+        sim_static_small,
+        main = "Static Snapshot - Small (50×50, 500 steps)"
+      )
+    }
+  ),
+
+  tar_target(
+    name = plot_dynamic_medium,
+    command = {
+      devtools::load_all()
+      randomwalk::plot_grid(
+        sim_dynamic_medium,
+        main = "Dynamic Broadcasting - Medium (100×100, 4000 steps)"
+      )
+    }
+  ),
+
+  tar_target(
+    name = plot_static_medium,
+    command = {
+      devtools::load_all()
+      randomwalk::plot_grid(
+        sim_static_medium,
+        main = "Static Snapshot - Medium (100×100, 4000 steps)"
+      )
+    }
+  ),
+
+  # ============================================================================
+  # End Dynamic Broadcasting Simulations
+  # ============================================================================
+
   # 9. Build dashboard vignette
   tar_target(
     name = dashboard_vignette,
