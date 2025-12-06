@@ -24,7 +24,7 @@ navbar:
       - text: Interactive Dashboard (Sync)
         href: articles/dashboard.html
       - text: Async/Parallel Dashboard
-        href: articles/dashboard_async.html
+        href: articles/dashboard_async/
       - text: Dynamic Grid Broadcasting
         href: articles/dynamic_broadcasting.html
       - text: Telemetry and Pipeline Statistics

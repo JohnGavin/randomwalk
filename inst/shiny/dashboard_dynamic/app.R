@@ -1,33 +1,12 @@
----
-title: "Dynamic Grid Broadcasting Dashboard"
-format:
-  html:
-    code-fold: true
-    code-summary: "Show code"
-    toc: true
-    toc-depth: 3
-    embed-resources: false
-filters:
-  - shinylive
----
+# Async Random Walk Simulation Dashboard
+# This dashboard demonstrates parallel processing capabilities using crew workers
 
-# Dynamic Grid Broadcasting
-
-This vignette provides a **fully interactive Shiny application** that demonstrates **Dynamic Grid Broadcasting**, a feature that allows parallel workers to share state updates in real-time.
-
-## 🚀 Launch the Interactive Dashboard
-
-The dashboard runs entirely in your browser using WebAssembly.
-
-``````{shinylive-r}
-#| standalone: true
-#| viewerHeight: 900
-
-# Mount WebAssembly file system from GitHub release
-# The wasm-release.yaml workflow builds library.data and attaches to releases
+# Mount WebAssembly file system from same-origin (avoids CORS issues)
+# The pkgdown workflow downloads library.data from releases to docs/wasm/
+# This allows the dashboard to load it from the same domain (johngavin.github.io)
 webr::mount(
   mountpoint = "/randomwalk-lib",
-  source = "https://github.com/JohnGavin/randomwalk/releases/download/v0.1.0/library.data"
+  source = "/randomwalk/wasm/library.data"
 )
 
 # Add mounted library to library paths
@@ -35,6 +14,7 @@ webr::mount(
 
 # Install ggplot2 dependencies explicitly from webR repository
 # Use /tmp for installation since it's writable
+# Installing dependencies first ensures they're available when ggplot2 loads
 webr::install(c("munsell", "colorspace", "farver", "labeling", "viridisLite",
                  "RColorBrewer", "scales", "tibble", "ggplot2"),
                lib = "/tmp/webr-libs")
@@ -295,7 +275,7 @@ ui <- fluidPage(
               selectInput(
                 "page_size",
                 "Rows per page:",
-                choices = c(10,25, 50, 100, "All"),
+                choices = c(10, 25, 50, 100, "All"),
                 selected = 10
               )
             ),
@@ -571,7 +551,7 @@ server <- function(input, output, session) {
       if (total_mb > webr_safe_limit_mb) {
         error_msg <- sprintf(
           "Memory estimate (%.0f MB) exceeds WebR safe limit (~%d MB). Reduce grid size, walkers, or max steps.",
-          total_mb, 
+          total_mb,
           webr_safe_limit_mb
         )
         add_log(paste("ERROR:", error_msg))
@@ -1054,5 +1034,3 @@ server <- function(input, output, session) {
 
 # Run the application
 shinyApp(ui = ui, server = server)
-
-``````
