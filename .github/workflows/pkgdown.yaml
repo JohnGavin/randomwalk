@@ -78,34 +78,34 @@ jobs:
             # This is critical because we skip pkgdown::build_articles()
             # We must copy both the HTML files and their associated *_files directories
             
-            if (!dir.exists("docs/articles")) {
-              dir.create("docs/articles", recursive = TRUE)
+            if (!dir.exists(\"docs/articles\")) {
+              dir.create(\"docs/articles\", recursive = TRUE)
             }
             
             # Copy all HTML files from vignettes to docs/articles
-            html_files <- list.files("vignettes", pattern = "\\.html$", full.names = TRUE)
+            html_files <- list.files(\"vignettes\", pattern = \"\\\\.html$\", full.names = TRUE)
             if (length(html_files) > 0) {
-              file.copy(html_files, "docs/articles/", overwrite = TRUE)
-              message(sprintf("Copied %d vignette HTML files to docs/articles/", length(html_files)))
+              file.copy(html_files, \"docs/articles/\", overwrite = TRUE)
+              message(sprintf(\"Copied %d vignette HTML files to docs/articles/\", length(html_files)))
             }
             
             # Copy all *_files directories (assets) from vignettes to docs/articles
             # This includes the massive Shinylive WASM binaries for dashboards
-            asset_dirs <- list.dirs("vignettes", full.names = TRUE, recursive = FALSE)
-            asset_dirs <- asset_dirs[grep("_files$", asset_dirs)]
+            asset_dirs <- list.dirs(\"vignettes\", full.names = TRUE, recursive = FALSE)
+            asset_dirs <- asset_dirs[grep(\"_files$\", asset_dirs)]
             
             if (length(asset_dirs) > 0) {
               for (dir in asset_dirs) {
                 dirname <- basename(dir)
-                target <- file.path("docs/articles", dirname)
+                target <- file.path(\"docs/articles\", dirname)
                 
                 # Remove target if it exists to ensure clean copy
                 if (dir.exists(target)) {
                   unlink(target, recursive = TRUE)
                 }
                 
-                file.copy(dir, "docs/articles/", recursive = TRUE)
-                message(sprintf("Copied asset directory %s to docs/articles/", dirname))
+                file.copy(dir, \"docs/articles/\", recursive = TRUE)
+                message(sprintf(\"Copied asset directory %s to docs/articles/\", dirname))
               }
             }
           '"
