@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Dynamic Grid Broadcasting</title>
+<title>Dynamic Grid Broadcasting Dashboard</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,41 +19,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -69,54 +34,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="dynamic_broadcasting_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="dynamic_broadcasting_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="dynamic_broadcasting_files/libs/bootstrap/bootstrap-b232414f0569882df4359abfb7cfba3f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<meta name="shinylive:serviceworker_dir" content="..">
+<script src="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/load-shinylive-sw.js" type="module"></script>
+<script src="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/run-python-blocks.js" type="module"></script>
+<link href="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/shinylive.css" rel="stylesheet">
+<link href="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-quarto-css/shinylive-quarto.css" rel="stylesheet">
 
 
 </head>
 
 <body class="quarto-light">
 
-<div id="quarto-content" class="page-columns page-rows-contents page-layout-full">
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
 <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
   <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#dynamic-grid-state-broadcasting" id="toc-dynamic-grid-state-broadcasting" class="nav-link active" data-scroll-target="#dynamic-grid-state-broadcasting">Dynamic Grid State Broadcasting</a>
+  <li><a href="#dynamic-grid-broadcasting" id="toc-dynamic-grid-broadcasting" class="nav-link active" data-scroll-target="#dynamic-grid-broadcasting">Dynamic Grid Broadcasting</a>
   <ul class="collapse">
-  <li><a href="#implementation-status" id="toc-implementation-status" class="nav-link" data-scroll-target="#implementation-status">Implementation Status</a>
-  <ul class="collapse">
-  <li><a href="#phase-1-broadcasting-infrastructure-complete" id="toc-phase-1-broadcasting-infrastructure-complete" class="nav-link" data-scroll-target="#phase-1-broadcasting-infrastructure-complete">✅ Phase 1: Broadcasting Infrastructure (Complete)</a></li>
-  <li><a href="#phase-2-walker-integration-in-progress" id="toc-phase-2-walker-integration-in-progress" class="nav-link" data-scroll-target="#phase-2-walker-integration-in-progress">🔄 Phase 2: Walker Integration (In Progress)</a></li>
-  <li><a href="#phase-3-simulation-integration-planned" id="toc-phase-3-simulation-integration-planned" class="nav-link" data-scroll-target="#phase-3-simulation-integration-planned">⏳ Phase 3: Simulation Integration (Planned)</a></li>
-  <li><a href="#phase-4-targets-pipeline-planned" id="toc-phase-4-targets-pipeline-planned" class="nav-link" data-scroll-target="#phase-4-targets-pipeline-planned">⏳ Phase 4: Targets Pipeline (Planned)</a></li>
-  <li><a href="#phase-5-interactive-dashboard-planned" id="toc-phase-5-interactive-dashboard-planned" class="nav-link" data-scroll-target="#phase-5-interactive-dashboard-planned">⏳ Phase 5: Interactive Dashboard (Planned)</a></li>
-  </ul></li>
-  <li><a href="#performance-analysis" id="toc-performance-analysis" class="nav-link" data-scroll-target="#performance-analysis">Performance Analysis</a>
-  <ul class="collapse">
-  <li><a href="#message-overhead" id="toc-message-overhead" class="nav-link" data-scroll-target="#message-overhead">Message Overhead</a></li>
-  <li><a href="#scalability" id="toc-scalability" class="nav-link" data-scroll-target="#scalability">Scalability</a></li>
-  </ul></li>
-  <li><a href="#when-to-use-each-mode" id="toc-when-to-use-each-mode" class="nav-link" data-scroll-target="#when-to-use-each-mode">When to Use Each Mode</a>
-  <ul class="collapse">
-  <li><a href="#use-static-mode-when" id="toc-use-static-mode-when" class="nav-link" data-scroll-target="#use-static-mode-when">Use Static Mode When</a></li>
-  <li><a href="#use-dynamic-mode-when" id="toc-use-dynamic-mode-when" class="nav-link" data-scroll-target="#use-dynamic-mode-when">Use Dynamic Mode When</a></li>
-  </ul></li>
-  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
-  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
+  <li><a href="#launch-the-interactive-dashboard" id="toc-launch-the-interactive-dashboard" class="nav-link" data-scroll-target="#launch-the-interactive-dashboard">🚀 Launch the Interactive Dashboard</a></li>
   </ul></li>
   </ul>
 </nav>
 </div>
-<main class="content column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Dynamic Grid Broadcasting</h1>
+<h1 class="title">Dynamic Grid Broadcasting Dashboard</h1>
 </div>
 
 
 
-<div class="quarto-title-meta column-page-left">
+<div class="quarto-title-meta">
 
     
   
@@ -128,623 +79,1045 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="dynamic-grid-state-broadcasting" class="level1">
-<h1>Dynamic Grid State Broadcasting</h1>
-<blockquote class="blockquote">
-<p><strong>Status</strong>: Phase 1 Complete - Broadcasting infrastructure implemented <strong>Implementation</strong>: Core functions ready, simulation integration in progress <strong>Issue</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/51">#51</a></p>
-</blockquote>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Overview</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Implementation</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">Targets Simulations</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-4" role="tab" aria-controls="tabset-1-4" aria-selected="false" href="">Comparison Analysis</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-5-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-5" role="tab" aria-controls="tabset-1-5" aria-selected="false" href="">Interactive Dashboard</a></li></ul>
-<div class="tab-content">
-<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
-<section id="the-problem" class="level3">
-<h3 class="anchored" data-anchor-id="the-problem">The Problem</h3>
-<p>Currently, async workers receive a <strong>frozen copy</strong> of the grid that never updates:</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Current: Static snapshot</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>controller<span class="sc">$</span><span class="fu">push</span>(</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">command =</span> <span class="fu">simulate_walker</span>(...),</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">list</span>(</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">walker_id =</span> i,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">grid_state =</span> grid  <span class="co"># FROZEN - never updates!</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-<p><strong>Consequences:</strong> - ✅ Simple and fast - ❌ Workers don’t see each other’s movements - ❌ No collision detection - ❌ Different behavior from sync mode</p>
-</section>
-<section id="the-solution" class="level3">
-<h3 class="anchored" data-anchor-id="the-solution">The Solution</h3>
-<p>Workers communicate via <strong>publish-subscribe</strong> pattern:</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># New: Dynamic broadcasting</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Worker 1 creates black pixel → broadcasts to all workers</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">broadcast_black_pixel</span>(pub_socket, position, walker_id)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Worker 2-4 receive and apply update</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>local_grid <span class="ot">&lt;-</span> <span class="fu">update_grid_from_broadcasts</span>(sub_socket, local_grid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-</section>
-<section id="key-insight-minimal-broadcasting" class="level3">
-<h3 class="anchored" data-anchor-id="key-insight-minimal-broadcasting">Key Insight: Minimal Broadcasting</h3>
-<p><strong>Only broadcast when NEW black pixel is created!</strong></p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Event</th>
-<th>Broadcast?</th>
-<th>Why</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><strong>Walker detects black neighbor</strong></td>
-<td>✅ YES</td>
-<td>Creates new black pixel</td>
-</tr>
-<tr class="even">
-<td><strong>Started on black</strong></td>
-<td>❌ NO</td>
-<td>Already broadcast earlier</td>
-</tr>
-<tr class="odd">
-<td><strong>Max steps reached</strong></td>
-<td>❌ NO</td>
-<td>No pixel created</td>
-</tr>
-<tr class="even">
-<td><strong>Hit boundary</strong></td>
-<td>❌ NO</td>
-<td>No pixel created</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Result:</strong> ~10-20 broadcasts per simulation (not 10,000!) 🎯</p>
-</section>
-<section id="architecture" class="level3">
-<h3 class="anchored" data-anchor-id="architecture">Architecture</h3>
-<p>``` ┌────────────────────────────────────────────┐ │ Main Process │ │ ├─ Publisher Socket (nanonext) │ │ └─ Crew Controller │ └────────────────────────────────────────────┘ │ │ pub/sub (nanonext NNG) │ ┌─────────┴──────┬──────────┬──────────┐ │ │ │ │ ┌───▼───┐ ┌──────▼──┐ ┌────▼────┐ ┌─▼──┐ │Worker1│ │Worker 2 │ │Worker 3 │ │… │ │Local │ │Local │ │Local │ │ │ │Grid │ │Grid │ │Grid │ │ │ │Sub │ │Sub │ │Sub │ │ │ └───────┘ └─────────┘ └─────────┘ └────┘ ```</p>
-</section>
-</div>
-<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
-<section id="walker-logic-simplified" class="level3">
-<h3 class="anchored" data-anchor-id="walker-logic-simplified">Walker Logic (Simplified)</h3>
-<p>The complete walker logic with <strong>Step 2 removed</strong> for simplicity:</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>simulate_walker_dynamic <span class="ot">&lt;-</span> <span class="cf">function</span>(walker_id, initial_grid,</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>                                   pub_socket, sub_socket, ...) {</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  local_grid <span class="ot">&lt;-</span> initial_grid</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># ═══════════════════════════════════════════════════════</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># STEP 0: Check starting position (before loop)</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># ═══════════════════════════════════════════════════════</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  position <span class="ot">&lt;-</span> <span class="fu">sample_start_position</span>(grid_size)</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (local_grid[position[<span class="dv">1</span>], position[<span class="dv">2</span>]] <span class="sc">==</span> <span class="st">"black"</span>) {</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">status =</span> <span class="st">"started_on_black"</span>, <span class="at">steps =</span> <span class="dv">0</span>))</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ❌ NO BROADCAST - pixel already broadcast earlier</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># ═══════════════════════════════════════════════════════</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="co"># MAIN LOOP (Steps 1-N)</span></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># ═══════════════════════════════════════════════════════</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (step <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>max_steps) {</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ─────────────────────────────────────────────────────</span></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># STEP 1: Pop ALL broadcasts, update local grid</span></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ─────────────────────────────────────────────────────</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> (<span class="fu">has_messages</span>(sub_socket)) {</span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>      msg <span class="ot">&lt;-</span> <span class="fu">pop_message</span>(sub_socket)</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>      local_grid[msg<span class="sc">$</span>position[<span class="dv">1</span>], msg<span class="sc">$</span>position[<span class="dv">2</span>]] <span class="ot">&lt;-</span> <span class="st">"black"</span></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ─────────────────────────────────────────────────────</span></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="co"># STEP 2: Check neighbors for black pixels</span></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ─────────────────────────────────────────────────────</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    neighbors <span class="ot">&lt;-</span> <span class="fu">get_neighbors</span>(position, neighborhood)</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    has_black_neighbor <span class="ot">&lt;-</span> <span class="fu">any</span>(<span class="fu">is_black</span>(neighbors, local_grid))</span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (has_black_neighbor) {</span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>      <span class="co"># Current position becomes BLACK</span></span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>      local_grid[position[<span class="dv">1</span>], position[<span class="dv">2</span>]] <span class="ot">&lt;-</span> <span class="st">"black"</span></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>      <span class="co"># ✅ BROADCAST to all workers</span></span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>      <span class="fu">broadcast_black_pixel</span>(pub_socket, position, walker_id)</span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">status =</span> <span class="st">"black_neighbor_detected"</span>, <span class="at">steps =</span> step))</span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ─────────────────────────────────────────────────────</span></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    <span class="co"># STEP 3: Make move</span></span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ─────────────────────────────────────────────────────</span></span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    next_position <span class="ot">&lt;-</span> <span class="fu">choose_next_position</span>(position, local_grid)</span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is_boundary</span>(next_position, grid_size)) {</span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (boundary <span class="sc">==</span> <span class="st">"terminate"</span>) {</span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">status =</span> <span class="st">"boundary"</span>, <span class="at">steps =</span> step))</span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>        <span class="co"># ❌ NO BROADCAST</span></span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>      next_position <span class="ot">&lt;-</span> <span class="fu">handle_boundary</span>(next_position, boundary)</span>
-<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>    position <span class="ot">&lt;-</span> next_position</span>
-<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Max steps - walker stops (no black pixel)</span></span>
-<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">status =</span> <span class="st">"max_steps"</span>, <span class="at">steps =</span> max_steps))</span>
-<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>  <span class="co"># ❌ NO BROADCAST</span></span>
-<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-</section>
-<section id="broadcasting-functions" class="level3">
-<h3 class="anchored" data-anchor-id="broadcasting-functions">Broadcasting Functions</h3>
-<p>Core infrastructure (implemented in <code>R/broadcasting.R</code>):</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(nanonext)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize publisher (main process)</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>pub_socket <span class="ot">&lt;-</span> <span class="fu">init_publisher_socket</span>(<span class="at">port =</span> <span class="dv">5555</span>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize subscriber (each worker)</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>sub_socket <span class="ot">&lt;-</span> <span class="fu">init_subscriber_socket</span>(<span class="at">host =</span> <span class="st">"localhost"</span>, <span class="at">port =</span> <span class="dv">5555</span>)</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Broadcast black pixel</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">broadcast_black_pixel</span>(pub_socket, <span class="fu">c</span>(<span class="dv">50</span>, <span class="dv">50</span>), <span class="at">walker_id =</span> <span class="dv">1</span>)</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Update local grid from all pending broadcasts</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>local_grid <span class="ot">&lt;-</span> <span class="fu">update_grid_from_broadcasts</span>(sub_socket, local_grid)</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Cleanup</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="fu">close_sockets</span>(pub_socket, sub_socket)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-</section>
-<section id="eventual-consistency" class="level3">
-<h3 class="anchored" data-anchor-id="eventual-consistency">Eventual Consistency</h3>
-<p><strong>Philosophy:</strong> “This is a simulation, not a bank”</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Workers use best-efforts synchronization</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (step <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>max_steps) {</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 1. Pop ALL pending messages</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  local_grid <span class="ot">&lt;-</span> <span class="fu">update_grid_from_broadcasts</span>(sub_socket, local_grid)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 2. Make move with current state (might be slightly stale)</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  position <span class="ot">&lt;-</span> <span class="fu">make_move</span>(position, local_grid)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 3. Broadcast if black pixel created</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (created_black_pixel) {</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">broadcast_black_pixel</span>(pub_socket, position)</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 4. Any staleness resolves on next iteration</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-<p><strong>Acceptable trade-offs:</strong> - ⚠️ Worker might have stale state for 1 iteration - ⚠️ Possible duplicate broadcast (rare) - ✅ System remains stable - ✅ Eventually consistent</p>
-</section>
-</div>
-<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
-<section id="pre-computed-results" class="level3">
-<h3 class="anchored" data-anchor-id="pre-computed-results">Pre-Computed Results</h3>
-<p>Pre-computed simulations at three scales (targets-based):</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In _targets.R</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(targets)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Small: Quick demonstration (500 steps)</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    sim_dynamic_small,</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">run_simulation</span>(</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid_size =</span> <span class="dv">50</span>,</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">n_walkers =</span> <span class="dv">10</span>,</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">workers =</span> <span class="dv">2</span>,</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">sync_mode =</span> <span class="st">"dynamic"</span>,</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">max_steps =</span> <span class="dv">500</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Medium: Balanced performance (4000 steps)</span></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    sim_dynamic_medium,</span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">run_simulation</span>(</span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid_size =</span> <span class="dv">100</span>,</span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">n_walkers =</span> <span class="dv">20</span>,</span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">workers =</span> <span class="dv">4</span>,</span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">sync_mode =</span> <span class="st">"dynamic"</span>,</span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">max_steps =</span> <span class="dv">4000</span></span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Large: Stress test (12000 steps)</span></span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(</span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    sim_dynamic_large,</span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">run_simulation</span>(</span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid_size =</span> <span class="dv">200</span>,</span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>      <span class="at">n_walkers =</span> <span class="dv">50</span>,</span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>      <span class="at">workers =</span> <span class="dv">8</span>,</span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>      <span class="at">sync_mode =</span> <span class="st">"dynamic"</span>,</span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>      <span class="at">max_steps =</span> <span class="dv">12000</span></span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Static mode comparisons</span></span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(</span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    sim_static_small,</span>
-<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>    <span class="fu">run_simulation</span>(</span>
-<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid_size =</span> <span class="dv">50</span>, <span class="at">n_walkers =</span> <span class="dv">10</span>, <span class="at">workers =</span> <span class="dv">2</span>,</span>
-<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>      <span class="at">sync_mode =</span> <span class="st">"static"</span>, <span class="at">max_steps =</span> <span class="dv">500</span></span>
-<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(</span>
-<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    sim_static_medium,</span>
-<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">run_simulation</span>(</span>
-<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid_size =</span> <span class="dv">100</span>, <span class="at">n_walkers =</span> <span class="dv">20</span>, <span class="at">workers =</span> <span class="dv">4</span>,</span>
-<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>      <span class="at">sync_mode =</span> <span class="st">"static"</span>, <span class="at">max_steps =</span> <span class="dv">4000</span></span>
-<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(</span>
-<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>    sim_static_large,</span>
-<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>    <span class="fu">run_simulation</span>(</span>
-<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid_size =</span> <span class="dv">200</span>, <span class="at">n_walkers =</span> <span class="dv">50</span>, <span class="at">workers =</span> <span class="dv">8</span>,</span>
-<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>      <span class="at">sync_mode =</span> <span class="st">"static"</span>, <span class="at">max_steps =</span> <span class="dv">12000</span></span>
-<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-</section>
-<section id="load-and-visualize" class="level3">
-<h3 class="anchored" data-anchor-id="load-and-visualize">Load and Visualize</h3>
-<div class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pre-computed results</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_load</span>(<span class="fu">c</span>(sim_static_small, sim_dynamic_small))</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare grids side-by-side</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_grid</span>(sim_static_small<span class="sc">$</span>grid) <span class="sc">+</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Static Mode"</span>) <span class="sc">+</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_grid</span>(sim_dynamic_small<span class="sc">$</span>grid) <span class="sc">+</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Dynamic Mode"</span>)</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Statistics comparison</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  sim_static_small<span class="sc">$</span>statistics <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">mode =</span> <span class="st">"static"</span>),</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  sim_dynamic_small<span class="sc">$</span>statistics <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">mode =</span> <span class="st">"dynamic"</span>)</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(mode, black_pixels, total_steps, elapsed_time_secs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-</section>
-<section id="expected-results" class="level3">
-<h3 class="anchored" data-anchor-id="expected-results">Expected Results</h3>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Scale</th>
-<th>Mode</th>
-<th>Black Pixels</th>
-<th>Collisions</th>
-<th>Time</th>
-<th>Overhead</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Small</td>
-<td>Static</td>
-<td>~80</td>
-<td>0</td>
-<td>0.5s</td>
-<td>-</td>
-</tr>
-<tr class="even">
-<td>Small</td>
-<td>Dynamic</td>
-<td>~70</td>
-<td>~3</td>
-<td>0.56s</td>
-<td>+12%</td>
-</tr>
-<tr class="odd">
-<td>Medium</td>
-<td>Static</td>
-<td>~350</td>
-<td>0</td>
-<td>3.2s</td>
-<td>-</td>
-</tr>
-<tr class="even">
-<td>Medium</td>
-<td>Dynamic</td>
-<td>~310</td>
-<td>~12</td>
-<td>3.6s</td>
-<td>+13%</td>
-</tr>
-<tr class="odd">
-<td>Large</td>
-<td>Static</td>
-<td>~1200</td>
-<td>0</td>
-<td>18s</td>
-<td>-</td>
-</tr>
-<tr class="even">
-<td>Large</td>
-<td>Dynamic</td>
-<td>~1050</td>
-<td>~45</td>
-<td>20s</td>
-<td>+11%</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Observations:</strong> - Dynamic mode: Fewer black pixels (collisions terminate walkers early) - Modest overhead: ~11-13% slower (broadcasting cost) - Realistic behavior: Walkers actually interact</p>
-</section>
-</div>
-<div id="tabset-1-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-4-tab">
-<section id="performance-metrics" class="level3">
-<h3 class="anchored" data-anchor-id="performance-metrics">Performance Metrics</h3>
-<div class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Performance comparison</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>compare_performance <span class="ot">&lt;-</span> <span class="cf">function</span>(static_result, dynamic_result) {</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">metric =</span> <span class="fu">c</span>(</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Black pixels"</span>,</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Total steps"</span>,</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Elapsed time (s)"</span>,</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Steps per second"</span>,</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Collisions detected"</span>,</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Overhead (%)"</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">static =</span> <span class="fu">c</span>(</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>      static_result<span class="sc">$</span>statistics<span class="sc">$</span>black_pixels,</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>      static_result<span class="sc">$</span>statistics<span class="sc">$</span>total_steps,</span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>      static_result<span class="sc">$</span>statistics<span class="sc">$</span>elapsed_time_secs,</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>      static_result<span class="sc">$</span>statistics<span class="sc">$</span>total_steps <span class="sc">/</span> static_result<span class="sc">$</span>statistics<span class="sc">$</span>elapsed_time_secs,</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>      <span class="dv">0</span>,  <span class="co"># No collisions in static mode</span></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>      <span class="dv">0</span></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">dynamic =</span> <span class="fu">c</span>(</span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>      dynamic_result<span class="sc">$</span>statistics<span class="sc">$</span>black_pixels,</span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>      dynamic_result<span class="sc">$</span>statistics<span class="sc">$</span>total_steps,</span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>      dynamic_result<span class="sc">$</span>statistics<span class="sc">$</span>elapsed_time_secs,</span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>      dynamic_result<span class="sc">$</span>statistics<span class="sc">$</span>total_steps <span class="sc">/</span> dynamic_result<span class="sc">$</span>statistics<span class="sc">$</span>elapsed_time_secs,</span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>      <span class="fu">sum</span>(dynamic_result<span class="sc">$</span>statistics<span class="sc">$</span>termination_reasons <span class="sc">==</span> <span class="st">"black_neighbor_detected"</span>),</span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>      ((dynamic_result<span class="sc">$</span>statistics<span class="sc">$</span>elapsed_time_secs <span class="sc">/</span></span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>        static_result<span class="sc">$</span>statistics<span class="sc">$</span>elapsed_time_secs) <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> <span class="dv">100</span></span>
-<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Run comparison</span></span>
-<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="fu">compare_performance</span>(sim_static_small, sim_dynamic_small)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-</section>
-<section id="clustering-patterns" class="level3">
-<h3 class="anchored" data-anchor-id="clustering-patterns">Clustering Patterns</h3>
-<div class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Analyze spatial clustering</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(spatstat)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>analyze_clustering <span class="ot">&lt;-</span> <span class="cf">function</span>(grid) {</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Convert grid to point pattern</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  black_positions <span class="ot">&lt;-</span> <span class="fu">which</span>(grid <span class="sc">==</span> <span class="st">"black"</span>, <span class="at">arr.ind =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  ppp_data <span class="ot">&lt;-</span> <span class="fu">ppp</span>(</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> black_positions[, <span class="dv">2</span>],</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> black_positions[, <span class="dv">1</span>],</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">window =</span> <span class="fu">owin</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="fu">ncol</span>(grid)), <span class="fu">c</span>(<span class="dv">1</span>, <span class="fu">nrow</span>(grid)))</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate Ripley's K function</span></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  k_func <span class="ot">&lt;-</span> <span class="fu">Kest</span>(ppp_data)</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plot</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(k_func, <span class="at">main =</span> <span class="st">"Clustering Analysis"</span>)</span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare clustering</span></span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="fu">analyze_clustering</span>(sim_static_small<span class="sc">$</span>grid)</span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="fu">analyze_clustering</span>(sim_dynamic_small<span class="sc">$</span>grid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-</section>
-</div>
-<div id="tabset-1-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-5-tab">
-<section id="shinylive-app" class="level3">
-<h3 class="anchored" data-anchor-id="shinylive-app">Shinylive App</h3>
-<blockquote class="blockquote">
-<p><strong>Note:</strong> Interactive Shiny app will be added in Phase 3</p>
-</blockquote>
-<p>The dashboard will include:</p>
-<p><strong>Inputs:</strong> - Grid size: 20-200 (slider) - Number of walkers: 1-max (slider) - Number of workers: 0-8 (slider) - <strong>Sync mode: “static” vs “dynamic” (radio)</strong> ← New - Neighborhood: “4-hood” vs “8-hood” - Boundary: “terminate” vs “wrap” - Max steps: 100-5000</p>
-<p><strong>Outputs:</strong> - Grid visualization (interactive plotly) - Statistics table - Black pixels - <strong>Collisions</strong> ← New (dynamic only) - Steps, time - Performance metrics - Elapsed time - Speedup - <strong>Broadcasting overhead</strong> ← New</p>
-<p><strong>Features:</strong> - Run button: Execute simulation - Compare button: Run static + dynamic side-by-side - Download results - Reset</p>
-</section>
-<section id="launch-dashboard" class="level3">
-<h3 class="anchored" data-anchor-id="launch-dashboard">Launch Dashboard</h3>
-<p>```{r eval=FALSE} # Will be available after Phase 3 implementation shiny::runApp(“inst/shiny/dashboard_dynamic”) ```</p>
-</section>
-</div>
-</div>
-</div>
-<section id="implementation-status" class="level2">
-<h2 class="anchored" data-anchor-id="implementation-status">Implementation Status</h2>
-<section id="phase-1-broadcasting-infrastructure-complete" class="level3">
-<h3 class="anchored" data-anchor-id="phase-1-broadcasting-infrastructure-complete">✅ Phase 1: Broadcasting Infrastructure (Complete)</h3>
-<ul class="task-list">
-<li><label><input type="checkbox" checked=""><code>R/broadcasting.R</code> with socket functions</label></li>
-<li><label><input type="checkbox" checked=""><code>init_publisher_socket()</code> - Create publisher</label></li>
-<li><label><input type="checkbox" checked=""><code>init_subscriber_socket()</code> - Create subscriber</label></li>
-<li><label><input type="checkbox" checked=""><code>broadcast_black_pixel()</code> - Send updates</label></li>
-<li><label><input type="checkbox" checked=""><code>update_grid_from_broadcasts()</code> - Receive and apply</label></li>
-<li><label><input type="checkbox" checked=""><code>close_sockets()</code> - Cleanup</label></li>
-<li><label><input type="checkbox" checked="">Complete documentation (roxygen2)</label></li>
-</ul>
-</section>
-<section id="phase-2-walker-integration-in-progress" class="level3">
-<h3 class="anchored" data-anchor-id="phase-2-walker-integration-in-progress">🔄 Phase 2: Walker Integration (In Progress)</h3>
-<ul class="task-list">
-<li><label><input type="checkbox" checked=""><code>R/walker_dynamic.R</code> created</label></li>
-<li><label><input type="checkbox" checked=""><code>simulate_walker_dynamic()</code> - Core walker logic</label></li>
-<li><label><input type="checkbox" checked="">Simplified 3-step logic (Step 2 removed)</label></li>
-<li><label><input type="checkbox" checked="">Helper functions (get_neighbors, etc.)</label></li>
-<li><label><input type="checkbox">Integration with crew worker processes</label></li>
-<li><label><input type="checkbox">Socket serialization handling</label></li>
-</ul>
-</section>
-<section id="phase-3-simulation-integration-planned" class="level3">
-<h3 class="anchored" data-anchor-id="phase-3-simulation-integration-planned">⏳ Phase 3: Simulation Integration (Planned)</h3>
-<ul class="task-list">
-<li><label><input type="checkbox">Add <code>sync_mode</code> parameter to <code>run_simulation()</code></label></li>
-<li><label><input type="checkbox">Create <code>run_simulation_async_dynamic()</code> function</label></li>
-<li><label><input type="checkbox">Handle socket initialization in main process</label></li>
-<li><label><input type="checkbox">Distribute sockets to workers</label></li>
-<li><label><input type="checkbox">Collect results and compile statistics</label></li>
-<li><label><input type="checkbox">Add collision statistics to output</label></li>
-</ul>
-</section>
-<section id="phase-4-targets-pipeline-planned" class="level3">
-<h3 class="anchored" data-anchor-id="phase-4-targets-pipeline-planned">⏳ Phase 4: Targets Pipeline (Planned)</h3>
-<ul class="task-list">
-<li><label><input type="checkbox">Add dynamic simulation targets to <code>_targets.R</code></label></li>
-<li><label><input type="checkbox">Pre-compute small/medium/large simulations</label></li>
-<li><label><input type="checkbox">Generate comparison plots</label></li>
-<li><label><input type="checkbox">Update vignette with actual results</label></li>
-</ul>
-</section>
-<section id="phase-5-interactive-dashboard-planned" class="level3">
-<h3 class="anchored" data-anchor-id="phase-5-interactive-dashboard-planned">⏳ Phase 5: Interactive Dashboard (Planned)</h3>
-<ul class="task-list">
-<li><label><input type="checkbox">Create <code>inst/shiny/dashboard_dynamic/app.R</code></label></li>
-<li><label><input type="checkbox">Add sync_mode selector</label></li>
-<li><label><input type="checkbox">Display collision statistics</label></li>
-<li><label><input type="checkbox">Show broadcasting overhead</label></li>
-<li><label><input type="checkbox">Export to shinylive</label></li>
-</ul>
-</section>
-</section>
-<section id="performance-analysis" class="level2">
-<h2 class="anchored" data-anchor-id="performance-analysis">Performance Analysis</h2>
-<section id="message-overhead" class="level3">
-<h3 class="anchored" data-anchor-id="message-overhead">Message Overhead</h3>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Approach</th>
-<th>Messages/Sim</th>
-<th>Overhead</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><strong>Broadcast every step</strong> (wrong)</td>
-<td>~10,000</td>
-<td>Network saturated</td>
-</tr>
-<tr class="even">
-<td><strong>Dynamic broadcasting</strong> (correct)</td>
-<td>~10-20</td>
-<td>Minimal (~12%)</td>
-</tr>
-<tr class="odd">
-<td><strong>Static snapshot</strong> (current)</td>
-<td>0</td>
-<td>None (unrealistic)</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="scalability" class="level3">
-<h3 class="anchored" data-anchor-id="scalability">Scalability</h3>
-<div class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Benchmark scaling with worker count</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>workers_range <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">8</span>)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">lapply</span>(workers_range, <span class="cf">function</span>(n_workers) {</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system.time</span>({</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">run_simulation</span>(</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid_size =</span> <span class="dv">100</span>,</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">n_walkers =</span> <span class="dv">20</span>,</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">workers =</span> n_workers,</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">sync_mode =</span> <span class="st">"dynamic"</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  })[<span class="st">"elapsed"</span>]</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(workers_range, results,</span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Number of Workers"</span>,</span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Time (seconds)"</span>,</span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Dynamic Broadcasting Scalability"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-</section>
-</section>
-<section id="when-to-use-each-mode" class="level2">
-<h2 class="anchored" data-anchor-id="when-to-use-each-mode">When to Use Each Mode</h2>
-<section id="use-static-mode-when" class="level3">
-<h3 class="anchored" data-anchor-id="use-static-mode-when">Use Static Mode When</h3>
-<ul>
-<li>✅ Maximum performance critical</li>
-<li>✅ Walker interactions not important</li>
-<li>✅ Quick prototyping</li>
-<li>✅ Reproducibility critical</li>
-</ul>
-</section>
-<section id="use-dynamic-mode-when" class="level3">
-<h3 class="anchored" data-anchor-id="use-dynamic-mode-when">Use Dynamic Mode When</h3>
-<ul>
-<li>✅ Realistic interactions required</li>
-<li>✅ Collision detection important</li>
-<li>✅ Studying emergent behavior</li>
-<li>✅ Educational demonstrations</li>
-<li>✅ Performance overhead acceptable</li>
-</ul>
-</section>
-</section>
-<section id="references" class="level2">
-<h2 class="anchored" data-anchor-id="references">References</h2>
-<ul>
-<li><a href="https://github.com/JohnGavin/randomwalk/issues/51">Issue #51</a> - Complete implementation plan</li>
-<li><a href="dashboard_async.html">Async Dashboard</a> - Static snapshot implementation</li>
-<li><code>?run_simulation</code> - Main simulation function</li>
-<li><a href="https://shikokuchuo.net/nanonext/">nanonext Package</a> - NNG sockets for R</li>
-<li><a href="https://wlandau.github.io/crew/">crew Package</a> - Distributed workers</li>
-</ul>
-</section>
-<section id="summary" class="level2">
-<h2 class="anchored" data-anchor-id="summary">Summary</h2>
-<p>Dynamic broadcasting enables realistic walker interactions in async simulations:</p>
-<p>✅ <strong>Minimal overhead</strong> - Only ~10-20 broadcasts per simulation ✅ <strong>Eventual consistency</strong> - Best-efforts approach, not perfect sync ✅ <strong>Simple protocol</strong> - Pop messages, check neighbors, broadcast ✅ <strong>Robust</strong> - Handles race conditions through repeated updates</p>
-<p><strong>Key insight:</strong> Workers only care about <strong>obstacles</strong> (black pixels), not walker positions. This makes the implementation dramatically simpler and more efficient.</p>
-<p><strong>Status:</strong> Phase 1 (infrastructure) complete. Phases 2-5 in progress.</p>
+<section id="dynamic-grid-broadcasting" class="level1">
+<h1>Dynamic Grid Broadcasting</h1>
+<p>This vignette provides a <strong>fully interactive Shiny application</strong> that demonstrates <strong>Dynamic Grid Broadcasting</strong>, a feature that allows parallel workers to share state updates in real-time.</p>
+<section id="launch-the-interactive-dashboard" class="level2">
+<h2 class="anchored" data-anchor-id="launch-the-interactive-dashboard">🚀 Launch the Interactive Dashboard</h2>
+<p>The dashboard runs entirely in your browser using WebAssembly.</p>
+<pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
+#|   shinylive does not work in self-contained HTML documents.
+#|   Please set `embed-resources: false` in your metadata.
+#| standalone: true
+#| viewerHeight: 900
+
+# Mount WebAssembly file system from GitHub release
+# The wasm-release.yaml workflow builds library.data and attaches to releases
+eval(parse(text = 'webr::mount(mountpoint = "/randomwalk-lib", source = "https://github.com/JohnGavin/randomwalk/releases/download/v0.1.0/library.data")'))
+
+# Add mounted library to library paths
+.libPaths(c("/randomwalk-lib", .libPaths()))
+
+# Install ggplot2 dependencies explicitly from webR repository
+# Use /tmp for installation since it's writable
+eval(parse(text = 'webr::install(c("munsell", "colorspace", "farver", "labeling", "viridisLite", "RColorBrewer", "scales", "tibble", "ggplot2"), lib = "/tmp/webr-libs")'))
+
+# Add the tmp library to the path
+.libPaths(c("/tmp/webr-libs", .libPaths()))
+
+# Load required packages
+library(shiny)
+
+# Load randomwalk from mounted library
+eval(parse(text = "library(randomwalk)"))
+
+# Define UI
+ui &lt;- fluidPage(
+  titlePanel("Dynamic Random Walk Simulation Dashboard"),
+
+  sidebarLayout(
+    # Sidebar with input controls
+    sidebarPanel(
+      width = 3,
+
+      h4("Simulation Parameters"),
+      p("Configure the random walk simulation parameters below."),
+
+      hr(),
+
+      # ASYNC PARAMETER - Number of workers (EXPANDED RANGE per issue #33)
+      sliderInput(
+        "workers",
+        "Number of Workers:",
+        min = 0,
+        max = 12,
+        value = 2,
+        step = 1,
+        ticks = FALSE
+      ),
+      helpText(
+        HTML("&lt;b&gt;0 = Sync mode&lt;/b&gt; (sequential)&lt;br&gt;",
+             "&lt;b&gt;1+ = Async mode&lt;/b&gt; (parallel)&lt;br&gt;",
+             "More workers may improve performance (0-12)")
+      ),
+
+      # SYNC MODE PARAMETER (New for Dynamic Dashboard)
+      radioButtons(
+        "sync_mode",
+        "Synchronization Mode:",
+        choices = c(
+          "Static Snapshot" = "static",
+          "Dynamic Broadcasting" = "dynamic"
+        ),
+        selected = "static"
+      ),
+      helpText(
+        HTML("&lt;b&gt;Static:&lt;/b&gt; Workers use frozen grid (faster)&lt;br&gt;",
+             "&lt;b&gt;Dynamic:&lt;/b&gt; Workers share updates (realistic)")
+      ),
+
+      sliderInput(
+        "grid_size",
+        "Grid Size:",
+        min = 20,
+        max = 400,
+        value = 100,
+        step = 20,
+        ticks = FALSE
+      ),
+      helpText("Size of the square grid (20-400 in steps of 20)"),
+
+      sliderInput(
+        "n_walkers",
+        "Number of Walkers:",
+        min = 1,
+        max = 100,  # Will be constrained dynamically to 70% of grid pixels
+        value = 6,
+        step = 1,
+        ticks = FALSE
+      ),
+      helpText(HTML("Number of simultaneous random walkers&lt;br&gt;&lt;em&gt;Max: 70% of grid pixels&lt;/em&gt;")),
+
+      selectInput(
+        "neighborhood",
+        "Neighborhood Type:",
+        choices = c(
+          "4-neighborhood (N, S, E, W)" = "4-hood",
+          "8-neighborhood (incl. diagonals)" = "8-hood"
+        ),
+        selected = "4-hood"
+      ),
+
+      selectInput(
+        "boundary",
+        "Boundary Behavior:",
+        choices = c(
+          "Terminate at edge" = "terminate",
+          "Wrap around (torus)" = "wrap"
+        ),
+        selected = "terminate"
+      ),
+
+      sliderInput(
+        "max_steps",
+        "Max Steps per Walker:",
+        min = 1000,
+        max = 20000,
+        value = 10000,
+        step = 1000,
+        ticks = FALSE
+      ),
+      helpText("Maximum steps before walker stops (1k-20k)"),
+
+      hr(),
+
+      # Memory estimate display
+      div(
+        id = "memory_estimate",
+        style = "padding: 10px; border-radius: 5px; background-color: #f0f0f0; margin-bottom: 15px;",
+        h5("Memory Estimate", style = "margin-top: 0;"),
+        textOutput("memory_estimate"),
+        helpText(HTML("&lt;b&gt;WebR limit:&lt;/b&gt; ~1 GB for simulation data&lt;br&gt;",
+                     "&lt;em&gt;Large simulations may fail in browser&lt;/em&gt;"))
+      ),
+
+      actionButton(
+        "run_sim",
+        "Run Simulation",
+        class = "btn-primary btn-lg",
+        width = "100%",
+        icon = icon("play")
+      ),
+
+      br(), br(),
+
+      actionButton(
+        "reset",
+        "Reset to Defaults",
+        class = "btn-secondary",
+        width = "100%",
+        icon = icon("rotate-left")
+      ),
+
+      hr(),
+
+      # Status display with progress indicator
+      div(
+        id = "status_box",
+        style = "padding: 10px; border-radius: 5px; background-color: #f8f9fa;",
+        h5("Status", style = "margin-top: 0;"),
+        p("✅ APP LOADED - UI IS WORKING", style = "color: green; font-weight: bold;"),
+        textOutput("status_text"),
+        br(),
+        # Progress indicator (hidden by default)
+        conditionalPanel(
+          condition = "output.show_progress",
+          div(
+            style = "margin-top: 10px;",
+            tags$div(
+              class = "progress",
+              tags$div(
+                class = "progress-bar progress-bar-striped progress-bar-animated",
+                role = "progressbar",
+                style = "width: 100%",
+                "Running simulation..."
+              )
+            )
+          )
+        )
+      )
+    ),
+
+    # Main panel with tabbed output
+    mainPanel(
+      width = 9,
+
+      tabsetPanel(
+        id = "output_tabs",
+        type = "pills",
+
+        # Performance Tab (NEW for async)
+        tabPanel(
+          "Performance",
+          icon = icon("gauge-high"),
+          br(),
+          h4("Async Performance Metrics"),
+          p("Compare execution time between sync and async modes."),
+          tableOutput("perf_table"),
+          hr(),
+          h5("Execution Mode"),
+          p(textOutput("mode_info")),
+          hr(),
+          h5("Performance Analysis"),
+          p(textOutput("perf_analysis"))
+        ),
+
+        # Grid State Tab
+        tabPanel(
+          "Grid State",
+          icon = icon("table-cells"),
+          br(),
+          h4("Final Grid Visualization"),
+          p("Black squares represent pixels visited by random walkers."),
+          plotOutput("grid_plot", height = "600px"),
+          hr(),
+          p(class = "text-muted", "Generated using plot_grid() from the randomwalk package")
+        ),
+
+        # Walker Paths Tab
+        tabPanel(
+          "Walker Paths",
+          icon = icon("route"),
+          br(),
+          h4("Individual Walker Trajectories"),
+          p("Green squares mark starting positions, red squares show where walkers terminated."),
+
+          # Path limit slider
+          sliderInput(
+            "max_paths",
+            "Maximum paths to display:",
+            min = 1,
+            max = 51,
+            value = 6,
+            step = 5,
+            ticks = FALSE
+          ),
+          helpText("Limit displayed paths to avoid visual clutter with many walkers. Slider range: 1-51."),
+
+          plotOutput("paths_plot", height = "600px"),
+          hr(),
+          p(class = "text-muted", "Generated using plot_walker_paths() from the randomwalk package")
+        ),
+
+        # Statistics Tab
+        tabPanel(
+          "Statistics",
+          icon = icon("chart-line"),
+          br(),
+          h4("Simulation Metrics"),
+          tableOutput("stats_table"),
+          hr(),
+          h5("Coverage Analysis"),
+          p(textOutput("coverage_analysis")),
+          hr(),
+          h5("Walker Summary"),
+          tableOutput("walker_summary")
+        ),
+
+        # Raw Data Tab
+        tabPanel(
+          "Raw Data",
+          icon = icon("database"),
+          br(),
+          h4("Detailed Walker Information"),
+          p("Complete data for each walker in the simulation."),
+
+          # Pagination controls
+          fluidRow(
+            column(3,
+              selectInput(
+                "page_size",
+                "Rows per page:",
+                choices = c(10,25, 50, 100, "All"),
+                selected = 10
+              )
+            ),
+            column(3,
+              uiOutput("page_nav")
+            ),
+            column(6,
+              textOutput("row_info")
+            )
+          ),
+
+          tableOutput("walker_data"),
+          hr(),
+          h4("Grid Information"),
+          tableOutput("grid_info")
+        ),
+
+        # Debug/Logs Tab
+        tabPanel(
+          "Debug Logs",
+          icon = icon("bug"),
+          br(),
+          h4("Debug Information"),
+          p("Real-time logs to help diagnose issues with the dashboard."),
+          hr(),
+          h5("Event Log"),
+          verbatimTextOutput("debug_log"),
+          hr(),
+          h5("Current State"),
+          verbatimTextOutput("debug_state"),
+          hr(),
+          actionButton("clear_log", "Clear Log", class = "btn-secondary")
+        ),
+
+        # About Tab
+        tabPanel(
+          "About",
+          icon = icon("info-circle"),
+          br(),
+          h4("About This Dynamic Dashboard"),
+          p("This interactive dashboard demonstrates the randomwalk package's dynamic broadcasting capabilities, allowing parallel workers to share state."),
+
+          h5("Synchronization Modes"),
+          tags$ul(
+            tags$li(strong("Static Snapshot:"), " Workers use a frozen copy of the grid. Fast but no interaction."),
+            tags$li(strong("Dynamic Broadcasting:"), " Workers broadcast new black pixels to all other workers. Realistic interactions.")
+          ),
+
+          h5("How Async Mode Works"),
+          tags$ul(
+            tags$li(strong("Sync Mode (workers=0):"), " Walkers processed sequentially"),
+            tags$li(strong("Async Mode (workers&gt;0):"), " Walkers processed in parallel by crew workers"),
+            tags$li(strong("Independent Execution:"), " Each worker processes walkers independently")
+          ),
+
+          h5("Expected Performance"),
+          tags$ul(
+            tags$li("1 worker: Similar to sync mode"),
+            tags$li("2 workers: ~1.5x speedup (target)"),
+            tags$li("4 workers: ~2-3x speedup (depends on workload)"),
+            tags$li("Speedup limited by walker termination times and overhead")
+          ),
+
+          h5("Trade-offs"),
+          tags$ul(
+            tags$li(tags$b("Pro:"), " Faster execution with multiple workers"),
+            tags$li(tags$b("Pro:"), " Simple, reliable architecture"),
+            tags$li(tags$b("Pro:"), " Visual progress indicator during execution"),
+            tags$li(tags$b("Con:"), " Results may differ from sync mode (acceptable)"),
+            tags$li(tags$b("Con:"), " Workers don't see real-time updates from other workers")
+          ),
+
+          h5("Progress Monitoring"),
+          p("The dashboard includes a visual progress indicator that shows when simulations are running. ",
+            "Future enhancements will include detailed task-level progress monitoring with completed/total walker counts."),
+
+          hr(),
+
+          h5("WebR Memory Limitations"),
+          p(strong("Important:"), " This dashboard runs entirely in your browser using WebAssembly (WebR), which has memory constraints."),
+          tags$ul(
+            tags$li(strong("Browser memory limit:"), " ~2-4 GB per browser tab"),
+            tags$li(strong("Safe simulation limit:"), " Keep estimated memory under ~1-1.5 GB"),
+            tags$li(strong("Memory estimation:"), " Displayed above the 'Run Simulation' button"),
+            tags$li(strong("Path storage dominates:"), " walkers × max_steps × 16 bytes")
+          ),
+
+          h5("Recommended Safe Parameters"),
+          tags$table(
+            class = "table table-sm table-bordered",
+            style = "max-width: 600px;",
+            tags$thead(
+              tags$tr(
+                tags$th("Grid Size"),
+                tags$th("Max Walkers"),
+                tags$th("Max Steps"),
+                tags$th("Est. Memory"),
+                tags$th("Status")
+              )
+            ),
+            tags$tbody(
+              tags$tr(
+                tags$td("100"),
+                tags$td("5,000"),
+                tags$td("10,000"),
+                tags$td("~760 MB"),
+                tags$td(tags$span(style = "color: green;", "✅ Safe"))
+              ),
+              tags$tr(
+                tags$td("200"),
+                tags$td("10,000"),
+                tags$td("10,000"),
+                tags$td("~1,520 MB"),
+                tags$td(tags$span(style = "color: orange;", "⚠️ High"))
+              ),
+              tags$tr(
+                tags$td("400"),
+                tags$td("32,000"),
+                tags$td("10,000"),
+                tags$td("~4,880 MB"),
+                tags$td(tags$span(style = "color: red;", "❌ Blocked"))
+              )
+            )
+          ),
+
+          p(strong("For large simulations:"), " Install the randomwalk package locally and run in RStudio instead of WebR."),
+
+          hr(),
+
+          h5("References"),
+          tags$ul(
+            tags$li(tags$a(href = "https://github.com/JohnGavin/randomwalk", "randomwalk GitHub Repository")),
+            tags$li(tags$a(href = "https://wlandau.github.io/crew/", "crew: A Distributed Worker Launcher")),
+            tags$li(tags$a(href = "https://posit-dev.github.io/r-shinylive/", "Shinylive Documentation")),
+            tags$li(tags$a(href = "https://github.com/JohnGavin/randomwalk/issues/43", "Issue #43: WebR Memory Limits"))
+          )
+        )
+      )
+    )
+  )
+)
+
+# Define server logic
+server &lt;- function(input, output, session) {
+
+  cat("=== SERVER FUNCTION STARTED ===\n")
+
+  # Reactive value to store simulation result
+  sim_result &lt;- reactiveVal(NULL)
+  cat("✓ sim_result created\n")
+
+  # Reactive value for status messages
+  status_msg &lt;- reactiveVal("Ready to run simulation")
+  cat("✓ status_msg created\n")
+
+  # Reactive value to control progress indicator visibility
+  show_progress_flag &lt;- reactiveVal(FALSE)
+  cat("✓ show_progress_flag created\n")
+
+  # Pagination state
+  current_page &lt;- reactiveVal(1)
+  cat("✓ current_page created\n")
+
+  # Debug log reactive values
+  debug_log_entries &lt;- reactiveVal(character(0))
+  cat("✓ debug_log_entries created\n")
+
+  # Helper function to add log entry
+  # CRITICAL: Use isolate() to prevent reactive dependency loop
+  add_log &lt;- function(msg) {
+    tryCatch({
+      timestamp &lt;- format(Sys.time(), "%H:%M:%S")
+      new_entry &lt;- paste0("[", timestamp, "] ", msg)
+      cat("LOG:", new_entry, "\n")  # Print to R console
+      # Use isolate() to read current entries without creating reactive dependency
+      current &lt;- isolate(debug_log_entries())
+      debug_log_entries(c(current, new_entry))
+    }, error = function(e) {
+      cat("ERROR in add_log:", e$message, "\n")
+    })
+  }
+  cat("✓ add_log function created\n")
+
+  # Log app startup (wrapped in observe to create reactive context)
+  observe({
+    cat("&gt;&gt; observe() for startup running\n")
+    add_log("Dashboard initialized - server is running!")
+  })
+  cat("✓ Startup observe() registered\n")
+
+  # Dynamic walker constraint (issue #33): Limit to 70% of grid pixels
+  observe({
+    max_walkers &lt;- floor(0.7 * input$grid_size^2)
+    updateSliderInput(
+      session,
+      "n_walkers",
+      max = max_walkers,
+      value = min(input$n_walkers, max_walkers)
+    )
+  })
+
+  # Memory estimate (issue #43): Calculate estimated memory usage
+  output$memory_estimate &lt;- renderText({
+    # Calculate memory components (in MB)
+    path_mb &lt;- (input$n_walkers * input$max_steps * 2 * 8) / (1024^2)
+    grid_mb &lt;- (input$grid_size^2 * 8) / (1024^2)
+    overhead_mb &lt;- 50  # Estimated overhead for worker copies, etc.
+    total_mb &lt;- path_mb + grid_mb + overhead_mb
+
+    # Determine status
+    if (total_mb &gt; 1500) {
+      status &lt;- "❌ Too high - will fail!"
+      color &lt;- "color: #d32f2f; font-weight: bold;"
+    } else if (total_mb &gt; 1000) {
+      status &lt;- "⚠️ High risk"
+      color &lt;- "color: #f57c00; font-weight: bold;"
+    } else if (total_mb &gt; 700) {
+      status &lt;- "⚠️ Caution"
+      color &lt;- "color: #ffa726;"
+    } else {
+      status &lt;- "✅ OK"
+      color &lt;- "color: #388e3c; font-weight: bold;"
+    }
+
+    # Format output
+    sprintf("Estimated: %.0f MB %s", total_mb, status)
+  })
+
+  # Reset pagination when page size changes or new simulation completes
+  observe({
+    input$page_size
+    sim_result()
+    current_page(1)
+  })
+
+  cat("✓ observeEvent(run_sim) registered\n")
+
+  # Run simulation when button clicked
+  observeEvent(input$run_sim, {
+    cat("!!! RUN SIMULATION BUTTON CLICKED !!!\n")
+    add_log("=== RUN SIMULATION CLICKED ===")
+    add_log(sprintf("Parameters: grid=%d, walkers=%d, workers=%d, mode=%s",
+                    input$grid_size, input$n_walkers, input$workers, input$sync_mode))
+
+    mode_text &lt;- if (input$workers == 0) "sync" else sprintf("async (%d workers, %s)", input$workers, input$sync_mode)
+    status_msg(sprintf("Running simulation in %s mode...", mode_text))
+    add_log(sprintf("Mode: %s", mode_text))
+
+    # Show progress indicator
+    show_progress_flag(TRUE)
+
+    tryCatch({
+      # Validate inputs
+      if (input$n_walkers &gt; (0.6 * input$grid_size^2)) {
+        add_log("ERROR: Too many walkers for grid size")
+        show_progress_flag(FALSE)  # Hide progress on validation error
+        showNotification(
+          "Too many walkers for grid size. Maximum is 60% of grid cells.",
+          type = "warning",
+          duration = 5
+        )
+        status_msg("Error: Too many walkers for grid size")
+        return(NULL)
+      }
+
+      # Memory validation (issue #43): Prevent OOM errors in WebR
+      path_mb &lt;- (input$n_walkers * input$max_steps * 2 * 8) / (1024^2)
+      grid_mb &lt;- (input$grid_size^2 * 8) / (1024^2)
+      total_mb &lt;- path_mb + grid_mb + 50  # +50 MB overhead
+
+      webr_safe_limit_mb &lt;- 1500  # Conservative limit for WebR
+
+      if (total_mb &gt; webr_safe_limit_mb) {
+        error_msg &lt;- sprintf(
+          "Memory estimate (%.0f MB) exceeds WebR safe limit (~%d MB). Reduce grid size, walkers, or max steps.",
+          total_mb, 
+          webr_safe_limit_mb
+        )
+        add_log(paste("ERROR:", error_msg))
+        show_progress_flag(FALSE)  # Hide progress on validation error
+        showNotification(
+          error_msg,
+          type = "error",
+          duration = 10
+        )
+        status_msg(paste("Error:", error_msg))
+        return(NULL)
+      }
+
+      # Warning for high memory usage
+      if (total_mb &gt; 1000) {
+        warning_msg &lt;- sprintf(
+          "Memory estimate (%.0f MB) is high. Simulation may be slow or fail in WebR.",
+          total_mb
+        )
+        add_log(paste("WARNING:", warning_msg))
+        showNotification(
+          warning_msg,
+          type = "warning",
+          duration = 5
+        )
+      }
+
+      add_log("Validation passed, starting simulation...")
+
+      # Run the simulation using randomwalk package with workers parameter
+      add_log("Calling run_simulation()...")
+      result &lt;- run_simulation(
+        grid_size = input$grid_size,
+        n_walkers = input$n_walkers,
+        workers = input$workers,        # ASYNC PARAMETER
+        sync_mode = input$sync_mode,    # DYNAMIC PARAMETER
+        neighborhood = input$neighborhood,
+        boundary = input$boundary,
+        max_steps = input$max_steps,
+        verbose = FALSE
+      )
+
+      add_log("Simulation completed successfully")
+      add_log(sprintf("Total steps: %d, Black pixels: %d (%.1f%%)",
+                      result$statistics$total_steps,
+                      result$statistics$black_pixels,
+                      result$statistics$black_percentage))
+
+      # Store result
+      sim_result(result)
+
+      # Hide progress indicator on success
+      show_progress_flag(FALSE)
+
+      # Update status
+      status_msg(sprintf(
+        "Simulation complete (%s mode)! %d steps, %.1f%% coverage in %.2fs",
+        mode_text,
+        result$statistics$total_steps,
+        result$statistics$black_percentage,
+        result$statistics$elapsed_time_secs
+      ))
+
+      # Show success notification
+      showNotification(
+        sprintf("Simulation completed in %.2f seconds!", result$statistics$elapsed_time_secs),
+        type = "message",
+        duration = 3
+      )
+
+    }, error = function(e) {
+      # Hide progress indicator on error
+      show_progress_flag(FALSE)
+
+      add_log(sprintf("ERROR in simulation: %s", e$message))
+      add_log(sprintf("Error traceback: %s", paste(capture.output(traceback()), collapse = "\n")))
+      status_msg(paste("Error:", e$message))
+      showNotification(
+        paste("Simulation failed:", e$message),
+        type = "error",
+        duration = 10
+      )
+    })
+  })
+
+  cat("✓ observeEvent(reset) registered\n")
+
+  # Reset parameters (UPDATED defaults per issue #33)
+  observeEvent(input$reset, {
+    cat("!!! RESET BUTTON CLICKED !!!\n")
+    add_log("=== RESET BUTTON CLICKED ===")
+    add_log("Resetting parameters to defaults: workers=2, grid=100, walkers=6")
+
+    updateSliderInput(session, "workers", value = 2)
+    updateRadioButtons(session, "sync_mode", selected = "static")
+    updateSliderInput(session, "grid_size", value = 100)  # Changed from 20
+    updateSliderInput(session, "n_walkers", value = 6)
+    updateSelectInput(session, "neighborhood", selected = "4-hood")
+    updateSelectInput(session, "boundary", selected = "terminate")
+    updateSliderInput(session, "max_steps", value = 10000)
+    status_msg("Parameters reset to defaults")
+
+    add_log("Parameters reset complete")
+
+    showNotification(
+      "Parameters reset to default values",
+      type = "message",
+      duration = 2
+    )
+  })
+
+  # Render status text
+  output$status_text &lt;- renderText({
+    status_msg()
+  })
+
+  # Control progress indicator visibility
+  output$show_progress &lt;- reactive({
+    show_progress_flag()
+  })
+  outputOptions(output, "show_progress", suspendWhenHidden = FALSE)
+
+  # Page navigation buttons
+  output$page_nav &lt;- renderUI({
+    req(sim_result())
+    walkers &lt;- sim_result()$walkers
+
+    page_size &lt;- if (input$page_size == "All") Inf else as.numeric(input$page_size)
+    total_pages &lt;- ceiling(length(walkers) / page_size)
+
+    if (total_pages &lt;= 1) {
+      return(NULL)  # No pagination needed
+    }
+
+    fluidRow(
+      column(6,
+        actionButton("prev_page", "Previous", class = "btn-sm",
+                     disabled = if (current_page() == 1) "" else NULL)
+      ),
+      column(6,
+        actionButton("next_page", "Next", class = "btn-sm",
+                     disabled = if (current_page() &gt;= total_pages) "" else NULL)
+      )
+    )
+  })
+
+  # Row information text
+  output$row_info &lt;- renderText({
+    req(sim_result())
+    walkers &lt;- sim_result()$walkers
+    total_rows &lt;- length(walkers)
+
+    page_size &lt;- if (input$page_size == "All") Inf else as.numeric(input$page_size)
+
+    if (page_size &gt;= total_rows) {
+      sprintf("Showing all %d walkers", total_rows)
+    } else {
+      start &lt;- (current_page() - 1) * page_size + 1
+      end &lt;- min(start + page_size - 1, total_rows)
+      sprintf("Showing walkers %d-%d of %d (Page %d of %d)",
+              start, end, total_rows,
+              current_page(), ceiling(total_rows / page_size))
+    }
+  })
+
+  # Previous page button
+  observeEvent(input$prev_page, {
+    if (current_page() &gt; 1) {
+      current_page(current_page() - 1)
+    }
+  })
+
+  # Next page button
+  observeEvent(input$next_page, {
+    req(sim_result())
+    walkers &lt;- sim_result()$walkers
+    page_size &lt;- if (input$page_size == "All") Inf else as.numeric(input$page_size)
+    total_pages &lt;- ceiling(length(walkers) / page_size)
+
+    if (current_page() &lt; total_pages) {
+      current_page(current_page() + 1)
+    }
+  })
+
+  # Debug log output
+  output$debug_log &lt;- renderText({
+    log_entries &lt;- debug_log_entries()
+    if (length(log_entries) == 0) {
+      return("No log entries yet. Click 'Run Simulation' or 'Reset to Defaults' to see logs.")
+    }
+    paste(log_entries, collapse = "\n")
+  })
+
+  # Debug state output
+  output$debug_state &lt;- renderText({
+    base_info &lt;- paste(
+      "=== CURRENT PARAMETERS ===",
+      sprintf("Workers: %d", input$workers),
+      sprintf("Sync Mode: %s", input$sync_mode),
+      sprintf("Grid Size: %d x %d", input$grid_size, input$grid_size),
+      sprintf("Walkers: %d", input$n_walkers),
+      sprintf("Neighborhood: %s", input$neighborhood),
+      sprintf("Boundary: %s", input$boundary),
+      sprintf("Max Steps: %d", input$max_steps),
+      "",
+      "=== UI CONTROLS ===",
+      sprintf("Page Size: %s rows per page", input$page_size),
+      sprintf("Current Page: %d", current_page()),
+      sprintf("Max Paths Displayed: %d", input$max_paths),
+      "",
+      "=== SIMULATION STATUS ===",
+      sprintf("Status: %s", status_msg()),
+      sprintf("Result stored: %s", if (is.null(sim_result())) "No" else "Yes"),
+      sep = "\n"
+    )
+
+    if (!is.null(sim_result())) {
+      walkers &lt;- sim_result()$walkers
+      base_info &lt;- paste(
+        base_info,
+        sprintf("Total walkers in result: %d", length(walkers)),
+        sprintf("Walkers being displayed in paths: %d", min(input$max_paths, length(walkers))),
+        "",
+        sep = "\n"
+      )
+    }
+
+    paste(
+      base_info,
+      "=== ENVIRONMENT INFO ===",
+      sprintf("R version: %s", R.version.string),
+      sprintf("Running in WebR: %s", if (exists("webr")) "Yes" else "Unknown"),
+      sprintf("randomwalk package loaded: %s", "randomwalk" %in% loadedNamespaces()),
+      sprintf("Session start: %s", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
+      sep = "\n"
+    )
+  })
+
+  # Clear log button
+  observeEvent(input$clear_log, {
+    add_log("Log cleared by user")
+    debug_log_entries(character(0))
+  })
+
+  # ASYNC PERFORMANCE TABLE
+  output$perf_table &lt;- renderTable({
+    req(sim_result())
+    stats &lt;- sim_result()$statistics
+    params &lt;- sim_result()$parameters
+
+    data.frame(
+      Metric = c(
+        "Execution Mode",
+        "Number of Workers",
+        "Elapsed Time",
+        "Total Steps",
+        "Steps per Second",
+        "Black Pixels Created"
+      ),
+      Value = c(
+        ifelse(params$workers == 0, "Sync (Sequential)", sprintf("Async (Parallel - %d workers)", params$workers)),
+        params$workers,
+        sprintf("%.3f seconds", stats$elapsed_time_secs),
+        format(stats$total_steps, big.mark = ","),
+        format(round(stats$total_steps / stats$elapsed_time_secs), big.mark = ","),
+        stats$black_pixels
+      )
+    )
+  }, striped = TRUE, hover = TRUE, bordered = TRUE)
+
+  # Mode information
+  output$mode_info &lt;- renderText({
+    req(sim_result())
+    params &lt;- sim_result()$parameters
+
+    if (params$workers == 0) {
+      "Running in SYNC mode: Walkers are processed sequentially in round-robin fashion. This produces deterministic, reproducible results."
+    } else {
+      sync_desc &lt;- if (is.null(params$sync_mode) || params$sync_mode == "static") {
+        "Workers use static grid snapshots (faster, but no interaction between workers)."
+      } else {
+        "Workers use DYNAMIC BROADCASTING to share state (slower, but realistic interactions)."
+      }
+      
+      sprintf(
+        "Running in ASYNC mode with %d worker%s: %s",
+        params$workers,
+        ifelse(params$workers == 1, "", "s"),
+        sync_desc
+      )
+    }
+  })
+
+  # Performance analysis
+  output$perf_analysis &lt;- renderText({
+    req(sim_result())
+    stats &lt;- sim_result()$statistics
+    params &lt;- sim_result()$parameters
+
+    if (params$workers == 0) {
+      sprintf(
+        "Sync mode completed %d walkers in %.3f seconds (%.1f walkers/second). To test async performance, increase the number of workers and re-run.",
+        stats$total_walkers,
+        stats$elapsed_time_secs,
+        stats$total_walkers / stats$elapsed_time_secs
+      )
+    } else {
+      # Estimate theoretical speedup (actual depends on walker termination patterns)
+      theoretical_speedup &lt;- min(params$workers, stats$total_walkers)
+
+      sprintf(
+        "Async mode with %d workers completed %d walkers in %.3f seconds. Theoretical maximum speedup is %.1fx (limited by %d workers and %d walkers). Actual speedup depends on walker termination patterns and parallelization overhead. Try comparing with sync mode (workers=0) to measure actual speedup.",
+        params$workers,
+        stats$total_walkers,
+        stats$elapsed_time_secs,
+        theoretical_speedup,
+        params$workers,
+        stats$total_walkers
+      )
+    }
+  })
+
+  # Render grid plot
+  output$grid_plot &lt;- renderPlot({
+    req(sim_result())
+    plot_grid(sim_result())
+  })
+
+  # Render walker paths plot with path limit slider
+  output$paths_plot &lt;- renderPlot({
+    req(sim_result())
+    result &lt;- sim_result()
+
+    # Limit to first N walkers based on slider
+    max_display &lt;- min(input$max_paths, length(result$walkers))
+
+    if (max_display &lt; length(result$walkers)) {
+      # Create a copy of result with limited walkers
+      result_limited &lt;- result
+      result_limited$walkers &lt;- result$walkers[1:max_display]
+      plot_walker_paths(result_limited)
+    } else {
+      # Show all walkers
+      plot_walker_paths(result)
+    }
+  })
+
+  # Render statistics table
+  output$stats_table &lt;- renderTable({
+    req(sim_result())
+    stats &lt;- sim_result()$statistics
+
+    data.frame(
+      Metric = c(
+        "Total Steps",
+        "Final Black Pixels",
+        "Final Black Percentage",
+        "Grid Size",
+        "Number of Walkers",
+        "Elapsed Time (sec)"
+      ),
+      Value = c(
+        format(stats$total_steps, big.mark = ","),
+        format(stats$black_pixels, big.mark = ","),
+        sprintf("%.2f%%", stats$black_percentage),
+        sprintf("%d × %d", stats$grid_size, stats$grid_size),
+        stats$total_walkers,
+        sprintf("%.3f", stats$elapsed_time_secs)
+      )
+    )
+  }, striped = TRUE, hover = TRUE, bordered = TRUE)
+
+  # Coverage analysis text
+  output$coverage_analysis &lt;- renderText({
+    req(sim_result())
+    stats &lt;- sim_result()$statistics
+
+    total_cells &lt;- stats$grid_size^2
+    black_cells &lt;- stats$black_pixels
+    coverage_pct &lt;- stats$black_percentage
+
+    sprintf(
+      "The simulation covered %d out of %d grid cells (%.2f%%). On average, %.1f steps were taken per black pixel created.",
+      black_cells,
+      total_cells,
+      coverage_pct,
+      stats$total_steps / black_cells
+    )
+  })
+
+  # Walker summary table
+  output$walker_summary &lt;- renderTable({
+    req(sim_result())
+    walkers &lt;- sim_result()$walkers
+
+    data.frame(
+      Statistic = c(
+        "Total Walkers",
+        "Average Steps",
+        "Min Steps",
+        "Max Steps",
+        "Completed Walkers"
+      ),
+      Value = c(
+        length(walkers),
+        sprintf("%.1f", mean(sapply(walkers, function(w) w$steps))),
+        min(sapply(walkers, function(w) w$steps)),
+        max(sapply(walkers, function(w) w$steps)),
+        sum(sapply(walkers, function(w) !w$active))
+      )
+    )
+  }, striped = TRUE, hover = TRUE, bordered = TRUE)
+
+  # Walker data table with pagination
+  output$walker_data &lt;- renderTable({
+    req(sim_result())
+    walkers &lt;- sim_result()$walkers
+
+    # Format for display
+    walkers_display &lt;- data.frame(
+      Walker = sapply(walkers, function(w) w$id),
+      Steps = sapply(walkers, function(w) w$steps),
+      Start_X = sapply(walkers, function(w) w$path[[1]][1]),
+      Start_Y = sapply(walkers, function(w) w$path[[1]][2]),
+      # Extract last position correctly from path matrix
+      End_X = sapply(walkers, function(w) {
+        path &lt;- w$path[[1]]
+        if (is.matrix(path)) path[nrow(path), 1] else path[length(path)]
+      }),
+      End_Y = sapply(walkers, function(w) {
+        path &lt;- w$path[[1]]
+        if (is.matrix(path)) path[nrow(path), 2] else path[length(path)]
+      }),
+      Active = sapply(walkers, function(w) ifelse(w$active, "Yes", "No")),
+      Reason = sapply(walkers, function(w) w$termination_reason)
+    )
+
+    # Apply pagination
+    page_size &lt;- if (input$page_size == "All") Inf else as.numeric(input$page_size)
+
+    if (page_size &gt;= nrow(walkers_display)) {
+      # Show all rows
+      walkers_display
+    } else {
+      # Show current page
+      start_row &lt;- (current_page() - 1) * page_size + 1
+      end_row &lt;- min(start_row + page_size - 1, nrow(walkers_display))
+      walkers_display[start_row:end_row, ]
+    }
+  })
+
+  # Grid info table
+  output$grid_info &lt;- renderTable({
+    req(sim_result())
+    stats &lt;- sim_result()$statistics
+    params &lt;- sim_result()$parameters
+
+    data.frame(
+      Property = c(
+        "Grid Dimensions",
+        "Total Cells",
+        "Black Cells",
+        "White Cells",
+        "Neighborhood Type",
+        "Boundary Behavior",
+        "Execution Mode"
+      ),
+      Value = c(
+        sprintf("%d × %d", stats$grid_size, stats$grid_size),
+        format(stats$grid_size^2, big.mark = ","),
+        format(stats$black_pixels, big.mark = ","),
+        format(stats$grid_size^2 - stats$black_pixels, big.mark = ","),
+        input$neighborhood,
+        input$boundary,
+        ifelse(params$workers == 0, "Sync", sprintf("Async (%d workers)", params$workers))
+      )
+    )
+  }, striped = TRUE, hover = TRUE, bordered = TRUE)
+}
+
+# Run the application
+shinyApp(ui = ui, server = server)
+</code></pre>
 </section>
 </section>
 
