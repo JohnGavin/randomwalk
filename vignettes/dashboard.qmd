@@ -38,7 +38,7 @@ Use the controls below to configure simulation parameters and visualize results 
 # The wasm-release.yaml workflow builds library.data and attaches to releases
 webr::mount(
   mountpoint = "/randomwalk-lib",
-  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
+  source = "https://github.com/JohnGavin/randomwalk/releases/download/v0.1.0/library.data"
 )
 
 # Add mounted library to library paths
@@ -223,7 +223,7 @@ ui <- fluidPage(
           tags$ul(
             tags$li("The dashboard runs entirely in your browser - no R server needed"),
             tags$li("Uses WebAssembly to run R code client-side"),
-            tags$li("Loads the randomwalk package from R-Universe"),
+            tags$li("Loads the randomwalk package from GitHub Releases"),
             tags$li("All simulations are computed on-demand in real-time")
           ),
 
