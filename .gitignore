@@ -19,7 +19,6 @@ Rplots.pdf
 inst/old/
 inst/shiny/test_minimal/
 test_minimal_export/
-shinylive-sw.js
 install_deps.R
 merge_pr.sh
 .envrc

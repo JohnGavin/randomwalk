@@ -108,6 +108,15 @@ jobs:
                 message(sprintf(\"Copied asset directory %s to docs/articles/\", dirname))
               }
             }
+            
+            # Copy shinylive-sw.js to site root if it exists
+            # This is required for Shinylive Service Worker registration
+            if (file.exists(\"shinylive-sw.js\")) {
+              file.copy(\"shinylive-sw.js\", \"docs/\", overwrite = TRUE)
+              message(\"Copied shinylive-sw.js to docs/\")
+            } else {
+              warning(\"shinylive-sw.js not found in root!\")
+            }
           '"
 
       - name: Download WebAssembly library from latest release
