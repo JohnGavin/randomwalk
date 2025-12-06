@@ -25,19 +25,14 @@ The dashboard runs entirely in your browser using WebAssembly.
 
 # Mount WebAssembly file system from GitHub release
 # The wasm-release.yaml workflow builds library.data and attaches to releases
-webr::mount(
-  mountpoint = "/randomwalk-lib",
-  source = "https://github.com/JohnGavin/randomwalk/releases/download/v0.1.0/library.data"
-)
+eval(parse(text = 'webr::mount(mountpoint = "/randomwalk-lib", source = "https://github.com/JohnGavin/randomwalk/releases/download/v0.1.0/library.data")'))
 
 # Add mounted library to library paths
 .libPaths(c("/randomwalk-lib", .libPaths()))
 
 # Install ggplot2 dependencies explicitly from webR repository
 # Use /tmp for installation since it's writable
-webr::install(c("munsell", "colorspace", "farver", "labeling", "viridisLite",
-                 "RColorBrewer", "scales", "tibble", "ggplot2"),
-               lib = "/tmp/webr-libs")
+eval(parse(text = 'webr::install(c("munsell", "colorspace", "farver", "labeling", "viridisLite", "RColorBrewer", "scales", "tibble", "ggplot2"), lib = "/tmp/webr-libs")'))
 
 # Add the tmp library to the path
 .libPaths(c("/tmp/webr-libs", .libPaths()))
@@ -46,7 +41,7 @@ webr::install(c("munsell", "colorspace", "farver", "labeling", "viridisLite",
 library(shiny)
 
 # Load randomwalk from mounted library
-library(randomwalk)
+eval(parse(text = "library(randomwalk)"))
 
 # Define UI
 ui <- fluidPage(
@@ -602,8 +597,8 @@ server <- function(input, output, session) {
       add_log("Validation passed, starting simulation...")
 
       # Run the simulation using randomwalk package with workers parameter
-      add_log("Calling randomwalk::run_simulation()...")
-      result <- randomwalk::run_simulation(
+      add_log("Calling run_simulation()...")
+      result <- run_simulation(
         grid_size = input$grid_size,
         n_walkers = input$n_walkers,
         workers = input$workers,        # ASYNC PARAMETER
@@ -897,7 +892,7 @@ server <- function(input, output, session) {
   # Render grid plot
   output$grid_plot <- renderPlot({
     req(sim_result())
-    randomwalk::plot_grid(sim_result())
+    plot_grid(sim_result())
   })
 
   # Render walker paths plot with path limit slider
@@ -912,10 +907,10 @@ server <- function(input, output, session) {
       # Create a copy of result with limited walkers
       result_limited <- result
       result_limited$walkers <- result$walkers[1:max_display]
-      randomwalk::plot_walker_paths(result_limited)
+      plot_walker_paths(result_limited)
     } else {
       # Show all walkers
-      randomwalk::plot_walker_paths(result)
+      plot_walker_paths(result)
     }
   })
 

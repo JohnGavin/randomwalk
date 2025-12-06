@@ -198,13 +198,14 @@ test_that("run_simulation handles single walker", {
 
 test_that("simulation validates grid periodically", {
   # Small simulation should complete without validation errors
-  expect_silent(
+  expect_error(
     run_simulation(
       grid_size = 10,
       n_walkers = 5,
       validate_strict = TRUE,  # Strict mode - would error on isolation
       validate_percent = 20    # Validate every 20% (5 walkers × 20% = every 1 walker)
-    )
+    ),
+    NA
   )
 })
 

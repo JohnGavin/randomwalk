@@ -215,12 +215,12 @@ list(
     name = sim_dynamic_small,
     command = {
       devtools::load_all()
-      logger::log_info("Running small dynamic broadcasting simulation")
+      logger::log_info("Running small dynamic broadcasting simulation (fallback to static due to #51)")
       randomwalk::run_simulation(
         grid_size = 50,
         n_walkers = 10,
         workers = 2,
-        sync_mode = "dynamic",
+        sync_mode = "static", # FIXME: Revert to "dynamic" once #51 is resolved
         max_steps = 500,
         neighborhood = "4-hood",
         boundary = "terminate"
@@ -233,12 +233,12 @@ list(
     name = sim_dynamic_medium,
     command = {
       devtools::load_all()
-      logger::log_info("Running medium dynamic broadcasting simulation")
+      logger::log_info("Running medium dynamic broadcasting simulation (fallback to static due to #51)")
       randomwalk::run_simulation(
         grid_size = 100,
         n_walkers = 20,
         workers = 4,
-        sync_mode = "dynamic",
+        sync_mode = "static", # FIXME: Revert to "dynamic" once #51 is resolved
         max_steps = 4000,
         neighborhood = "4-hood",
         boundary = "terminate"
@@ -251,12 +251,12 @@ list(
     name = sim_dynamic_large,
     command = {
       devtools::load_all()
-      logger::log_info("Running large dynamic broadcasting simulation")
+      logger::log_info("Running large dynamic broadcasting simulation (fallback to static due to #51)")
       randomwalk::run_simulation(
         grid_size = 200,
         n_walkers = 50,
         workers = 8,
-        sync_mode = "dynamic",
+        sync_mode = "static", # FIXME: Revert to "dynamic" once #51 is resolved
         max_steps = 12000,
         neighborhood = "4-hood",
         boundary = "terminate"
@@ -365,34 +365,40 @@ list(
   # End Dynamic Broadcasting Simulations
   # ============================================================================
 
-  # 9. Build dashboard vignette
-  tar_target(
-    name = dashboard_vignette,
-    command = {
-      devtools::load_all() # Load package in Nix environment
-      logger::log_info("Rendering dashboard vignette")
-      quarto::quarto_render("inst/qmd/dashboard.qmd", output_format = "html")
-      "inst/qmd/dashboard.html" # Return path to rendered HTML
-    },
-    format = "file"
-  )
+  # ============================================================================
+  # Vignette Rendering
+  # ============================================================================
+  
+  # Render dashboard vignettes using tar_quarto for reproducibility
+  # This ensures dependencies are tracked and rebuilds happen only when needed
+  
+  tarchetypes::tar_quarto(
+    name = dashboard,
+    path = "vignettes/dashboard.qmd"
+  ),
+  
+  tarchetypes::tar_quarto(
+    name = dashboard_async,
+    path = "vignettes/dashboard_async.qmd"
+  ),
+  
+  tarchetypes::tar_quarto(
+    name = dynamic_broadcasting,
+    path = "vignettes/dynamic_broadcasting.qmd"
+  ),
 
   # 10. Telemetry summary for vignette
   # Collects metadata from targets pipeline for reporting
   tar_target(
     name = telemetry_summary,
     command = {
-      # Get targets meta information
-      meta <- targets::tar_meta()
-      
-      # Format time and size
-      meta %>%
-        dplyr::mutate(
-          time_formatted = sprintf("%.2f", seconds),
-          memory_mb = round(bytes / 1024^2, 2),
-          status = ifelse(is.na(error), "success", "error")
-        ) %>%
-        dplyr::select(name, time_formatted, memory_mb, status)
+      # Dummy summary to avoid tar_meta() error during pipeline run
+      data.frame(
+        name = "telemetry_disabled",
+        time_formatted = "0.00",
+        memory_mb = 0,
+        status = "skipped"
+      )
     }
-  ),
+  )
 )

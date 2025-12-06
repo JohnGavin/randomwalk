@@ -189,7 +189,7 @@ get_neighbors_bounded <- function(position, grid_size, neighborhood) {
 #' @keywords internal
 choose_next_position <- function(position, grid, neighborhood) {
   grid_size <- nrow(grid)
-  neighbors <- get_neighbors(position, grid_size, neighborhood)
+  neighbors <- get_neighbors(position, neighborhood)
 
   # Randomly select one neighbor
   if (length(neighbors) > 0) {

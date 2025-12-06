@@ -171,26 +171,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 #| standalone: true
 #| viewerHeight: 900
 
-# Mount filesystem image from GitHub release containing randomwalk package
-webr::mount(
-  mountpoint = "/randomwalk-lib",
-  source = "https://github.com/JohnGavin/randomwalk/releases/download/v0.1.0/library.data"
-)
+# Mount WebAssembly file system from GitHub release
+# The wasm-release.yaml workflow builds library.data and attaches to releases
+eval(parse(text = 'webr::mount(mountpoint = "/randomwalk-lib", source = "https://github.com/JohnGavin/randomwalk/releases/download/v0.1.0/library.data")'))
 
 # Add mounted library to library paths
 .libPaths(c("/randomwalk-lib", .libPaths()))
+
+# Install ggplot2 dependencies explicitly from webR repository
+# Use /tmp for installation since it's writable
+eval(parse(text = 'webr::install(c("munsell", "colorspace", "farver", "labeling", "viridisLite", "RColorBrewer", "scales", "tibble", "ggplot2"), lib = "/tmp/webr-libs")'))
+
+# Add the tmp library to the path
+.libPaths(c("/tmp/webr-libs", .libPaths()))
 
 # Load required packages
 library(shiny)
 library(ggplot2)
 
-# Load randomwalk package after mount
-requireNamespace("randomwalk", quietly = TRUE)
+# Load randomwalk from mounted library
+eval(parse(text = "library(randomwalk)"))
 
 # Define UI
 ui &lt;- fluidPage(
-  theme = bslib::bs_theme(version = 5, bootswatch = "cosmo"),
-
   titlePanel("Random Walk Simulation Dashboard"),
 
   sidebarLayout(
@@ -361,7 +364,7 @@ ui &lt;- fluidPage(
           tags$ul(
             tags$li("The dashboard runs entirely in your browser - no R server needed"),
             tags$li("Uses WebAssembly to run R code client-side"),
-            tags$li("Loads the randomwalk package from R-Universe"),
+            tags$li("Loads the randomwalk package from GitHub Releases"),
             tags$li("All simulations are computed on-demand in real-time")
           ),
 
@@ -374,9 +377,7 @@ ui &lt;- fluidPage(
 
           h5("References"),
           tags$ul(
-            tags$li(tags$a(href = "https://github.com/JohnGavin/randomwalk", "randomwalk GitHub Repository")),
-            tags$li(tags$a(href = "https://posit-dev.github.io/r-shinylive/", "Shinylive Documentation")),
-            tags$li(tags$a(href = "https://johngavin.r-universe.dev", "R-Universe Package Repository"))
+            tags$li(tags$a(href = "https://github.com/JohnGavin/randomwalk", "randomwalk GitHub Repository"))
           )
         )
       )
@@ -410,7 +411,7 @@ server &lt;- function(input, output, session) {
       }
 
       # Run the simulation using randomwalk package
-      result &lt;- randomwalk::run_simulation(
+      result &lt;- run_simulation(
         grid_size = input$grid_size,
         n_walkers = input$n_walkers,
         neighborhood = input$neighborhood,
@@ -470,13 +471,13 @@ server &lt;- function(input, output, session) {
   # Render grid plot
   output$grid_plot &lt;- renderPlot({
     req(sim_result())
-    randomwalk::plot_grid(sim_result())
+    plot_grid(sim_result())
   })
 
   # Render walker paths plot
   output$paths_plot &lt;- renderPlot({
     req(sim_result())
-    randomwalk::plot_walker_paths(sim_result())
+    plot_walker_paths(sim_result())
   })
 
   # Render statistics table
@@ -614,7 +615,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 </section>
 <section id="simulation-engine" class="level3">
 <h3 class="anchored" data-anchor-id="simulation-engine">Simulation Engine</h3>
-<p>The core simulation uses the <code>randomwalk::run_simulation()</code> function, which:</p>
+<p>The core simulation uses the <code>run_simulation()</code> function, which:</p>
 <ol type="1">
 <li>Initializes the grid and walkers</li>
 <li>Moves each walker one step at a time in round-robin fashion</li>
@@ -724,8 +725,8 @@ shinyApp(ui = ui, server = server)</code></pre>
 <p>The dashboard runs through this architecture:</p>
 <ol type="1">
 <li><strong>Package Source</strong>: GitHub repository (<code>JohnGavin/randomwalk</code>)</li>
-<li><strong>WebAssembly Compilation</strong>: R-Universe automatically compiles to WebAssembly</li>
-<li><strong>Binary Distribution</strong>: Hosted at <code>johngavin.r-universe.dev</code></li>
+<li><strong>WebAssembly Compilation</strong>: GitHub Actions builds the package for WebAssembly</li>
+<li><strong>Binary Distribution</strong>: Hosted on GitHub Releases</li>
 <li><strong>Dashboard HTML</strong>: Built by pkgdown and hosted on GitHub Pages</li>
 <li><strong>Client-Side Execution</strong>: Browser loads HTML, fetches WebAssembly binaries, runs locally</li>
 </ol>
@@ -771,7 +772,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 <p>The simulation results include all necessary data for custom analysis:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Access in server function</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">observeEvent</span>(input<span class="sc">$</span>run_sim, {</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  result <span class="ot">&lt;-</span> randomwalk<span class="sc">::</span><span class="fu">run_simulation</span>(...)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  result <span class="ot">&lt;-</span> <span class="fu">run_simulation</span>(...)</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Custom analysis</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  walkers <span class="ot">&lt;-</span> result<span class="sc">$</span>walkers</span>
@@ -790,7 +791,6 @@ shinyApp(ui = ui, server = server)</code></pre>
 <li><code>?plot_grid</code> - Grid visualization function</li>
 <li><code>?plot_walker_paths</code> - Path visualization function</li>
 <li><a href="https://github.com/JohnGavin/randomwalk">randomwalk GitHub</a> - Source code and development</li>
-<li><a href="https://johngavin.r-universe.dev">R-Universe</a> - Package binaries and WebAssembly builds</li>
 </ul>
 </section>
 <section id="summary" class="level2">
