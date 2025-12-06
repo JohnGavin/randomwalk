@@ -1,5 +1,5 @@
 ---
-title: "Async Random Walk Simulation Dashboard"
+title: "Hello Async Random Walk Simulation Dashboard"
 format:
   html:
     code-fold: true
@@ -23,16 +23,21 @@ The dashboard runs entirely in your browser using WebAssembly.
 #| standalone: true
 #| viewerHeight: 900
 
-# Mount WebAssembly file system from GitHub release
-# The wasm-release.yaml workflow builds library.data and attaches to releases
-eval(parse(text = 'webr::mount(mountpoint = "/randomwalk-lib", source = "https://github.com/JohnGavin/randomwalk/releases/download/v0.1.0/library.data")'))
+# Mount WebAssembly file system from local path (deployed to docs/wasm)
+# This avoids CORS issues by using the same origin
+webr::mount(
+  mountpoint = "/randomwalk-lib",
+  source = "../wasm/library.data"
+)
 
 # Add mounted library to library paths
 .libPaths(c("/randomwalk-lib", .libPaths()))
 
 # Install ggplot2 dependencies explicitly from webR repository
 # Use /tmp for installation since it's writable
-eval(parse(text = 'webr::install(c("munsell", "colorspace", "farver", "labeling", "viridisLite", "RColorBrewer", "scales", "tibble", "ggplot2"), lib = "/tmp/webr-libs")'))
+webr::install(c("munsell", "colorspace", "farver", "labeling", "viridisLite",
+                 "RColorBrewer", "scales", "tibble", "ggplot2"),
+               lib = "/tmp/webr-libs")
 
 # Add the tmp library to the path
 .libPaths(c("/tmp/webr-libs", .libPaths()))
@@ -41,7 +46,7 @@ eval(parse(text = 'webr::install(c("munsell", "colorspace", "farver", "labeling"
 library(shiny)
 
 # Load randomwalk from mounted library
-eval(parse(text = "library(randomwalk)"))
+library(randomwalk)
 
 # Define UI
 ui <- fluidPage(

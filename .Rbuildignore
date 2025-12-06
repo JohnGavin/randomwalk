@@ -15,3 +15,5 @@
 ^archive$
 ^CLAUDE_CONTEXT\.md$
 ^PROJECT_INFO\.md$
+^push_to_cachix\.sh$
+^.*\.sh$
