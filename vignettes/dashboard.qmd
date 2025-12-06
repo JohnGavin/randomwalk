@@ -236,9 +236,7 @@ ui <- fluidPage(
 
           h5("References"),
           tags$ul(
-            tags$li(tags$a(href = "https://github.com/JohnGavin/randomwalk", "randomwalk GitHub Repository")),
-            tags$li(tags$a(href = "https://posit-dev.github.io/r-shinylive/", "Shinylive Documentation")),
-            tags$li(tags$a(href = "https://johngavin.r-universe.dev", "R-Universe Package Repository"))
+            tags$li(tags$a(href = "https://github.com/JohnGavin/randomwalk", "randomwalk GitHub Repository"))
           )
         )
       )
@@ -577,8 +575,8 @@ tar_plan(
 The dashboard runs through this architecture:
 
 1. **Package Source**: GitHub repository (`JohnGavin/randomwalk`)
-2. **WebAssembly Compilation**: R-Universe automatically compiles to WebAssembly
-3. **Binary Distribution**: Hosted at `johngavin.r-universe.dev`
+2. **WebAssembly Compilation**: GitHub Actions builds the package for WebAssembly
+3. **Binary Distribution**: Hosted on GitHub Releases
 4. **Dashboard HTML**: Built by pkgdown and hosted on GitHub Pages
 5. **Client-Side Execution**: Browser loads HTML, fetches WebAssembly binaries, runs locally
 
@@ -643,7 +641,6 @@ observeEvent(input$run_sim, {
 - `?plot_grid` - Grid visualization function
 - `?plot_walker_paths` - Path visualization function
 - [randomwalk GitHub](https://github.com/JohnGavin/randomwalk) - Source code and development
-- [R-Universe](https://johngavin.r-universe.dev) - Package binaries and WebAssembly builds
 
 ## Summary
 
