@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.34">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Interactive Dashboard</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="dashboard_files/libs/clipboard/clipboard.min.js"></script>
+<script src="dashboard_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="dashboard_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="dashboard_files/libs/quarto-html/popper.min.js"></script>
+<script src="dashboard_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="dashboard_files/libs/quarto-html/anchor.min.js"></script>
+<link href="dashboard_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="dashboard_files/libs/quarto-html/quarto-syntax-highlighting-c8ad9e5dbd60b7b70b38521ab19b7da4.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="dashboard_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="dashboard_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="dashboard_files/libs/bootstrap/bootstrap-b232414f0569882df4359abfb7cfba3f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<meta name="shinylive:serviceworker_dir" content="..">
+<script src="dashboard_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/load-shinylive-sw.js" type="module"></script>
+<script src="dashboard_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/run-python-blocks.js" type="module"></script>
+<link href="dashboard_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/shinylive.css" rel="stylesheet">
+<link href="dashboard_files/libs/quarto-contrib/shinylive-quarto-css/shinylive-quarto.css" rel="stylesheet">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#random-walk-simulation-dashboard" id="toc-random-walk-simulation-dashboard" class="nav-link active" data-scroll-target="#random-walk-simulation-dashboard">Random Walk Simulation Dashboard</a>
+  <ul class="collapse">
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a>
+  <ul class="collapse">
+  <li><a href="#key-features" id="toc-key-features" class="nav-link" data-scroll-target="#key-features">Key Features</a></li>
+  </ul></li>
+  <li><a href="#interactive-dashboard" id="toc-interactive-dashboard" class="nav-link" data-scroll-target="#interactive-dashboard">Interactive Dashboard</a></li>
+  <li><a href="#architecture" id="toc-architecture" class="nav-link" data-scroll-target="#architecture">Architecture</a>
+  <ul class="collapse">
+  <li><a href="#input-controls" id="toc-input-controls" class="nav-link" data-scroll-target="#input-controls">Input Controls</a></li>
+  <li><a href="#simulation-engine" id="toc-simulation-engine" class="nav-link" data-scroll-target="#simulation-engine">Simulation Engine</a></li>
+  <li><a href="#output-views" id="toc-output-views" class="nav-link" data-scroll-target="#output-views">Output Views</a></li>
+  </ul></li>
+  <li><a href="#usage-examples" id="toc-usage-examples" class="nav-link" data-scroll-target="#usage-examples">Usage Examples</a>
+  <ul class="collapse">
+  <li><a href="#basic-exploration" id="toc-basic-exploration" class="nav-link" data-scroll-target="#basic-exploration">Basic Exploration</a></li>
+  <li><a href="#comparing-neighborhoods" id="toc-comparing-neighborhoods" class="nav-link" data-scroll-target="#comparing-neighborhoods">Comparing Neighborhoods</a></li>
+  <li><a href="#boundary-effects" id="toc-boundary-effects" class="nav-link" data-scroll-target="#boundary-effects">Boundary Effects</a></li>
+  <li><a href="#coverage-analysis" id="toc-coverage-analysis" class="nav-link" data-scroll-target="#coverage-analysis">Coverage Analysis</a></li>
+  </ul></li>
+  <li><a href="#integration-with-targets-pipeline" id="toc-integration-with-targets-pipeline" class="nav-link" data-scroll-target="#integration-with-targets-pipeline">Integration with Targets Pipeline</a></li>
+  <li><a href="#technical-details" id="toc-technical-details" class="nav-link" data-scroll-target="#technical-details">Technical Details</a>
+  <ul class="collapse">
+  <li><a href="#webassembly-deployment" id="toc-webassembly-deployment" class="nav-link" data-scroll-target="#webassembly-deployment">WebAssembly Deployment</a></li>
+  <li><a href="#performance-considerations" id="toc-performance-considerations" class="nav-link" data-scroll-target="#performance-considerations">Performance Considerations</a></li>
+  <li><a href="#browser-compatibility" id="toc-browser-compatibility" class="nav-link" data-scroll-target="#browser-compatibility">Browser Compatibility</a></li>
+  </ul></li>
+  <li><a href="#extending-the-dashboard" id="toc-extending-the-dashboard" class="nav-link" data-scroll-target="#extending-the-dashboard">Extending the Dashboard</a>
+  <ul class="collapse">
+  <li><a href="#adding-new-parameters" id="toc-adding-new-parameters" class="nav-link" data-scroll-target="#adding-new-parameters">Adding New Parameters</a></li>
+  <li><a href="#adding-new-visualizations" id="toc-adding-new-visualizations" class="nav-link" data-scroll-target="#adding-new-visualizations">Adding New Visualizations</a></li>
+  <li><a href="#custom-analysis" id="toc-custom-analysis" class="nav-link" data-scroll-target="#custom-analysis">Custom Analysis</a></li>
+  </ul></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Interactive Dashboard</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="random-walk-simulation-dashboard" class="level1">
+<h1>Random Walk Simulation Dashboard</h1>
+<p>This vignette provides a <strong>fully interactive Shiny application</strong> that runs directly in your browser using WebAssembly. No R installation or server required!</p>
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>The dashboard demonstrates the interactive capabilities of the <code>randomwalk</code> package through a browser-based Shiny application. The simulation runs entirely client-side using WebAssembly technology.</p>
+<section id="key-features" class="level3">
+<h3 class="anchored" data-anchor-id="key-features">Key Features</h3>
+<ul>
+<li><strong>Parameter Configuration</strong>: Adjust grid size, number of walkers, neighborhood type, and boundary behavior</li>
+<li><strong>Real-time Visualization</strong>: View grid state, walker paths, and statistics as tabs</li>
+<li><strong>No Server Required</strong>: Runs entirely in your browser via WebAssembly</li>
+<li><strong>Package Integration</strong>: Uses the actual <code>randomwalk</code> package functions</li>
+</ul>
+</section>
+</section>
+<section id="interactive-dashboard" class="level2">
+<h2 class="anchored" data-anchor-id="interactive-dashboard">Interactive Dashboard</h2>
+<p>Use the controls below to configure simulation parameters and visualize results in real-time:</p>
+<pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
+#|   shinylive does not work in self-contained HTML documents.
+#|   Please set `embed-resources: false` in your metadata.
+#| standalone: true
+#| viewerHeight: 900
+
+# Mount filesystem image from GitHub release containing randomwalk package
+webr::mount(
+  mountpoint = "/randomwalk-lib",
+  source = "https://github.com/JohnGavin/randomwalk/releases/download/v0.1.0/library.data"
+)
+
+# Add mounted library to library paths
+.libPaths(c("/randomwalk-lib", .libPaths()))
+
+# Load required packages
+library(shiny)
+library(ggplot2)
+
+# Load randomwalk package after mount
+requireNamespace("randomwalk", quietly = TRUE)
+
+# Define UI
+ui &lt;- fluidPage(
+  theme = bslib::bs_theme(version = 5, bootswatch = "cosmo"),
+
+  titlePanel("Random Walk Simulation Dashboard"),
+
+  sidebarLayout(
+    # Sidebar with input controls
+    sidebarPanel(
+      width = 3,
+
+      h4("Simulation Parameters"),
+      p("Configure the random walk simulation parameters below."),
+
+      hr(),
+
+      sliderInput(
+        "grid_size",
+        "Grid Size:",
+        min = 5,
+        max = 50,
+        value = 20,
+        step = 1,
+        ticks = FALSE
+      ),
+      helpText("Size of the square grid (5-50)"),
+
+      sliderInput(
+        "n_walkers",
+        "Number of Walkers:",
+        min = 1,
+        max = 20,
+        value = 5,
+        step = 1,
+        ticks = FALSE
+      ),
+      helpText("Number of simultaneous random walkers (1-20)"),
+
+      selectInput(
+        "neighborhood",
+        "Neighborhood Type:",
+        choices = c(
+          "4-neighborhood (N, S, E, W)" = "4-hood",
+          "8-neighborhood (incl. diagonals)" = "8-hood"
+        ),
+        selected = "4-hood"
+      ),
+      helpText("Movement options: cardinal directions only or including diagonals"),
+
+      selectInput(
+        "boundary",
+        "Boundary Behavior:",
+        choices = c(
+          "Terminate at edge" = "terminate",
+          "Wrap around (torus)" = "wrap"
+        ),
+        selected = "terminate"
+      ),
+      helpText("What happens when walkers reach the grid edge"),
+
+      sliderInput(
+        "max_steps",
+        "Max Steps per Walker:",
+        min = 1000,
+        max = 20000,
+        value = 10000,
+        step = 1000,
+        ticks = FALSE
+      ),
+      helpText("Maximum steps before walker stops (1k-20k)"),
+
+      hr(),
+
+      actionButton(
+        "run_sim",
+        "Run Simulation",
+        class = "btn-primary btn-lg",
+        width = "100%",
+        icon = icon("play")
+      ),
+
+      br(), br(),
+
+      actionButton(
+        "reset",
+        "Reset to Defaults",
+        class = "btn-secondary",
+        width = "100%",
+        icon = icon("rotate-left")
+      ),
+
+      hr(),
+
+      # Status display
+      div(
+        id = "status_box",
+        style = "padding: 10px; border-radius: 5px; background-color: #f8f9fa;",
+        h5("Status", style = "margin-top: 0;"),
+        textOutput("status_text")
+      )
+    ),
+
+    # Main panel with tabbed output
+    mainPanel(
+      width = 9,
+
+      tabsetPanel(
+        id = "output_tabs",
+        type = "pills",
+
+        # Grid State Tab
+        tabPanel(
+          "Grid State",
+          icon = icon("table-cells"),
+          br(),
+          h4("Final Grid Visualization"),
+          p("Black squares represent pixels visited by random walkers."),
+          plotOutput("grid_plot", height = "600px"),
+          hr(),
+          p(class = "text-muted", "Generated using plot_grid() from the randomwalk package")
+        ),
+
+        # Walker Paths Tab
+        tabPanel(
+          "Walker Paths",
+          icon = icon("route"),
+          br(),
+          h4("Individual Walker Trajectories"),
+          p("Green squares mark starting positions, red squares show where walkers terminated."),
+          plotOutput("paths_plot", height = "600px"),
+          hr(),
+          p(class = "text-muted", "Generated using plot_walker_paths() from the randomwalk package")
+        ),
+
+        # Statistics Tab
+        tabPanel(
+          "Statistics",
+          icon = icon("chart-line"),
+          br(),
+          h4("Simulation Metrics"),
+          tableOutput("stats_table"),
+          hr(),
+          h5("Coverage Analysis"),
+          p(textOutput("coverage_analysis")),
+          hr(),
+          h5("Walker Summary"),
+          tableOutput("walker_summary")
+        ),
+
+        # Raw Data Tab
+        tabPanel(
+          "Raw Data",
+          icon = icon("database"),
+          br(),
+          h4("Detailed Walker Information"),
+          p("Complete data for each walker in the simulation."),
+          dataTableOutput("walker_data"),
+          hr(),
+          h4("Grid Information"),
+          tableOutput("grid_info")
+        ),
+
+        # About Tab
+        tabPanel(
+          "About",
+          icon = icon("info-circle"),
+          br(),
+          h4("About This Dashboard"),
+          p("This interactive dashboard demonstrates the randomwalk package capabilities using Shinylive and WebAssembly."),
+
+          h5("How It Works"),
+          tags$ul(
+            tags$li("The dashboard runs entirely in your browser - no R server needed"),
+            tags$li("Uses WebAssembly to run R code client-side"),
+            tags$li("Loads the randomwalk package from R-Universe"),
+            tags$li("All simulations are computed on-demand in real-time")
+          ),
+
+          h5("Architecture"),
+          tags$ul(
+            tags$li(strong("Input Module:"), " Parameter controls with dynamic validation"),
+            tags$li(strong("Simulation Engine:"), " Core random walk logic from randomwalk package"),
+            tags$li(strong("Output Module:"), " Multiple visualization and data views")
+          ),
+
+          h5("References"),
+          tags$ul(
+            tags$li(tags$a(href = "https://github.com/JohnGavin/randomwalk", "randomwalk GitHub Repository")),
+            tags$li(tags$a(href = "https://posit-dev.github.io/r-shinylive/", "Shinylive Documentation")),
+            tags$li(tags$a(href = "https://johngavin.r-universe.dev", "R-Universe Package Repository"))
+          )
+        )
+      )
+    )
+  )
+)
+
+# Define server logic
+server &lt;- function(input, output, session) {
+
+  # Reactive value to store simulation result
+  sim_result &lt;- reactiveVal(NULL)
+
+  # Reactive value for status messages
+  status_msg &lt;- reactiveVal("Ready to run simulation")
+
+  # Run simulation when button clicked
+  observeEvent(input$run_sim, {
+    status_msg("Running simulation...")
+
+    tryCatch({
+      # Validate inputs
+      if (input$n_walkers &gt; (0.6 * input$grid_size^2)) {
+        showNotification(
+          "Too many walkers for grid size. Maximum is 60% of grid cells.",
+          type = "warning",
+          duration = 5
+        )
+        status_msg("Error: Too many walkers for grid size")
+        return(NULL)
+      }
+
+      # Run the simulation using randomwalk package
+      result &lt;- randomwalk::run_simulation(
+        grid_size = input$grid_size,
+        n_walkers = input$n_walkers,
+        neighborhood = input$neighborhood,
+        boundary = input$boundary,
+        max_steps = input$max_steps,
+        verbose = FALSE
+      )
+
+      # Store result
+      sim_result(result)
+
+      # Update status
+      status_msg(sprintf(
+        "Simulation complete! %d steps, %.1f%% coverage",
+        result$statistics$total_steps,
+        result$statistics$black_percentage
+      ))
+
+      # Show success notification
+      showNotification(
+        "Simulation completed successfully!",
+        type = "message",
+        duration = 3
+      )
+
+    }, error = function(e) {
+      status_msg(paste("Error:", e$message))
+      showNotification(
+        paste("Simulation failed:", e$message),
+        type = "error",
+        duration = 10
+      )
+    })
+  })
+
+  # Reset parameters
+  observeEvent(input$reset, {
+    updateSliderInput(session, "grid_size", value = 20)
+    updateSliderInput(session, "n_walkers", value = 5)
+    updateSelectInput(session, "neighborhood", selected = "4-hood")
+    updateSelectInput(session, "boundary", selected = "terminate")
+    updateSliderInput(session, "max_steps", value = 10000)
+    status_msg("Parameters reset to defaults")
+
+    showNotification(
+      "Parameters reset to default values",
+      type = "message",
+      duration = 2
+    )
+  })
+
+  # Render status text
+  output$status_text &lt;- renderText({
+    status_msg()
+  })
+
+  # Render grid plot
+  output$grid_plot &lt;- renderPlot({
+    req(sim_result())
+    randomwalk::plot_grid(sim_result())
+  })
+
+  # Render walker paths plot
+  output$paths_plot &lt;- renderPlot({
+    req(sim_result())
+    randomwalk::plot_walker_paths(sim_result())
+  })
+
+  # Render statistics table
+  output$stats_table &lt;- renderTable({
+    req(sim_result())
+    stats &lt;- sim_result()$statistics
+
+    data.frame(
+      Metric = c(
+        "Total Steps",
+        "Final Black Pixels",
+        "Final Black Percentage",
+        "Grid Size",
+        "Number of Walkers",
+        "Elapsed Time (sec)"
+      ),
+      Value = c(
+        format(stats$total_steps, big.mark = ","),
+        format(stats$black_pixels, big.mark = ","),
+        sprintf("%.2f%%", stats$black_percentage),
+        sprintf("%d × %d", stats$grid_size, stats$grid_size),
+        stats$total_walkers,
+        sprintf("%.3f", stats$elapsed_time_secs)
+      )
+    )
+  }, striped = TRUE, hover = TRUE, bordered = TRUE)
+
+  # Coverage analysis text
+  output$coverage_analysis &lt;- renderText({
+    req(sim_result())
+    stats &lt;- sim_result()$statistics
+
+    total_cells &lt;- stats$grid_size^2
+    black_cells &lt;- stats$black_pixels
+    coverage_pct &lt;- stats$black_percentage
+
+    sprintf(
+      "The simulation covered %d out of %d grid cells (%.2f%%). On average, %.1f steps were taken per black pixel created.",
+      black_cells,
+      total_cells,
+      coverage_pct,
+      stats$total_steps / black_cells
+    )
+  })
+
+  # Walker summary table
+  output$walker_summary &lt;- renderTable({
+    req(sim_result())
+    walkers &lt;- sim_result()$walkers
+
+    data.frame(
+      Statistic = c(
+        "Total Walkers",
+        "Average Steps",
+        "Min Steps",
+        "Max Steps",
+        "Terminated Walkers",
+        "Active Walkers"
+      ),
+      Value = c(
+        nrow(walkers),
+        round(mean(walkers$steps), 1),
+        min(walkers$steps),
+        max(walkers$steps),
+        sum(walkers$terminated),
+        sum(!walkers$terminated)
+      )
+    )
+  }, striped = TRUE, hover = TRUE, bordered = TRUE)
+
+  # Walker data table
+  output$walker_data &lt;- renderDataTable({
+    req(sim_result())
+    walkers &lt;- sim_result()$walkers
+
+    # Format for display
+    walkers_display &lt;- data.frame(
+      Walker = walkers$walker_id,
+      Steps = walkers$steps,
+      Start_X = walkers$start_x,
+      Start_Y = walkers$start_y,
+      End_X = walkers$end_x,
+      End_Y = walkers$end_y,
+      Terminated = ifelse(walkers$terminated, "Yes", "No")
+    )
+
+    walkers_display
+  }, options = list(
+    pageLength = 10,
+    scrollX = TRUE,
+    dom = 'tip'
+  ))
+
+  # Grid info table
+  output$grid_info &lt;- renderTable({
+    req(sim_result())
+    stats &lt;- sim_result()$statistics
+
+    data.frame(
+      Property = c(
+        "Grid Dimensions",
+        "Total Cells",
+        "Black Cells",
+        "White Cells",
+        "Neighborhood Type",
+        "Boundary Behavior"
+      ),
+      Value = c(
+        sprintf("%d × %d", stats$grid_size, stats$grid_size),
+        format(stats$grid_size^2, big.mark = ","),
+        format(stats$black_pixels, big.mark = ","),
+        format(stats$grid_size^2 - stats$black_pixels, big.mark = ","),
+        input$neighborhood,
+        input$boundary
+      )
+    )
+  }, striped = TRUE, hover = TRUE, bordered = TRUE)
+}
+
+# Run the application
+shinyApp(ui = ui, server = server)</code></pre>
+</section>
+<section id="architecture" class="level2">
+<h2 class="anchored" data-anchor-id="architecture">Architecture</h2>
+<p>The dashboard uses a modular architecture that separates concerns:</p>
+<section id="input-controls" class="level3">
+<h3 class="anchored" data-anchor-id="input-controls">Input Controls</h3>
+<ul>
+<li><strong>Grid Size</strong>: 5-50 cells per side</li>
+<li><strong>Number of Walkers</strong>: 1-20 simultaneous walkers (max 60% of grid cells)</li>
+<li><strong>Neighborhood Type</strong>: 4-neighborhood (cardinal) or 8-neighborhood (including diagonals)</li>
+<li><strong>Boundary Behavior</strong>: Terminate at edges or wrap around (torus topology)</li>
+<li><strong>Max Steps</strong>: 1,000-20,000 steps per walker</li>
+</ul>
+</section>
+<section id="simulation-engine" class="level3">
+<h3 class="anchored" data-anchor-id="simulation-engine">Simulation Engine</h3>
+<p>The core simulation uses the <code>randomwalk::run_simulation()</code> function, which:</p>
+<ol type="1">
+<li>Initializes the grid and walkers</li>
+<li>Moves each walker one step at a time in round-robin fashion</li>
+<li>Records pixel visits and walker statistics</li>
+<li>Returns comprehensive results including final grid state and walker paths</li>
+</ol>
+</section>
+<section id="output-views" class="level3">
+<h3 class="anchored" data-anchor-id="output-views">Output Views</h3>
+<section id="grid-state" class="level4">
+<h4 class="anchored" data-anchor-id="grid-state">Grid State</h4>
+<p>Visualizes the final state of the grid showing all visited pixels (black) using <code>plot_grid()</code>.</p>
+</section>
+<section id="walker-paths" class="level4">
+<h4 class="anchored" data-anchor-id="walker-paths">Walker Paths</h4>
+<p>Shows individual trajectories with starting positions (green) and termination points (red) using <code>plot_walker_paths()</code>.</p>
+</section>
+<section id="statistics" class="level4">
+<h4 class="anchored" data-anchor-id="statistics">Statistics</h4>
+<p>Displays detailed metrics including: - Total steps taken - Grid coverage (absolute and percentage) - Timing information - Walker-level summaries</p>
+</section>
+<section id="raw-data" class="level4">
+<h4 class="anchored" data-anchor-id="raw-data">Raw Data</h4>
+<p>Provides complete walker-level information and grid properties for detailed analysis.</p>
+</section>
+</section>
+</section>
+<section id="usage-examples" class="level2">
+<h2 class="anchored" data-anchor-id="usage-examples">Usage Examples</h2>
+<section id="basic-exploration" class="level3">
+<h3 class="anchored" data-anchor-id="basic-exploration">Basic Exploration</h3>
+<ol type="1">
+<li>Start with default parameters (20×20 grid, 5 walkers)</li>
+<li>Click “Run Simulation”</li>
+<li>Explore different tabs to see results</li>
+</ol>
+</section>
+<section id="comparing-neighborhoods" class="level3">
+<h3 class="anchored" data-anchor-id="comparing-neighborhoods">Comparing Neighborhoods</h3>
+<ol type="1">
+<li>Run simulation with 4-neighborhood</li>
+<li>Note the coverage percentage</li>
+<li>Reset and change to 8-neighborhood</li>
+<li>Compare how diagonal movement affects patterns</li>
+</ol>
+</section>
+<section id="boundary-effects" class="level3">
+<h3 class="anchored" data-anchor-id="boundary-effects">Boundary Effects</h3>
+<ol type="1">
+<li>Try “terminate” boundary with small grid (10×10)</li>
+<li>Observe walkers stopping at edges</li>
+<li>Switch to “wrap” boundary</li>
+<li>See how torus topology affects exploration</li>
+</ol>
+</section>
+<section id="coverage-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="coverage-analysis">Coverage Analysis</h3>
+<ol type="1">
+<li>Use large grid (40×40) with few walkers (3)</li>
+<li>Note low coverage percentage</li>
+<li>Increase walkers to 15</li>
+<li>Observe improved coverage</li>
+</ol>
+</section>
+</section>
+<section id="integration-with-targets-pipeline" class="level2">
+<h2 class="anchored" data-anchor-id="integration-with-targets-pipeline">Integration with Targets Pipeline</h2>
+<p>For batch processing or reproducible research, the simulation functions can be integrated with the <code>targets</code> package:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># _targets.R</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(targets)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(randomwalk)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tar_plan</span>(</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Define parameter sets</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    param_grid,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">expand.grid</span>(</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid_size =</span> <span class="fu">c</span>(<span class="dv">20</span>, <span class="dv">30</span>),</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">n_walkers =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">10</span>),</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">neighborhood =</span> <span class="fu">c</span>(<span class="st">"4-hood"</span>, <span class="st">"8-hood"</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Run simulations</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    sim_results,</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">pmap</span>(param_grid, <span class="sc">~</span><span class="fu">run_simulation</span>(</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid_size =</span> ..<span class="dv">1</span>,</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">n_walkers =</span> ..<span class="dv">2</span>,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">neighborhood =</span> ..<span class="dv">3</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    )),</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">pattern =</span> <span class="fu">map</span>(param_grid)</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Generate plots</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    plots,</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">map</span>(sim_results, plot_grid),</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">pattern =</span> <span class="fu">map</span>(sim_results)</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="technical-details" class="level2">
+<h2 class="anchored" data-anchor-id="technical-details">Technical Details</h2>
+<section id="webassembly-deployment" class="level3">
+<h3 class="anchored" data-anchor-id="webassembly-deployment">WebAssembly Deployment</h3>
+<p>The dashboard runs through this architecture:</p>
+<ol type="1">
+<li><strong>Package Source</strong>: GitHub repository (<code>JohnGavin/randomwalk</code>)</li>
+<li><strong>WebAssembly Compilation</strong>: R-Universe automatically compiles to WebAssembly</li>
+<li><strong>Binary Distribution</strong>: Hosted at <code>johngavin.r-universe.dev</code></li>
+<li><strong>Dashboard HTML</strong>: Built by pkgdown and hosted on GitHub Pages</li>
+<li><strong>Client-Side Execution</strong>: Browser loads HTML, fetches WebAssembly binaries, runs locally</li>
+</ol>
+<p>No R server is required - everything runs in your browser!</p>
+</section>
+<section id="performance-considerations" class="level3">
+<h3 class="anchored" data-anchor-id="performance-considerations">Performance Considerations</h3>
+<ul>
+<li>Larger grids (&gt;40×40) may take longer to render</li>
+<li>More walkers increase computation time linearly</li>
+<li>Higher max_steps increase computation time proportionally</li>
+<li>WebAssembly performance is typically 2-3× slower than native R</li>
+</ul>
+</section>
+<section id="browser-compatibility" class="level3">
+<h3 class="anchored" data-anchor-id="browser-compatibility">Browser Compatibility</h3>
+<p>The dashboard requires a modern browser with WebAssembly support: - Chrome/Edge 57+ - Firefox 52+ - Safari 11+</p>
+</section>
+</section>
+<section id="extending-the-dashboard" class="level2">
+<h2 class="anchored" data-anchor-id="extending-the-dashboard">Extending the Dashboard</h2>
+<p>The modular architecture makes it easy to extend:</p>
+<section id="adding-new-parameters" class="level3">
+<h3 class="anchored" data-anchor-id="adding-new-parameters">Adding New Parameters</h3>
+<p>To add a new simulation parameter:</p>
+<ol type="1">
+<li>Add input control in sidebar</li>
+<li>Pass to <code>run_simulation()</code> call</li>
+<li>Update documentation</li>
+</ol>
+</section>
+<section id="adding-new-visualizations" class="level3">
+<h3 class="anchored" data-anchor-id="adding-new-visualizations">Adding New Visualizations</h3>
+<p>To add new output tabs:</p>
+<ol type="1">
+<li>Create new <code>tabPanel()</code> in UI</li>
+<li>Add corresponding <code>render*()</code> function in server</li>
+<li>Use simulation result data to generate visualization</li>
+</ol>
+</section>
+<section id="custom-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="custom-analysis">Custom Analysis</h3>
+<p>The simulation results include all necessary data for custom analysis:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Access in server function</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">observeEvent</span>(input<span class="sc">$</span>run_sim, {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  result <span class="ot">&lt;-</span> randomwalk<span class="sc">::</span><span class="fu">run_simulation</span>(...)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Custom analysis</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  walkers <span class="ot">&lt;-</span> result<span class="sc">$</span>walkers</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  grid <span class="ot">&lt;-</span> result<span class="sc">$</span>final_grid</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  stats <span class="ot">&lt;-</span> result<span class="sc">$</span>statistics</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Your custom code here</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="see-also" class="level2">
+<h2 class="anchored" data-anchor-id="see-also">See Also</h2>
+<ul>
+<li><code>vignette("telemetry")</code> - Pipeline statistics and performance metrics</li>
+<li><code>?run_simulation</code> - Core simulation function documentation</li>
+<li><code>?plot_grid</code> - Grid visualization function</li>
+<li><code>?plot_walker_paths</code> - Path visualization function</li>
+<li><a href="https://github.com/JohnGavin/randomwalk">randomwalk GitHub</a> - Source code and development</li>
+<li><a href="https://johngavin.r-universe.dev">R-Universe</a> - Package binaries and WebAssembly builds</li>
+</ul>
+</section>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<p>This dashboard provides:</p>
+<ul>
+<li><strong>Accessibility</strong>: No coding required for basic exploration</li>
+<li><strong>Interactivity</strong>: Real-time parameter adjustment and visualization</li>
+<li><strong>Education</strong>: Visual understanding of random walk behavior</li>
+<li><strong>Research</strong>: Foundation for parameter exploration and hypothesis testing</li>
+<li><strong>Modularity</strong>: Clean separation between GUI and simulation logic</li>
+<li><strong>Portability</strong>: Runs entirely in browser with no server requirements</li>
+</ul>
+<p>The simulation engine remains completely independent from the GUI, allowing the same functions to be used in scripts, pipelines, and other applications.</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
