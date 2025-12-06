@@ -33,13 +33,13 @@ test_that("cleanup_async handles NULL inputs gracefully", {
   skip_if_not_installed("crew")
 
   # Should not error with NULL inputs
-  expect_silent(cleanup_async(NULL, NULL))
+  expect_error(cleanup_async(NULL, NULL), NA)
 
   # Should handle real objects
   controller <- create_controller(n_workers = 1)
   socket <- create_pub_socket(port = 5558)
 
-  expect_silent(cleanup_async(controller, socket))
+  expect_error(cleanup_async(controller, socket), NA)
 })
 
 

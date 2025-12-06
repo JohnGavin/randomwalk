@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Async/Parallel Simulation Dashboard</title>
+<title>Async Random Walk Simulation Dashboard</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -35,6 +35,35 @@ ul.task-list li input[type="checkbox"] {
 <link href="dashboard_async_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="dashboard_async_files/libs/bootstrap/bootstrap-b232414f0569882df4359abfb7cfba3f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -49,31 +78,18 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#async-random-walk-simulation-dashboard" id="toc-async-random-walk-simulation-dashboard" class="nav-link active" data-scroll-target="#async-random-walk-simulation-dashboard">Async Random Walk Simulation Dashboard</a>
   <ul class="collapse">
   <li><a href="#launch-the-interactive-dashboard" id="toc-launch-the-interactive-dashboard" class="nav-link" data-scroll-target="#launch-the-interactive-dashboard">🚀 Launch the Interactive Dashboard</a></li>
-  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a>
-  <ul class="collapse">
-  <li><a href="#key-features" id="toc-key-features" class="nav-link" data-scroll-target="#key-features">Key Features</a></li>
-  <li><a href="#async-vs-sync-mode" id="toc-async-vs-sync-mode" class="nav-link" data-scroll-target="#async-vs-sync-mode">Async vs Sync Mode</a></li>
   </ul></li>
-  <li><a href="#architecture" id="toc-architecture" class="nav-link" data-scroll-target="#architecture">Architecture</a>
-  <ul class="collapse">
-  <li><a href="#async-parameters" id="toc-async-parameters" class="nav-link" data-scroll-target="#async-parameters">Async Parameters</a></li>
-  <li><a href="#async-execution-model" id="toc-async-execution-model" class="nav-link" data-scroll-target="#async-execution-model">Async Execution Model</a></li>
-  <li><a href="#performance-metrics" id="toc-performance-metrics" class="nav-link" data-scroll-target="#performance-metrics">Performance Metrics</a></li>
-  </ul></li>
-  <li><a href="#usage-examples" id="toc-usage-examples" class="nav-link" data-scroll-target="#usage-examples">Usage Examples</a>
-  <ul class="collapse">
-  <li><a href="#testing-async-performance" id="toc-testing-async-performance" class="nav-link" data-scroll-target="#testing-async-performance">Testing Async Performance</a></li>
-  <li><a href="#optimal-worker-count" id="toc-optimal-worker-count" class="nav-link" data-scroll-target="#optimal-worker-count">Optimal Worker Count</a></li>
-  <li><a href="#expected-results" id="toc-expected-results" class="nav-link" data-scroll-target="#expected-results">Expected Results</a></li>
-  </ul></li>
-  <li><a href="#technical-details" id="toc-technical-details" class="nav-link" data-scroll-target="#technical-details">Technical Details</a>
-  <ul class="collapse">
-  <li><a href="#static-snapshot-architecture" id="toc-static-snapshot-architecture" class="nav-link" data-scroll-target="#static-snapshot-architecture">Static Snapshot Architecture</a></li>
-  <li><a href="#why-results-differ" id="toc-why-results-differ" class="nav-link" data-scroll-target="#why-results-differ">Why Results Differ</a></li>
-  </ul></li>
-  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
-  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
-  </ul></li>
+  <li><a href="#mount-webassembly-file-system-from-github-release" id="toc-mount-webassembly-file-system-from-github-release" class="nav-link" data-scroll-target="#mount-webassembly-file-system-from-github-release">Mount WebAssembly file system from GitHub release</a></li>
+  <li><a href="#the-wasm-release.yaml-workflow-builds-library.data-and-attaches-to-releases" id="toc-the-wasm-release.yaml-workflow-builds-library.data-and-attaches-to-releases" class="nav-link" data-scroll-target="#the-wasm-release.yaml-workflow-builds-library.data-and-attaches-to-releases">The wasm-release.yaml workflow builds library.data and attaches to releases</a></li>
+  <li><a href="#add-mounted-library-to-library-paths" id="toc-add-mounted-library-to-library-paths" class="nav-link" data-scroll-target="#add-mounted-library-to-library-paths">Add mounted library to library paths</a></li>
+  <li><a href="#install-ggplot2-dependencies-explicitly-from-webr-repository" id="toc-install-ggplot2-dependencies-explicitly-from-webr-repository" class="nav-link" data-scroll-target="#install-ggplot2-dependencies-explicitly-from-webr-repository">Install ggplot2 dependencies explicitly from webR repository</a></li>
+  <li><a href="#use-tmp-for-installation-since-its-writable" id="toc-use-tmp-for-installation-since-its-writable" class="nav-link" data-scroll-target="#use-tmp-for-installation-since-its-writable">Use /tmp for installation since it’s writable</a></li>
+  <li><a href="#add-the-tmp-library-to-the-path" id="toc-add-the-tmp-library-to-the-path" class="nav-link" data-scroll-target="#add-the-tmp-library-to-the-path">Add the tmp library to the path</a></li>
+  <li><a href="#load-required-packages" id="toc-load-required-packages" class="nav-link" data-scroll-target="#load-required-packages">Load required packages</a></li>
+  <li><a href="#load-randomwalk-from-mounted-library" id="toc-load-randomwalk-from-mounted-library" class="nav-link" data-scroll-target="#load-randomwalk-from-mounted-library">Load randomwalk from mounted library</a></li>
+  <li><a href="#define-ui" id="toc-define-ui" class="nav-link" data-scroll-target="#define-ui">Define UI</a></li>
+  <li><a href="#define-server-logic" id="toc-define-server-logic" class="nav-link" data-scroll-target="#define-server-logic">Define server logic</a></li>
+  <li><a href="#run-the-application" id="toc-run-the-application" class="nav-link" data-scroll-target="#run-the-application">Run the application</a></li>
   </ul>
 </nav>
 </div>
@@ -81,7 +97,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Async/Parallel Simulation Dashboard</h1>
+<h1 class="title">Async Random Walk Simulation Dashboard</h1>
 </div>
 
 
@@ -100,132 +116,889 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="async-random-walk-simulation-dashboard" class="level1">
 <h1>Async Random Walk Simulation Dashboard</h1>
-<p>This vignette provides documentation for the <strong>fully interactive async/parallel Shiny application</strong> that runs directly in your browser using WebAssembly. Test parallel execution with multiple workers!</p>
+<p>This vignette provides a <strong>fully interactive Shiny application</strong> that demonstrates <strong>Async Parallel Execution</strong>, allowing you to test simulation performance with multiple workers.</p>
 <section id="launch-the-interactive-dashboard" class="level2">
 <h2 class="anchored" data-anchor-id="launch-the-interactive-dashboard">🚀 Launch the Interactive Dashboard</h2>
-<p><strong><a href="../dashboard_async/" class="btn btn-primary btn-lg">Click here to open the Async Dashboard</a></strong></p>
-<p>The dashboard runs entirely in your browser - no R installation or server required!</p>
-</section>
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>The async dashboard demonstrates the <strong>parallel processing capabilities</strong> of the <code>randomwalk</code> package using the <code>crew</code> package for worker management. The simulation runs entirely client-side using WebAssembly technology.</p>
-<section id="key-features" class="level3">
-<h3 class="anchored" data-anchor-id="key-features">Key Features</h3>
-<ul>
-<li><strong>Parallel Execution</strong>: Choose 0-12 workers for sync or async mode</li>
-<li><strong>Performance Metrics</strong>: Compare execution time with different worker counts</li>
-<li><strong>Real-time Visualization</strong>: View grid state, walker paths, and statistics</li>
-<li><strong>No Server Required</strong>: Runs entirely in your browser via WebAssembly</li>
-<li><strong>Package Integration</strong>: Uses the actual <code>randomwalk</code> package async functions</li>
-<li><strong>Flexible Parameters</strong>: Grid sizes from 20x20 to 400x400, dynamic walker constraints</li>
-</ul>
-</section>
-<section id="async-vs-sync-mode" class="level3">
-<h3 class="anchored" data-anchor-id="async-vs-sync-mode">Async vs Sync Mode</h3>
-<ul>
-<li><strong>Sync Mode</strong> (<code>workers = 0</code>): Sequential processing, predictable results</li>
-<li><strong>Async Mode</strong> (<code>workers &gt; 0</code>): Parallel processing using <code>crew</code> workers
-<ul>
-<li>Workers process walkers independently</li>
-<li>Potential speedup with multiple CPU cores</li>
-<li>Results may differ slightly (workers use static grid snapshots)</li>
-</ul></li>
-</ul>
+<p>The dashboard runs entirely in your browser using WebAssembly.</p>
+<p>```rbajfgywpeooc #| standalone: true #| viewerHeight: 900</p>
 </section>
 </section>
-<section id="architecture" class="level2">
-<h2 class="anchored" data-anchor-id="architecture">Architecture</h2>
-<p>The async dashboard extends the sync dashboard with parallel processing capabilities:</p>
-<section id="async-parameters" class="level3">
-<h3 class="anchored" data-anchor-id="async-parameters">Async Parameters</h3>
-<p><strong>Number of Workers</strong>: 0-12 workers - 0 workers = Sync mode (baseline for comparison) - 1+ workers = Async mode (parallel execution) - More workers may improve performance (up to CPU core limit)</p>
-<p><strong>Grid Size</strong>: 20-400 (in steps of 20) - Smaller grids (20-100): Fast simulations for quick testing - Medium grids (100-200): Balanced performance and coverage - Large grids (200-400): Stress testing and performance evaluation</p>
-<p><strong>Number of Walkers</strong>: Dynamically constrained to 70% of grid pixels - Automatically adjusts maximum based on selected grid size - Prevents overcrowding and ensures simulation quality</p>
+<section id="mount-webassembly-file-system-from-github-release" class="level1">
+<h1>Mount WebAssembly file system from GitHub release</h1>
 </section>
-<section id="async-execution-model" class="level3">
-<h3 class="anchored" data-anchor-id="async-execution-model">Async Execution Model</h3>
-<ol type="1">
-<li><strong>Worker Initialization</strong>: <code>crew</code> spawns requested number of R worker processes</li>
-<li><strong>Task Distribution</strong>: Walkers distributed across workers</li>
-<li><strong>Independent Processing</strong>: Each worker processes assigned walkers using static grid snapshot</li>
-<li><strong>Result Collection</strong>: Main process collects completed walker results</li>
-<li><strong>Resource Cleanup</strong>: Workers terminated after simulation completes</li>
-</ol>
+<section id="the-wasm-release.yaml-workflow-builds-library.data-and-attaches-to-releases" class="level1">
+<h1>The wasm-release.yaml workflow builds library.data and attaches to releases</h1>
+<p>eval(parse(text = ‘webr::mount(mountpoint = “/randomwalk-lib”, source = “https://github.com/JohnGavin/randomwalk/releases/download/v0.1.0/library.data”)’))</p>
 </section>
-<section id="performance-metrics" class="level3">
-<h3 class="anchored" data-anchor-id="performance-metrics">Performance Metrics</h3>
-<p>The Performance tab shows: - Execution mode (sync vs async) - Number of workers used - Elapsed time - Steps per second throughput - Performance analysis and speedup estimation</p>
+<section id="add-mounted-library-to-library-paths" class="level1">
+<h1>Add mounted library to library paths</h1>
+<p>.libPaths(c(“/randomwalk-lib”, .libPaths()))</p>
 </section>
+<section id="install-ggplot2-dependencies-explicitly-from-webr-repository" class="level1">
+<h1>Install ggplot2 dependencies explicitly from webR repository</h1>
 </section>
-<section id="usage-examples" class="level2">
-<h2 class="anchored" data-anchor-id="usage-examples">Usage Examples</h2>
-<section id="testing-async-performance" class="level3">
-<h3 class="anchored" data-anchor-id="testing-async-performance">Testing Async Performance</h3>
-<ol type="1">
-<li><strong>Baseline</strong>: Run with <code>workers = 0</code> (sync mode)</li>
-<li><strong>Note timing</strong>: Check elapsed time in Performance tab</li>
-<li><strong>Scale up</strong>: Increase workers to 2, 4, 8, or 12</li>
-<li><strong>Compare</strong>: Observe speedup in Performance tab</li>
-<li><strong>Test large grids</strong>: Try 200x200 or 400x400 with 8-12 workers</li>
-</ol>
+<section id="use-tmp-for-installation-since-its-writable" class="level1">
+<h1>Use /tmp for installation since it’s writable</h1>
+<p>eval(parse(text = ‘webr::install(c(“munsell”, “colorspace”, “farver”, “labeling”, “viridisLite”, “RColorBrewer”, “scales”, “tibble”, “ggplot2”), lib = “/tmp/webr-libs”)’))</p>
 </section>
-<section id="optimal-worker-count" class="level3">
-<h3 class="anchored" data-anchor-id="optimal-worker-count">Optimal Worker Count</h3>
-<ul>
-<li><strong>Small simulations</strong> (20-100 grid): 1-2 workers (overhead dominates)</li>
-<li><strong>Medium simulations</strong> (100-200 grid): 2-4 workers (good speedup)</li>
-<li><strong>Large simulations</strong> (200-400 grid): 4-12 workers (max speedup)</li>
-<li><strong>Rule of thumb</strong>: Don’t exceed number of CPU cores</li>
-</ul>
+<section id="add-the-tmp-library-to-the-path" class="level1">
+<h1>Add the tmp library to the path</h1>
+<p>.libPaths(c(“/tmp/webr-libs”, .libPaths()))</p>
 </section>
-<section id="expected-results" class="level3">
-<h3 class="anchored" data-anchor-id="expected-results">Expected Results</h3>
-<ul>
-<li><strong>Sync vs Async</strong>: Results may differ (static snapshots)</li>
-<li><strong>Speedup</strong>: Typically 1.5-2x with 2 workers, up to 3-4x with 8-12 workers</li>
-<li><strong>Variability</strong>: Speedup depends on walker termination patterns and grid size</li>
-<li><strong>Overhead</strong>: Some overhead from worker management</li>
-<li><strong>Large grids</strong>: Better parallelization efficiency with more workers</li>
-</ul>
+<section id="load-required-packages" class="level1">
+<h1>Load required packages</h1>
+<p>library(shiny)</p>
 </section>
+<section id="load-randomwalk-from-mounted-library" class="level1">
+<h1>Load randomwalk from mounted library</h1>
+<p>eval(parse(text = “library(randomwalk)”))</p>
 </section>
-<section id="technical-details" class="level2">
-<h2 class="anchored" data-anchor-id="technical-details">Technical Details</h2>
-<section id="static-snapshot-architecture" class="level3">
-<h3 class="anchored" data-anchor-id="static-snapshot-architecture">Static Snapshot Architecture</h3>
-<p>Workers operate on frozen grid state:</p>
-<p><strong>Pros:</strong> - ✅ No serialization issues - ✅ Simple, reliable implementation - ✅ Fast worker execution</p>
-<p><strong>Cons:</strong> - ⚠️ Workers don’t see real-time updates - ⚠️ Results may differ from sync mode - ⚠️ Some walker interactions missed</p>
+<section id="define-ui" class="level1">
+<h1>Define UI</h1>
+<p>ui &lt;- fluidPage( titlePanel(“Async Random Walk Simulation Dashboard”),</p>
+<p>sidebarLayout( # Sidebar with input controls sidebarPanel( width = 3,</p>
+<pre><code>  h4("Simulation Parameters"),
+  p("Configure the random walk simulation parameters below."),
+
+  hr(),
+
+  # ASYNC PARAMETER - Number of workers (EXPANDED RANGE per issue #33)
+  sliderInput(
+    "workers",
+    "Number of Workers:",
+    min = 0,
+    max = 12,
+    value = 2,
+    step = 1,
+    ticks = FALSE
+  ),
+  helpText(
+    HTML("&lt;b&gt;0 = Sync mode&lt;/b&gt; (sequential)&lt;br&gt;",
+         "&lt;b&gt;1+ = Async mode&lt;/b&gt; (parallel)&lt;br&gt;",
+         "More workers may improve performance (0-12)")
+  ),
+
+  # SYNC MODE PARAMETER (New for Dynamic Dashboard)
+  radioButtons(
+    "sync_mode",
+    "Synchronization Mode:",
+    choices = c(
+      "Static Snapshot" = "static",
+      "Dynamic Broadcasting" = "dynamic"
+    ),
+    selected = "static"
+  ),
+  helpText(
+    HTML("&lt;b&gt;Static:&lt;/b&gt; Workers use frozen grid (faster)&lt;br&gt;",
+         "&lt;b&gt;Dynamic:&lt;/b&gt; Workers share updates (realistic)")
+  ),
+
+  sliderInput(
+    "grid_size",
+    "Grid Size:",
+    min = 20,
+    max = 400,
+    value = 100,
+    step = 20,
+    ticks = FALSE
+  ),
+  helpText("Size of the square grid (20-400 in steps of 20)"),
+
+  sliderInput(
+    "n_walkers",
+    "Number of Walkers:",
+    min = 1,
+    max = 100,  # Will be constrained dynamically to 70% of grid pixels
+    value = 6,
+    step = 1,
+    ticks = FALSE
+  ),
+  helpText(HTML("Number of simultaneous random walkers&lt;br&gt;&lt;em&gt;Max: 70% of grid pixels&lt;/em&gt;")),
+
+  selectInput(
+    "neighborhood",
+    "Neighborhood Type:",
+    choices = c(
+      "4-neighborhood (N, S, E, W)" = "4-hood",
+      "8-neighborhood (incl. diagonals)" = "8-hood"
+    ),
+    selected = "4-hood"
+  ),
+
+  selectInput(
+    "boundary",
+    "Boundary Behavior:",
+    choices = c(
+      "Terminate at edge" = "terminate",
+      "Wrap around (torus)" = "wrap"
+    ),
+    selected = "terminate"
+  ),
+
+  sliderInput(
+    "max_steps",
+    "Max Steps per Walker:",
+    min = 1000,
+    max = 20000,
+    value = 10000,
+    step = 1000,
+    ticks = FALSE
+  ),
+  helpText("Maximum steps before walker stops (1k-20k)"),
+
+  hr(),
+
+  # Memory estimate display
+  div(
+    id = "memory_estimate",
+    style = "padding: 10px; border-radius: 5px; background-color: #f0f0f0; margin-bottom: 15px;",
+    h5("Memory Estimate", style = "margin-top: 0;"),
+    textOutput("memory_estimate"),
+    helpText(HTML("&lt;b&gt;WebR limit:&lt;/b&gt; ~1 GB for simulation data&lt;br&gt;",
+                 "&lt;em&gt;Large simulations may fail in browser&lt;/em&gt;"))
+  ),
+
+  actionButton(
+    "run_sim",
+    "Run Simulation",
+    class = "btn-primary btn-lg",
+    width = "100%",
+    icon = icon("play")
+  ),
+
+  br(), br(),
+
+  actionButton(
+    "reset",
+    "Reset to Defaults",
+    class = "btn-secondary",
+    width = "100%",
+    icon = icon("rotate-left")
+  ),
+
+  hr(),
+
+  # Status display with progress indicator
+  div(
+    id = "status_box",
+    style = "padding: 10px; border-radius: 5px; background-color: #f8f9fa;",
+    h5("Status", style = "margin-top: 0;"),
+    p("✅ APP LOADED - UI IS WORKING", style = "color: green; font-weight: bold;"),
+    textOutput("status_text"),
+    br(),
+    # Progress indicator (hidden by default)
+    conditionalPanel(
+      condition = "output.show_progress",
+      div(
+        style = "margin-top: 10px;",
+        tags$div(
+          class = "progress",
+          tags$div(
+            class = "progress-bar progress-bar-striped progress-bar-animated",
+            role = "progressbar",
+            style = "width: 100%",
+            "Running simulation..."
+          )
+        )
+      )
+    )
+  )
+),
+
+# Main panel with tabbed output
+mainPanel(
+  width = 9,
+
+  tabsetPanel(
+    id = "output_tabs",
+    type = "pills",
+
+    # Performance Tab (NEW for async)
+    tabPanel(
+      "Performance",
+      icon = icon("gauge-high"),
+      br(),
+      h4("Async Performance Metrics"),
+      p("Compare execution time between sync and async modes."),
+      tableOutput("perf_table"),
+      hr(),
+      h5("Execution Mode"),
+      p(textOutput("mode_info")),
+      hr(),
+      h5("Performance Analysis"),
+      p(textOutput("perf_analysis"))
+    ),
+
+    # Grid State Tab
+    tabPanel(
+      "Grid State",
+      icon = icon("table-cells"),
+      br(),
+      h4("Final Grid Visualization"),
+      p("Black squares represent pixels visited by random walkers."),
+      plotOutput("grid_plot", height = "600px"),
+      hr(),
+      p(class = "text-muted", "Generated using plot_grid() from the randomwalk package")
+    ),
+
+    # Walker Paths Tab
+    tabPanel(
+      "Walker Paths",
+      icon = icon("route"),
+      br(),
+      h4("Individual Walker Trajectories"),
+      p("Green squares mark starting positions, red squares show where walkers terminated."),
+
+      # Path limit slider
+      sliderInput(
+        "max_paths",
+        "Maximum paths to display:",
+        min = 1,
+        max = 51,
+        value = 6,
+        step = 5,
+        ticks = FALSE
+      ),
+      helpText("Limit displayed paths to avoid visual clutter with many walkers. Slider range: 1-51."),
+
+      plotOutput("paths_plot", height = "600px"),
+      hr(),
+      p(class = "text-muted", "Generated using plot_walker_paths() from the randomwalk package")
+    ),
+
+    # Statistics Tab
+    tabPanel(
+      "Statistics",
+      icon = icon("chart-line"),
+      br(),
+      h4("Simulation Metrics"),
+      tableOutput("stats_table"),
+      hr(),
+      h5("Coverage Analysis"),
+      p(textOutput("coverage_analysis")),
+      hr(),
+      h5("Walker Summary"),
+      tableOutput("walker_summary")
+    ),
+
+    # Raw Data Tab
+    tabPanel(
+      "Raw Data",
+      icon = icon("database"),
+      br(),
+      h4("Detailed Walker Information"),
+      p("Complete data for each walker in the simulation."),
+
+      # Pagination controls
+      fluidRow(
+        column(3,
+          selectInput(
+            "page_size",
+            "Rows per page:",
+            choices = c(10,25, 50, 100, "All"),
+            selected = 10
+          )
+        ),
+        column(3,
+          uiOutput("page_nav")
+        ),
+        column(6,
+          textOutput("row_info")
+        )
+      ),
+
+      tableOutput("walker_data"),
+      hr(),
+      h4("Grid Information"),
+      tableOutput("grid_info")
+    ),
+
+    # Debug/Logs Tab
+    tabPanel(
+      "Debug Logs",
+      icon = icon("bug"),
+      br(),
+      h4("Debug Information"),
+      p("Real-time logs to help diagnose issues with the dashboard."),
+      hr(),
+      h5("Event Log"),
+      verbatimTextOutput("debug_log"),
+      hr(),
+      h5("Current State"),
+      verbatimTextOutput("debug_state"),
+      hr(),
+      actionButton("clear_log", "Clear Log", class = "btn-secondary")
+    ),
+
+    # About Tab
+    tabPanel(
+      "About",
+      icon = icon("info-circle"),
+      br(),
+      h4("About This Dynamic Dashboard"),
+      p("This interactive dashboard demonstrates the randomwalk package's dynamic broadcasting capabilities, allowing parallel workers to share state."),
+
+      h5("Synchronization Modes"),
+      tags$ul(
+        tags$li(strong("Static Snapshot:"), " Workers use a frozen copy of the grid. Fast but no interaction."),
+        tags$li(strong("Dynamic Broadcasting:"), " Workers broadcast new black pixels to all other workers. Realistic interactions.")
+      ),
+
+      h5("How Async Mode Works"),
+      tags$ul(
+        tags$li(strong("Sync Mode (workers=0):"), " Walkers processed sequentially"),
+        tags$li(strong("Async Mode (workers&gt;0):"), " Walkers processed in parallel by crew workers"),
+        tags$li(strong("Independent Execution:"), " Each worker processes walkers independently")
+      ),
+
+      h5("Expected Performance"),
+      tags$ul(
+        tags$li("1 worker: Similar to sync mode"),
+        tags$li("2 workers: ~1.5x speedup (target)"),
+        tags$li("4 workers: ~2-3x speedup (depends on workload)"),
+        tags$li("Speedup limited by walker termination times and overhead")
+      ),
+
+      h5("Trade-offs"),
+      tags$ul(
+        tags$li(tags$b("Pro:"), " Faster execution with multiple workers"),
+        tags$li(tags$b("Pro:"), " Simple, reliable architecture"),
+        tags$li(tags$b("Pro:"), " Visual progress indicator during execution"),
+        tags$li(tags$b("Con:"), " Results may differ from sync mode (acceptable)"),
+        tags$li(tags$b("Con:"), " Workers don't see real-time updates from other workers")
+      ),
+
+      h5("Progress Monitoring"),
+      p("The dashboard includes a visual progress indicator that shows when simulations are running. ",
+        "Future enhancements will include detailed task-level progress monitoring with completed/total walker counts."),
+
+      hr(),
+
+      h5("WebR Memory Limitations"),
+      p(strong("Important:"), " This dashboard runs entirely in your browser using WebAssembly (WebR), which has memory constraints."),
+      tags$ul(
+        tags$li(strong("Browser memory limit:"), " ~2-4 GB per browser tab"),
+        tags$li(strong("Safe simulation limit:"), " Keep estimated memory under ~1-1.5 GB"),
+        tags$li(strong("Memory estimation:"), " Displayed above the 'Run Simulation' button"),
+        tags$li(strong("Path storage dominates:"), " walkers × max_steps × 16 bytes")
+      ),
+
+      h5("Recommended Safe Parameters"),
+      tags$table(
+        class = "table table-sm table-bordered",
+        style = "max-width: 600px;",
+        tags$thead(
+          tags$tr(
+            tags$th("Grid Size"),
+            tags$th("Max Walkers"),
+            tags$th("Max Steps"),
+            tags$th("Est. Memory"),
+            tags$th("Status")
+          )
+        ),
+        tags$tbody(
+          tags$tr(
+            tags$td("100"),
+            tags$td("5,000"),
+            tags$td("10,000"),
+            tags$td("~760 MB"),
+            tags$td(tags$span(style = "color: green;", "✅ Safe"))
+          ),
+          tags$tr(
+            tags$td("200"),
+            tags$td("10,000"),
+            tags$td("10,000"),
+            tags$td("~1,520 MB"),
+            tags$td(tags$span(style = "color: orange;", "⚠️ High"))
+          ),
+          tags$tr(
+            tags$td("400"),
+            tags$td("32,000"),
+            tags$td("10,000"),
+            tags$td("~4,880 MB"),
+            tags$td(tags$span(style = "color: red;", "❌ Blocked"))
+          )
+        )
+      ),
+
+      p(strong("For large simulations:"), " Install the randomwalk package locally and run in RStudio instead of WebR."),
+
+      hr(),
+
+      h5("References"),
+      tags$ul(
+        tags$li(tags$a(href = "https://github.com/JohnGavin/randomwalk", "randomwalk GitHub Repository")),
+        tags$li(tags$a(href = "https://wlandau.github.io/crew/", "crew: A Distributed Worker Launcher")),
+        tags$li(tags$a(href = "https://posit-dev.github.io/r-shinylive/", "Shinylive Documentation")),
+        tags$li(tags$a(href = "https://github.com/JohnGavin/randomwalk/issues/43", "Issue #43: WebR Memory Limits"))
+      )
+    )
+  )
+)</code></pre>
+<p>) )</p>
 </section>
-<section id="why-results-differ" class="level3">
-<h3 class="anchored" data-anchor-id="why-results-differ">Why Results Differ</h3>
-<p><strong>Sync mode example:</strong> 1. Walker A terminates at (5,5) → pixel becomes black 2. Walker B sees black pixel at (5,5) 3. Walker B terminates early when near (5,5) 4. Result: 2 black pixels</p>
-<p><strong>Async mode example:</strong> 1. Worker 1: Walker A terminates at (5,5) 2. Worker 2: Walker B doesn’t see (5,5) is black 3. Walker B continues until termination at (7,8) 4. Result: 3 black pixels</p>
-<p>This is <strong>expected behavior</strong> and doesn’t indicate a bug.</p>
+<section id="define-server-logic" class="level1">
+<h1>Define server logic</h1>
+<p>server &lt;- function(input, output, session) {</p>
+<p>cat(“=== SERVER FUNCTION STARTED ===”)</p>
+<p># Reactive value to store simulation result sim_result &lt;- reactiveVal(NULL) cat(“✓ sim_result created”)</p>
+<p># Reactive value for status messages status_msg &lt;- reactiveVal(“Ready to run simulation”) cat(“✓ status_msg created”)</p>
+<p># Reactive value to control progress indicator visibility show_progress_flag &lt;- reactiveVal(FALSE) cat(“✓ show_progress_flag created”)</p>
+<p># Pagination state current_page &lt;- reactiveVal(1) cat(“✓ current_page created”)</p>
+<p># Debug log reactive values debug_log_entries &lt;- reactiveVal(character(0)) cat(“✓ debug_log_entries created”)</p>
+<p># Helper function to add log entry # CRITICAL: Use isolate() to prevent reactive dependency loop add_log &lt;- function(msg) { tryCatch({ timestamp &lt;- format(Sys.time(), “%H:%M:%S”) new_entry &lt;- paste0(“[”, timestamp, ”]”, msg) cat(“LOG:”, new_entry, “”) # Print to R console # Use isolate() to read current entries without creating reactive dependency current &lt;- isolate(debug_log_entries()) debug_log_entries(c(current, new_entry)) }, error = function(e) { cat(“ERROR in add_log:”, e$message, “”) }) } cat(“✓ add_log function created”)</p>
+<p># Log app startup (wrapped in observe to create reactive context) observe({ cat(“&gt;&gt; observe() for startup running”) add_log(“Dashboard initialized - server is running!”) }) cat(“✓ Startup observe() registered”)</p>
+<p># Dynamic walker constraint (issue #33): Limit to 70% of grid pixels observe({ max_walkers &lt;- floor(0.7 * input<span class="math inline">\(grid_size^2)
+    updateSliderInput(
+      session,
+      "n_walkers",
+      max = max_walkers,
+      value = min(input\)</span>n_walkers, max_walkers) ) })</p>
+<p># Memory estimate (issue #43): Calculate estimated memory usage output<span class="math inline">\(memory_estimate &lt;- renderText({
+    # Calculate memory components (in MB)
+    path_mb &lt;- (input\)</span>n_walkers * input<span class="math inline">\(max_steps * 2 * 8) / (1024^2)
+    grid_mb &lt;- (input\)</span>grid_size^2 * 8) / (1024^2) overhead_mb &lt;- 50 # Estimated overhead for worker copies, etc. total_mb &lt;- path_mb + grid_mb + overhead_mb</p>
+<pre><code># Determine status
+if (total_mb &gt; 1500) {
+  status &lt;- "❌ Too high - will fail!"
+  color &lt;- "color: #d32f2f; font-weight: bold;"
+} else if (total_mb &gt; 1000) {
+  status &lt;- "⚠️ High risk"
+  color &lt;- "color: #f57c00; font-weight: bold;"
+} else if (total_mb &gt; 700) {
+  status &lt;- "⚠️ Caution"
+  color &lt;- "color: #ffa726;"
+} else {
+  status &lt;- "✅ OK"
+  color &lt;- "color: #388e3c; font-weight: bold;"
+}
+
+# Format output
+sprintf("Estimated: %.0f MB %s", total_mb, status)</code></pre>
+<p>})</p>
+<p># Reset pagination when page size changes or new simulation completes observe({ input$page_size sim_result() current_page(1) })</p>
+<p>cat(“✓ observeEvent(run_sim) registered”)</p>
+<p># Run simulation when button clicked observeEvent(input<span class="math inline">\(run_sim, {
+    cat("!!! RUN SIMULATION BUTTON CLICKED !!!\n")
+    add_log("=== RUN SIMULATION CLICKED ===")
+    add_log(sprintf("Parameters: grid=%d, walkers=%d, workers=%d, mode=%s",
+                    input\)</span>grid_size, input<span class="math inline">\(n_walkers, input\)</span>workers, input$sync_mode))</p>
+<pre><code>mode_text &lt;- if (input$workers == 0) "sync" else sprintf("async (%d workers, %s)", input$workers, input$sync_mode)
+status_msg(sprintf("Running simulation in %s mode...", mode_text))
+add_log(sprintf("Mode: %s", mode_text))
+
+# Show progress indicator
+show_progress_flag(TRUE)
+
+tryCatch({
+  # Validate inputs
+  if (input$n_walkers &gt; (0.6 * input$grid_size^2)) {
+    add_log("ERROR: Too many walkers for grid size")
+    show_progress_flag(FALSE)  # Hide progress on validation error
+    showNotification(
+      "Too many walkers for grid size. Maximum is 60% of grid cells.",
+      type = "warning",
+      duration = 5
+    )
+    status_msg("Error: Too many walkers for grid size")
+    return(NULL)
+  }
+
+  # Memory validation (issue #43): Prevent OOM errors in WebR
+  path_mb &lt;- (input$n_walkers * input$max_steps * 2 * 8) / (1024^2)
+  grid_mb &lt;- (input$grid_size^2 * 8) / (1024^2)
+  total_mb &lt;- path_mb + grid_mb + 50  # +50 MB overhead
+
+  webr_safe_limit_mb &lt;- 1500  # Conservative limit for WebR
+
+  if (total_mb &gt; webr_safe_limit_mb) {
+    error_msg &lt;- sprintf(
+      "Memory estimate (%.0f MB) exceeds WebR safe limit (~%d MB). Reduce grid size, walkers, or max steps.",
+      total_mb, 
+      webr_safe_limit_mb
+    )
+    add_log(paste("ERROR:", error_msg))
+    show_progress_flag(FALSE)  # Hide progress on validation error
+    showNotification(
+      error_msg,
+      type = "error",
+      duration = 10
+    )
+    status_msg(paste("Error:", error_msg))
+    return(NULL)
+  }
+
+  # Warning for high memory usage
+  if (total_mb &gt; 1000) {
+    warning_msg &lt;- sprintf(
+      "Memory estimate (%.0f MB) is high. Simulation may be slow or fail in WebR.",
+      total_mb
+    )
+    add_log(paste("WARNING:", warning_msg))
+    showNotification(
+      warning_msg,
+      type = "warning",
+      duration = 5
+    )
+  }
+
+  add_log("Validation passed, starting simulation...")
+
+  # Run the simulation using randomwalk package with workers parameter
+  add_log("Calling run_simulation()...")
+  result &lt;- run_simulation(
+    grid_size = input$grid_size,
+    n_walkers = input$n_walkers,
+    workers = input$workers,        # ASYNC PARAMETER
+    sync_mode = input$sync_mode,    # DYNAMIC PARAMETER
+    neighborhood = input$neighborhood,
+    boundary = input$boundary,
+    max_steps = input$max_steps,
+    verbose = FALSE
+  )
+
+  add_log("Simulation completed successfully")
+  add_log(sprintf("Total steps: %d, Black pixels: %d (%.1f%%)",
+                  result$statistics$total_steps,
+                  result$statistics$black_pixels,
+                  result$statistics$black_percentage))
+
+  # Store result
+  sim_result(result)
+
+  # Hide progress indicator on success
+  show_progress_flag(FALSE)
+
+  # Update status
+  status_msg(sprintf(
+    "Simulation complete (%s mode)! %d steps, %.1f%% coverage in %.2fs",
+    mode_text,
+    result$statistics$total_steps,
+    result$statistics$black_percentage,
+    result$statistics$elapsed_time_secs
+  ))
+
+  # Show success notification
+  showNotification(
+    sprintf("Simulation completed in %.2f seconds!", result$statistics$elapsed_time_secs),
+    type = "message",
+    duration = 3
+  )
+
+}, error = function(e) {
+  # Hide progress indicator on error
+  show_progress_flag(FALSE)
+
+  add_log(sprintf("ERROR in simulation: %s", e$message))
+  add_log(sprintf("Error traceback: %s", paste(capture.output(traceback()), collapse = "\n")))
+  status_msg(paste("Error:", e$message))
+  showNotification(
+    paste("Simulation failed:", e$message),
+    type = "error",
+    duration = 10
+  )
+})</code></pre>
+<p>})</p>
+<p>cat(“✓ observeEvent(reset) registered”)</p>
+<p># Reset parameters (UPDATED defaults per issue #33) observeEvent(input$reset, { cat(“!!! RESET BUTTON CLICKED !!!”) add_log(“=== RESET BUTTON CLICKED ===”) add_log(“Resetting parameters to defaults: workers=2, grid=100, walkers=6”)</p>
+<pre><code>updateSliderInput(session, "workers", value = 2)
+updateRadioButtons(session, "sync_mode", selected = "static")
+updateSliderInput(session, "grid_size", value = 100)  # Changed from 20
+updateSliderInput(session, "n_walkers", value = 6)
+updateSelectInput(session, "neighborhood", selected = "4-hood")
+updateSelectInput(session, "boundary", selected = "terminate")
+updateSliderInput(session, "max_steps", value = 10000)
+status_msg("Parameters reset to defaults")
+
+add_log("Parameters reset complete")
+
+showNotification(
+  "Parameters reset to default values",
+  type = "message",
+  duration = 2
+)</code></pre>
+<p>})</p>
+<p># Render status text output$status_text &lt;- renderText({ status_msg() })</p>
+<p># Control progress indicator visibility output$show_progress &lt;- reactive({ show_progress_flag() }) outputOptions(output, “show_progress”, suspendWhenHidden = FALSE)</p>
+<p># Page navigation buttons output<span class="math inline">\(page_nav &lt;- renderUI({
+    req(sim_result())
+    walkers &lt;- sim_result()\)</span>walkers</p>
+<pre><code>page_size &lt;- if (input$page_size == "All") Inf else as.numeric(input$page_size)
+total_pages &lt;- ceiling(length(walkers) / page_size)
+
+if (total_pages &lt;= 1) {
+  return(NULL)  # No pagination needed
+}
+
+fluidRow(
+  column(6,
+    actionButton("prev_page", "Previous", class = "btn-sm",
+                 disabled = if (current_page() == 1) "" else NULL)
+  ),
+  column(6,
+    actionButton("next_page", "Next", class = "btn-sm",
+                 disabled = if (current_page() &gt;= total_pages) "" else NULL)
+  )
+)</code></pre>
+<p>})</p>
+<p># Row information text output<span class="math inline">\(row_info &lt;- renderText({
+    req(sim_result())
+    walkers &lt;- sim_result()\)</span>walkers total_rows &lt;- length(walkers)</p>
+<pre><code>page_size &lt;- if (input$page_size == "All") Inf else as.numeric(input$page_size)
+
+if (page_size &gt;= total_rows) {
+  sprintf("Showing all %d walkers", total_rows)
+} else {
+  start &lt;- (current_page() - 1) * page_size + 1
+  end &lt;- min(start + page_size - 1, total_rows)
+  sprintf("Showing walkers %d-%d of %d (Page %d of %d)",
+          start, end, total_rows,
+          current_page(), ceiling(total_rows / page_size))
+}</code></pre>
+<p>})</p>
+<p># Previous page button observeEvent(input$prev_page, { if (current_page() &gt; 1) { current_page(current_page() - 1) } })</p>
+<p># Next page button observeEvent(input<span class="math inline">\(next_page, {
+    req(sim_result())
+    walkers &lt;- sim_result()\)</span>walkers page_size &lt;- if (input<span class="math inline">\(page_size == "All") Inf else as.numeric(input\)</span>page_size) total_pages &lt;- ceiling(length(walkers) / page_size)</p>
+<pre><code>if (current_page() &lt; total_pages) {
+  current_page(current_page() + 1)
+}</code></pre>
+<p>})</p>
+<p># Debug log output output$debug_log &lt;- renderText({ log_entries &lt;- debug_log_entries() if (length(log_entries) == 0) { return(“No log entries yet. Click ‘Run Simulation’ or ‘Reset to Defaults’ to see logs.”) } paste(log_entries, collapse = “”) })</p>
+<p># Debug state output output<span class="math inline">\(debug_state &lt;- renderText({
+    base_info &lt;- paste(
+      "=== CURRENT PARAMETERS ===",
+      sprintf("Workers: %d", input\)</span>workers), sprintf(“Sync Mode: %s”, input<span class="math inline">\(sync_mode),
+      sprintf("Grid Size: %d x %d", input\)</span>grid_size, input<span class="math inline">\(grid_size),
+      sprintf("Walkers: %d", input\)</span>n_walkers), sprintf(“Neighborhood: %s”, input<span class="math inline">\(neighborhood),
+      sprintf("Boundary: %s", input\)</span>boundary), sprintf(“Max Steps: %d”, input<span class="math inline">\(max_steps),
+      "",
+      "=== UI CONTROLS ===",
+      sprintf("Page Size: %s rows per page", input\)</span>page_size), sprintf(“Current Page: %d”, current_page()), sprintf(“Max Paths Displayed: %d”, input$max_paths), ““,”=== SIMULATION STATUS ===“, sprintf(”Status: %s”, status_msg()), sprintf(“Result stored: %s”, if (is.null(sim_result())) “No” else “Yes”), sep = “” )</p>
+<pre><code>if (!is.null(sim_result())) {
+  walkers &lt;- sim_result()$walkers
+  base_info &lt;- paste(
+    base_info,
+    sprintf("Total walkers in result: %d", length(walkers)),
+    sprintf("Walkers being displayed in paths: %d", min(input$max_paths, length(walkers))),
+    "",
+    sep = "\n"
+  )
+}
+
+paste(
+  base_info,
+  "=== ENVIRONMENT INFO ===",
+  sprintf("R version: %s", R.version.string),
+  sprintf("Running in WebR: %s", if (exists("webr")) "Yes" else "Unknown"),
+  sprintf("randomwalk package loaded: %s", "randomwalk" %in% loadedNamespaces()),
+  sprintf("Session start: %s", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
+  sep = "\n"
+)</code></pre>
+<p>})</p>
+<p># Clear log button observeEvent(input$clear_log, { add_log(“Log cleared by user”) debug_log_entries(character(0)) })</p>
+<p># ASYNC PERFORMANCE TABLE output<span class="math inline">\(perf_table &lt;- renderTable({
+    req(sim_result())
+    stats &lt;- sim_result()\)</span>statistics params &lt;- sim_result()$parameters</p>
+<pre><code>data.frame(
+  Metric = c(
+    "Execution Mode",
+    "Number of Workers",
+    "Elapsed Time",
+    "Total Steps",
+    "Steps per Second",
+    "Black Pixels Created"
+  ),
+  Value = c(
+    ifelse(params$workers == 0, "Sync (Sequential)", sprintf("Async (Parallel - %d workers)", params$workers)),
+    params$workers,
+    sprintf("%.3f seconds", stats$elapsed_time_secs),
+    format(stats$total_steps, big.mark = ","),
+    format(round(stats$total_steps / stats$elapsed_time_secs), big.mark = ","),
+    stats$black_pixels
+  )
+)</code></pre>
+<p>}, striped = TRUE, hover = TRUE, bordered = TRUE)</p>
+<p># Mode information output<span class="math inline">\(mode_info &lt;- renderText({
+    req(sim_result())
+    params &lt;- sim_result()\)</span>parameters</p>
+<pre><code>if (params$workers == 0) {
+  "Running in SYNC mode: Walkers are processed sequentially in round-robin fashion. This produces deterministic, reproducible results."
+} else {
+  sync_desc &lt;- if (is.null(params$sync_mode) || params$sync_mode == "static") {
+    "Workers use static grid snapshots (faster, but no interaction between workers)."
+  } else {
+    "Workers use DYNAMIC BROADCASTING to share state (slower, but realistic interactions)."
+  }
+  
+  sprintf(
+    "Running in ASYNC mode with %d worker%s: %s",
+    params$workers,
+    ifelse(params$workers == 1, "", "s"),
+    sync_desc
+  )
+}</code></pre>
+<p>})</p>
+<p># Performance analysis output<span class="math inline">\(perf_analysis &lt;- renderText({
+    req(sim_result())
+    stats &lt;- sim_result()\)</span>statistics params &lt;- sim_result()$parameters</p>
+<pre><code>if (params$workers == 0) {
+  sprintf(
+    "Sync mode completed %d walkers in %.3f seconds (%.1f walkers/second). To test async performance, increase the number of workers and re-run.",
+    stats$total_walkers,
+    stats$elapsed_time_secs,
+    stats$total_walkers / stats$elapsed_time_secs
+  )
+} else {
+  # Estimate theoretical speedup (actual depends on walker termination patterns)
+  theoretical_speedup &lt;- min(params$workers, stats$total_walkers)
+
+  sprintf(
+    "Async mode with %d workers completed %d walkers in %.3f seconds. Theoretical maximum speedup is %.1fx (limited by %d workers and %d walkers). Actual speedup depends on walker termination patterns and parallelization overhead. Try comparing with sync mode (workers=0) to measure actual speedup.",
+    params$workers,
+    stats$total_walkers,
+    stats$elapsed_time_secs,
+    theoretical_speedup,
+    params$workers,
+    stats$total_walkers
+  )
+}</code></pre>
+<p>})</p>
+<p># Render grid plot output$grid_plot &lt;- renderPlot({ req(sim_result()) plot_grid(sim_result()) })</p>
+<p># Render walker paths plot with path limit slider output$paths_plot &lt;- renderPlot({ req(sim_result()) result &lt;- sim_result()</p>
+<pre><code># Limit to first N walkers based on slider
+max_display &lt;- min(input$max_paths, length(result$walkers))
+
+if (max_display &lt; length(result$walkers)) {
+  # Create a copy of result with limited walkers
+  result_limited &lt;- result
+  result_limited$walkers &lt;- result$walkers[1:max_display]
+  plot_walker_paths(result_limited)
+} else {
+  # Show all walkers
+  plot_walker_paths(result)
+}</code></pre>
+<p>})</p>
+<p># Render statistics table output<span class="math inline">\(stats_table &lt;- renderTable({
+    req(sim_result())
+    stats &lt;- sim_result()\)</span>statistics</p>
+<pre><code>data.frame(
+  Metric = c(
+    "Total Steps",
+    "Final Black Pixels",
+    "Final Black Percentage",
+    "Grid Size",
+    "Number of Walkers",
+    "Elapsed Time (sec)"
+  ),
+  Value = c(
+    format(stats$total_steps, big.mark = ","),
+    format(stats$black_pixels, big.mark = ","),
+    sprintf("%.2f%%", stats$black_percentage),
+    sprintf("%d × %d", stats$grid_size, stats$grid_size),
+    stats$total_walkers,
+    sprintf("%.3f", stats$elapsed_time_secs)
+  )
+)</code></pre>
+<p>}, striped = TRUE, hover = TRUE, bordered = TRUE)</p>
+<p># Coverage analysis text output<span class="math inline">\(coverage_analysis &lt;- renderText({
+    req(sim_result())
+    stats &lt;- sim_result()\)</span>statistics</p>
+<pre><code>total_cells &lt;- stats$grid_size^2
+black_cells &lt;- stats$black_pixels
+coverage_pct &lt;- stats$black_percentage
+
+sprintf(
+  "The simulation covered %d out of %d grid cells (%.2f%%). On average, %.1f steps were taken per black pixel created.",
+  black_cells,
+  total_cells,
+  coverage_pct,
+  stats$total_steps / black_cells
+)</code></pre>
+<p>})</p>
+<p># Walker summary table output<span class="math inline">\(walker_summary &lt;- renderTable({
+    req(sim_result())
+    walkers &lt;- sim_result()\)</span>walkers</p>
+<pre><code>data.frame(
+  Statistic = c(
+    "Total Walkers",
+    "Average Steps",
+    "Min Steps",
+    "Max Steps",
+    "Completed Walkers"
+  ),
+  Value = c(
+    length(walkers),
+    sprintf("%.1f", mean(sapply(walkers, function(w) w$steps))),
+    min(sapply(walkers, function(w) w$steps)),
+    max(sapply(walkers, function(w) w$steps)),
+    sum(sapply(walkers, function(w) !w$active))
+  )
+)</code></pre>
+<p>}, striped = TRUE, hover = TRUE, bordered = TRUE)</p>
+<p># Walker data table with pagination output<span class="math inline">\(walker_data &lt;- renderTable({
+    req(sim_result())
+    walkers &lt;- sim_result()\)</span>walkers</p>
+<pre><code># Format for display
+walkers_display &lt;- data.frame(
+  Walker = sapply(walkers, function(w) w$id),
+  Steps = sapply(walkers, function(w) w$steps),
+  Start_X = sapply(walkers, function(w) w$path[[1]][1]),
+  Start_Y = sapply(walkers, function(w) w$path[[1]][2]),
+  # Extract last position correctly from path matrix
+  End_X = sapply(walkers, function(w) {
+    path &lt;- w$path[[1]]
+    if (is.matrix(path)) path[nrow(path), 1] else path[length(path)]
+  }),
+  End_Y = sapply(walkers, function(w) {
+    path &lt;- w$path[[1]]
+    if (is.matrix(path)) path[nrow(path), 2] else path[length(path)]
+  }),
+  Active = sapply(walkers, function(w) ifelse(w$active, "Yes", "No")),
+  Reason = sapply(walkers, function(w) w$termination_reason)
+)
+
+# Apply pagination
+page_size &lt;- if (input$page_size == "All") Inf else as.numeric(input$page_size)
+
+if (page_size &gt;= nrow(walkers_display)) {
+  # Show all rows
+  walkers_display
+} else {
+  # Show current page
+  start_row &lt;- (current_page() - 1) * page_size + 1
+  end_row &lt;- min(start_row + page_size - 1, nrow(walkers_display))
+  walkers_display[start_row:end_row, ]
+}</code></pre>
+<p>})</p>
+<p># Grid info table output<span class="math inline">\(grid_info &lt;- renderTable({
+    req(sim_result())
+    stats &lt;- sim_result()\)</span>statistics params &lt;- sim_result()$parameters</p>
+<pre><code>data.frame(
+  Property = c(
+    "Grid Dimensions",
+    "Total Cells",
+    "Black Cells",
+    "White Cells",
+    "Neighborhood Type",
+    "Boundary Behavior",
+    "Execution Mode"
+  ),
+  Value = c(
+    sprintf("%d × %d", stats$grid_size, stats$grid_size),
+    format(stats$grid_size^2, big.mark = ","),
+    format(stats$black_pixels, big.mark = ","),
+    format(stats$grid_size^2 - stats$black_pixels, big.mark = ","),
+    input$neighborhood,
+    input$boundary,
+    ifelse(params$workers == 0, "Sync", sprintf("Async (%d workers)", params$workers))
+  )
+)</code></pre>
+<p>}, striped = TRUE, hover = TRUE, bordered = TRUE) }</p>
 </section>
-</section>
-<section id="see-also" class="level2">
-<h2 class="anchored" data-anchor-id="see-also">See Also</h2>
-<ul>
-<li><a href="../dashboard/">Sync Dashboard</a> - Sync-only dashboard</li>
-<li><code>vignette("telemetry")</code> - Pipeline statistics</li>
-<li><code>?run_simulation</code> - Core simulation function (<code>workers</code> parameter)</li>
-<li><a href="https://wlandau.github.io/crew/">crew Package</a> - Distributed worker launcher</li>
-</ul>
-</section>
-<section id="summary" class="level2">
-<h2 class="anchored" data-anchor-id="summary">Summary</h2>
-<p>This async dashboard provides:</p>
-<ul>
-<li><strong>Parallel Execution</strong>: Test async performance with multiple workers</li>
-<li><strong>Performance Metrics</strong>: Compare sync vs async timing</li>
-<li><strong>Interactive Testing</strong>: Adjust worker count in real-time</li>
-<li><strong>Educational</strong>: Understand async/parallel random walks</li>
-<li><strong>Production-Ready</strong>: Uses the actual async implementation from <code>randomwalk</code> package</li>
-</ul>
-<p>The async implementation uses static grid snapshots for simplicity and reliability, trading real-time synchronization for predictable, robust parallel execution.</p>
-<p><strong><a href="../dashboard_async/" class="btn btn-primary">Launch the Async Dashboard →</a></strong></p>
-</section>
+<section id="run-the-application" class="level1">
+<h1>Run the application</h1>
+<p>shinyApp(ui = ui, server = server)</p>
 </section>
 
 </main>
