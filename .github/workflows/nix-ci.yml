@@ -78,12 +78,6 @@ jobs:
           nix-store -qR --include-outputs result | cachix push johngavin
           echo "✓ Package cached successfully"
 
-      - name: Push dev environment to johngavin cache
-        run: |
-          echo "Pushing dev environment to johngavin cachix..."
-          nix-store -qR --include-outputs $(nix-instantiate default-ci.nix) | cachix push johngavin
-          echo "✓ Dev environment cached successfully"
-
       - name: Verify package structure
         run: |
           echo "Package structure:"
@@ -236,7 +230,6 @@ jobs:
   # Job 5: Check nix file generation
   check-nix-generation:
     name: Verify Nix Files
-    needs: build-and-cache-package
     runs-on: ubuntu-latest
 
     steps:
