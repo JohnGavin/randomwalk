@@ -31,6 +31,7 @@ jobs:
   build-and-cache-package:
     name: Build & Cache Package
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
@@ -78,6 +79,14 @@ jobs:
           nix-store -qR --include-outputs result | cachix push johngavin
           echo "✓ Package cached successfully"
 
+      - name: Build and Cache Dev Environment
+        run: |
+          echo "Instantiating default-ci.nix environment..."
+          # This builds the full shell environment including R, Quarto, and system tools
+          # We push this to cache so subsequent Linux jobs can just pull it
+          nix-store -qR --include-outputs $(nix-instantiate default-ci.nix) | cachix push johngavin
+          echo "✓ Dev environment cached successfully"
+
       - name: Verify package structure
         run: |
           echo "Package structure:"
@@ -88,6 +97,7 @@ jobs:
     name: R CMD check
     needs: build-and-cache-package
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -135,6 +145,7 @@ jobs:
     name: Run Tests
     needs: build-and-cache-package
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -184,6 +195,7 @@ jobs:
     name: Build pkgdown site
     needs: build-and-cache-package
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # Only run on pushes to main, not on PRs
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
 
@@ -230,7 +242,9 @@ jobs:
   # Job 5: Check nix file generation
   check-nix-generation:
     name: Verify Nix Files
+    needs: build-and-cache-package
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
