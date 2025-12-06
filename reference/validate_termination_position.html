@@ -23,7 +23,7 @@ when workers operate on stale grid snapshots."></head><body>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/dashboard.html">Interactive Dashboard (Sync)</a></li>
-    <li><a class="dropdown-item" href="../articles/dashboard_async.html">Async/Parallel Dashboard</a></li>
+    <li><a class="dropdown-item" href="../articles/dashboard_async/">Async/Parallel Dashboard</a></li>
     <li><a class="dropdown-item" href="../articles/dynamic_broadcasting.html">Dynamic Grid Broadcasting</a></li>
     <li><a class="dropdown-item" href="../articles/telemetry.html">Telemetry and Pipeline Statistics</a></li>
   </ul></li>
@@ -88,13 +88,13 @@ workers may have stale grid snapshots.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="initialize_grid.html">initialize_grid</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2025-12-06 15:37:41] Initializing grid of size 10x10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2025-12-06 16:37:02] Initializing grid of size 10x10</span>
 <span class="r-in"><span><span class="co"># Center (5,5) is black, so (5,6) has a black neighbor</span></span></span>
 <span class="r-in"><span><span class="fu">validate_termination_position</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">6</span><span class="op">)</span>, <span class="va">grid</span>, <span class="st">"4-hood"</span><span class="op">)</span>  <span class="co"># TRUE</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span><span class="co"># Position (1,1) is far from center - no black neighbors</span></span></span>
 <span class="r-in"><span><span class="fu">validate_termination_position</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">grid</span>, <span class="st">"4-hood"</span><span class="op">)</span>  <span class="co"># FALSE</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> WARN [2025-12-06 15:37:41] Position (1, 1) is INVALID: would create isolated pixel (no black neighbors in 4-hood)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> WARN [2025-12-06 16:37:02] Position (1, 1) is INVALID: would create isolated pixel (no black neighbors in 4-hood)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
