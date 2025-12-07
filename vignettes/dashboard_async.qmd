@@ -1,5 +1,5 @@
 ---
-title: "Hello Async Random Walk Simulation Dashboard"
+title: "Async Random Walk Simulation Dashboard"
 format:
   html:
     code-fold: true
@@ -19,7 +19,7 @@ This vignette provides a **fully interactive Shiny application** that demonstrat
 
 The dashboard runs entirely in your browser using WebAssembly.
 
-```{shinylive-r}
+``````{shinylive-r}
 #| standalone: true
 #| viewerHeight: 900
 
@@ -47,6 +47,7 @@ library(shiny)
 
 # Load randomwalk from mounted library
 library(randomwalk)
+
 
 # Define UI
 ui <- fluidPage(
@@ -468,7 +469,7 @@ server <- function(input, output, session) {
   add_log <- function(msg) {
     tryCatch({
       timestamp <- format(Sys.time(), "%H:%M:%S")
-      new_entry <- paste0("[", timestamp, "] ", msg)
+      new_entry <- paste0("[ ", timestamp, "] ", msg)
       cat("LOG:", new_entry, "\n")  # Print to R console
       # Use isolate() to read current entries without creating reactive dependency
       current <- isolate(debug_log_entries())
@@ -923,23 +924,24 @@ server <- function(input, output, session) {
   output$stats_table <- renderTable({
     req(sim_result())
     stats <- sim_result()$statistics
+    params <- sim_result()$parameters
 
     data.frame(
       Metric = c(
+        "Execution Mode",
+        "Number of Workers",
+        "Elapsed Time",
         "Total Steps",
-        "Final Black Pixels",
-        "Final Black Percentage",
-        "Grid Size",
-        "Number of Walkers",
-        "Elapsed Time (sec)"
+        "Steps per Second",
+        "Black Pixels Created"
       ),
       Value = c(
+        ifelse(params$workers == 0, "Sync (Sequential)", sprintf("Async (Parallel - %d workers)", params$workers)),
+        params$workers,
+        sprintf("%.3f seconds", stats$elapsed_time_secs),
         format(stats$total_steps, big.mark = ","),
-        format(stats$black_pixels, big.mark = ","),
-        sprintf("%.2f%%", stats$black_percentage),
-        sprintf("%d × %d", stats$grid_size, stats$grid_size),
-        stats$total_walkers,
-        sprintf("%.3f", stats$elapsed_time_secs)
+        format(round(stats$total_steps / stats$elapsed_time_secs), big.mark = ","),
+        stats$black_pixels
       )
     )
   }, striped = TRUE, hover = TRUE, bordered = TRUE)
@@ -1054,3 +1056,5 @@ server <- function(input, output, session) {
 
 # Run the application
 shinyApp(ui = ui, server = server)
+
+``````
