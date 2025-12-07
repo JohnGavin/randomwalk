@@ -1,5 +1,5 @@
 ---
-title: "Hello Dynamic Grid Broadcasting Dashboard"
+title: "Dynamic Grid Broadcasting Dashboard"
 format:
   html:
     code-fold: true

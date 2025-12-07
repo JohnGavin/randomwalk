@@ -1,5 +1,5 @@
 ---
-title: "Hello Interactive Dashboard"
+title: "Interactive Dashboard"
 format:
   html:
     code-fold: true
