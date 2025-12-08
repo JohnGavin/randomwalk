@@ -31,7 +31,7 @@
 #' }
 #'
 #' @seealso \code{\link{worker_check_updates}}, \code{\link{worker_step_walker}}
-#'
+#' @importFrom nanonext nano subscribe
 #' @export
 worker_init <- function(pub_address) {
   logger::log_info("Worker initializing with publisher at {pub_address}")
@@ -91,6 +91,7 @@ worker_init <- function(pub_address) {
 #'
 #' @seealso \code{\link{worker_init}}, \code{\link{broadcast_update}}
 #'
+#' @importFrom nanonext recv
 #' @export
 worker_check_updates <- function(worker_state) {
   # Non-blocking receive

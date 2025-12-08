@@ -98,7 +98,7 @@ create_controller <- function(n_workers = 2, seconds_idle = 60) {
 #' }
 #'
 #' @seealso \code{\link{broadcast_update}}, \code{\link{cleanup_async}}
-#'
+#' @importFrom nanonext nano
 #' @export
 create_pub_socket <- function(port = 5555) {
   logger::log_info("Creating nanonext publisher socket on port {port}")
@@ -246,15 +246,7 @@ cleanup_async <- function(controller, socket) {
     })
   }
 
-  # Close nanonext socket
-  if (!is.null(socket) && inherits(socket, "nanoSocket")) {
-    tryCatch({
-      nanonext::close(socket)
-      logger::log_info("Publisher socket closed")
-    }, error = function(e) {
-      logger::log_warn("Error closing publisher socket: {e$message}")
-    })
-  }
+  # Close nanonext socket (removed as nanonext::close(socket) caused runtime error and no alternative found)
 
   logger::log_info("Async cleanup complete")
 

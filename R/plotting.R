@@ -92,6 +92,7 @@ plot_grid <- function(result,
 #' plot_walker_paths(result)
 #' }
 #'
+#' @importFrom graphics grid lines points
 #' @export
 plot_walker_paths <- function(result,
                                main = "Walker Paths and Final Positions",
@@ -186,6 +187,7 @@ plot_walker_paths <- function(result,
 #' plot_simulation(result)
 #' }
 #'
+#' @importFrom graphics par
 #' @export
 plot_simulation <- function(result, ...) {
   # Save current par settings
