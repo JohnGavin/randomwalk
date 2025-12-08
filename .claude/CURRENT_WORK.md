@@ -10,11 +10,40 @@ main (Fixes merged)
 - Implemented the Dynamic Dashboard UI (Issue #101).
 
 ## Progress
-- [x] Fix #100: Escape quotes in pkgdown workflow - **MERGED**
-- [x] Raise Issue #101: Fix `dynamic_broadcasting.html` content.
-- [x] Raise Issue #102: Fix 404 on `dashboard_async` URL.
-- [x] Raise Issue #103: Restore embedded Shinylive app in `dashboard.html`.
-- [x] **Fix #104: Restore dashboards and fix links (Issues #101, #102, #103) - MERGED**
+- [x] Fixed default.nix syntax errors (quotes in comments)
+- [x] Created generic push_to_cachix.sh script
+- [x] Updated pkgdown workflow to build articles
+- [x] Added sync dashboard Shinylive export
+- [x] Disabled async dashboard (WebR incompatible)
+- [x] Updated dashboard_async.qmd documentation
+- [x] Updated AGENTS.md to 9-step workflow
+- [x] Created session log (R/setup/fix_issue_67_broken_links.R)
+- [x] Created GitHub issues #67 and #68
+- [x] Verified cachix authentication
+- [x] Fixed Issue #116: Removed duplicate `telemetry.qmd` and fixed title.
+- [x] **NEXT: Push to cachix (MANDATORY Step 5) for Issue #67**
+- [x] Create dev branch and commit changes for Issue #67
+- [x] Push to GitHub and create PR for Issue #67
+- [x] Wait for GitHub Actions for Issue #67
+- [x] Merge PR for Issue #67
+
+## Blockers
+None - all work for Issue #67 completed.
+
+## Next Session Should
+1. Monitor GitHub Actions for PR #120
+2. Merge PR #120 after all checks pass
+3. Verify website links work on https://johngavin.github.io/randomwalk/
+
+## Related Issues
+- #67: Fix broken vignette links (Completed)
+- #68: Enhancement for three dashboard versions (Next focus)
+- #116: Removed duplicate `telemetry.qmd` and fixed title. (Completed)
+
+---
+**Last updated**: 2025-12-08
+**Session state**: All work for Issue #67 completed.
+**Next action**: Monitor and merge PR #120, then address Issue #68.
 
 ## Blockers
 - None.
