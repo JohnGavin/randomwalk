@@ -32,6 +32,8 @@ jobs:
     name: Build & Cache Package
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      randomwalk_store_path: ${{ steps.build.outputs.randomwalk_store_path }}
 
     steps:
       - name: Checkout code
@@ -70,8 +72,8 @@ jobs:
           echo "Listing package contents:"
           ls -lh result/
 
-          # Save store path for later steps
-          echo "store_path=$(readlink -f result)" >> $GITHUB_OUTPUT
+          # Save randomwalk package store path for later steps
+          echo "randomwalk_store_path=$(readlink -f result)" >> $GITHUB_OUTPUT
 
       - name: Push package to johngavin cache
         run: |
@@ -122,15 +124,33 @@ jobs:
       - name: Run R CMD check
         run: |
           echo "Entering nix-shell with dev tools..."
+          # Retrieve the randomwalk package store path from the build job's outputs
+          randomwalk_package_path="${{ needs.build-and-cache-package.outputs.randomwalk_store_path }}"
+          echo "Using randomwalk package from: $randomwalk_package_path"
+          
+          # Set R_LIBS to include the installed randomwalk package for this R session
           nix-shell default-ci.nix --run "
+            export R_LIBS=\"${randomwalk_package_path}/lib/R/library:\${R_LIBS}\"
+            echo 'R_LIBS set to: '$R_LIBS
+            
             echo 'R version:'
             Rscript -e 'R.version.string'
 
             echo 'Session info:'
             Rscript -e 'sessionInfo()'
-
+            
             echo 'Running R CMD check...'
-            Rscript -e 'rcmdcheck::rcmdcheck(args = c(\"--no-manual\", \"--as-cran\"), error_on = \"warning\", check_dir = \"check\")'
+            Rscript -e '
+              .libPaths(c(Sys.getenv(\"R_LIBS\"), .libPaths())); # Ensure the package is on the path
+              library(devtools); # Load devtools for check()
+              devtools::check(
+                pkg = \".\",
+                build_args = \"--no-build\", # Do not rebuild, use already installed package
+                args = c(\"--no-manual\", \"--as-cran\"),
+                error_on = \"warning\",
+                check_dir = \"check\"
+              );
+            '
           "
 
       - name: Upload check results
@@ -169,17 +189,41 @@ jobs:
 
       - name: Run tests
         run: |
+          echo "Entering nix-shell with dev tools..."
+          # Retrieve the randomwalk package store path from the build job's outputs
+          randomwalk_package_path="${{ needs.build-and-cache-package.outputs.randomwalk_store_path }}"
+          echo "Using randomwalk package from: $randomwalk_package_path"
+          
+          # Set R_LIBS to include the installed randomwalk package for this R session
           nix-shell default-ci.nix --run "
+            export R_LIBS=\"${randomwalk_package_path}/lib/R/library:\${R_LIBS}\"
+            echo 'R_LIBS set to: '$R_LIBS
+            
             echo 'Running testthat tests...'
-            Rscript -e 'devtools::test(stop_on_failure = TRUE)'
+            Rscript -e '
+              .libPaths(c(Sys.getenv(\"R_LIBS\"), .libPaths())); # Ensure the package is on the path
+              library(devtools); # Load devtools for test()
+              devtools::test(pkg = \".\", stop_on_failure = TRUE);
+            '
           "
 
       - name: Run test coverage
         if: github.event_name == 'push'
         run: |
+          # Retrieve the randomwalk package store path from the build job's outputs
+          randomwalk_package_path="${{ needs.build-and-cache-package.outputs.randomwalk_store_path }}"
+          echo "Using randomwalk package from: $randomwalk_package_path"
+
           nix-shell default-ci.nix --run "
+            export R_LIBS=\"${randomwalk_package_path}/lib/R/library:\${R_LIBS}\"
+            echo 'R_LIBS set to: '$R_LIBS
+            
             echo 'Computing test coverage...'
-            Rscript -e 'covr::package_coverage()' > coverage.txt
+            Rscript -e '
+              .libPaths(c(Sys.getenv(\"R_LIBS\"), .libPaths())); # Ensure the package is on the path
+              library(covr); # Load covr
+              covr::package_coverage(type = \"tests\")
+            ' > coverage.txt
             cat coverage.txt
           "
 
@@ -263,9 +307,19 @@ jobs:
 
       - name: Verify nix files are up to date
         run: |
+          # Retrieve the randomwalk package store path from the build job's outputs
+          randomwalk_package_path="${{ needs.build-and-cache-package.outputs.randomwalk_store_path }}"
+          echo "Using randomwalk package from: $randomwalk_package_path"
+
           nix-shell default-ci.nix --run "
+            export R_LIBS=\"${randomwalk_package_path}/lib/R/library:\${R_LIBS}\"
+            echo 'R_LIBS set to: '$R_LIBS
+            
             echo 'Regenerating nix files...'
-            Rscript -e 'source(\"R/setup/generate_nix_files.R\"); generate_all_nix_files(verify = FALSE)'
+            Rscript -e '
+              .libPaths(c(Sys.getenv(\"R_LIBS\"), .libPaths())); # Ensure the package is on the path
+              source(\"R/setup/generate_nix_files.R\"); generate_all_nix_files(verify = FALSE);
+            '
 
             echo 'Checking for differences...'
             if ! git diff --exit-code package.nix default-ci.nix; then

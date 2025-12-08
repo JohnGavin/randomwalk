@@ -19,6 +19,8 @@
 #' @importFrom stats median quantile
 "_PACKAGE"
 
+utils::globalVariables(c("x", "y", "value", "initial_grid", "grid_size"))
+
 ## usethis namespace: start
 ## usethis namespace: end
 NULL

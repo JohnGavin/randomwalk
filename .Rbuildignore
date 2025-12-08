@@ -17,3 +17,37 @@
 ^PROJECT_INFO\.md$
 ^push_to_cachix\.sh$
 ^.*\.sh$
+^rix_minimal\.nix$
+^default-ci\.nix$
+^default-dev\.nix$
+^default\.R$
+^package\.nix$
+^random_walk\.code-workspace$
+^ISSUES_GROUPED_BY_DIFFICULTY\.md$
+^ISSUES_GROUPED\.md$
+^STARTUP\.md$
+^result$
+^result/$
+^shinylive-sw\.js$
+^benchmarks$
+^benchmarks/$
+^_extensions$
+^_extensions/
+^_quarto\.yml$
+
+# Ignore Quarto/Shinylive generated files and directories within vignettes (source and built versions)
+^vignettes/.*\.qmd$
+^vignettes/.*\.html$
+^vignettes/.*_files/$
+^vignettes/.quarto/
+
+# Ignore other hidden files/directories found by R CMD check at top level
+^\.cachix_test$
+^\.envrc_old$
+^\.claude$
+^\.claude/
+^\.quarto$
+^\.quarto/
+
+# Specific ignore for shinylive/webr compiled objects and related files
+^vignettes/.*/libs/quarto-contrib/shinylive-0.9.1/shinylive/webr/.*$

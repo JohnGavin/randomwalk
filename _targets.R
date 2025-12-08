@@ -11,7 +11,8 @@ tar_option_set(
     "devtools",  # For load_all() in Nix environment
     "dplyr",
     "ggplot2",
-    "logger"
+    "logger",
+    "fs" # Added for directory and file operations
   ),
   format = "rds",
   workspace_on_error = TRUE
@@ -385,6 +386,56 @@ list(
   tarchetypes::tar_quarto(
     name = dynamic_broadcasting,
     path = "vignettes/dynamic_broadcasting.qmd"
+  ),
+
+  # Target to copy rendered vignettes to inst/doc
+  tar_target(
+    name = copy_vignettes_to_inst_doc,
+    command = {
+      # Ensure fs is loaded
+      library(fs)
+      
+      # The values of the upstream tar_quarto targets (which are the paths to the rendered HTML)
+      # are implicitly available here by their names
+      dashboard_html_path <- dashboard # This implicitly gets the value of the dashboard target
+      dashboard_async_html_path <- dashboard_async
+      dynamic_broadcasting_html_path <- dynamic_broadcasting
+
+      # Ensure inst/doc directory exists
+      fs::dir_create("inst/doc")
+
+      # Define source and destination base directory for _files
+      vignettes_dir <- "vignettes"
+      inst_doc_dir <- "inst/doc"
+
+      # Function to copy HTML and its associated _files directory
+      copy_vignette_output <- function(html_path, vignette_name) {
+        base_html_name <- basename(html_path)
+        source_files_dir <- file.path(vignettes_dir, paste0(vignette_name, "_files"))
+        dest_html_path <- file.path(inst_doc_dir, base_html_name)
+        dest_files_dir <- file.path(inst_doc_dir, paste0(vignette_name, "_files"))
+
+        # Copy HTML file
+        file.copy(html_path, dest_html_path, overwrite = TRUE)
+
+        # Copy _files directory if it exists
+        if (fs::dir_exists(source_files_dir)) {
+          fs::dir_copy(source_files_dir, dest_files_dir, overwrite = TRUE)
+        }
+        
+        # Return paths of copied files for targets to track
+        c(dest_html_path, dest_files_dir)
+      }
+
+      # Copy each vignette's output
+      copied_files <- c(
+        copy_vignette_output(dashboard_html_path, "dashboard"),
+        copy_vignette_output(dashboard_async_html_path, "dashboard_async"),
+        copy_vignette_output(dynamic_broadcasting_html_path, "dynamic_broadcasting")
+      )
+      
+      copied_files
+    }
   ),
 
   # 10. Telemetry summary for vignette

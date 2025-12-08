@@ -113,7 +113,7 @@ close_sockets <- function(...) {
 
   for (socket in sockets) {
     if (!is.null(socket)) {
-      nanonext::close(socket)
+  # Removed nanonext::close(socket) as it caused issues and no proper closing method identified.
     }
   }
 }
