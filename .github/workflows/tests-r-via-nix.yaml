@@ -38,8 +38,8 @@ jobs:
         with:
           nix_path: nixpkgs=https://github.com/rstats-on-nix/nixpkgs/archive/refs/heads/r-daily.tar.gz
 
-      - name: Enable Magic Nix Cache
-        uses: DeterminateSystems/magic-nix-cache-action@main
+      # Magic Nix Cache removed - redundant with johngavin cachix
+      # Saves 20+ minutes of GitHub Actions time per run
 
       - uses: cachix/cachix-action@v15
         with:
