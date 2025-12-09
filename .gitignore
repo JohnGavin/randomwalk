@@ -4,7 +4,7 @@
 .Ruserdata
 .DS_Store
 *.Rproj
-docs/
+# docs/ - Removed to commit pre-built website for deploy-pages.yaml workflow
 _targets/
 *.tar.gz
 *.Rcheck/
