@@ -13,11 +13,11 @@ filters:
 
 # Async Random Walk Simulation Dashboard
 
-This vignette provides a **fully interactive Shiny application** that demonstrates **Async Parallel Execution**, allowing you to test simulation performance with multiple workers.
+This vignette provides a **Shiny application** that demonstrates **Async Parallel Execution**. While this version runs in the browser, its asynchronous features (using 'crew' and 'nanonext') are currently **not supported in WebR/Shinylive**, making it unsuitable for interactive parallel execution directly in the browser. For full functionality, please run this application locally in an R environment.
 
-## 🚀 Launch the Interactive Dashboard
+## 🚀 Run this Dashboard Locally (WebR Limitations)
 
-The dashboard runs entirely in your browser using WebAssembly.
+This version of the dashboard runs in your browser using WebAssembly (WebR). However, due to WebR limitations with parallel processing libraries, asynchronous functionality is NOT supported in the browser. Please run this app locally for full async features.
 
 ``````{shinylive-r}
 #| standalone: true

@@ -12,7 +12,9 @@ tar_option_set(
     "dplyr",
     "ggplot2",
     "logger",
-    "fs" # Added for directory and file operations
+    "fs",       # Added for directory and file operations
+    "pkgdown",  # For building website
+    "quarto"    # For rendering vignettes
   ),
   format = "rds",
   workspace_on_error = TRUE
@@ -386,6 +388,66 @@ list(
   tarchetypes::tar_quarto(
     name = dynamic_broadcasting,
     path = "vignettes/dynamic_broadcasting.qmd"
+  ),
+
+  # NOTE: telemetry target temporarily disabled - needs _targets path fix
+  # tarchetypes::tar_quarto(
+  #   name = telemetry,
+  #   path = "vignettes/telemetry.qmd"
+  # ),
+
+  # ============================================================================
+  # pkgdown Site Building
+  # ============================================================================
+  # Build pkgdown website WITHOUT re-rendering vignettes
+  # Vignettes are pre-rendered by tar_quarto() targets above
+  # pkgdown just copies the pre-built HTML files
+  # This avoids Quarto/bslib/Nix incompatibility issues
+  tar_target(
+    name = pkgdown_site,
+    command = {
+      # Build ONLY reference docs and home page (NOT articles)
+      pkgdown::build_reference()
+      pkgdown::build_home()
+
+      # Manually copy pre-built vignettes to docs/articles/
+      if (!dir.exists("docs/articles")) {
+        dir.create("docs/articles", recursive = TRUE)
+      }
+
+      # Copy all pre-rendered HTML files
+      html_files <- list.files("vignettes", pattern = "\\.html$", full.names = TRUE)
+      if (length(html_files) > 0) {
+        file.copy(html_files, "docs/articles/", overwrite = TRUE)
+        message(sprintf("Copied %d pre-rendered vignette HTML files", length(html_files)))
+      }
+
+      # Copy all *_files directories (Shinylive assets, etc.)
+      asset_dirs <- list.dirs("vignettes", full.names = TRUE, recursive = FALSE)
+      asset_dirs <- asset_dirs[grep("_files$", asset_dirs)]
+
+      if (length(asset_dirs) > 0) {
+        for (dir in asset_dirs) {
+          dirname <- basename(dir)
+          target <- file.path("docs/articles", dirname)
+
+          # Remove target if exists for clean copy
+          if (dir.exists(target)) {
+            unlink(target, recursive = TRUE)
+          }
+
+          file.copy(dir, "docs/articles/", recursive = TRUE)
+          message(sprintf("Copied asset directory %s", dirname))
+        }
+      }
+
+      # Build articles index page manually
+      pkgdown::build_articles_index()
+
+      # Return docs/ as tracked output
+      "docs/"
+    },
+    format = "file"
   ),
 
   # Target to copy rendered vignettes to inst/doc
