@@ -424,3 +424,105 @@ Benefits:
 
 ========================================
 ")
+
+# ==============================================================================
+# Step 16: Performance Analysis and Created Additional Issues
+# ==============================================================================
+
+# User requested analysis of simulation performance and logging overhead
+
+# Analyzed targets performance with tar_meta():
+# Top 10 targets by runtime (total: 60 sec):
+# 1. dynamic_broadcasting: 11.9 sec
+# 2. pkgdown_site: 11.5 sec (285 MB memory)
+# 3. dashboard: 6.18 sec
+# 4. dashboard_async: 5.58 sec
+# 5. sim_dynamic_large: 5.14 sec (grid=200, walkers=50, steps=12000)
+# 6. sim_static_large: 4.86 sec (grid=200, walkers=50, steps=12000)
+# 7. telemetry: 2.92 sec
+# 8. sim_dynamic_medium: 2.27 sec
+# 9. sim_static_medium: 1.98 sec
+# 10. perf_async: 1.79 sec
+
+# Created Issue #123: "Reduce excessive console logging during devtools::test()"
+# - Problem: ~70,000 lines of INFO logs during tests
+# - Proposed: Add `quiet` parameter to suppress INFO logs
+# - URL: https://github.com/JohnGavin/randomwalk/issues/123
+
+# Created Issue #124: "Optimize vignette simulation parameters to reduce local testing time"
+# - Proposed reducing grid_size, n_walkers, max_steps by 25-33%
+# - Expected savings: 30-40% reduction in simulation runtime
+# - URL: https://github.com/JohnGavin/randomwalk/issues/124
+
+# ==============================================================================
+# Step 17: Push Commits to PR #120
+# ==============================================================================
+
+# All workflows on PR #120 had passed (devtools_test 3m11s, nix builder 12m43s)
+# User confirmed: "yes" to push
+
+library(gert)
+
+# Push commits bf69e9e and f6a288a to remote
+gert::git_push()
+
+cat("
+========================================
+COMMITS PUSHED TO PR #120
+========================================
+
+✅ Pushed 2 commits:
+   - bf69e9e: CI/CD: Remove wasteful Magic Nix Cache from workflows
+   - f6a288a: Optimize workflows and fix errors (#122)
+
+Next workflows expected to show:
+   - 20+ min time savings (no Magic Nix Cache upload)
+   - Clean nix-ci.yml run (fixed syntax error)
+
+========================================
+")
+
+# ==============================================================================
+# Step 18: Monitor New Workflow Runs
+# ==============================================================================
+
+# Waiting for GitHub Actions to start new workflows...
+# Expected improvements:
+# - nix builder: ~8-10 min (down from 12m43s)
+# - No Magic Nix Cache upload messages in logs
+# - nix-ci.yml: Clean run (no syntax errors)
+
+# ==============================================================================
+# Step 19: Fix deploy-pages.yaml Deprecated Actions (URGENT HOTFIX)
+# ==============================================================================
+
+# After PR #120 merged, discovered deploy-pages.yaml workflow failing
+# Error: "actions/upload-artifact: v3 is deprecated"
+
+# Root cause:
+# - actions/upload-pages-artifact@v2 uses deprecated upload-artifact@v3
+# - GitHub deprecated v3 on 2024-04-16
+
+# Fix:
+# - Upgraded actions/upload-pages-artifact: v2 → v3
+# - Upgraded actions/deploy-pages: v2 → v4
+
+# Files modified:
+# - .github/workflows/deploy-pages.yaml (lines 25, 31)
+
+cat("
+========================================
+HOTFIX: deploy-pages.yaml
+========================================
+
+Issue: Deployment failing after PR #120 merge
+Error: actions/upload-artifact v3 deprecated
+
+Fix:
+- upload-pages-artifact: v2 → v3
+- deploy-pages: v2 → v4
+
+Status: Ready to commit and push
+========================================
+")
+
