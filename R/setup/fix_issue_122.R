@@ -242,3 +242,127 @@ Fixes #122"
 )
 
 cat("\n✅ Committed built artifacts successfully\n")
+
+# ==============================================================================
+# Step 11: Create deploy-only GitHub Actions workflow
+# ==============================================================================
+
+# Created .github/workflows/deploy-pages.yaml
+# Simple workflow: checkout → upload docs/ → deploy to GitHub Pages
+# NO Nix, NO Quarto, NO bslib, NO build steps
+
+# Renamed old pkgdown.yaml to pkgdown.yaml.old (disabled)
+
+# Committed workflow changes
+gert::git_add(c(
+  ".github/workflows/deploy-pages.yaml",
+  ".github/workflows/pkgdown.yaml.old"
+))
+
+gert::git_commit(
+  "CI/CD: Add simple deploy-only GitHub Actions workflow (#122)
+
+- Created deploy-pages.yaml (deploy only, no build)
+- Disabled old pkgdown.yaml (renamed to .old)
+- New workflow: checkout → upload docs/ → deploy
+- NO Nix, NO Quarto, NO bslib, NO runtime errors
+- Expected deploy time: ~30 seconds
+
+Related to #122"
+)
+
+# Stage deletion of old workflow file
+gert::git_add(".github/workflows/pkgdown.yaml")
+gert::git_commit("CI/CD: Remove old pkgdown workflow")
+
+# ==============================================================================
+# Step 12: Push to johngavin cachix (MANDATORY before GitHub push)
+# ==============================================================================
+
+# CRITICAL: This is Step 5 in the 9-step workflow
+# Push package to cachix BEFORE pushing to GitHub
+# This ensures GitHub Actions can pull from cache instead of rebuilding
+
+# Using the generic helper script
+system("../push_to_cachix.sh")
+
+# Result:
+# ✅ Built: /nix/store/m0z2621lq05w5mjxqf0clwl025amgz6y-r-randomwalk
+# ✅ Pushed to johngavin cachix (220.71 MiB)
+# ✅ Pinned as randomwalk-v2.0.0.9000 (protected from GC forever)
+#
+# Cache location: https://app.cachix.org/cache/johngavin
+
+# ==============================================================================
+# Step 13: Push to GitHub via PR
+# ==============================================================================
+
+# Push branch to GitHub and create PR
+usethis::pr_push()
+
+# PR created: https://github.com/JohnGavin/randomwalk/pull/120
+# Branch: fix-issue-67-broken-vignette-links
+# (Note: Commits went to existing branch instead of creating new fix-issue-122 branch)
+
+# ==============================================================================
+# Step 14: Monitor GitHub Actions
+# ==============================================================================
+
+# Check PR workflow status
+system("gh pr checks 120")
+
+# Workflows running:
+# - devtools_test (ubuntu-latest) - pending
+# - nix builder for Ubuntu - pending
+#
+# Deploy workflow will run AFTER merge to main (configured for on: push: branches: [main])
+
+# ==============================================================================
+# SUMMARY
+# ==============================================================================
+
+cat("
+========================================
+IMPLEMENTATION COMPLETE
+========================================
+
+✅ Solution: Option B - Skip pkgdown re-rendering
+
+Performance:
+- First run:  15.9 seconds
+- Second run: 3.1 seconds
+- Speedup:    80.4%
+
+Built artifacts:
+- dashboard.html (50K)
+- dashboard_async.html (53K)
+- dynamic_broadcasting.html (52K)
+- Complete docs/ site (288 MB)
+
+Workflow:
+- Pre-render vignettes with tar_quarto()
+- pkgdown builds reference/home only
+- Manually copy HTML to docs/articles/
+- New deploy-only GitHub Actions workflow
+- Successfully pushed to johngavin cachix
+
+PR Status:
+- PR #120: https://github.com/JohnGavin/randomwalk/pull/120
+- Workflows pending (devtools_test, nix builder)
+- Deploy will trigger after merge to main
+
+Next steps:
+1. Wait for PR checks to pass
+2. Merge PR to main
+3. Verify deployment to GitHub Pages (~30 sec)
+4. Confirm website accessible at https://johngavin.github.io/randomwalk/
+
+Issues addressed:
+- ✅ Avoids bslib/Nix incompatibility completely
+- ✅ No runtime file copying errors
+- ✅ Fast builds with targets caching
+- ✅ Simple deploy-only CI/CD workflow
+- ⚠️ telemetry vignette temporarily disabled (needs _targets path fix)
+
+========================================
+")
