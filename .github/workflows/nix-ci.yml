@@ -263,7 +263,7 @@ jobs:
       - name: Install R Dependencies for pkgdown
         run: |
           # Install R packages required for pkgdown and vignette rendering in native R environment
-          install.packages(c("pkgdown", "rmarkdown", "knitr", "shinylive", "ggplot2", "dplyr", "targets", "tarchetypes", "logger", "gert"))
+          Rscript -e 'install.packages(c("pkgdown", "rmarkdown", "knitr", "shinylive", "ggplot2", "dplyr", "targets", "tarchetypes", "logger", "gert"))'
           
       - name: Build pkgdown site
         run: |

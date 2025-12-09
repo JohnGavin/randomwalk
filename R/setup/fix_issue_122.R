@@ -366,3 +366,61 @@ Issues addressed:
 
 ========================================
 ")
+
+# ==============================================================================
+# Step 14: Remove wasteful Magic Nix Cache from workflows
+# ==============================================================================
+
+# Problem discovered: Magic Nix Cache uploads every R package individually
+# to GitHub Actions cache, consuming 20+ minutes per workflow run.
+# This is completely redundant when using cachix.
+
+# Modified workflows:
+# - .github/workflows/nix-builder.yaml - Removed DeterminateSystems/magic-nix-cache-action@main
+# - .github/workflows/tests-r-via-nix.yaml - Removed DeterminateSystems/magic-nix-cache-action@main
+
+# Added explanatory comments:
+# "# Magic Nix Cache removed - redundant with johngavin cachix
+#  # Saves 20+ minutes of GitHub Actions time per run"
+
+# Benefits:
+# - Saves 20+ minutes per workflow run
+# - Reduces GitHub Actions costs
+# - rstats-on-nix cachix already provides R package caching
+# - johngavin cachix already provides randomwalk package caching
+
+# Committed with message: "CI/CD: Remove wasteful Magic Nix Cache from workflows"
+
+# ==============================================================================
+# Step 15: Fix nix-ci.yml syntax error
+# ==============================================================================
+
+# Error: Line 266 had raw R code without Rscript wrapper
+# install.packages(c("pkgdown", ...))  # ❌ WRONG
+
+# Fixed to:
+# Rscript -e 'install.packages(c("pkgdown", ...))'  # ✅ CORRECT
+
+# This eliminates workflow failures from GitHub Actions tab
+
+cat("
+========================================
+ADDITIONAL FIXES COMPLETED
+========================================
+
+✅ Removed Magic Nix Cache from workflows
+   - nix-builder.yaml
+   - tests-r-via-nix.yaml
+   - Saves 20+ minutes per workflow run
+
+✅ Fixed nix-ci.yml syntax error
+   - Line 266: Added missing Rscript -e wrapper
+   - Eliminates immediate workflow failures
+
+Benefits:
+- Reduced GitHub Actions costs (20+ min savings per run)
+- Cleaner Actions tab (no more nix-ci.yml failures)
+- Still get full caching from cachix (rstats-on-nix + johngavin)
+
+========================================
+")
