@@ -6,9 +6,10 @@ on:
   workflow_dispatch:  # Allow manual triggers for testing
 
 permissions:
-  contents: write  # Needed to attach binaries to releases and deploy to Pages
-  pages: write     # Needed to deploy to GitHub Pages
-  id-token: write  # Needed for GitHub Pages deployment
+  contents: write             # Needed to attach binaries to releases and deploy to Pages
+  pages: write                # Needed to deploy to GitHub Pages
+  id-token: write             # Needed for GitHub Pages deployment
+  repository-projects: read   # Needed to access GitHub Packages
 
 jobs:
   # Use the reusable workflow from r-wasm/actions
