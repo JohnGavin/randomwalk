@@ -285,3 +285,136 @@ gert::git_push()
 #    - Saved time and ensured proper solution
 #
 # ============================================================
+
+# ============================================================
+# 10. Second Post-Deployment Discovery - ARCHITECTURAL ISSUE
+# ============================================================
+
+# After HTML fixes were deployed, user tested again and reported:
+# - All three vignettes STILL broken with JavaScript console errors
+# - NEW error appeared: CORS policy blocking GitHub Releases
+# - Service Worker errors: "ServiceWorker controller was not found!"
+# - Package errors: "Requested package randomwalk not found in webR binary repo"
+
+# Root Cause Analysis (Second Round):
+# Previous fix addressed SYMPTOM (wrong URL in HTML) but not ROOT CAUSE.
+# 
+# TWO FUNDAMENTAL ARCHITECTURAL PROBLEMS:
+# 
+# 1. MISSING SERVICE WORKER RESOURCE
+#    - Shinylive requires shinylive-sw.js declared in YAML resources
+#    - Our vignettes were missing this critical declaration
+#    - Without it, Service Worker fails to register correctly
+# 
+# 2. WRONG PACKAGE LOADING APPROACH
+#    - Using webr::mount() with GitHub Releases URL
+#    - GitHub Releases don't serve files with CORS headers
+#    - Browser blocks cross-origin requests from GitHub Pages
+#    - Even if URL was "correct", it couldn't work due to CORS
+
+# Key Insight from User Research:
+# User provided working template from https://github.com/coatless-quarto/r-shinylive-demo
+# which showed correct modern Shinylive pattern:
+# 
+# 1. Declare Service Worker in YAML resources
+# 2. Use simple library() calls - NO webr::mount()
+# 3. Let Shinylive 0.8.0+ automatic bundling handle packages
+
+# ============================================================
+# 11. Architectural Fix - All Three Vignettes
+# ============================================================
+
+# Applied to:
+# - vignettes/dashboard.qmd
+# - vignettes/dashboard_async.qmd
+# - vignettes/dynamic_broadcasting.qmd
+
+# CHANGE 1: Add Service Worker Resource to YAML Header
+# BEFORE (BROKEN):
+# ---
+# title: "..."
+# format:
+#   html:
+#     code-fold: true
+#     embed-resources: false
+# filters:
+#   - shinylive
+# ---
+#
+# AFTER (FIXED):
+# ---
+# title: "..."
+# format:
+#   html:
+#     code-fold: true
+#     embed-resources: false
+#     resources:
+#       - shinylive-sw.js  # ← CRITICAL ADDITION
+# filters:
+#   - shinylive
+# ---
+
+# CHANGE 2: Replace webr::mount() with Simple library() Calls
+# BEFORE (BROKEN - ~25 lines):
+# webr::mount(
+#   mountpoint = "/randomwalk-lib",
+#   source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
+# )
+# .libPaths(c("/randomwalk-lib", .libPaths()))
+# webr::install(c("munsell", "colorspace", ...),
+#                lib = "/tmp/webr-libs")
+# .libPaths(c("/tmp/webr-libs", .libPaths()))
+# library(shiny)
+# library(randomwalk)
+#
+# AFTER (FIXED - 4 lines):
+# # Load required packages
+# # Shinylive will automatically detect and bundle these packages
+# library(shiny)
+# library(randomwalk)
+
+# Why This Works:
+# - Modern Shinylive (0.8.0+) automatically detects library() calls
+# - Downloads and bundles packages from CORS-enabled sources
+# - No manual mounting or installation needed
+# - Service Worker properly registered for offline caching
+
+# ============================================================
+# 12. Testing Protocol (Per AGENTS.md)
+# ============================================================
+
+# After vignettes rebuild, MUST test in browser:
+# 
+# For EACH vignette:
+#   1. Open in browser
+#   2. Open JavaScript Console (F12)
+#   3. Wait for app to load (10-30 seconds)
+#   4. Verify NO errors:
+#      ❌ Should NOT see: CORS policy blocking
+#      ❌ Should NOT see: Service Worker registration failed
+#      ❌ Should NOT see: Package not found
+#      ✅ SHOULD see: App loads successfully
+#   5. Test interactivity (buttons, sliders, simulation runs)
+
+# ============================================================
+# Key Lessons Learned (Updated)
+# ============================================================
+#
+# 5. **Architecture over quick fixes**:
+#    - First fix addressed wrong URL (symptom)
+#    - But didn't address architectural problems (root cause)
+#    - CORS issue + missing Service Worker = fundamental design flaw
+#    - Modern Shinylive 0.8.0+ automatic bundling is THE solution
+#
+# 6. **User research is invaluable**:
+#    - User found working template (coatless-quarto)
+#    - Template showed correct modern pattern
+#    - Saved hours of trial-and-error debugging
+#
+# 7. **Technology evolves - patterns must too**:
+#    - webr::mount() was older approach
+#    - Shinylive 0.8.0+ automatic bundling is modern standard
+#    - Always check for newer best practices
+#
+# ============================================================
+

@@ -7,6 +7,8 @@ format:
     toc: true
     toc-depth: 3
     embed-resources: false
+    resources:
+      - shinylive-sw.js
 filters:
   - shinylive
 ---
@@ -23,29 +25,9 @@ This version of the dashboard runs in your browser using WebAssembly (WebR). How
 #| standalone: true
 #| viewerHeight: 900
 
-# Mount WebAssembly file system from GitHub release
-# The wasm-release.yaml workflow builds library.data and attaches to releases
-webr::mount(
-  mountpoint = "/randomwalk-lib",
-  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
-)
-
-# Add mounted library to library paths
-.libPaths(c("/randomwalk-lib", .libPaths()))
-
-# Install ggplot2 dependencies explicitly from webR repository
-# Use /tmp for installation since it's writable
-webr::install(c("munsell", "colorspace", "farver", "labeling", "viridisLite",
-                 "RColorBrewer", "scales", "tibble", "ggplot2"),
-               lib = "/tmp/webr-libs")
-
-# Add the tmp library to the path
-.libPaths(c("/tmp/webr-libs", .libPaths()))
-
 # Load required packages
+# Shinylive will automatically detect and bundle these packages
 library(shiny)
-
-# Load randomwalk from mounted library
 library(randomwalk)
 
 
