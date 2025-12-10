@@ -417,4 +417,43 @@ gert::git_push()
 #    - Always check for newer best practices
 #
 # ============================================================
+# 13. Third Discovery: HTML Files Still Have Wrong Code (2025-12-10)
+# ============================================================
+
+# PROBLEM: Source .qmd files were fixed, but deployed HTML in docs/ still broken
+# - dashboard_async.html and dynamic_broadcasting.html still had GitHub releases URLs
+# - First R script (fix_html_vignettes.R) applied WRONG fix - added URLs instead of removing
+
+# SOLUTION: Created fix_html_correct_pattern.R to apply correct fix
+source("R/setup/fix_html_correct_pattern.R")
+# Manually run from command line (outside this script)
+
+# Verification:
+# grep -A 5 "# Load required packages" docs/articles/dashboard_async.html
+# grep -A 5 "# Load required packages" docs/articles/dynamic_broadcasting.html
+# grep -c "github.com.*releases.*library.data" docs/articles/*.html
+
+# Results: Both files now have correct pattern, 0 matches for GitHub releases URLs
+
+# Commit:
+library(gert)
+gert::git_add(c(
+  "docs/articles/dashboard_async.html",
+  "docs/articles/dynamic_broadcasting.html",
+  "R/setup/fix_html_correct_pattern.R"
+))
+gert::git_commit("Fix #125: Replace GitHub releases URLs with simple library() calls in HTML
+
+Fixes dashboard_async.html and dynamic_broadcasting.html by:
+- Removing webr::mount() blocks with CORS-blocked GitHub releases URLs
+- Replacing with simple library(shiny) and library(randomwalk) calls
+- Leveraging Shinylive 0.8.0+ automatic package bundling
+
+This completes the architectural fix for all three Shinylive vignettes.
+All vignettes now use the correct modern pattern per WIKI_SHINYLIVE_LESSONS_LEARNED.md")
+# Commit: ee389db
+
+# Next: Push to trigger deployment and test in browser per AGENTS.md
+
+# ============================================================
 
