@@ -175,7 +175,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 # This avoids CORS issues by using the same origin
 webr::mount(
   mountpoint = "/randomwalk-lib",
-  source = "../wasm/library.data"
+  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
 )
 
 # Add mounted library to library paths

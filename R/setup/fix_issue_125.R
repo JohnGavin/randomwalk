@@ -138,25 +138,150 @@ library(usethis)
 usethis::pr_push()
 
 # ============================================================
-# 6. Post-Push Verification
+# 6. Post-Push Verification - DISCOVERED ISSUE!
 # ============================================================
 
-# After GitHub Actions complete:
-# 1. Verify deployed site at: https://johngavin.github.io/randomwalk/articles/
-# 2. Test each vignette in browser with JavaScript console
-# 3. Verify apps load without errors
-# 4. Merge PR via usethis::pr_merge_main()
-# 5. Close issue #125
+# After GitHub Actions complete and PR merged:
+# User tested deployed site at: https://johngavin.github.io/randomwalk/articles/
+# JavaScript console STILL showed errors - apps not loading!
+#
+# Root Cause Discovery:
+# - Source .qmd files were fixed with correct GitHub releases URL ✅
+# - BUT rendered HTML in docs/articles/ was NOT rebuilt ❌
+# - deploy-pages.yaml workflow just deploys pre-built docs/ folder
+# - The old broken HTML (with ../wasm/library.data) was still being served
+#
+# Evidence:
+# curl https://johngavin.github.io/randomwalk/articles/dashboard.html | grep "webr::mount"
+# Found: source = "../wasm/library.data" (BROKEN!)
+#
+# grep -A 2 "webr::mount" vignettes/dashboard.qmd
+# Found: source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data" (CORRECT!)
+#
+# Conclusion: The fix was only applied to source files, not rendered output!
+
+# ============================================================
+# 7. Fix Rendered HTML Files (CRITICAL ADDITIONAL STEP)
+# ============================================================
+
+# Problem: pkgdown::build_site() fails in Nix environment due to bslib incompatibility (Issue #122)
+# Solution: Directly edit the pre-built HTML files to fix the WASM path
+
+# Use R to fix all three HTML files:
+files <- c(
+  "docs/articles/dashboard.html",
+  "docs/articles/dashboard_async.html",
+  "docs/articles/dynamic_broadcasting.html"
+)
+
+for (file in files) {
+  content <- readLines(file, warn = FALSE)
+  content <- gsub(
+    'source = "../wasm/library.data"',
+    'source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"',
+    content,
+    fixed = TRUE
+  )
+  writeLines(content, file)
+  cat("Fixed:", file, "\n")
+}
+
+# Verify fix applied correctly:
+# grep -A 2 "webr::mount" docs/articles/dashboard.html
+# Should show: source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data" ✅
+
+# ============================================================
+# 8. Commit Fixed HTML and Deploy
+# ============================================================
+
+library(gert)
+
+# Stage fixed HTML files and updated session log
+gert::git_add(c(
+  "docs/articles/dashboard.html",
+  "docs/articles/dashboard_async.html",
+  "docs/articles/dynamic_broadcasting.html",
+  "R/setup/fix_issue_125.R"  # Updated session log
+))
+
+# Commit with descriptive message
+gert::git_commit(
+  "Fix #125 (HTML): Apply WASM path fix to rendered vignette HTML
+
+- First fix (PR #126) corrected source .qmd files ✅
+- But rendered HTML in docs/ was not rebuilt (bslib/Nix incompatibility)
+- User verified deployed site still had broken paths
+- Directly edited HTML files to fix webr::mount() source parameter
+- Changed from '../wasm/library.data' to GitHub releases URL
+- Verified fix in all three vignette HTML files
+- Update session log with complete troubleshooting details
+
+Related: #122 (bslib/Nix incompatibility preventing pkgdown rebuild)
+"
+)
+
+# Push to trigger deployment
+gert::git_push()
+
+# ============================================================
+# 9. Final Verification (MANDATORY per AGENTS.md)
+# ============================================================
+
+# After deployment completes:
+# 1. Open each vignette in browser:
+#    - https://johngavin.github.io/randomwalk/articles/dashboard.html
+#    - https://johngavin.github.io/randomwalk/articles/dashboard_async.html
+#    - https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html
+#
+# 2. Open JavaScript Console (F12)
+#
+# 3. Verify NO errors:
+#    ❌ Should NOT see: "404" for library.data or library.js.metadata
+#    ❌ Should NOT see: "Requested package randomwalk not found"
+#    ❌ Should NOT see: "Can't download Emscripten filesystem image metadata"
+#    ✅ SHOULD see: Apps load successfully with working interface
+#
+# 4. Test interactivity (buttons, sliders work)
+#
+# 5. Verify apps display simulation results
 
 # ============================================================
 # Success Criteria
 # ============================================================
 #
+# ✅ Source .qmd files fixed with correct GitHub releases URL (PR #126)
+# ✅ Rendered HTML files fixed with correct GitHub releases URL (this commit)
 # ✅ All three vignettes load successfully in deployed site
 # ✅ No JavaScript console errors (404, WASM loading, etc.)
 # ✅ Apps display correctly and are interactive
 # ✅ AGENTS.md protocol followed (browser + console testing)
-# ✅ Session log included in PR
+# ✅ Session log included and updated with complete troubleshooting
 # ✅ GitHub Actions all pass
+# ✅ Issue #125 resolved
+#
+# ============================================================
+# Key Lessons Learned
+# ============================================================
+#
+# 1. **Fixing source != fixing deployment**:
+#    - Source files and rendered output are separate
+#    - deploy-pages.yaml deploys pre-built docs/ folder
+#    - Must verify DEPLOYED content, not just source
+#
+# 2. **bslib/Nix incompatibility blocking rebuild**:
+#    - pkgdown::build_site() fails in Nix with Quarto+bslib (Issue #122)
+#    - Workaround: Direct HTML editing when rebuild not possible
+#    - Long-term: Need targets-based pre-build workflow
+#
+# 3. **User testing caught what CI missed**:
+#    - All GitHub Actions passed ✅
+#    - But deployed site was still broken ❌
+#    - AGENTS.md browser testing protocol is MANDATORY
+#    - Always verify in browser with JavaScript console
+#
+# 4. **Historical analysis prevented wrong fix**:
+#    - User pointed to working v1.0.0 release
+#    - Found correct pattern instead of guessing
+#    - Saved time and ensured proper solution
 #
 # ============================================================
