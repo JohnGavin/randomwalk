@@ -8,10 +8,33 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  repository-projects: read   # Needed for webR build
 
 jobs:
+  # First job: Build webR binaries
+  build-webr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build webR binaries
+        uses: r-wasm/actions/build-rwasm@v2
+        with:
+          packages: "local::."
+          repo-path: _site
+
+      - name: Upload webR binaries as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webr-repo
+          path: _site/
+          retention-days: 1
+
+  # Second job: Deploy pkgdown site + webR binaries together
   deploy:
     runs-on: ubuntu-latest
+    needs: build-webr  # Wait for webR binaries to be built
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -23,6 +46,25 @@ jobs:
       # NO NIX - Not needed!
       # NO QUARTO - Already rendered!
       # NO BSLIB - No runtime file copying!
+
+      - name: Download webR binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: webr-repo
+          path: webr-temp/
+
+      - name: Merge webR binaries into docs
+        run: |
+          # Copy webR repository structure into docs/ directory
+          echo "Merging webR binaries into docs/"
+          cp -r webr-temp/* docs/
+          echo "webR binaries merged successfully"
+
+          # Verify the structure
+          echo "Checking for CRAN-like repository structure:"
+          ls -la docs/bin/ || echo "Warning: No bin/ directory"
+          ls -la docs/bin/emscripten/contrib/ || echo "Warning: No contrib/ directory"
+          find docs/bin -name "PACKAGES" -exec echo "Found: {}" \; || echo "Warning: No PACKAGES file"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

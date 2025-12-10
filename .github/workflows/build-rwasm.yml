@@ -1,20 +1,32 @@
 name: Build WebR Binaries
 
 on:
+  push:
+    branches: [main]
   release:
     types: [published]
   workflow_dispatch:  # Allow manual triggers for testing
 
 permissions:
-  contents: write             # Needed to attach binaries to releases and deploy to Pages
-  pages: write                # Needed to deploy to GitHub Pages
-  id-token: write             # Needed for GitHub Pages deployment
+  contents: read
   repository-projects: read   # Needed to access GitHub Packages
 
 jobs:
-  # Use the reusable workflow from r-wasm/actions
-  build-and-deploy:
-    uses: r-wasm/actions/.github/workflows/deploy-cran-repo.yml@v2
-    with:
-      # Build the randomwalk package from the current repository
-      packages: "local::."
+  build-webr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build webR binaries
+        uses: r-wasm/actions/build-rwasm@v2
+        with:
+          packages: "local::."
+          repo-path: _site
+
+      - name: Upload webR binaries as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webr-repo
+          path: _site/
+          retention-days: 7
