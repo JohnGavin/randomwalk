@@ -25,8 +25,17 @@ The dashboard runs entirely in your browser using WebAssembly.
 #| standalone: true
 #| viewerHeight: 900
 
-# Load required packages
-# Shinylive will automatically detect and bundle these packages
+# Install randomwalk from GitHub Pages webR repository
+# This repository is built by .github/workflows/build-rwasm.yml
+webr::install(
+  "randomwalk",
+  repos = c(
+    "https://johngavin.github.io/randomwalk/",  # Our webR binaries
+    "https://repo.r-wasm.org/"                   # Official webR packages
+  )
+)
+
+# Load packages
 library(shiny)
 library(randomwalk)
 

@@ -1,0 +1,23 @@
+name: Build WebR Binaries
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:  # Allow manual triggers for testing
+
+permissions:
+  contents: write  # Needed to attach binaries to releases and deploy to Pages
+  pages: write     # Needed to deploy to GitHub Pages
+  id-token: write  # Needed for GitHub Pages deployment
+
+jobs:
+  # Use the reusable workflow from r-wasm/actions
+  build-and-deploy:
+    uses: r-wasm/actions/.github/workflows/deploy-cran-repo.yml@v2
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    with:
+      # Build the randomwalk package from the current repository
+      packages: "local::."
