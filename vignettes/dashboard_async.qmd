@@ -23,11 +23,11 @@ This version of the dashboard runs in your browser using WebAssembly (WebR). How
 #| standalone: true
 #| viewerHeight: 900
 
-# Mount WebAssembly file system from local path (deployed to docs/wasm)
-# This avoids CORS issues by using the same origin
+# Mount WebAssembly file system from GitHub release
+# The wasm-release.yaml workflow builds library.data and attaches to releases
 webr::mount(
   mountpoint = "/randomwalk-lib",
-  source = "../wasm/library.data"
+  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
 )
 
 # Add mounted library to library paths
