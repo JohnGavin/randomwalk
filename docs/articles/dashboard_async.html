@@ -94,7 +94,17 @@ ul.task-list li input[type="checkbox"] {
 # Mount WebAssembly file system from local path (deployed to docs/wasm)
 # This avoids CORS issues by using the same origin
 # Load required packages
-# Shinylive will automatically detect and bundle these packages
+# Mount WebAssembly filesystem from GitHub release
+# The wasm-release.yaml workflow builds library.data
+webr::mount(
+  mountpoint = "/randomwalk-lib",
+  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
+)
+
+# Add mounted library to library paths
+.libPaths(c("/randomwalk-lib", .libPaths()))
+
+# Load required packages
 library(shiny)
 library(randomwalk)
 

@@ -172,9 +172,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 #| viewerHeight: 900
 
 # Load required packages
-# Shinylive will automatically detect and bundle these packages
+# Mount WebAssembly filesystem from GitHub release
+# The wasm-release.yaml workflow builds library.data
+webr::mount(
+  mountpoint = "/randomwalk-lib",
+  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
+)
+
+# Add mounted library to library paths
+.libPaths(c("/randomwalk-lib", .libPaths()))
+
+# Load required packages
 library(shiny)
-library(ggplot2)
+library(randomwalk)
 library(randomwalk)
 
 # Define UI
