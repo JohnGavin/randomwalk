@@ -36,22 +36,59 @@ Use the controls below to configure simulation parameters and visualize results 
 #| standalone: true
 #| viewerHeight: 900
 
-# Mount WebAssembly file system from GitHub release
-# The wasm-release.yaml workflow builds library.data and attaches to releases
-webr::mount(
-  mountpoint = "/randomwalk-lib",
-  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
-)
+# ============================================================================
+# DIAGNOSTIC LOGGING - webR Package Installation
+# ============================================================================
 
-# Add mounted library to library paths
-.libPaths(c("/randomwalk-lib", .libPaths()))
+cat("\n=== webR DIAGNOSTIC START (dashboard.qmd) ===\n")
+cat("Timestamp:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
+cat("R Version:", R.version.string, "\n")
+cat("Platform:", R.version$platform, "\n\n")
 
-# Load required packages
+cat("Library paths BEFORE installation:\n")
+print(.libPaths())
+cat("\n")
+
+cat("Attempting to install randomwalk from GitHub Pages...\n")
+cat("Repository URL: https://johngavin.github.io/randomwalk/\n\n")
+
+tryCatch({
+  webr::install(
+    "randomwalk",
+    repos = "https://johngavin.github.io/randomwalk/",
+    verbose = TRUE
+  )
+  cat("\n✅ webr::install() completed\n")
+}, error = function(e) {
+  cat("\n❌ ERROR during webr::install():", e$message, "\n\n")
+})
+
+cat("\nLibrary paths AFTER installation:\n")
+print(.libPaths())
+
+cat("\nChecking installed packages:\n")
+installed_pkgs <- installed.packages()[, c("Package", "Version")]
+if ("randomwalk" %in% rownames(installed_pkgs)) {
+  cat("✅ randomwalk found:", installed_pkgs["randomwalk", "Version"], "\n")
+} else {
+  cat("❌ randomwalk NOT found\n")
+}
+
+cat("\nLoading packages...\n")
 library(shiny)
+cat("✅ shiny loaded\n")
 library(ggplot2)
+cat("✅ ggplot2 loaded\n")
 
-# Load randomwalk from mounted library
-library(randomwalk)
+tryCatch({
+  library(randomwalk)
+  cat("✅ randomwalk loaded\n")
+  cat("Available functions:", paste(head(ls("package:randomwalk"), 10), collapse=", "), "\n")
+}, error = function(e) {
+  cat("❌ ERROR loading randomwalk:", e$message, "\n")
+})
+
+cat("\n=== webR DIAGNOSTIC END ===\n\n")
 
 # Define UI
 ui <- fluidPage(

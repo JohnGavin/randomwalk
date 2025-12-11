@@ -25,21 +25,94 @@ The dashboard runs entirely in your browser using WebAssembly.
 #| standalone: true
 #| viewerHeight: 900
 
-# Mount WebAssembly file system from GitHub release
-# The wasm-release.yaml workflow builds library.data and attaches to releases
-webr::mount(
-  mountpoint = "/randomwalk-lib",
-  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
-)
+# ============================================================================
+# DIAGNOSTIC LOGGING - webR Package Installation
+# ============================================================================
 
-# Add mounted library to library paths
-.libPaths(c("/randomwalk-lib", .libPaths()))
+cat("\n=== webR DIAGNOSTIC START ===\n")
+cat("Timestamp:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
 
-# Load required packages
-library(shiny)
+# Check R version
+cat("R Version:", R.version.string, "\n")
+cat("Platform:", R.version$platform, "\n\n")
 
-# Load randomwalk from mounted library
-library(randomwalk)
+# Check library paths BEFORE installation
+cat("Library paths BEFORE installation:\n")
+print(.libPaths())
+cat("\n")
+
+# Check available repos
+cat("Available repositories:\n")
+print(getOption("repos"))
+cat("\n")
+
+# Attempt to install randomwalk with verbose output
+cat("Attempting to install randomwalk from GitHub Pages...\n")
+cat("Repository URL: https://johngavin.github.io/randomwalk/\n\n")
+
+tryCatch({
+  webr::install(
+    "randomwalk",
+    repos = "https://johngavin.github.io/randomwalk/",
+    verbose = TRUE
+  )
+  cat("\n✅ webr::install() completed successfully\n")
+}, error = function(e) {
+  cat("\n❌ ERROR during webr::install():\n")
+  cat("Message:", e$message, "\n")
+  cat("Call:", deparse(e$call), "\n\n")
+})
+
+# Check library paths AFTER installation
+cat("\nLibrary paths AFTER installation:\n")
+print(.libPaths())
+cat("\n")
+
+# Check installed packages
+cat("Installed packages (checking for randomwalk):\n")
+installed_pkgs <- installed.packages()[, c("Package", "Version", "LibPath")]
+if ("randomwalk" %in% rownames(installed_pkgs)) {
+  cat("✅ randomwalk found:\n")
+  print(installed_pkgs["randomwalk", ])
+} else {
+  cat("❌ randomwalk NOT found in installed packages\n")
+  cat("\nAll installed packages:\n")
+  print(head(installed_pkgs, 10))
+}
+cat("\n")
+
+# Try loading shiny
+cat("Loading shiny package...\n")
+tryCatch({
+  library(shiny)
+  cat("✅ shiny loaded successfully\n")
+}, error = function(e) {
+  cat("❌ ERROR loading shiny:", e$message, "\n")
+})
+
+# Try loading randomwalk
+cat("\nLoading randomwalk package...\n")
+tryCatch({
+  library(randomwalk)
+  cat("✅ randomwalk loaded successfully\n")
+
+  # Check available functions
+  cat("\nAvailable randomwalk functions:\n")
+  randomwalk_fns <- ls("package:randomwalk")
+  cat(paste(randomwalk_fns, collapse = ", "), "\n")
+
+  # Check if run_simulation exists
+  if ("run_simulation" %in% randomwalk_fns) {
+    cat("✅ run_simulation function found\n")
+  } else {
+    cat("❌ run_simulation function NOT found\n")
+  }
+}, error = function(e) {
+  cat("❌ ERROR loading randomwalk:", e$message, "\n")
+  cat("This will cause 'could not find function' errors in the dashboard\n")
+})
+
+cat("\n=== webR DIAGNOSTIC END ===\n\n")
 
 
 # Define UI
