@@ -1,28 +1,13 @@
-# Mount WebAssembly file system from same-origin (avoids CORS issues)
-# The pkgdown workflow downloads library.data from releases to docs/wasm/
-# This allows the dashboard to load it from the same domain (johngavin.github.io)
-webr::mount(
-  mountpoint = "/randomwalk-lib",
-  source = "/randomwalk/wasm/library.data"
+# Install randomwalk from GitHub Pages webR repository
+# This approach is more reliable than webr::mount() which gets stripped during pkgdown deployment
+# See: https://docs.r-wasm.org/webr/latest/packages.html
+webr::install(
+  "randomwalk",
+  repos = "https://johngavin.github.io/randomwalk/"
 )
-
-# Add mounted library to library paths
-.libPaths(c("/randomwalk-lib", .libPaths()))
-
-# Install ggplot2 dependencies explicitly from webR repository
-# Use /tmp for installation since it's writable
-# Installing dependencies first ensures they're available when ggplot2 loads
-webr::install(c("munsell", "colorspace", "farver", "labeling", "viridisLite",
-                 "RColorBrewer", "scales", "tibble", "ggplot2"),
-               lib = "/tmp/webr-libs")
-
-# Add the tmp library to the path
-.libPaths(c("/tmp/webr-libs", .libPaths()))
 
 # Load required packages
 library(shiny)
-
-# Load randomwalk from mounted library
 library(randomwalk)
 
 # UI

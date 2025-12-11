@@ -25,20 +25,16 @@ This version of the dashboard runs in your browser using WebAssembly (WebR). How
 #| standalone: true
 #| viewerHeight: 900
 
-# Mount WebAssembly file system from GitHub release
-# The wasm-release.yaml workflow builds library.data and attaches to releases
-webr::mount(
-  mountpoint = "/randomwalk-lib",
-  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
+# Install randomwalk from GitHub Pages webR repository
+# This approach is more reliable than webr::mount() which gets stripped during pkgdown deployment
+# See: https://docs.r-wasm.org/webr/latest/packages.html
+webr::install(
+  "randomwalk",
+  repos = "https://johngavin.github.io/randomwalk/"
 )
-
-# Add mounted library to library paths
-.libPaths(c("/randomwalk-lib", .libPaths()))
 
 # Load required packages
 library(shiny)
-
-# Load randomwalk from mounted library
 library(randomwalk)
 
 
