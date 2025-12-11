@@ -15,7 +15,9 @@ filters:
 
 # Dynamic Grid Broadcasting
 
-This vignette demonstrates **Dynamic Grid Broadcasting** using interactive WebR code cells that run entirely in your browser.
+This vignette demonstrates **Random Walk Simulations** using interactive WebR code cells that run entirely in your browser.
+
+> **Note:** The full Dynamic Broadcasting feature (async parallel workers) requires the `nanonext` package which is not yet available for WebAssembly. The examples below use the standard synchronous simulation. To use async features, run locally: `randomwalk::run_dashboard_dynamic()`
 
 ## Setup
 
@@ -36,7 +38,6 @@ grid_size <- 20
 n_walkers <- 5
 neighborhood <- "4-hood"
 max_steps <- 5000
-workers <- 2
 ```
 
 ## Run Simulation
@@ -44,13 +45,13 @@ workers <- 2
 Execute the dynamic broadcasting simulation:
 
 ```{webr-r}
-result <- run_simulation_async_dynamic(
+# Note: Async functionality requires nanonext which isn't available in WebAssembly
+# Using simple synchronous simulation instead
+result <- run_simulation(
   grid_size = grid_size,
   n_walkers = n_walkers,
   neighborhood = neighborhood,
-  max_steps = max_steps,
-  workers = workers,
-  sync_mode = "dynamic"
+  max_steps = max_steps
 )
 ```
 
