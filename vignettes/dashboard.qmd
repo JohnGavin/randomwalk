@@ -1,5 +1,5 @@
 ---
-title: "hello Interactive Dashboard"
+title: "Interactive Dashboard"
 format:
   html:
     code-fold: true
@@ -36,19 +36,21 @@ Use the controls below to configure simulation parameters and visualize results 
 #| standalone: true
 #| viewerHeight: 900
 
-# Install randomwalk from GitHub Pages webR repository
-# This repository is built by .github/workflows/build-rwasm.yml
-webr::install(
-  "randomwalk",
-  repos = c(
-    "https://johngavin.github.io/randomwalk/",  # Our webR binaries
-    "https://repo.r-wasm.org/"                   # Official webR packages
-  )
+# Mount WebAssembly file system from GitHub release
+# The wasm-release.yaml workflow builds library.data and attaches to releases
+webr::mount(
+  mountpoint = "/randomwalk-lib",
+  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
 )
 
-# Load packages
+# Add mounted library to library paths
+.libPaths(c("/randomwalk-lib", .libPaths()))
+
+# Load required packages
 library(shiny)
 library(ggplot2)
+
+# Load randomwalk from mounted library
 library(randomwalk)
 
 # Define UI

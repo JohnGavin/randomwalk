@@ -1,5 +1,5 @@
 ---
-title: "hello Async Random Walk Simulation Dashboard"
+title: "Async Random Walk Simulation Dashboard"
 format:
   html:
     code-fold: true
@@ -25,18 +25,20 @@ This version of the dashboard runs in your browser using WebAssembly (WebR). How
 #| standalone: true
 #| viewerHeight: 900
 
-# Install randomwalk from GitHub Pages webR repository
-# This repository is built by .github/workflows/build-rwasm.yml
-webr::install(
-  "randomwalk",
-  repos = c(
-    "https://johngavin.github.io/randomwalk/",  # Our webR binaries
-    "https://repo.r-wasm.org/"                   # Official webR packages
-  )
+# Mount WebAssembly file system from GitHub release
+# The wasm-release.yaml workflow builds library.data and attaches to releases
+webr::mount(
+  mountpoint = "/randomwalk-lib",
+  source = "https://github.com/JohnGavin/randomwalk/releases/latest/download/library.data"
 )
 
-# Load packages
+# Add mounted library to library paths
+.libPaths(c("/randomwalk-lib", .libPaths()))
+
+# Load required packages
 library(shiny)
+
+# Load randomwalk from mounted library
 library(randomwalk)
 
 
