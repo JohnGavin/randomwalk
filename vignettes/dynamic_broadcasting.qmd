@@ -18,7 +18,11 @@ filters:
 
 This vignette demonstrates **Random Walk Simulations** using interactive WebR code cells that run entirely in your browser.
 
-> **Note:** This vignette demonstrates **Dynamic Grid Broadcasting** with async parallel workers. When run locally (native R), it uses `workers=2` and `sync_mode="dynamic"` for true parallel processing. In WebR/browser, it automatically falls back to synchronous mode because the `crew` package is not yet available for WebAssembly (though `nanonext` and `mirai` are available). **Future work:** Refactor async controller to use `mirai` directly (Issue #129) to enable async in WebAssembly.
+> **Note:** This vignette demonstrates **Dynamic Grid Broadcasting** with async parallel workers. When run locally (native R), it uses `workers=2` and `sync_mode="dynamic"` for true parallel processing with nanonext broadcasting.
+>
+> **WebR/Browser Status:** Currently falls back to synchronous mode (`workers=0`) because the current implementation uses `crew` (not available in wasm). However, both `nanonext` (broadcasting) and `mirai` (async parallelization) **ARE available for WebAssembly**!
+>
+> **Coming soon (Issues #129, #130):** Refactor to use `mirai` directly → async dynamic broadcasting will work in browser too, with full nanonext broadcasting whenever walkers turn black!
 
 ## Setup
 
@@ -41,15 +45,18 @@ neighborhood <- "4-hood"
 max_steps <- 5000
 
 # Dynamic Broadcasting parameters (async parallel)
-# Note: In WebR/browser, will fall back to sync (crew not available in wasm)
+# Note: TEMPORARY WebR limitation - crew not available in wasm
+# Once we switch to mirai (Issues #129, #130), async will work in browser too!
 is_webr <- exists(".webr_env", envir = .GlobalEnv) ||
            identical(Sys.getenv("WEBR"), "1")
 
 if (is_webr) {
-  # WebR environment: Use sync mode (crew not available)
+  # TEMPORARY: Sync fallback (current crew implementation not available in wasm)
+  # TODO (Issue #129): Switch to mirai → async will work here too!
   workers <- 0
   sync_mode <- "static"
-  message("Running in WebR: Using synchronous mode (crew not available for wasm)")
+  message("Running in WebR: TEMPORARY sync fallback (crew limitation)")
+  message("After Issue #129: Will use mirai for async in browser!")
 } else {
   # Local/native R: Use async dynamic broadcasting
   workers <- 2
@@ -121,23 +128,36 @@ Experiment with different parameters:
 
 Just modify the parameter values in the configuration cell above and re-run the subsequent cells!
 
-**Note:**
-- **In browser**: Runs in sync mode (crew limitation)
-- **Locally** (quarto render or Rscript): Runs in async mode with parallel workers and dynamic broadcasting!
+**Current Limitation:**
+- **In browser**: TEMPORARY sync fallback (crew not available in wasm)
+- **Locally**: Full async with parallel workers and dynamic broadcasting
+
+**After Issue #129 (mirai refactor):**
+- **In browser**: Will run async too! (mirai + nanonext both available in wasm)
+- **Locally**: Same async behavior (mirai everywhere, simpler code)
 
 ## Technical Details
 
-### Current WebAssembly Implementation
+### Current Implementation (Temporary Limitation)
 
-- **WebAssembly**: R compiled to run in your browser (via WebR)
-- **Synchronous Mode**: Single-threaded execution (workers=0)
-- **Client-Side Rendering**: All computation happens in your browser
+**In Browser (WebR):**
+- **TEMPORARY**: Synchronous fallback (workers=0)
+- **Why**: Current code uses `crew` (not available in wasm)
+- **Client-Side**: All computation happens in browser
 
-### Local Async Implementation (Not Yet Available in Wasm)
+**Locally:**
+- **crew**: Worker process management
+- **mirai**: (crew uses this internally)
+- **nanonext**: Broadcasting via sockets
+- **Dynamic Broadcasting**: Workers coordinate on pixel updates
 
-- **nanonext**: Low-level async messaging (✅ available for wasm at r-lib.r-universe.dev)
-- **mirai**: Parallel task execution framework (✅ available for wasm)
-- **crew**: Worker process management (❌ not yet available for wasm)
-- **Dynamic Broadcasting**: Workers coordinate via nanonext sockets
+### Coming Soon: Async in Browser! (Issues #129, #130)
 
-**Path to WebAssembly Async**: Refactor async controller to use `mirai` directly instead of `crew`
+**Both building blocks ARE available for wasm:**
+- **nanonext**: ✅ v1.7.2.9000 at r-lib.r-universe.dev (broadcasting/messaging)
+- **mirai**: ✅ v2.5.3.9000 at r-lib.r-universe.dev (async parallelization)
+
+**After refactor to mirai:**
+- **In Browser**: `workers=2` → async mirai daemons → nanonext broadcasting → full dynamic algorithm!
+- **Locally**: Same mirai implementation (simpler, no crew needed)
+- **No fallback needed**: Same async code works everywhere!
