@@ -18,7 +18,7 @@ filters:
 
 This vignette demonstrates **Random Walk Simulations** using interactive WebR code cells that run entirely in your browser.
 
-> **Note:** The `nanonext` and `mirai` packages ARE available for WebAssembly at r-lib.r-universe.dev, which are the core async messaging components. However, the `crew` package (which manages worker processes) is not yet available for wasm. The examples below use synchronous simulation. **Future work:** Refactor async controller to use `mirai` directly (instead of `crew`) to enable async in WebAssembly. To use async features now, run locally: `randomwalk::run_dashboard_dynamic()`
+> **Note:** This vignette demonstrates **Dynamic Grid Broadcasting** with async parallel workers. When run locally (native R), it uses `workers=2` and `sync_mode="dynamic"` for true parallel processing. In WebR/browser, it automatically falls back to synchronous mode because the `crew` package is not yet available for WebAssembly (though `nanonext` and `mirai` are available). **Future work:** Refactor async controller to use `mirai` directly (Issue #129) to enable async in WebAssembly.
 
 ## Setup
 
@@ -40,10 +40,22 @@ n_walkers <- 5
 neighborhood <- "4-hood"
 max_steps <- 5000
 
-# Note: Async requires crew (not yet available for wasm)
-# These params work locally but use workers=0 for wasm:
-workers <- 0            # Set to 2+ for async (local only)
-sync_mode <- "static"   # Use "dynamic" for broadcasting (local only)
+# Dynamic Broadcasting parameters (async parallel)
+# Note: In WebR/browser, will fall back to sync (crew not available in wasm)
+is_webr <- exists(".webr_env", envir = .GlobalEnv) ||
+           identical(Sys.getenv("WEBR"), "1")
+
+if (is_webr) {
+  # WebR environment: Use sync mode (crew not available)
+  workers <- 0
+  sync_mode <- "static"
+  message("Running in WebR: Using synchronous mode (crew not available for wasm)")
+} else {
+  # Local/native R: Use async dynamic broadcasting
+  workers <- 2
+  sync_mode <- "dynamic"
+  message("Running locally: Using async dynamic broadcasting")
+}
 ```
 
 ## Run Simulation
@@ -51,14 +63,16 @@ sync_mode <- "static"   # Use "dynamic" for broadcasting (local only)
 Execute the dynamic broadcasting simulation:
 
 ```{webr-r}
-# Run simulation (sync mode in browser, async when run locally)
+# Run simulation with dynamic broadcasting
+# Auto-detects environment: async locally, sync fallback in WebR
 result <- run_simulation(
   grid_size = grid_size,
   n_walkers = n_walkers,
   neighborhood = neighborhood,
   max_steps = max_steps,
-  workers = workers,    # 0 for wasm (sync), 2+ locally (async)
-  sync_mode = sync_mode # "static" for wasm, "dynamic" locally
+  workers = workers,      # 2 locally (async), 0 in WebR (sync fallback)
+  sync_mode = sync_mode,  # "dynamic" locally, "static" in WebR
+  verbose = !is_webr      # Show logs locally, quiet in browser
 )
 ```
 
@@ -102,11 +116,14 @@ Experiment with different parameters:
 
 - **Larger grid**: More space to explore (try 30 or 40)
 - **More walkers**: Greater density (try 10 or 15)
+- **More workers**: More parallelization (try 4 or 8) - *local execution only*
 - **Different neighborhood**: Try "8-hood" for diagonal movement
 
 Just modify the parameter values in the configuration cell above and re-run the subsequent cells!
 
-**To try async features**: Run this vignette locally with `workers=2+` and `sync_mode="dynamic"`
+**Note:**
+- **In browser**: Runs in sync mode (crew limitation)
+- **Locally** (quarto render or Rscript): Runs in async mode with parallel workers and dynamic broadcasting!
 
 ## Technical Details
 
