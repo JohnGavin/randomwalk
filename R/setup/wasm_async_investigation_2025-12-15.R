@@ -192,11 +192,44 @@ gh::gh("POST /repos/JohnGavin/randomwalk/issues",
 # https://github.com/JohnGavin/randomwalk/issues/129
 
 # ============================================================================
+# CORRECTION (same session)
+# ============================================================================
+
+# User correctly pointed out: The vignette is called "dynamic_broadcasting"
+# so it should DEFAULT to demonstrating async dynamic broadcasting, not sync mode!
+#
+# Fixed in commit 13aa402:
+# - Added WebR environment detection
+# - Default: workers=2, sync_mode="dynamic" (the actual feature)
+# - Auto-fallback to sync ONLY in browser (crew limitation)
+# - When run locally: demonstrates actual async dynamic broadcasting
+# - When in browser: graceful sync fallback with message
+
+# Updated parameter section:
+gert::git_add("vignettes/dynamic_broadcasting.qmd")
+gert::git_commit("Fix: dynamic_broadcasting should default to async mode
+
+The vignette is about Dynamic Broadcasting (async), not sync mode!
+
+Changes:
+- Default to workers=2, sync_mode=\"dynamic\" (the feature being demonstrated)
+- Add WebR environment detection
+- Auto-fallback to sync mode ONLY in browser (crew limitation)
+- When run locally: demonstrates actual async dynamic broadcasting
+- When in browser: graceful sync fallback with message
+
+Before: Always ran in sync mode (workers=0) even locally - wrong!
+After: Runs in async mode locally, sync fallback in browser - correct!
+
+Related: Issue #129")
+# Commit: 13aa402
+
+# ============================================================================
 # SESSION INFO
 # ============================================================================
 
 # Session conducted: 2025-12-15
-# Commits: 247f26d, 5934a7e
+# Commits: 247f26d, 5934a7e, 8ee624e, 13aa402
 # GitHub Issue: #129
 # Documentation: inst/docs/WASM_ASYNC_STATUS.md
 # Updated vignette: vignettes/dynamic_broadcasting.qmd
