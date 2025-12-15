@@ -9,6 +9,7 @@ webr:
   packages: ['randomwalk']
   repos:
     - https://johngavin.github.io/randomwalk/
+    - https://r-lib.r-universe.dev
 filters:
   - webr
 ---
@@ -17,7 +18,7 @@ filters:
 
 This vignette demonstrates **Random Walk Simulations** using interactive WebR code cells that run entirely in your browser.
 
-> **Note:** The full Dynamic Broadcasting feature (async parallel workers) requires the `nanonext` package which is not yet available for WebAssembly. The examples below use the standard synchronous simulation. To use async features, run locally: `randomwalk::run_dashboard_dynamic()`
+> **Note:** The `nanonext` and `mirai` packages ARE available for WebAssembly at r-lib.r-universe.dev, which are the core async messaging components. However, the `crew` package (which manages worker processes) is not yet available for wasm. The examples below use synchronous simulation. **Future work:** Refactor async controller to use `mirai` directly (instead of `crew`) to enable async in WebAssembly. To use async features now, run locally: `randomwalk::run_dashboard_dynamic()`
 
 ## Setup
 
@@ -38,6 +39,11 @@ grid_size <- 20
 n_walkers <- 5
 neighborhood <- "4-hood"
 max_steps <- 5000
+
+# Note: Async requires crew (not yet available for wasm)
+# These params work locally but use workers=0 for wasm:
+workers <- 0            # Set to 2+ for async (local only)
+sync_mode <- "static"   # Use "dynamic" for broadcasting (local only)
 ```
 
 ## Run Simulation
@@ -45,13 +51,14 @@ max_steps <- 5000
 Execute the dynamic broadcasting simulation:
 
 ```{webr-r}
-# Note: Async functionality requires nanonext which isn't available in WebAssembly
-# Using simple synchronous simulation instead
+# Run simulation (sync mode in browser, async when run locally)
 result <- run_simulation(
   grid_size = grid_size,
   n_walkers = n_walkers,
   neighborhood = neighborhood,
-  max_steps = max_steps
+  max_steps = max_steps,
+  workers = workers,    # 0 for wasm (sync), 2+ locally (async)
+  sync_mode = sync_mode # "static" for wasm, "dynamic" locally
 )
 ```
 
@@ -93,20 +100,27 @@ Dynamic Grid Broadcasting allows parallel workers to:
 
 Experiment with different parameters:
 
-- **Increase workers**: More parallelization (try 4 or 8)
 - **Larger grid**: More space to explore (try 30 or 40)
 - **More walkers**: Greater density (try 10 or 15)
 - **Different neighborhood**: Try "8-hood" for diagonal movement
 
 Just modify the parameter values in the configuration cell above and re-run the subsequent cells!
 
+**To try async features**: Run this vignette locally with `workers=2+` and `sync_mode="dynamic"`
+
 ## Technical Details
 
-This implementation uses:
+### Current WebAssembly Implementation
 
-- **WebAssembly**: R compiled to run in your browser
-- **Message Passing**: Via nanonext for inter-worker communication
-- **Dynamic Synchronization**: Workers coordinate based on actual pixel updates
+- **WebAssembly**: R compiled to run in your browser (via WebR)
+- **Synchronous Mode**: Single-threaded execution (workers=0)
 - **Client-Side Rendering**: All computation happens in your browser
 
-No server required!
+### Local Async Implementation (Not Yet Available in Wasm)
+
+- **nanonext**: Low-level async messaging (✅ available for wasm at r-lib.r-universe.dev)
+- **mirai**: Parallel task execution framework (✅ available for wasm)
+- **crew**: Worker process management (❌ not yet available for wasm)
+- **Dynamic Broadcasting**: Workers coordinate via nanonext sockets
+
+**Path to WebAssembly Async**: Refactor async controller to use `mirai` directly instead of `crew`

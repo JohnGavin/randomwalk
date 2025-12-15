@@ -1,1 +1,0 @@
-../push_to_cachix.sh
