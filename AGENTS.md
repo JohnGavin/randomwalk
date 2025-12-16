@@ -75,16 +75,55 @@ Consider implementing:
 
 ## Workflow Requirements
 
-All code changes must follow the 8-step workflow documented in `.claude/CLAUDE.md`:
+All code changes must follow the 9-step workflow documented in `.claude/CLAUDE.md`:
 
 1. Create GitHub Issue
 2. Create dev branch (`usethis::pr_init()`)
 3. Make changes
 4. Run ALL checks locally (including Shinylive tests above)
-5. Push via PR (`usethis::pr_push()`)
-6. Wait for GitHub Actions
-7. Merge PR (`usethis::pr_merge_main()`)
-8. Log everything in `R/setup/`
+5. **Push to cachix** (`../push_to_cachix.sh` - for Nix binaries)
+6. Push via PR (`usethis::pr_push()`)
+7. Wait for GitHub Actions (including R-WASM build - see below)
+8. Merge PR (`usethis::pr_merge_main()`)
+9. Log everything in `R/setup/`
+
+**NEVER commit directly to main** - all changes must go through PR review and CI/CD validation.
+
+### GitHub Actions Workflows
+
+After pushing, the following workflows run automatically:
+
+1. **R CMD Check** (`.github/workflows/R-CMD-check.yaml`)
+   - Runs `devtools::check()` in Nix environment
+   - Must pass with 0 errors, 0 warnings, 0 notes
+
+2. **Build R-WASM Binary** (`.github/workflows/build-wasm.yaml`) ⭐ **NEW**
+   - Builds WebAssembly binary for browser-based vignettes
+   - Deploys to GitHub Pages at `https://johngavin.github.io/randomwalk/wasm/`
+   - **Timeline**: ~5-10 minutes (vs 1-4 hours for r-universe)
+   - **Purpose**: Fast feedback for Shinylive vignette testing
+   - **Includes**: randomwalk + nanonext/mirai/crew from r-lib.r-universe.dev
+
+3. **Build and Deploy pkgdown Site** (`.github/workflows/pkgdown.yaml`)
+   - Builds package website
+   - Deploys to GitHub Pages
+
+### Testing Vignettes After Push
+
+**Fast feedback loop** (5-10 minutes):
+
+1. Push commits → GitHub Actions triggers
+2. Wait for "Build R-WASM Binary" workflow to complete (green ✓)
+3. Test vignettes immediately:
+   - https://johngavin.github.io/randomwalk/articles/dashboard.html
+   - https://johngavin.github.io/randomwalk/articles/dashboard_async.html
+   - https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html
+4. Vignettes load randomwalk from GitHub Pages (fast!)
+
+**Stable fallback** (1-4 hours):
+- r-universe syncs periodically
+- Provides stable binaries at https://johngavin.r-universe.dev/randomwalk
+- Used for releases and production
 
 **NEVER commit directly to main** - all changes must go through PR review and CI/CD validation.
 
@@ -114,11 +153,24 @@ All code changes must follow the 8-step workflow documented in `.claude/CLAUDE.m
 
 ## Related Documentation
 
+### Local Documentation
 - **Workflow Details**: `.claude/CLAUDE.md`
 - **Nix Setup**: `NIX_PACKAGE_DEVELOPMENT.md`
 - **Troubleshooting**: `NIX_TROUBLESHOOTING.md`
 - **Issue Tracking**: GitHub Issues
 
+### LLM Repository (Comprehensive Guides)
+- **R-WASM Workflows**: [llm/R_WASM_WORKFLOWS.md](https://github.com/JohnGavin/llm/blob/main/R_WASM_WORKFLOWS.md) - Complete guide for WebAssembly package builds
+- **Agent Guidelines**: [llm/AGENTS.md](https://github.com/JohnGavin/llm/blob/main/AGENTS.md) - General agent development guidelines
+- **Deployment Guide**: [llm/DEPLOYMENT_QUARTO_WEBSITE.md](https://github.com/JohnGavin/llm/blob/main/DEPLOYMENT_QUARTO_WEBSITE.md) - Quarto website deployment
+
+**Wiki Migration**: See [llm#1](https://github.com/JohnGavin/llm/issues/1) for planned migration to GitHub wiki
+
 ## Revision History
 
+- 2025-12-16: Added R-WASM build workflow - Fast development feedback (5-10 min vs 1-4 hours)
+  - New GitHub Actions workflow `.github/workflows/build-wasm.yaml`
+  - Three-tier package distribution (GitHub Pages → R-Universe → CRAN)
+  - Cross-references to llm repository comprehensive guides
+  - See [llm#1](https://github.com/JohnGavin/llm/issues/1) for wiki migration plan
 - 2025-12-09: Initial creation - Added mandatory Shinylive console testing (Issue #125)
