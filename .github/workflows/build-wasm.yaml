@@ -30,7 +30,7 @@ jobs:
 
       - name: Install R dependencies
         run: |
-          install.packages(c("remotes", "desc"))
+          install.packages(c("remotes", "desc"), repos = "https://cran.r-project.org")
         shell: Rscript {0}
 
       - name: Install rwasm
