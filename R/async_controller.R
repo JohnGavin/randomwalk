@@ -128,10 +128,14 @@ create_controller <- function(n_workers = 2, seconds_idle = 60) {
 #' }
 #'
 #' @seealso \code{\link{broadcast_update}}, \code{\link{cleanup_async}}
-#' @importFrom nanonext nano
 #' @export
 create_pub_socket <- function(port = 5555) {
   logger::log_info("Creating nanonext publisher socket on port {port}")
+
+  # Check nanonext availability
+  if (!requireNamespace("nanonext", quietly = TRUE)) {
+    stop("nanonext package required for dynamic broadcasting. Install with: install.packages('nanonext')")
+  }
 
   # Validate port
   if (!is.numeric(port) || port < 1024 || port > 65535) {
@@ -190,6 +194,11 @@ create_pub_socket <- function(port = 5555) {
 #'
 #' @export
 broadcast_update <- function(socket, position, version) {
+  # Check nanonext availability
+  if (!requireNamespace("nanonext", quietly = TRUE)) {
+    stop("nanonext package required for dynamic broadcasting")
+  }
+
   # Validate inputs
   if (!inherits(socket, "nanoSocket")) {
     stop("socket must be a nanonext socket object")
