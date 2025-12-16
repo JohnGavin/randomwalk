@@ -31,18 +31,16 @@
 #' }
 #'
 #' @seealso \code{\link{worker_check_updates}}, \code{\link{worker_step_walker}}
-#' @importFrom nanonext nano subscribe
 #' @export
 worker_init <- function(pub_address) {
   logger::log_info("Worker initializing with publisher at {pub_address}")
 
   # Create subscriber socket
-  # Note: When used in crew workers, nanonext package loaded via packages parameter
-  # so we can call nano() directly without namespace prefix
-  socket <- nano("sub", dial = pub_address)
+  # Note: nanonext is in Suggests, use fully qualified calls
+  socket <- nanonext::nano("sub", dial = pub_address)
 
   # Subscribe to all messages
-  subscribe(socket, "")
+  nanonext::subscribe(socket, "")
 
   # Wait briefly for connection
   Sys.sleep(0.1)
@@ -90,12 +88,11 @@ worker_init <- function(pub_address) {
 #' }
 #'
 #' @seealso \code{\link{worker_init}}, \code{\link{broadcast_update}}
-#'
-#' @importFrom nanonext recv
 #' @export
 worker_check_updates <- function(worker_state) {
   # Non-blocking receive
-  result <- recv(
+  # Note: nanonext is in Suggests, use fully qualified call
+  result <- nanonext::recv(
     worker_state$socket,
     mode = "raw",
     block = FALSE
