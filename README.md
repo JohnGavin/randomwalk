@@ -1,6 +1,6 @@
 # randomwalk
 
-Asynchronous Pixel Walking Simulation with Parallel Processing
+Asynchronous Pixel Walking Simulation with Parallel Processing.
 
 ## 🚀 Quick Links
 
