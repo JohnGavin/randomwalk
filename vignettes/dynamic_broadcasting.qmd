@@ -18,11 +18,14 @@ filters:
 
 This vignette demonstrates **Random Walk Simulations** using interactive WebR code cells that run entirely in your browser.
 
-> **Note:** This vignette demonstrates **Dynamic Grid Broadcasting** with async parallel workers. When run locally (native R), it uses `workers=2` and `sync_mode="dynamic"` for true parallel processing with nanonext broadcasting.
+> **Note:** This vignette demonstrates **Async Parallel Random Walks** with automatic backend selection. The randomwalk package auto-detects your environment:
 >
-> **WebR/Browser Status:** Currently falls back to synchronous mode (`workers=0`) because the current implementation uses `crew` (not available in wasm). However, both `nanonext` (broadcasting) and `mirai` (async parallelization) **ARE available for WebAssembly**!
+> - **Native R:** Uses `crew` backend (preferred for better abstractions)
+> - **WebR/Browser:** Uses `mirai` backend (WebAssembly-compatible, Issue #129 ✅)
 >
-> **Coming soon (Issues #129, #130):** Refactor to use `mirai` directly → async dynamic broadcasting will work in browser too, with full nanonext broadcasting whenever walkers turn black!
+> Both environments can use `workers=2` for async parallel processing!
+>
+> **Dynamic Broadcasting Status (Issue #130):** Currently uses `sync_mode="static"` (grid snapshots). Full dynamic broadcasting via nanonext pub/sub is future work.
 
 ## Setup
 
@@ -44,24 +47,25 @@ n_walkers <- 5
 neighborhood <- "4-hood"
 max_steps <- 5000
 
-# Dynamic Broadcasting parameters (async parallel)
-# Note: TEMPORARY WebR limitation - crew not available in wasm
-# Once we switch to mirai (Issues #129, #130), async will work in browser too!
+# Async parallel parameters
+# Auto-detects environment and selects appropriate backend:
+# - Native R → crew backend
+# - WebR → mirai backend (Issue #129 ✅)
 is_webr <- exists(".webr_env", envir = .GlobalEnv) ||
            identical(Sys.getenv("WEBR"), "1")
 
+# Both environments can use async (workers=2)!
+workers <- 2
+
 if (is_webr) {
-  # TEMPORARY: Sync fallback (current crew implementation not available in wasm)
-  # TODO (Issue #129): Switch to mirai → async will work here too!
-  workers <- 0
+  # WebR: mirai backend, static grid snapshots
   sync_mode <- "static"
-  message("Running in WebR: TEMPORARY sync fallback (crew limitation)")
-  message("After Issue #129: Will use mirai for async in browser!")
+  message("Running in WebR: Using mirai backend for async (Issue #129 ✅)")
+  message("Static grid snapshots (dynamic broadcasting is Issue #130)")
 } else {
-  # Local/native R: Use async dynamic broadcasting
-  workers <- 2
+  # Native R: crew backend, dynamic broadcasting
   sync_mode <- "dynamic"
-  message("Running locally: Using async dynamic broadcasting")
+  message("Running locally: Using crew backend with dynamic broadcasting")
 }
 ```
 
@@ -70,15 +74,17 @@ if (is_webr) {
 Execute the dynamic broadcasting simulation:
 
 ```{webr-r}
-# Run simulation with dynamic broadcasting
-# Auto-detects environment: async locally, sync fallback in WebR
+# Run async parallel simulation
+# Auto-detects environment and selects backend:
+# - Native R → crew backend (sync_mode="dynamic")
+# - WebR → mirai backend (sync_mode="static")
 result <- run_simulation(
   grid_size = grid_size,
   n_walkers = n_walkers,
   neighborhood = neighborhood,
   max_steps = max_steps,
-  workers = workers,      # 2 locally (async), 0 in WebR (sync fallback)
-  sync_mode = sync_mode,  # "dynamic" locally, "static" in WebR
+  workers = workers,      # 2 in both environments (async parallel!)
+  sync_mode = sync_mode,  # "dynamic" (native R), "static" (WebR)
   verbose = !is_webr      # Show logs locally, quiet in browser
 )
 ```

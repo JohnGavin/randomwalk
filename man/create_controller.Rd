@@ -2,7 +2,7 @@
 % Please edit documentation in R/async_controller.R
 \name{create_controller}
 \alias{create_controller}
-\title{Create Crew Controller for Async Simulation}
+\title{Create Async Controller (Auto-detect Backend)}
 \usage{
 create_controller(n_workers = 2, seconds_idle = 60)
 }
@@ -10,14 +10,23 @@ create_controller(n_workers = 2, seconds_idle = 60)
 \item{n_workers}{Integer. Number of parallel workers to create (default: 2).
 Recommended: 2-4 for medium grids, 4-8 for large grids.}
 
-\item{seconds_idle}{Numeric. Seconds of idle time before worker shutdown (default: 60).}
+\item{seconds_idle}{Numeric. Seconds of idle time before worker shutdown (default: 60).
+Note: Only applies to crew backend (ignored for mirai).}
 }
 \value{
-A crew controller object with initialized workers.
+An async controller object with initialized workers.
+\itemize{
+\item Crew backend: R6 crew controller object
+\item Mirai backend: List with crew-compatible interface
+}
 }
 \description{
-Initializes a crew controller to manage parallel R worker processes
-for asynchronous random walk simulation.
+Creates an async controller for parallel random walk simulation.
+Automatically selects the appropriate backend:
+\itemize{
+\item WebR/WebAssembly: mirai (crew not available)
+\item Native R: crew (preferred for better abstractions)
+}
 }
 \details{
 The controller manages a pool of R worker processes that execute
@@ -25,12 +34,25 @@ walker step functions in parallel. Each worker maintains its own
 local cache of the grid state and subscribes to updates from the
 main process.
 
+\strong{Backend Selection:}
+\itemize{
+\item WebR/WebAssembly detected by \code{is_webr()} → uses mirai
+\item Native R → uses crew
+}
+
+Both backends provide the same interface:
+\itemize{
+\item \code{push()}: Submit task
+\item \code{pop()}: Retrieve completed task
+\item \code{terminate()}: Shutdown workers
+}
+
 Workers are automatically started when the controller is created
 and can be cleanly shut down using \code{cleanup_async()}.
 }
 \examples{
 \dontrun{
-# Create controller with 2 workers
+# Create controller (auto-detects environment)
 controller <- create_controller(n_workers = 2)
 
 # Use controller for parallel tasks
@@ -42,5 +64,6 @@ cleanup_async(controller, socket)
 
 }
 \seealso{
-\code{\link{create_pub_socket}}, \code{\link{cleanup_async}}
+\code{\link{create_pub_socket}}, \code{\link{cleanup_async}},
+\code{\link{create_mirai_controller}}
 }

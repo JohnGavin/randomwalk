@@ -325,3 +325,121 @@ test_that("async simulation statistics are complete", {
   expect_equal(stats$total_walkers, 4)
   expect_equal(stats$completed_walkers, 4)
 })
+
+
+# ============================================================================
+# Mirai Backend Tests (WebAssembly/WebR)
+# ============================================================================
+
+test_that("create_mirai_controller creates controller with correct interface", {
+  skip_if_not_installed("mirai")
+  skip_on_cran()
+
+  controller <- randomwalk:::create_mirai_controller(n_workers = 2)
+
+  # Check class
+  expect_s3_class(controller, "mirai_controller")
+  expect_type(controller, "environment")
+
+  # Check interface methods exist
+  expect_true(!is.null(controller$push))
+  expect_true(!is.null(controller$pop))
+  expect_true(!is.null(controller$terminate))
+
+  # Check methods are functions
+  expect_type(controller$push, "closure")
+  expect_type(controller$pop, "closure")
+  expect_type(controller$terminate, "closure")
+
+  # Check backend identifier
+  expect_equal(controller$backend, "mirai")
+
+  # Clean up
+  controller$terminate()
+})
+
+
+test_that("mirai controller can push and pop tasks", {
+  skip_if_not_installed("mirai")
+  skip_on_cran()
+
+  controller <- randomwalk:::create_mirai_controller(n_workers = 2)
+
+  # Push a simple task
+  controller$push(
+    name = "test_task",
+    command = 2 + 2,
+    data = list(),
+    globals = list(),
+    packages = character()
+  )
+
+  # Pop the result (should block until complete)
+  result <- controller$pop()
+
+  # Check result structure (crew-compatible data frame)
+  expect_s3_class(result, "data.frame")
+  expect_named(result, c("name", "result", "status"))
+  expect_equal(result$name, "test_task")
+  expect_equal(result$result[[1]], 4)
+  expect_equal(result$status, "success")
+
+  # Clean up
+  controller$terminate()
+})
+
+
+test_that("mirai controller handles globals correctly", {
+  skip_if_not_installed("mirai")
+  skip_on_cran()
+
+  controller <- randomwalk:::create_mirai_controller(n_workers = 2)
+
+  # Push task with globals
+  controller$push(
+    name = "test_globals",
+    command = x + y,
+    data = list(),
+    globals = list(x = 10, y = 5),
+    packages = character()
+  )
+
+  # Pop result
+  result <- controller$pop()
+
+  expect_equal(result$result[[1]], 15)
+  expect_equal(result$status, "success")
+
+  # Clean up
+  controller$terminate()
+})
+
+
+test_that("cleanup_async handles mirai controller", {
+  skip_if_not_installed("mirai")
+
+  controller <- randomwalk:::create_mirai_controller(n_workers = 1)
+  socket <- create_pub_socket(port = 5559)
+
+  # Should not error
+  expect_error(cleanup_async(controller, socket), NA)
+
+  # Controller should be terminated (verify by checking daemons are stopped)
+  # Note: After terminate(), controller$task_list should be empty
+  expect_equal(length(controller$task_list), 0)
+})
+
+
+test_that("create_controller auto-detects crew backend in native R", {
+  skip_if_not_installed("crew")
+
+  # In native R (not WebR), should create crew controller
+  controller <- create_controller(n_workers = 2)
+
+  # Should be R6 crew controller, not mirai
+  expect_s3_class(controller, "R6")
+  expect_false(inherits(controller, "mirai_controller"))
+
+  # Clean up
+  controller$terminate()
+})

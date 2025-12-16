@@ -19,9 +19,10 @@ Depends:
 Imports:
     logger,
     ggplot2,
-    crew,
     nanonext
 Suggests:
+    crew,
+    mirai,
     munsell,
     dplyr,
     duckdb,
