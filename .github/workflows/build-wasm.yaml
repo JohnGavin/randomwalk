@@ -1,0 +1,133 @@
+name: Build R-WASM Binary
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-wasm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.1'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev
+
+      - name: Install R dependencies
+        run: |
+          install.packages(c("remotes", "desc"))
+        shell: Rscript {0}
+
+      - name: Install rwasm
+        run: |
+          remotes::install_github("r-wasm/rwasm")
+        shell: Rscript {0}
+
+      - name: Get package dependencies
+        id: deps
+        run: |
+          # Read DESCRIPTION to get dependencies
+          desc <- read.dcf("DESCRIPTION")
+          imports <- strsplit(desc[, "Imports"], ",\\s*")[[1]]
+          suggests <- strsplit(desc[, "Suggests"], ",\\s*")[[1]]
+
+          # Clean package names (remove version constraints)
+          clean_pkg <- function(x) gsub("\\s*\\(.*\\)", "", x)
+          imports <- sapply(imports, clean_pkg, USE.NAMES = FALSE)
+          suggests <- sapply(suggests, clean_pkg, USE.NAMES = FALSE)
+
+          # Combine and write to file
+          all_deps <- unique(c(imports, suggests))
+          writeLines(all_deps, "wasm-deps.txt")
+
+          cat("Dependencies to build for WASM:\n")
+          cat(paste(all_deps, collapse = "\n"))
+        shell: Rscript {0}
+
+      - name: Build WASM repository
+        run: |
+          library(rwasm)
+
+          cat("\n=== Building R-WASM Repository ===\n")
+          cat("Package: randomwalk\n")
+          cat("Commit: ${{ github.sha }}\n\n")
+
+          # Initialize WASM library
+          make_library(
+            packages = c(
+              # Core dependencies
+              "logger", "ggplot2",
+              # Async backends (from r-lib.r-universe.dev)
+              "nanonext", "mirai", "crew",
+              # Shiny and visualization
+              "shiny", "ggplot2",
+              # Local package (built from source)
+              "."
+            ),
+            repos = c(
+              "https://cran.r-project.org",
+              "https://r-lib.r-universe.dev"  # For nanonext, mirai, crew
+            ),
+            lib_dir = "wasm-library",
+            compress = TRUE
+          )
+
+          cat("\n=== WASM Build Complete ===\n")
+          cat("Library created at: wasm-library/\n")
+
+          # List built packages
+          if (dir.exists("wasm-library")) {
+            pkgs <- list.dirs("wasm-library", recursive = FALSE, full.names = FALSE)
+            cat("\nBuilt packages:\n")
+            cat(paste0("  - ", pkgs, collapse = "\n"))
+          }
+        shell: Rscript {0}
+
+      - name: Create repository metadata
+        run: |
+          cat > wasm-library/PACKAGES <<EOF
+          Package: randomwalk
+          Version: $(Rscript -e "cat(read.dcf('DESCRIPTION')[,'Version'])")
+          Depends: R (>= 4.1.0)
+          Imports: logger, ggplot2, nanonext
+          Suggests: crew, mirai
+          Built: R 4.4.1; wasm32-unknown-emscripten; ${{ github.sha }}
+          EOF
+
+          cat "\n=== Repository Metadata Created ===\n"
+          cat wasm-library/PACKAGES
+
+      - name: Upload WASM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-library
+          path: wasm-library/
+          retention-days: 30
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./wasm-library
+          destination_dir: wasm
+          commit_message: |
+            Deploy R-WASM binary for randomwalk
+
+            Commit: ${{ github.sha }}
+            Workflow: ${{ github.workflow }}
+            Run: ${{ github.run_number }}

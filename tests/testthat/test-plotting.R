@@ -1,6 +1,6 @@
 test_that("plot_grid creates a plot without errors", {
   # Create a simple simulation result
-  result <- run_simulation(
+  result <- run_simulation(quiet = TRUE, 
     grid_size = 10,
     n_walkers = 3,
     neighborhood = "4-hood",
@@ -26,7 +26,7 @@ test_that("plot_grid validates input", {
 
 test_that("plot_walker_paths creates a plot without errors", {
   # Create a simple simulation result
-  result <- run_simulation(
+  result <- run_simulation(quiet = TRUE, 
     grid_size = 10,
     n_walkers = 3,
     neighborhood = "4-hood",
@@ -44,7 +44,7 @@ test_that("plot_walker_paths creates a plot without errors", {
 })
 
 test_that("plot_walker_paths handles color recycling", {
-  result <- run_simulation(
+  result <- run_simulation(quiet = TRUE, 
     grid_size = 10,
     n_walkers = 5,
     neighborhood = "4-hood",
@@ -63,7 +63,7 @@ test_that("plot_walker_paths validates input", {
 })
 
 test_that("plot_simulation creates combined plots without errors", {
-  result <- run_simulation(
+  result <- run_simulation(quiet = TRUE, 
     grid_size = 10,
     n_walkers = 3,
     neighborhood = "4-hood",
@@ -81,19 +81,19 @@ test_that("plot_simulation creates combined plots without errors", {
 
 test_that("plotting functions work with different grid sizes", {
   # Small grid
-  result_small <- run_simulation(grid_size = 5, n_walkers = 2, workers = 1)
+  result_small <- run_simulation(quiet = TRUE, grid_size = 5, n_walkers = 2, workers = 1)
   expect_silent(plot_grid(result_small))
   expect_silent(plot_walker_paths(result_small))
   
   # Larger grid
-  result_large <- run_simulation(grid_size = 30, n_walkers = 10, workers = 1)
+  result_large <- run_simulation(quiet = TRUE, grid_size = 30, n_walkers = 10, workers = 1)
   expect_silent(plot_grid(result_large))
   expect_silent(plot_walker_paths(result_large))
 })
 
 test_that("plotting functions work with different boundary conditions", {
   # Terminate boundary
-  result_term <- run_simulation(
+  result_term <- run_simulation(quiet = TRUE, 
     grid_size = 10,
     n_walkers = 3,
     boundary = "terminate",
@@ -102,7 +102,7 @@ test_that("plotting functions work with different boundary conditions", {
   expect_silent(plot_walker_paths(result_term))
   
   # Wrap boundary
-  result_wrap <- run_simulation(
+  result_wrap <- run_simulation(quiet = TRUE, 
     grid_size = 10,
     n_walkers = 3,
     boundary = "wrap",
@@ -113,7 +113,7 @@ test_that("plotting functions work with different boundary conditions", {
 
 test_that("plot_walker_paths handles walkers with different termination reasons", {
   # Run simulation that should produce both termination types
-  result <- run_simulation(
+  result <- run_simulation(quiet = TRUE, 
     grid_size = 15,
     n_walkers = 5,
     boundary = "terminate",
@@ -129,7 +129,7 @@ test_that("plot_walker_paths handles walkers with different termination reasons"
 
 test_that("plotting functions handle edge cases", {
   # Single walker
-  result_single <- run_simulation(grid_size = 10, n_walkers = 1, workers = 1)
+  result_single <- run_simulation(quiet = TRUE, grid_size = 10, n_walkers = 1, workers = 1)
   expect_silent(plot_grid(result_single))
   expect_silent(plot_walker_paths(result_single))
   expect_silent(plot_simulation(result_single))

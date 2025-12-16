@@ -19,6 +19,8 @@
 #' @param max_steps Integer. Maximum steps per walker before forced termination.
 #'   Default 10000.
 #' @param verbose Logical. If TRUE, enables detailed logging. Default FALSE.
+#' @param quiet Logical. If TRUE, suppresses INFO-level logs (shows only WARN/ERROR).
+#'   Useful for tests to reduce console output. Default FALSE.
 #' @param validate_strict Logical. If TRUE, validation errors stop simulation.
 #'   If FALSE, they only log warnings. Default FALSE. Tests should use TRUE.
 #' @param validate_percent Numeric. Validate grid every X% of walkers complete.
@@ -49,6 +51,7 @@ run_simulation <- function(grid_size = 10,
                             sync_mode = "static",
                             max_steps = 10000L,
                             verbose = FALSE,
+                            quiet = FALSE,
                             validate_strict = FALSE,
                             validate_percent = 5) {
 
@@ -84,6 +87,9 @@ run_simulation <- function(grid_size = 10,
   # Set logging level
   if (verbose) {
     logger::log_threshold(logger::TRACE)
+  } else if (quiet) {
+    # Suppress INFO logs, show only WARN/ERROR
+    logger::log_threshold(logger::WARN)
   }
 
   logger::log_info("=== STARTING SIMULATION ===")

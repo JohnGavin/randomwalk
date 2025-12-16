@@ -64,7 +64,7 @@ test_that("async simulation runs with 2 workers on small grid", {
   skip_on_cran()  # Skip on CRAN (async tests can be flaky in CI)
 
   # Small test simulation
-  result <- run_simulation(
+  result <- run_simulation(quiet = TRUE, 
     grid_size = 10,
     n_walkers = 3,
     workers = 2,
@@ -108,7 +108,7 @@ test_that("async mode completes successfully (may differ from sync)", {
   set.seed(123)
 
   # Run sync simulation
-  result_sync <- run_simulation(
+  result_sync <- run_simulation(quiet = TRUE, 
     grid_size = 10,
     n_walkers = 5,
     workers = 0,  # Sync
@@ -120,7 +120,7 @@ test_that("async mode completes successfully (may differ from sync)", {
   set.seed(123)
 
   # Run async simulation with same seed
-  result_async <- run_simulation(
+  result_async <- run_simulation(quiet = TRUE, 
     grid_size = 10,
     n_walkers = 5,
     workers = 2,  # Async
@@ -162,7 +162,7 @@ test_that("async simulation handles single worker correctly", {
   skip_if_not_installed("crew")
   skip_on_cran()
 
-  result <- run_simulation(
+  result <- run_simulation(quiet = TRUE, 
     grid_size = 8,
     n_walkers = 2,
     workers = 1,  # Single worker (serial async)
@@ -180,7 +180,7 @@ test_that("async simulation with 8-hood neighborhood works", {
   skip_if_not_installed("crew")
   skip_on_cran()
 
-  result <- run_simulation(
+  result <- run_simulation(quiet = TRUE, 
     grid_size = 10,
     n_walkers = 4,
     workers = 2,
@@ -198,7 +198,7 @@ test_that("async simulation with wrap boundary works", {
   skip_if_not_installed("crew")
   skip_on_cran()
 
-  result <- run_simulation(
+  result <- run_simulation(quiet = TRUE, 
     grid_size = 10,
     n_walkers = 3,
     workers = 2,
@@ -297,7 +297,7 @@ test_that("async simulation statistics are complete", {
   skip_if_not_installed("crew")
   skip_on_cran()
 
-  result <- run_simulation(
+  result <- run_simulation(quiet = TRUE, 
     grid_size = 10,
     n_walkers = 4,
     workers = 2,

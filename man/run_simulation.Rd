@@ -13,6 +13,7 @@ run_simulation(
   sync_mode = "static",
   max_steps = 10000L,
   verbose = FALSE,
+  quiet = FALSE,
   validate_strict = FALSE,
   validate_percent = 5
 )
@@ -41,6 +42,9 @@ nanonext package and has ~10-15\% performance overhead.}
 Default 10000.}
 
 \item{verbose}{Logical. If TRUE, enables detailed logging. Default FALSE.}
+
+\item{quiet}{Logical. If TRUE, suppresses INFO-level logs (shows only WARN/ERROR).
+Useful for tests to reduce console output. Default FALSE.}
 
 \item{validate_strict}{Logical. If TRUE, validation errors stop simulation.
 If FALSE, they only log warnings. Default FALSE. Tests should use TRUE.}
