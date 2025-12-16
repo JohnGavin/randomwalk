@@ -28,16 +28,11 @@
 ^STARTUP\.md$
 ^result$
 ^result/$
-^shinylive-sw\.js$
 ^benchmarks$
 ^benchmarks/$
 ^_extensions$
 ^_extensions/
 ^_quarto\.yml$
-
-# Exclude entire vignettes/ directory from package
-# Vignettes have long file paths and work better on website (docs/articles/)
-^vignettes/
 
 # Ignore other hidden files/directories found by R CMD check at top level
 ^\.cachix_test$
@@ -47,8 +42,10 @@
 ^\.quarto$
 ^\.quarto/
 
-# Specific ignore for shinylive/webr compiled objects and related files
-^vignettes/.*/libs/quarto-contrib/shinylive-0.9.1/shinylive/webr/.*$
+# Exclude vignette build artifacts (keep source .qmd files)
+^vignettes/.*\.html$
+^vignettes/.*_files/
+^vignettes/_targets\.yaml$
 
 # Non-standard top-level documentation files (exclude from package)
 ^AGENTS\.md$
