@@ -37,15 +37,17 @@ This vignette provides a **fully interactive Shiny application** demonstrating a
 cat("\n=== ASYNC PARALLEL SETUP (dynamic_broadcasting.qmd) ===\n")
 cat("Timestamp:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
 
-cat("Installing randomwalk from GitHub Pages...\n")
+cat("Installing randomwalk...\n")
+cat("Note: nanonext not available for R 4.4 WebR - using synchronous mode\n\n")
 tryCatch({
   webr::install(
     "randomwalk",
     repos = c(
-      "https://johngavin.github.io/randomwalk/",
-      "https://r-lib.r-universe.dev"  # For nanonext and mirai
+      "https://johngavin.r-universe.dev",  # Stable randomwalk build
+      "https://repo.r-wasm.org"            # Standard webR packages
     ),
-    verbose = TRUE
+    verbose = TRUE,
+    quiet = FALSE
   )
   cat("✅ randomwalk installed\n")
 }, error = function(e) {
@@ -88,8 +90,8 @@ ui <- fluidPage(
                   min = 1, max = 20, value = 5, step = 1),
 
       sliderInput("workers", "Parallel Workers:",
-                  min = 0, max = 4, value = 2, step = 1,
-                  help = "0 = synchronous, >0 = async parallel"),
+                  min = 0, max = 4, value = 0, step = 1,
+                  help = "0 = synchronous (WebR R 4.4 only supports sync mode)"),
 
       selectInput("neighborhood", "Neighborhood:",
                   choices = c("4-hood", "8-hood"),

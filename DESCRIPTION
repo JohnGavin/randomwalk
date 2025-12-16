@@ -18,9 +18,9 @@ Depends:
     R (>= 4.1.0)
 Imports:
     logger,
-    ggplot2,
-    nanonext
+    ggplot2
 Suggests:
+    nanonext,
     crew,
     mirai,
     munsell,
