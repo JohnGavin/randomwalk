@@ -375,24 +375,28 @@ list(
   # Render dashboard vignettes using tar_quarto for reproducibility
   # This ensures dependencies are tracked and rebuilds happen only when needed
   
-  tarchetypes::tar_quarto(
-    name = dashboard,
-    path = "vignettes/dashboard.qmd"
-  ),
-  
-  tarchetypes::tar_quarto(
-    name = dashboard_async,
-    path = "vignettes/dashboard_async.qmd"
-  ),
-  
+  # NOTE: Disabled broken vignettes (Issue #132)
+  # - dashboard: Service Worker errors, old Shinylive/webR 4.4.1
+  # - dashboard_async: Same Service Worker issues
+  # - telemetry: Missing target definitions (plot_pipeline_timing, etc.)
+  # tarchetypes::tar_quarto(
+  #   name = dashboard,
+  #   path = "vignettes/dashboard.qmd"
+  # ),
+  #
+  # tarchetypes::tar_quarto(
+  #   name = dashboard_async,
+  #   path = "vignettes/dashboard_async.qmd"
+  # ),
+  #
+  # tarchetypes::tar_quarto(
+  #   name = telemetry,
+  #   path = "vignettes/telemetry.qmd"
+  # ),
+
   tarchetypes::tar_quarto(
     name = dynamic_broadcasting,
     path = "vignettes/dynamic_broadcasting.qmd"
-  ),
-
-  tarchetypes::tar_quarto(
-    name = telemetry,
-    path = "vignettes/telemetry.qmd"
   ),
 
   # ============================================================================
@@ -458,8 +462,6 @@ list(
       
       # The values of the upstream tar_quarto targets (which are the paths to the rendered HTML)
       # are implicitly available here by their names
-      dashboard_html_path <- dashboard # This implicitly gets the value of the dashboard target
-      dashboard_async_html_path <- dashboard_async
       dynamic_broadcasting_html_path <- dynamic_broadcasting
 
       # Ensure inst/doc directory exists
@@ -483,17 +485,13 @@ list(
         if (fs::dir_exists(source_files_dir)) {
           fs::dir_copy(source_files_dir, dest_files_dir, overwrite = TRUE)
         }
-        
+
         # Return paths of copied files for targets to track
         c(dest_html_path, dest_files_dir)
       }
 
-      # Copy each vignette's output
-      copied_files <- c(
-        copy_vignette_output(dashboard_html_path, "dashboard"),
-        copy_vignette_output(dashboard_async_html_path, "dashboard_async"),
-        copy_vignette_output(dynamic_broadcasting_html_path, "dynamic_broadcasting")
-      )
+      # Copy only dynamic_broadcasting (Issue #132: other vignettes disabled)
+      copied_files <- copy_vignette_output(dynamic_broadcasting_html_path, "dynamic_broadcasting")
       
       copied_files
     }
