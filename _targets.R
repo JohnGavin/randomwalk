@@ -390,11 +390,10 @@ list(
     path = "vignettes/dynamic_broadcasting.qmd"
   ),
 
-  # NOTE: telemetry target temporarily disabled - needs _targets path fix
-  # tarchetypes::tar_quarto(
-  #   name = telemetry,
-  #   path = "vignettes/telemetry.qmd"
-  # ),
+  tarchetypes::tar_quarto(
+    name = telemetry,
+    path = "vignettes/telemetry.qmd"
+  ),
 
   # ============================================================================
   # pkgdown Site Building
