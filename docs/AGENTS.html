@@ -18,7 +18,8 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="articles/dynamic_broadcasting.html">Async Parallel Random Walks</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="articles/dynamic_broadcasting.html">Async Parallel Random Walks (Basic)</a></li>
+    <li><a class="dropdown-item" href="articles/dashboard_comprehensive.html">Comprehensive Async Dashboard (NEW)</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json"></form></li>
@@ -107,7 +108,12 @@
 <p>All code changes must follow the 9-step workflow documented in <code>.claude/CLAUDE.md</code>:</p>
 <ol style="list-style-type: decimal"><li>Create GitHub Issue</li>
 <li>Create dev branch (<code><a href="https://usethis.r-lib.org/reference/pull-requests.html" class="external-link">usethis::pr_init()</a></code>)</li>
-<li>Make changes</li>
+<li>Make changes
+<ul><li>
+<strong>3a. Bump version in DESCRIPTION</strong> (use <code><a href="https://usethis.r-lib.org/reference/use_version.html" class="external-link">usethis::use_version()</a></code>)</li>
+<li><strong>3b. Make code/documentation changes</strong></li>
+<li><strong>3c. Commit with version bump included</strong></li>
+</ul></li>
 <li>Run ALL checks locally (including Shinylive tests above)</li>
 <li>
 <strong>Push to cachix</strong> (<code>../push_to_cachix.sh</code> - for Nix binaries)</li>
@@ -117,6 +123,62 @@
 <li>Log everything in <code>R/setup/</code>
 </li>
 </ol><p><strong>NEVER commit directly to main</strong> - all changes must go through PR review and CI/CD validation.</p>
+<div class="section level3">
+<h3 id="version-bumping-guidelines-step-3a">Version Bumping Guidelines (Step 3a)<a class="anchor" aria-label="anchor" href="#version-bumping-guidelines-step-3a"></a></h3>
+<p><strong>Always bump the version</strong> when making changes. Follow semantic versioning:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Bug fix (patch release)</span></span>
+<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/use_version.html" class="external-link">use_version</a></span><span class="op">(</span><span class="st">"patch"</span><span class="op">)</span>   <span class="co"># 2.0.0.9000 → 2.0.1.9000</span></span>
+<span></span>
+<span><span class="co"># New feature (minor release)</span></span>
+<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/use_version.html" class="external-link">use_version</a></span><span class="op">(</span><span class="st">"minor"</span><span class="op">)</span>   <span class="co"># 2.0.1.9000 → 2.1.0.9000</span></span>
+<span></span>
+<span><span class="co"># Breaking change (major release)</span></span>
+<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/use_version.html" class="external-link">use_version</a></span><span class="op">(</span><span class="st">"major"</span><span class="op">)</span>   <span class="co"># 2.1.0.9000 → 3.0.0.9000</span></span>
+<span></span>
+<span><span class="co"># For CRAN/stable releases (remove .9000 suffix)</span></span>
+<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/use_version.html" class="external-link">use_version</a></span><span class="op">(</span><span class="st">"patch"</span><span class="op">)</span>   <span class="co"># 2.0.1.9000 → 2.0.1</span></span></code></pre></div>
+<p><strong>Version Bumping Decision Table:</strong></p>
+<table class="table"><colgroup><col width="25%"><col width="31%"><col width="17%"><col width="25%"></colgroup><thead><tr><th>Change Type</th>
+<th>Version Command</th>
+<th>Example</th>
+<th>Cachix Pin?</th>
+</tr></thead><tbody><tr><td>
+<strong>Bug fix</strong> (dev)</td>
+<td><code>use_version("patch")</code></td>
+<td>2.0.0.9000 → 2.0.1.9000</td>
+<td>❌ No</td>
+</tr><tr><td>
+<strong>Bug fix</strong> (release)</td>
+<td>Remove <code>.9000</code>
+</td>
+<td>2.0.1.9000 → 2.0.1</td>
+<td>✅ Yes</td>
+</tr><tr><td>
+<strong>New feature</strong> (dev)</td>
+<td><code>use_version("minor")</code></td>
+<td>2.0.1.9000 → 2.1.0.9000</td>
+<td>❌ No</td>
+</tr><tr><td>
+<strong>New feature</strong> (release)</td>
+<td>Remove <code>.9000</code>
+</td>
+<td>2.1.0.9000 → 2.1.0</td>
+<td>✅ Yes</td>
+</tr><tr><td>
+<strong>Breaking change</strong> (dev)</td>
+<td><code>use_version("major")</code></td>
+<td>2.1.0.9000 → 3.0.0.9000</td>
+<td>❌ No</td>
+</tr><tr><td>
+<strong>Breaking change</strong> (release)</td>
+<td>Remove <code>.9000</code>
+</td>
+<td>3.0.0.9000 → 3.0.0</td>
+<td>✅ Yes</td>
+</tr></tbody></table><p><strong>Development vs Release Versions:</strong> - <strong>Development</strong> (<code>.9000</code> suffix): Ongoing work between releases - push to cachix but don’t pin - <strong>Release</strong> (no <code>.9000</code>): Stable versions for users - push to cachix AND pin forever</p>
+<p><strong>References:</strong> - <a href="https://r-pkgs.org/lifecycle.html#sec-lifecycle-version-number" class="external-link">R Packages (2e): Lifecycle</a> - <a href="https://usethis.r-lib.org/reference/use_version.html" class="external-link">usethis::use_version()</a> - <a href="https://semver.org/" class="external-link">Semantic Versioning</a></p>
+</div>
 <div class="section level3">
 <h3 id="github-actions-workflows">GitHub Actions Workflows<a class="anchor" aria-label="anchor" href="#github-actions-workflows"></a></h3>
 <p>After pushing, the following workflows run automatically:</p>

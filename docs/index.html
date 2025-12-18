@@ -36,7 +36,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/dynamic_broadcasting.html">Async Parallel Random Walks</a></li>
+<li><a class="dropdown-item" href="articles/dynamic_broadcasting.html">Async Parallel Random Walks (Basic)</a></li>
+    <li><a class="dropdown-item" href="articles/dashboard_comprehensive.html">Comprehensive Async Dashboard (NEW)</a></li>
   </ul>
 </li>
       </ul>
@@ -61,6 +62,8 @@
 <ul>
 <li>
 <strong>📊 <a href="https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html">Async Parallel Demo</a></strong> - Try async parallel simulation in your browser (WebR + mirai)</li>
+<li>
+<strong>✨ <a href="https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html">Comprehensive Dashboard</a></strong> - Full-featured dashboard with all visualizations (NEW!)</li>
 <li>
 <strong>📚 <a href="https://johngavin.github.io/randomwalk/">Package Documentation</a></strong> - Full API reference and vignettes</li>
 <li>
@@ -109,20 +112,30 @@
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="interactive-async-parallel-demo">Interactive Async Parallel Demo<a class="anchor" aria-label="anchor" href="#interactive-async-parallel-demo"></a>
+<h2 id="interactive-async-parallel-demos">Interactive Async Parallel Demos<a class="anchor" aria-label="anchor" href="#interactive-async-parallel-demos"></a>
 </h2>
 <p>Try the simulation directly in your browser (no installation required):</p>
+<div class="section level3">
+<h3 id="basic-demo">Basic Demo<a class="anchor" aria-label="anchor" href="#basic-demo"></a>
+</h3>
 <p><strong><a href="https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html">Launch Async Parallel Demo</a></strong></p>
-<p>The dashboard runs entirely in your browser using WebAssembly via <a href="https://docs.r-wasm.org/webr/" class="external-link">WebR</a> with true async parallel processing using <a href="https://shikokuchuo.net/mirai/" class="external-link">mirai</a>. Features include:</p>
+<p>Simple demonstration of async parallel processing with basic visualizations.</p>
+</div>
+<div class="section level3">
+<h3 id="comprehensive-dashboard-new">Comprehensive Dashboard (NEW!)<a class="anchor" aria-label="anchor" href="#comprehensive-dashboard-new"></a>
+</h3>
+<p><strong><a href="https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html">Launch Comprehensive Dashboard</a></strong></p>
+<p>Full-featured showcase with all randomwalk capabilities: - <strong>Multiple visualizations</strong>: Fractal plots, walker paths, distributions - <strong>Comprehensive statistics</strong>: Grid stats, walker stats, performance metrics - <strong>Debug information</strong>: Package versions, backend selection, periodic updates - <strong>Documentation integration</strong>: Links to wiki, issues, implementation notes</p>
+<p>Both dashboards run entirely in your browser using WebAssembly via <a href="https://docs.r-wasm.org/webr/" class="external-link">WebR</a> with true async parallel processing using <a href="https://shikokuchuo.net/mirai/" class="external-link">mirai</a>. Features include:</p>
 <ul>
 <li>Real-time parameter adjustment with sliders and dropdowns</li>
 <li>
 <strong>True async parallelization</strong> (workers=2) running in-browser via mirai backend</li>
-<li>Multiple visualization tabs (Grid State, Walker Paths, Statistics, Backend Info)</li>
 <li>Auto-detection of WebR environment (uses mirai instead of crew)</li>
 <li>Complete simulation statistics and detailed walker information</li>
 <li>No R installation or server required</li>
 </ul>
+</div>
 </div>
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
