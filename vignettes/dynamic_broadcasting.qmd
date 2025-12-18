@@ -7,6 +7,8 @@ format:
     toc: true
     toc-depth: 3
     embed-resources: false
+    resources:
+      - shinylive-sw.js
 filters:
   - shinylive
 ---
