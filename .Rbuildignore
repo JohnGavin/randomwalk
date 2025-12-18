@@ -48,6 +48,11 @@
 ^vignettes/_targets\.yaml$
 ^vignettes/\.quarto$
 
+# Exclude disabled vignettes (Issue #132)
+^vignettes/.*\.qmd\.disabled$
+^vignettes/.*\.qmd\.bak$
+^vignettes/README_DISABLED\.md$
+
 # Non-standard top-level documentation files (exclude from package)
 ^AGENTS\.md$
 ^CONSOLIDATION_.*\.md$
