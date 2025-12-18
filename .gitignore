@@ -14,6 +14,8 @@ pdfs/
 Rplots.pdf
 
 /.quarto/
+vignettes/.quarto/
+vignettes/*_files/
 
 # Temporary development files
 inst/old/
