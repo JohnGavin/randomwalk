@@ -11,6 +11,10 @@ format:
       - shinylive-sw.js
 filters:
   - shinylive
+vignette: >
+  %\VignetteIndexEntry{Async Parallel Random Walks}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
 ---
 
 # Async Parallel Random Walks
