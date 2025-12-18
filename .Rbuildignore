@@ -46,6 +46,7 @@
 ^vignettes/.*\.html$
 ^vignettes/.*_files/
 ^vignettes/_targets\.yaml$
+^vignettes/\.quarto$
 
 # Non-standard top-level documentation files (exclude from package)
 ^AGENTS\.md$
@@ -57,3 +58,4 @@
 ^DEVTOOLS_LOAD_ALL_EXAMPLES\.md$
 ^GC_ROOT_EXAMPLES\.md$
 ^TIPS\.txt$
+^shinylive-sw\.js$
