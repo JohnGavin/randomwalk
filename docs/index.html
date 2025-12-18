@@ -36,10 +36,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/dashboard.html">Interactive Dashboard (Sync)</a></li>
-    <li><a class="dropdown-item" href="articles/dashboard_async.html">Async/Parallel Dashboard</a></li>
-    <li><a class="dropdown-item" href="articles/dynamic_broadcasting.html">Dynamic Grid Broadcasting</a></li>
-    <li><a class="dropdown-item" href="articles/telemetry.html">Telemetry and Pipeline Statistics</a></li>
+<li><a class="dropdown-item" href="articles/dynamic_broadcasting.html">Async Parallel Random Walks</a></li>
   </ul>
 </li>
       </ul>
@@ -57,13 +54,13 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="randomwalk">randomwalk<a class="anchor" aria-label="anchor" href="#randomwalk"></a>
 </h1></div>
-<p>Asynchronous Pixel Walking Simulation with Parallel Processing</p>
+<p>Asynchronous Pixel Walking Simulation with Parallel Processing.</p>
 <div class="section level2">
 <h2 id="rocket-quick-links">🚀 Quick Links<a class="anchor" aria-label="anchor" href="#rocket-quick-links"></a>
 </h2>
 <ul>
 <li>
-<strong>📊 <a href="https://johngavin.github.io/randomwalk/articles/dashboard/">Live Dashboard</a></strong> - Try the simulation in your browser (no installation needed)</li>
+<strong>📊 <a href="https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html">Async Parallel Demo</a></strong> - Try async parallel simulation in your browser (WebR + mirai)</li>
 <li>
 <strong>📚 <a href="https://johngavin.github.io/randomwalk/">Package Documentation</a></strong> - Full API reference and vignettes</li>
 <li>
@@ -112,15 +109,17 @@
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="interactive-dashboard">Interactive Dashboard<a class="anchor" aria-label="anchor" href="#interactive-dashboard"></a>
+<h2 id="interactive-async-parallel-demo">Interactive Async Parallel Demo<a class="anchor" aria-label="anchor" href="#interactive-async-parallel-demo"></a>
 </h2>
 <p>Try the simulation directly in your browser (no installation required):</p>
-<p><strong><a href="https://johngavin.github.io/randomwalk/articles/dashboard/">Launch Interactive Dashboard</a></strong></p>
-<p>The dashboard runs entirely in your browser using WebAssembly via <a href="https://posit-dev.github.io/r-shinylive/" class="external-link">Shinylive</a>. Features include:</p>
+<p><strong><a href="https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html">Launch Async Parallel Demo</a></strong></p>
+<p>The dashboard runs entirely in your browser using WebAssembly via <a href="https://docs.r-wasm.org/webr/" class="external-link">WebR</a> with true async parallel processing using <a href="https://shikokuchuo.net/mirai/" class="external-link">mirai</a>. Features include:</p>
 <ul>
 <li>Real-time parameter adjustment with sliders and dropdowns</li>
-<li>Multiple visualization tabs (Grid State, Walker Paths, Statistics, Raw Data)</li>
-<li>Start points (green circles) and end points (red triangles) on path plots</li>
+<li>
+<strong>True async parallelization</strong> (workers=2) running in-browser via mirai backend</li>
+<li>Multiple visualization tabs (Grid State, Walker Paths, Statistics, Backend Info)</li>
+<li>Auto-detection of WebR environment (uses mirai instead of crew)</li>
 <li>Complete simulation statistics and detailed walker information</li>
 <li>No R installation or server required</li>
 </ul>
@@ -179,24 +178,28 @@
 <div class="section level2">
 <h2 id="books-vignettes--documentation">📚 Vignettes &amp; Documentation<a class="anchor" aria-label="anchor" href="#books-vignettes--documentation"></a>
 </h2>
-<p>The package includes comprehensive vignettes for different use cases:</p>
 <div class="section level3">
-<h3 id="interactive-dashboard-video_game">
-<strong><a href="https://johngavin.github.io/randomwalk/articles/dashboard.html">Interactive Dashboard</a></strong> 🎮<a class="anchor" aria-label="anchor" href="#interactive-dashboard-video_game"></a>
+<h3 id="available-vignettes">Available Vignettes<a class="anchor" aria-label="anchor" href="#available-vignettes"></a>
 </h3>
-<p>Browser-based Shiny application running entirely client-side via WebAssembly. Features real-time parameter adjustment, multiple visualization tabs, and complete simulation statistics - no R installation required.</p>
 </div>
 <div class="section level3">
-<h3 id="asyncparallel-simulation-dashboard-zap">
-<strong><a href="https://johngavin.github.io/randomwalk/articles/dashboard_async.html">Async/Parallel Simulation Dashboard</a></strong> ⚡<a class="anchor" aria-label="anchor" href="#asyncparallel-simulation-dashboard-zap"></a>
+<h3 id="async-parallel-random-walks-zap">
+<strong><a href="https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html">Async Parallel Random Walks</a></strong> ⚡<a class="anchor" aria-label="anchor" href="#async-parallel-random-walks-zap"></a>
 </h3>
-<p>Advanced dashboard demonstrating parallel processing with 0-12 workers using the <code>crew</code> package. Compare performance metrics between sync and async modes, with grid sizes from 20×20 to 400×400.</p>
+<p>Interactive Shiny dashboard demonstrating <strong>true async parallel processing</strong> in WebAssembly. Uses mirai backend for parallel workers running entirely in-browser via WebR. Features real-time parameter adjustment, multiple visualization tabs, and complete simulation statistics - no R installation required.</p>
 </div>
 <div class="section level3">
-<h3 id="telemetry-and-pipeline-statistics-bar_chart">
-<strong><a href="https://johngavin.github.io/randomwalk/articles/telemetry.html">Telemetry and Pipeline Statistics</a></strong> 📊<a class="anchor" aria-label="anchor" href="#telemetry-and-pipeline-statistics-bar_chart"></a>
+<h3 id="temporarily-disabled-vignettes">Temporarily Disabled Vignettes<a class="anchor" aria-label="anchor" href="#temporarily-disabled-vignettes"></a>
 </h3>
-<p>Package performance metrics, targets pipeline visualization, git history, test coverage statistics, and session information. All data pre-computed using the <code>targets</code> package for reproducibility.</p>
+<p>The following vignettes are temporarily disabled (see <a href="https://github.com/JohnGavin/randomwalk/issues/132" class="external-link">Issue #132</a>):</p>
+<ul>
+<li>
+<strong>Interactive Dashboard</strong> (dashboard.html) - Service Worker errors, requires Shinylive/webR update</li>
+<li>
+<strong>Async/Parallel Dashboard</strong> (dashboard_async.html) - Same Service Worker issues as dashboard</li>
+<li>
+<strong>Telemetry and Pipeline Statistics</strong> (telemetry.html) - Missing target definitions in pipeline</li>
+</ul>
 </div>
 </div>
 <div class="section level2">
@@ -259,9 +262,10 @@
 │   └── qmd/                   # Source Quarto documents
 │
 ├── vignettes/                 # Package vignettes
-│   ├── dashboard.qmd          # Interactive dashboard vignette
-│   ├── dashboard_async.qmd    # Async dashboard vignette
-│   └── telemetry.qmd          # Telemetry statistics vignette
+│   ├── dynamic_broadcasting.qmd # Async parallel demo (✅ active)
+│   ├── dashboard.qmd          # Interactive dashboard (⏸️ disabled, Issue #132)
+│   ├── dashboard_async.qmd    # Async dashboard (⏸️ disabled, Issue #132)
+│   └── telemetry.qmd          # Telemetry statistics (⏸️ disabled, Issue #132)
 │
 ├── tests/                     # Test suite
 │   └── testthat/              # testthat unit tests
@@ -314,7 +318,7 @@
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li><a href="articles/dashboard.html">Try Interactive Dashboard</a></li>
+<li><a href="articles/dynamic_broadcasting.html">Try Async Parallel Demo</a></li>
 </ul>
 </div>
 
