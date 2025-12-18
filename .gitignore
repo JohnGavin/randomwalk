@@ -16,6 +16,8 @@ Rplots.pdf
 /.quarto/
 vignettes/.quarto/
 vignettes/*_files/
+vignettes/*.html
+vignettes/*.bak
 
 # Temporary development files
 inst/old/
