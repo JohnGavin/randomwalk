@@ -4,7 +4,7 @@ Asynchronous Pixel Walking Simulation with Parallel Processing.
 
 ## 🚀 Quick Links
 
-- **📊 [Live Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard/)** - Try the simulation in your browser (no installation needed)
+- **📊 [Async Parallel Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)** - Try async parallel simulation in your browser (WebR + mirai)
 - **📚 [Package Documentation](https://johngavin.github.io/randomwalk/)** - Full API reference and vignettes
 - **📖 [Wiki](https://github.com/JohnGavin/randomwalk/wiki)** - How-to guides, troubleshooting, and deployment docs
 - **🐙 [GitHub Repository](https://github.com/JohnGavin/randomwalk)** - Source code and issues
@@ -35,17 +35,18 @@ Asynchronous Pixel Walking Simulation with Parallel Processing.
 devtools::install()
 ```
 
-## Interactive Dashboard
+## Interactive Async Parallel Demo
 
 Try the simulation directly in your browser (no installation required):
 
-**[Launch Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard/)**
+**[Launch Async Parallel Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)**
 
-The dashboard runs entirely in your browser using WebAssembly via [Shinylive](https://posit-dev.github.io/r-shinylive/). Features include:
+The dashboard runs entirely in your browser using WebAssembly via [WebR](https://docs.r-wasm.org/webr/) with true async parallel processing using [mirai](https://shikokuchuo.net/mirai/). Features include:
 
 - Real-time parameter adjustment with sliders and dropdowns
-- Multiple visualization tabs (Grid State, Walker Paths, Statistics, Raw Data)
-- Start points (green circles) and end points (red triangles) on path plots
+- **True async parallelization** (workers=2) running in-browser via mirai backend
+- Multiple visualization tabs (Grid State, Walker Paths, Statistics, Backend Info)
+- Auto-detection of WebR environment (uses mirai instead of crew)
 - Complete simulation statistics and detailed walker information
 - No R installation or server required
 
@@ -91,16 +92,18 @@ run_dashboard()
 
 ## 📚 Vignettes & Documentation
 
-The package includes comprehensive vignettes for different use cases:
+### Available Vignettes
 
-### **[Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard.html)** 🎮
-Browser-based Shiny application running entirely client-side via WebAssembly. Features real-time parameter adjustment, multiple visualization tabs, and complete simulation statistics - no R installation required.
+### **[Async Parallel Random Walks](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)** ⚡
+Interactive Shiny dashboard demonstrating **true async parallel processing** in WebAssembly. Uses mirai backend for parallel workers running entirely in-browser via WebR. Features real-time parameter adjustment, multiple visualization tabs, and complete simulation statistics - no R installation required.
 
-### **[Async/Parallel Simulation Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_async.html)** ⚡
-Advanced dashboard demonstrating parallel processing with 0-12 workers using the `crew` package. Compare performance metrics between sync and async modes, with grid sizes from 20×20 to 400×400.
+### Temporarily Disabled Vignettes
 
-### **[Telemetry and Pipeline Statistics](https://johngavin.github.io/randomwalk/articles/telemetry.html)** 📊
-Package performance metrics, targets pipeline visualization, git history, test coverage statistics, and session information. All data pre-computed using the `targets` package for reproducibility.
+The following vignettes are temporarily disabled (see [Issue #132](https://github.com/JohnGavin/randomwalk/issues/132)):
+
+- **Interactive Dashboard** (dashboard.html) - Service Worker errors, requires Shinylive/webR update
+- **Async/Parallel Dashboard** (dashboard_async.html) - Same Service Worker issues as dashboard
+- **Telemetry and Pipeline Statistics** (telemetry.html) - Missing target definitions in pipeline
 
 ## 📋 Essential Documentation
 
@@ -152,9 +155,10 @@ randomwalk/
 │   └── qmd/                   # Source Quarto documents
 │
 ├── vignettes/                 # Package vignettes
-│   ├── dashboard.qmd          # Interactive dashboard vignette
-│   ├── dashboard_async.qmd    # Async dashboard vignette
-│   └── telemetry.qmd          # Telemetry statistics vignette
+│   ├── dynamic_broadcasting.qmd # Async parallel demo (✅ active)
+│   ├── dashboard.qmd          # Interactive dashboard (⏸️ disabled, Issue #132)
+│   ├── dashboard_async.qmd    # Async dashboard (⏸️ disabled, Issue #132)
+│   └── telemetry.qmd          # Telemetry statistics (⏸️ disabled, Issue #132)
 │
 ├── tests/                     # Test suite
 │   └── testthat/              # testthat unit tests

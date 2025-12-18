@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Hello Async Random Walk Simulation Dashboard</title>
+<title>Async Random Walk Simulation Dashboard</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -93,9 +93,27 @@ ul.task-list li input[type="checkbox"] {
 
 # Mount WebAssembly file system from local path (deployed to docs/wasm)
 # This avoids CORS issues by using the same origin
+webr::mount(
+  mountpoint = "/randomwalk-lib",
+  source = "../wasm/library.data"
+)
+
+# Add mounted library to library paths
+.libPaths(c("/randomwalk-lib", .libPaths()))
+
+# Install ggplot2 dependencies explicitly from webR repository
+# Use /tmp for installation since it's writable
+webr::install(c("munsell", "colorspace", "farver", "labeling", "viridisLite",
+                 "RColorBrewer", "scales", "tibble", "ggplot2"),
+               lib = "/tmp/webr-libs")
+
+# Add the tmp library to the path
+.libPaths(c("/tmp/webr-libs", .libPaths()))
+
 # Load required packages
-# Shinylive will automatically detect and bundle these packages
 library(shiny)
+
+# Load randomwalk from mounted library
 library(randomwalk)
 
 

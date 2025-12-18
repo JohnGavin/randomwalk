@@ -10,8 +10,8 @@ home:
     Parallel random walk simulations that create fractal graphs through
     asynchronous pixel walking on a grid.
   links:
-  - text: Try Interactive Dashboard
-    href: articles/dashboard.html
+  - text: Try Async Parallel Demo
+    href: articles/dynamic_broadcasting.html
 
 navbar:
   structure:
@@ -21,23 +21,25 @@ navbar:
     articles:
       text: Articles
       menu:
-      - text: Interactive Dashboard (Sync)
-        href: articles/dashboard.html
-      - text: Async/Parallel Dashboard
-        href: articles/dashboard_async.html
-      - text: Dynamic Grid Broadcasting
+      # NOTE: Disabled broken vignettes (Issue #132)
+      # - text: Interactive Dashboard (Sync)
+      #   href: articles/dashboard.html
+      # - text: Async/Parallel Dashboard
+      #   href: articles/dashboard_async.html
+      - text: Async Parallel Random Walks
         href: articles/dynamic_broadcasting.html
-      - text: Telemetry and Pipeline Statistics
-        href: articles/telemetry.html
+      # - text: Telemetry and Pipeline Statistics
+      #   href: articles/telemetry.html
 
 articles:
 - title: Vignettes
   navbar: ~
   contents:
-  - dashboard
-  - dashboard_async
+  # NOTE: Disabled broken vignettes (Issue #132)
+  # - dashboard
+  # - dashboard_async
   - dynamic_broadcasting
-  - telemetry
+  # - telemetry
 
 footer:
   structure:
