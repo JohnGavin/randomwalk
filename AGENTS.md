@@ -80,6 +80,9 @@ All code changes must follow the 9-step workflow documented in `.claude/CLAUDE.m
 1. Create GitHub Issue
 2. Create dev branch (`usethis::pr_init()`)
 3. Make changes
+   - **3a. Bump version in DESCRIPTION** (use `usethis::use_version()`)
+   - **3b. Make code/documentation changes**
+   - **3c. Commit with version bump included**
 4. Run ALL checks locally (including Shinylive tests above)
 5. **Push to cachix** (`../push_to_cachix.sh` - for Nix binaries)
 6. Push via PR (`usethis::pr_push()`)
@@ -88,6 +91,44 @@ All code changes must follow the 9-step workflow documented in `.claude/CLAUDE.m
 9. Log everything in `R/setup/`
 
 **NEVER commit directly to main** - all changes must go through PR review and CI/CD validation.
+
+### Version Bumping Guidelines (Step 3a)
+
+**Always bump the version** when making changes. Follow semantic versioning:
+
+```r
+# Bug fix (patch release)
+usethis::use_version("patch")   # 2.0.0.9000 → 2.0.1.9000
+
+# New feature (minor release)
+usethis::use_version("minor")   # 2.0.1.9000 → 2.1.0.9000
+
+# Breaking change (major release)
+usethis::use_version("major")   # 2.1.0.9000 → 3.0.0.9000
+
+# For CRAN/stable releases (remove .9000 suffix)
+usethis::use_version("patch")   # 2.0.1.9000 → 2.0.1
+```
+
+**Version Bumping Decision Table:**
+
+| Change Type | Version Command | Example | Cachix Pin? |
+|-------------|----------------|---------|-------------|
+| **Bug fix** (dev) | `use_version("patch")` | 2.0.0.9000 → 2.0.1.9000 | ❌ No |
+| **Bug fix** (release) | Remove `.9000` | 2.0.1.9000 → 2.0.1 | ✅ Yes |
+| **New feature** (dev) | `use_version("minor")` | 2.0.1.9000 → 2.1.0.9000 | ❌ No |
+| **New feature** (release) | Remove `.9000` | 2.1.0.9000 → 2.1.0 | ✅ Yes |
+| **Breaking change** (dev) | `use_version("major")` | 2.1.0.9000 → 3.0.0.9000 | ❌ No |
+| **Breaking change** (release) | Remove `.9000` | 3.0.0.9000 → 3.0.0 | ✅ Yes |
+
+**Development vs Release Versions:**
+- **Development** (`.9000` suffix): Ongoing work between releases - push to cachix but don't pin
+- **Release** (no `.9000`): Stable versions for users - push to cachix AND pin forever
+
+**References:**
+- [R Packages (2e): Lifecycle](https://r-pkgs.org/lifecycle.html#sec-lifecycle-version-number)
+- [usethis::use_version()](https://usethis.r-lib.org/reference/use_version.html)
+- [Semantic Versioning](https://semver.org/)
 
 ### GitHub Actions Workflows
 
