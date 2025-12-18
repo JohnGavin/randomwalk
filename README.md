@@ -5,6 +5,7 @@ Asynchronous Pixel Walking Simulation with Parallel Processing.
 ## 🚀 Quick Links
 
 - **📊 [Async Parallel Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)** - Try async parallel simulation in your browser (WebR + mirai)
+- **✨ [Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)** - Full-featured dashboard with all visualizations (NEW!)
 - **📚 [Package Documentation](https://johngavin.github.io/randomwalk/)** - Full API reference and vignettes
 - **📖 [Wiki](https://github.com/JohnGavin/randomwalk/wiki)** - How-to guides, troubleshooting, and deployment docs
 - **🐙 [GitHub Repository](https://github.com/JohnGavin/randomwalk)** - Source code and issues
@@ -35,17 +36,28 @@ Asynchronous Pixel Walking Simulation with Parallel Processing.
 devtools::install()
 ```
 
-## Interactive Async Parallel Demo
+## Interactive Async Parallel Demos
 
 Try the simulation directly in your browser (no installation required):
 
+### Basic Demo
 **[Launch Async Parallel Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)**
 
-The dashboard runs entirely in your browser using WebAssembly via [WebR](https://docs.r-wasm.org/webr/) with true async parallel processing using [mirai](https://shikokuchuo.net/mirai/). Features include:
+Simple demonstration of async parallel processing with basic visualizations.
+
+### Comprehensive Dashboard (NEW!)
+**[Launch Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)**
+
+Full-featured showcase with all randomwalk capabilities:
+- **Multiple visualizations**: Fractal plots, walker paths, distributions
+- **Comprehensive statistics**: Grid stats, walker stats, performance metrics
+- **Debug information**: Package versions, backend selection, periodic updates
+- **Documentation integration**: Links to wiki, issues, implementation notes
+
+Both dashboards run entirely in your browser using WebAssembly via [WebR](https://docs.r-wasm.org/webr/) with true async parallel processing using [mirai](https://shikokuchuo.net/mirai/). Features include:
 
 - Real-time parameter adjustment with sliders and dropdowns
 - **True async parallelization** (workers=2) running in-browser via mirai backend
-- Multiple visualization tabs (Grid State, Walker Paths, Statistics, Backend Info)
 - Auto-detection of WebR environment (uses mirai instead of crew)
 - Complete simulation statistics and detailed walker information
 - No R installation or server required

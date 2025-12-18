@@ -26,8 +26,10 @@ navbar:
       #   href: articles/dashboard.html
       # - text: Async/Parallel Dashboard
       #   href: articles/dashboard_async.html
-      - text: Async Parallel Random Walks
+      - text: Async Parallel Random Walks (Basic)
         href: articles/dynamic_broadcasting.html
+      - text: Comprehensive Async Dashboard (NEW)
+        href: articles/dashboard_comprehensive.html
       # - text: Telemetry and Pipeline Statistics
       #   href: articles/telemetry.html
 
@@ -39,6 +41,7 @@ articles:
   # - dashboard
   # - dashboard_async
   - dynamic_broadcasting
+  - dashboard_comprehensive
   # - telemetry
 
 footer:

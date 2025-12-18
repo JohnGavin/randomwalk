@@ -1,0 +1,628 @@
+---
+title: "Comprehensive Async Parallel Random Walks Dashboard"
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
+    toc: true
+    toc-depth: 3
+    embed-resources: false
+    resources:
+      - shinylive-sw.js
+filters:
+  - shinylive
+---
+
+# Comprehensive Async Parallel Dashboard
+
+This vignette provides a **comprehensive interactive Shiny application** demonstrating all features of the randomwalk package with async parallel processing in WebAssembly.
+
+> **Complete Showcase**: This dashboard demonstrates **all randomwalk capabilities**:
+>
+> - ✅ Async parallel processing (mirai in WebR, crew in native R)
+> - ✅ Multiple visualizations (fractal plots, path plots, distributions)
+> - ✅ Comprehensive statistics and debugging information
+> - ✅ Real-time parameter tuning
+> - ✅ Error handling and status updates
+> - ✅ Cross-references to documentation
+
+**Related Documentation:**
+- [WIKI_SHINYLIVE_LESSONS_LEARNED.md](https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md) - Complete lessons learned
+- [Issue #129](https://github.com/JohnGavin/randomwalk/issues/129) - Async parallel support
+- [Issue #136](https://github.com/JohnGavin/randomwalk/issues/136) - This comprehensive vignette
+
+## Interactive Dashboard
+
+```{shinylive-r}
+#| standalone: true
+#| viewerHeight: 900
+
+# ============================================================================
+# Package Installation
+# ============================================================================
+
+cat("\n=== COMPREHENSIVE ASYNC DASHBOARD SETUP ===\n")
+cat("Timestamp:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
+
+cat("Installing randomwalk from R-Universe...\n")
+tryCatch({
+  webr::install(
+    "randomwalk",
+    repos = c(
+      "https://johngavin.r-universe.dev",  # Stable randomwalk with WebR binaries
+      "https://repo.r-wasm.org"            # Standard webR packages
+    ),
+    verbose = TRUE,
+    quiet = FALSE
+  )
+  cat("✅ randomwalk installed\n")
+}, error = function(e) {
+  cat("❌ ERROR installing randomwalk:", e$message, "\n")
+  cat("Fallback: Check https://johngavin.r-universe.dev/randomwalk\n")
+})
+
+cat("\nLoading packages...\n")
+library(shiny)
+cat("✅ shiny loaded\n")
+library(ggplot2)
+cat("✅ ggplot2 loaded\n")
+
+tryCatch({
+  library(randomwalk)
+  cat("✅ randomwalk loaded\n")
+  cat("Available functions:", paste(head(ls("package:randomwalk"), 10), collapse=", "), "\n")
+}, error = function(e) {
+  cat("❌ ERROR loading randomwalk:", e$message, "\n")
+})
+
+cat("\n=== SETUP COMPLETE ===\n\n")
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+# WebR environment detection (from Issue #129)
+is_webr <- function() {
+  exists(".webr_env", envir = .GlobalEnv) ||
+    identical(Sys.getenv("WEBR"), "1")
+}
+
+# ============================================================================
+# Shiny UI
+# ============================================================================
+
+ui <- fluidPage(
+  titlePanel("Comprehensive Async Parallel Random Walks (Issue #136)"),
+
+  sidebarLayout(
+    # LEFT PANEL: INPUTS
+    sidebarPanel(
+      h4("Simulation Parameters"),
+
+      sliderInput("grid_size", "Grid Size:",
+                  min = 10, max = 50, value = 20, step = 5),
+
+      sliderInput("n_walkers", "Number of Walkers:",
+                  min = 1, max = 50, value = 10, step = 1),
+
+      sliderInput("workers", "Parallel Workers:",
+                  min = 0, max = 4, value = 2, step = 1),
+      helpText("0 = synchronous, 2-4 = async parallel (requires webR with R 4.5+)"),
+
+      selectInput("neighborhood", "Neighborhood:",
+                  choices = c("4-hood", "8-hood"),
+                  selected = "4-hood"),
+
+      selectInput("boundary", "Boundary Behavior:",
+                  choices = c("terminate", "wrap"),
+                  selected = "terminate"),
+
+      sliderInput("max_steps", "Max Steps per Walker:",
+                  min = 100, max = 10000, value = 5000, step = 100),
+
+      hr(),
+
+      actionButton("run_sim", "Run Simulation",
+                   class = "btn-primary btn-lg",
+                   style = "width: 100%;"),
+
+      hr(),
+
+      h5("Status:"),
+      verbatimTextOutput("status", placeholder = TRUE)
+    ),
+
+    # RIGHT PANEL: MULTIPLE OUTPUT PAGES
+    mainPanel(
+      tabsetPanel(
+        id = "tabs",
+
+        # PAGE 1: Fractal Graph (Black Pixels)
+        tabPanel("Fractal Graph",
+                 h4("Grid Visualization - Black Pixels"),
+                 plotOutput("fractal_plot", height = "600px"),
+                 hr(),
+                 verbatimTextOutput("fractal_stats")),
+
+        # PAGE 2: Walker Paths (First 25 and Last 25)
+        tabPanel("Walker Paths",
+                 h4("Walker Trajectories"),
+                 plotOutput("paths_plot_first25", height = "400px"),
+                 h5("First 25 Walkers (if available)"),
+                 hr(),
+                 plotOutput("paths_plot_last25", height = "400px"),
+                 h5("Last 25 Walkers (if available)")),
+
+        # PAGE 3: Distributions (Path Lengths by Termination Reason)
+        tabPanel("Distributions",
+                 h4("Path Length Distributions"),
+                 plotOutput("dist_overall", height = "300px"),
+                 h5("Overall Distribution"),
+                 hr(),
+                 plotOutput("dist_by_reason", height = "300px"),
+                 h5("By Termination Reason")),
+
+        # PAGE 4: Statistics
+        tabPanel("Statistics",
+                 h4("Comprehensive Simulation Statistics"),
+                 verbatimTextOutput("stats_comprehensive")),
+
+        # PAGE 5: Debug Info
+        tabPanel("Debug",
+                 h4("Debug Information"),
+                 h5("Package Versions"),
+                 verbatimTextOutput("debug_versions"),
+                 hr(),
+                 h5("Current Inputs"),
+                 verbatimTextOutput("debug_inputs"),
+                 hr(),
+                 h5("Backend Information"),
+                 verbatimTextOutput("debug_backend"),
+                 hr(),
+                 h5("Periodic Updates"),
+                 verbatimTextOutput("debug_periodic")),
+
+        # PAGE 6: Notes
+        tabPanel("Notes",
+                 h4("About This Dashboard"),
+                 h5("Differences from Basic Vignette"),
+                 tags$ul(
+                   tags$li(strong("Comprehensive:"), " Shows all randomwalk features, not just basic demo"),
+                   tags$li(strong("Multiple visualizations:"), " Fractal plots, path plots, distributions"),
+                   tags$li(strong("More walkers:"), " Default 10 walkers (vs 5 in basic demo)"),
+                   tags$li(strong("Detailed statistics:"), " Comprehensive stats across all tabs"),
+                   tags$li(strong("Debug information:"), " Package versions, inputs, backend selection"),
+                   tags$li(strong("Documentation links:"), " Cross-references to wiki and issues")
+                 ),
+                 hr(),
+                 h5("Related Documentation"),
+                 tags$ul(
+                   tags$li(tags$a(href="https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md", "WIKI_SHINYLIVE_LESSONS_LEARNED.md"), " - Complete lessons learned"),
+                   tags$li(tags$a(href="https://github.com/JohnGavin/randomwalk/issues/129", "Issue #129"), " - Async parallel support in WebAssembly"),
+                   tags$li(tags$a(href="https://github.com/JohnGavin/randomwalk/issues/136", "Issue #136"), " - This comprehensive dashboard"),
+                   tags$li(tags$a(href="https://github.com/JohnGavin/randomwalk/issues/130", "Issue #130"), " - Dynamic broadcasting (future work)"),
+                   tags$li(tags$a(href="https://johngavin.github.io/randomwalk/", "randomwalk website"), " - Package documentation")
+                 ),
+                 hr(),
+                 h5("Implementation Notes"),
+                 tags$ul(
+                   tags$li(strong("Auto-backend selection:"), " Automatically uses mirai in WebR, crew in native R"),
+                   tags$li(strong("WebR environment detection:"), " Uses exists('.webr_env') || Sys.getenv('WEBR')"),
+                   tags$li(strong("Package installation:"), " Uses webr::install() from R-Universe"),
+                   tags$li(strong("Sync mode:"), " Uses 'static' (grid snapshots) for WebR compatibility"),
+                   tags$li(strong("Error handling:"), " Comprehensive try-catch blocks with helpful messages")
+                 ),
+                 hr(),
+                 h5("Known Limitations"),
+                 tags$ul(
+                   tags$li("No worker count UI feedback (just slider)"),
+                   tags$li("No per-worker progress bars"),
+                   tags$li("Dynamic broadcasting not yet implemented (Issue #130)"),
+                   tags$li("First load can take 15-30 seconds (package downloads)")
+                 ))
+      )
+    )
+  )
+)
+
+# ============================================================================
+# Shiny Server
+# ============================================================================
+
+server <- function(input, output, session) {
+
+  # Reactive value to store simulation result
+  sim_result <- reactiveVal(NULL)
+
+  # Periodic timer for debug updates
+  timer <- reactiveTimer(1000)  # Update every second
+
+  # Run simulation when button clicked
+  observeEvent(input$run_sim, {
+    output$status <- renderText({
+      paste0(
+        "🏃 Running simulation...\n",
+        "Grid: ", input$grid_size, "×", input$grid_size, "\n",
+        "Walkers: ", input$n_walkers, "\n",
+        "Workers: ", input$workers,
+        if (input$workers > 0) " (async)" else " (sync)", "\n",
+        "Started: ", format(Sys.time(), "%H:%M:%S")
+      )
+    })
+
+    tryCatch({
+      start_time <- Sys.time()
+
+      # Run simulation with async support
+      result <- run_simulation(
+        grid_size = input$grid_size,
+        n_walkers = input$n_walkers,
+        neighborhood = input$neighborhood,
+        boundary = input$boundary,
+        max_steps = input$max_steps,
+        workers = input$workers,  # Auto-detects backend (mirai in WebR)
+        sync_mode = "static",     # Grid snapshots (dynamic is Issue #130)
+        verbose = FALSE
+      )
+
+      end_time <- Sys.time()
+      elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+
+      sim_result(result)
+
+      output$status <- renderText({
+        paste0(
+          "✅ Simulation complete!\n",
+          "Elapsed: ", sprintf("%.2f", elapsed), "s\n",
+          "Backend: ", if (input$workers > 0) {
+            if (is_webr()) "mirai (WebR)" else "crew (native R)"
+          } else {
+            "synchronous"
+          }, "\n",
+          "Completed: ", format(end_time, "%H:%M:%S")
+        )
+      })
+
+    }, error = function(e) {
+      output$status <- renderText({
+        paste0(
+          "❌ ERROR:\n",
+          e$message, "\n\n",
+          "Troubleshooting:\n",
+          "- Check JavaScript console (F12)\n",
+          "- Verify randomwalk package loaded\n",
+          "- Check workers setting (0-4)\n",
+          "- See WIKI_SHINYLIVE_LESSONS_LEARNED.md"
+        )
+      })
+    })
+  })
+
+  # PAGE 1: Fractal Graph
+  output$fractal_plot <- renderPlot({
+    req(sim_result())
+    plot_grid(sim_result(), main = "Fractal Pattern - Black Pixels on Grid")
+  })
+
+  output$fractal_stats <- renderText({
+    req(sim_result())
+    stats <- sim_result()$statistics
+    paste0(
+      "Black Pixels: ", stats$black_pixels,
+      " (", sprintf("%.2f%%", stats$black_percentage), " of grid)\n",
+      "Grid Size: ", stats$grid_size, "×", stats$grid_size,
+      " (", stats$grid_size^2, " total cells)"
+    )
+  })
+
+  # PAGE 2: Walker Paths
+  output$paths_plot_first25 <- renderPlot({
+    req(sim_result())
+    result <- sim_result()
+    n_walkers <- length(result$walkers)
+
+    if (n_walkers >= 1) {
+      first_n <- min(25, n_walkers)
+      plot_walker_paths(result, walker_ids = 1:first_n,
+                        main = paste("First", first_n, "Walkers"))
+    } else {
+      plot.new()
+      text(0.5, 0.5, "No walkers available")
+    }
+  })
+
+  output$paths_plot_last25 <- renderPlot({
+    req(sim_result())
+    result <- sim_result()
+    n_walkers <- length(result$walkers)
+
+    if (n_walkers > 25) {
+      last_n <- min(25, n_walkers)
+      start_id <- n_walkers - last_n + 1
+      plot_walker_paths(result, walker_ids = start_id:n_walkers,
+                        main = paste("Last", last_n, "Walkers"))
+    } else {
+      plot.new()
+      text(0.5, 0.5, "Less than 25 walkers total - see first panel")
+    }
+  })
+
+  # PAGE 3: Distributions
+  output$dist_overall <- renderPlot({
+    req(sim_result())
+    result <- sim_result()
+
+    # Extract path lengths
+    path_lengths <- sapply(result$walkers, function(w) nrow(w$path))
+
+    # Plot histogram
+    hist(path_lengths,
+         breaks = 30,
+         col = "steelblue",
+         border = "white",
+         main = "Overall Path Length Distribution",
+         xlab = "Path Length (steps)",
+         ylab = "Frequency")
+    abline(v = median(path_lengths), col = "red", lwd = 2, lty = 2)
+    legend("topright",
+           legend = c(paste("Median:", median(path_lengths)),
+                     paste("Mean:", sprintf("%.1f", mean(path_lengths)))),
+           col = c("red", "black"),
+           lty = c(2, 1),
+           lwd = 2)
+  })
+
+  output$dist_by_reason <- renderPlot({
+    req(sim_result())
+    result <- sim_result()
+
+    # Extract termination reasons and path lengths
+    walkers_data <- data.frame(
+      path_length = sapply(result$walkers, function(w) nrow(w$path)),
+      reason = sapply(result$walkers, function(w) w$termination_reason)
+    )
+
+    # Plot boxplot by termination reason
+    ggplot(walkers_data, aes(x = reason, y = path_length, fill = reason)) +
+      geom_boxplot(alpha = 0.7) +
+      geom_jitter(width = 0.2, alpha = 0.3) +
+      labs(title = "Path Lengths by Termination Reason",
+           x = "Termination Reason",
+           y = "Path Length (steps)") +
+      theme_minimal() +
+      theme(legend.position = "none")
+  })
+
+  # PAGE 4: Statistics
+  output$stats_comprehensive <- renderText({
+    req(sim_result())
+    stats <- sim_result()$statistics
+
+    paste0(
+      "=== GRID STATISTICS ===\n",
+      "Grid Size: ", stats$grid_size, "×", stats$grid_size, "\n",
+      "Total Cells: ", stats$grid_size^2, "\n",
+      "Black Pixels: ", stats$black_pixels,
+      sprintf(" (%.2f%%)\n", stats$black_percentage),
+      "White Pixels: ", stats$grid_size^2 - stats$black_pixels,
+      sprintf(" (%.2f%%)\n", 100 - stats$black_percentage),
+      "\n=== WALKER STATISTICS ===\n",
+      "Total Walkers: ", stats$total_walkers, "\n",
+      "Completed: ", stats$completed_walkers, "\n",
+      "Success Rate: ",
+      sprintf("%.1f%%", 100 * stats$completed_walkers / stats$total_walkers), "\n",
+      "\n=== STEP STATISTICS ===\n",
+      "Total Steps: ", stats$total_steps, "\n",
+      "Min Steps: ", stats$min_steps, "\n",
+      "Max Steps: ", stats$max_steps, "\n",
+      "Mean Steps: ", sprintf("%.1f", stats$mean_steps), "\n",
+      "Median Steps: ", stats$median_steps, "\n",
+      "Std Dev: ", sprintf("%.1f", sd(sapply(sim_result()$walkers, function(w) nrow(w$path)))), "\n",
+      "\n=== PERFORMANCE ===\n",
+      "Elapsed Time: ", sprintf("%.2f", stats$elapsed_time_secs), " seconds\n",
+      "Steps per Second: ",
+      sprintf("%.0f", stats$total_steps / stats$elapsed_time_secs), "\n",
+      "\n=== TERMINATION REASONS ===\n",
+      paste(sprintf("  %s: %d (%.1f%%)",
+                    names(stats$termination_reasons),
+                    stats$termination_reasons,
+                    100 * stats$termination_reasons / stats$total_walkers),
+            collapse = "\n")
+    )
+  })
+
+  # PAGE 5: Debug - Versions
+  output$debug_versions <- renderText({
+    paste0(
+      "=== PACKAGE VERSIONS ===\n",
+      "randomwalk: ", packageVersion("randomwalk"), "\n",
+      "shiny: ", packageVersion("shiny"), "\n",
+      "ggplot2: ", packageVersion("ggplot2"), "\n",
+      if (requireNamespace("mirai", quietly = TRUE)) {
+        paste0("mirai: ", packageVersion("mirai"), "\n")
+      } else "",
+      if (requireNamespace("nanonext", quietly = TRUE)) {
+        paste0("nanonext: ", packageVersion("nanonext"), "\n")
+      } else "",
+      if (requireNamespace("crew", quietly = TRUE)) {
+        paste0("crew: ", packageVersion("crew"), "\n")
+      } else ""
+    )
+  })
+
+  # PAGE 5: Debug - Inputs
+  output$debug_inputs <- renderText({
+    paste0(
+      "=== CURRENT INPUTS ===\n",
+      "Grid Size: ", input$grid_size, "\n",
+      "Number of Walkers: ", input$n_walkers, "\n",
+      "Parallel Workers: ", input$workers, "\n",
+      "Neighborhood: ", input$neighborhood, "\n",
+      "Boundary: ", input$boundary, "\n",
+      "Max Steps: ", input$max_steps
+    )
+  })
+
+  # PAGE 5: Debug - Backend
+  output$debug_backend <- renderText({
+    env_is_webr <- is_webr()
+
+    paste0(
+      "=== BACKEND INFORMATION ===\n",
+      "Environment: ", if (env_is_webr) "WebR/Browser" else "Native R", "\n",
+      "R Version: ", R.version.string, "\n",
+      "Backend: ", if (input$workers > 0) {
+        if (env_is_webr) "mirai (WebAssembly-compatible)" else "crew"
+      } else {
+        "synchronous (no parallelization)"
+      }, "\n",
+      "Sync Mode: static (grid snapshots)\n",
+      "\n=== ENVIRONMENT DETECTION ===\n",
+      ".webr_env exists: ", exists(".webr_env", envir = .GlobalEnv), "\n",
+      "WEBR env var: ", Sys.getenv("WEBR"), "\n",
+      "is_webr() result: ", env_is_webr
+    )
+  })
+
+  # PAGE 5: Debug - Periodic Updates
+  output$debug_periodic <- renderText({
+    # Depend on timer to update every second
+    timer()
+
+    paste0(
+      "=== PERIODIC UPDATES ===\n",
+      "Current Time: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n",
+      "Simulation Result: ", if (is.null(sim_result())) "Not yet run" else "Available", "\n",
+      "Active Tab: ", input$tabs
+    )
+  })
+}
+
+# ============================================================================
+# Run Shiny App
+# ============================================================================
+
+shinyApp(ui = ui, server = server)
+```
+
+## Features Demonstrated
+
+This comprehensive dashboard showcases:
+
+### 1. **Multiple Visualization Types**
+- **Fractal graphs**: Black pixel patterns on grid
+- **Walker paths**: First 25 and last 25 trajectories
+- **Distributions**: Overall and by termination reason
+- **Statistics**: Comprehensive simulation metrics
+
+### 2. **Async Parallel Processing**
+- Auto-backend selection (mirai in WebR, crew in native R)
+- True parallelization with workers=2-4
+- Performance metrics and timing
+- Backend information display
+
+### 3. **Comprehensive Statistics**
+- Grid statistics (black/white pixels)
+- Walker statistics (completion rates)
+- Step statistics (min/max/mean/median)
+- Performance metrics (steps per second)
+- Termination reason breakdown
+
+### 4. **Debug Information**
+- Package versions
+- Current input parameters
+- Backend selection details
+- Environment detection results
+- Periodic updates
+
+### 5. **Documentation Integration**
+- Links to wiki documentation
+- Cross-references to related issues
+- Implementation notes
+- Known limitations
+
+## Differences from Basic Vignette
+
+**dynamic_broadcasting.qmd** (basic demo):
+- 5 walkers (simple)
+- 2 output pages (Grid, Paths, Stats)
+- Minimal statistics
+- Basic demo focus
+
+**dashboard_comprehensive.qmd** (this vignette):
+- 10 walkers (more comprehensive)
+- 6 output pages (Fractal, Paths, Distributions, Stats, Debug, Notes)
+- Comprehensive statistics and visualizations
+- Production-ready showcase
+
+## Technical Details
+
+### Auto-Backend Selection
+
+```r
+# WebR environment detection (from Issue #129)
+is_webr <- exists(".webr_env", envir = .GlobalEnv) ||
+           identical(Sys.getenv("WEBR"), "1")
+
+# Backend selection in run_simulation()
+if (workers > 0) {
+  if (is_webr) {
+    # Use mirai backend in WebAssembly
+    controller <- create_mirai_controller(workers, seconds_idle)
+  } else {
+    # Use crew backend in native R
+    controller <- crew::crew_controller_local(workers, seconds_idle)
+  }
+}
+```
+
+### Package Installation
+
+```r
+# Install from R-Universe (automatic WebR binary builds)
+webr::install(
+  "randomwalk",
+  repos = c(
+    "https://johngavin.r-universe.dev",  # Stable randomwalk build
+    "https://repo.r-wasm.org"            # Standard webR packages
+  )
+)
+```
+
+### Error Handling
+
+```r
+# Comprehensive error handling with helpful messages
+tryCatch({
+  result <- run_simulation(...)
+  sim_result(result)
+}, error = function(e) {
+  output$status <- renderText({
+    paste0(
+      "❌ ERROR:\n", e$message, "\n\n",
+      "Troubleshooting:\n",
+      "- Check JavaScript console (F12)\n",
+      "- Verify randomwalk package loaded\n",
+      "- See WIKI_SHINYLIVE_LESSONS_LEARNED.md"
+    )
+  })
+})
+```
+
+## Try It Yourself
+
+Experiment with different parameters:
+
+- **Larger grid**: More exploration space (try 30-50)
+- **More walkers**: Higher density (try 20-50)
+- **More workers**: Increased parallelization (try 4)
+- **8-hood**: Enable diagonal movement
+- **Wrap boundary**: Toroidal grid (no boundaries)
+
+## Related Documentation
+
+- **Issue #129**: [Async parallel support in WebAssembly](https://github.com/JohnGavin/randomwalk/issues/129)
+- **Issue #136**: [This comprehensive vignette](https://github.com/JohnGavin/randomwalk/issues/136)
+- **Issue #130**: [Dynamic broadcasting via nanonext](https://github.com/JohnGavin/randomwalk/issues/130) (future work)
+- **WIKI**: [WIKI_SHINYLIVE_LESSONS_LEARNED.md](https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md)
+- **randomwalk Website**: https://johngavin.github.io/randomwalk/
