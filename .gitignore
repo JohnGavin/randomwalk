@@ -31,3 +31,4 @@ merge_pr.sh
 result
 $WRAPPER_SCRIPT
 $WRAPPER_DIR
+R/setup/fix_issue_134.R
