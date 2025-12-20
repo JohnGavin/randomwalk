@@ -168,9 +168,7 @@ tryCatch({
     repos = c(
       "https://johngavin.r-universe.dev",  # Stable randomwalk with WebR binaries
       "https://repo.r-wasm.org"            # Standard webR packages
-    ),
-    verbose = TRUE,
-    quiet = FALSE
+    )
   )
   cat("✅ randomwalk installed\n")
 }, error = function(e) {
@@ -178,11 +176,25 @@ tryCatch({
   cat("Fallback: Check https://johngavin.r-universe.dev/randomwalk\n")
 })
 
-cat("\nLoading packages...\n")
+cat("\nInstalling/loading required packages...\n")
+# shiny is usually pre-installed in webR
 library(shiny)
 cat("✅ shiny loaded\n")
-library(ggplot2)
-cat("✅ ggplot2 loaded\n")
+
+# Install ggplot2 dependencies and ggplot2
+tryCatch({
+  library(ggplot2)
+  cat("✅ ggplot2 loaded\n")
+}, error = function(e) {
+  cat("⚠️  ggplot2 not found, installing dependencies...\n")
+  # Install munsell first (required ggplot2 dependency)
+  webr::install("munsell", repos = "https://repo.r-wasm.org")
+  cat("✅ munsell installed\n")
+  # Now install ggplot2
+  webr::install("ggplot2", repos = "https://repo.r-wasm.org")
+  library(ggplot2)
+  cat("✅ ggplot2 installed and loaded\n")
+})
 
 tryCatch({
   library(randomwalk)
