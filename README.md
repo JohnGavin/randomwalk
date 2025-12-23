@@ -114,8 +114,10 @@ Interactive Shiny dashboard demonstrating **true async parallel processing** in 
 The following vignettes are temporarily disabled (see [Issue #132](https://github.com/JohnGavin/randomwalk/issues/132)):
 
 - **Interactive Dashboard** (dashboard.html) - Service Worker errors, requires Shinylive/webR update
-- **Async/Parallel Dashboard** (dashboard_async.html) - Same Service Worker issues as dashboard
+- **Async/Parallel Dashboard** (dashboard_async.html) - ⚠️ **Use [Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html) instead** - Same Service Worker issues as dashboard
 - **Telemetry and Pipeline Statistics** (telemetry.html) - Missing target definitions in pipeline
+
+> **Note**: For async parallel dashboard functionality, use the [Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html) which includes all features from dashboard_async plus additional visualizations and statistics.
 
 ## 📋 Essential Documentation
 
