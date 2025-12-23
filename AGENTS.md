@@ -175,6 +175,36 @@ After pushing, the following workflows run automatically:
 - Include session logs IN the PR, not after merge
 - Update documentation when adding/modifying features
 
+## GitHub API Access
+
+**Accessing GitHub via CLI**: Use `GITHUB_PAT` environment variable for authentication.
+
+```bash
+# Set GH_TOKEN from GITHUB_PAT
+export GH_TOKEN=$GITHUB_PAT
+
+# Query open PRs
+gh pr list --state open --limit 50 --json number,title,headRefName
+
+# Query open issues
+gh issue list --state open --limit 50 --json number,title,labels,createdAt
+
+# Get PR details
+gh pr view 123 --json number,title,state,mergeable
+```
+
+**Key Learnings** (Session 2025-12-23):
+- ✅ `GITHUB_PAT` works reliably for gh CLI authentication
+- ✅ Use for querying current PR/issue status (avoid stale documentation)
+- ✅ Always verify data freshness via API before making assumptions
+- ✅ Export as `GH_TOKEN` for gh CLI compatibility
+
+**Best Practices**:
+- Always query GitHub API for ground truth (don't trust old docs)
+- Use `--json` flag for structured output
+- Document API queries in session logs for reproducibility
+- Verify environment variable is set: `echo $GITHUB_PAT | head -c 20`
+
 ## Nix Environment
 
 - All development must occur inside the Nix shell
