@@ -46,10 +46,13 @@ jobs:
       run: |
         nix-build --quiet package.nix
 
-    - name: Push randomwalk Derivation to Cachix
+    - name: Selectively push randomwalk to cachix
       run: |
-        # Push the randomwalk package derivation and all its dependencies
-        nix-store -qR --include-outputs result | cachix push johngavin
+        # Push ONLY randomwalk package to johngavin cachix (not R dependencies)
+        # R dependencies come from rstats-on-nix cache
+        nix-store -qR --include-outputs result | \
+          grep -E 'randomwalk' | \
+          cachix push johngavin
 
   # macOS runner commented out to reduce CI time and costs
   # run-x86_64-darwin:
