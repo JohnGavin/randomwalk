@@ -14,7 +14,7 @@ jobs:
   deploy-cran-repo:
     uses: r-wasm/actions/.github/workflows/deploy-cran-repo.yml@v2
     with:
-      # Build randomwalk package and its dependencies
+      # Build randomwalk package and its dependencies for WebR
       packages: |
         logger
         ggplot2
@@ -27,3 +27,5 @@ jobs:
       repo-url: |
         https://cran.r-project.org
         https://r-lib.r-universe.dev
+      # Deploy to repo/ subdirectory on GitHub Pages
+      repo-subdir: 'repo'

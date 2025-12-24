@@ -226,21 +226,30 @@
 <li>Log all commands in <code>R/setup/</code> for reproducibility</li>
 <li>Include session logs IN the PR, not after merge</li>
 <li>Update documentation when adding/modifying features</li>
-</ul></div>
+</ul><div class="section level3">
+<h3 id="git-configuration-best-practices">Git Configuration Best Practices<a class="anchor" aria-label="anchor" href="#git-configuration-best-practices"></a></h3>
+<p><strong>One-time global setup</strong>: Run <code><a href="https://usethis.r-lib.org/reference/git_vaccinate.html" class="external-link">usethis::git_vaccinate()</a></code> to add common temporary files to your global <code>.gitignore</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/git_vaccinate.html" class="external-link">git_vaccinate</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>This adds patterns to <code>~/.gitignore_global</code> for: - <code>.DS_Store</code> (macOS) - <code>Thumbs.db</code> (Windows) - <code>.Rproj.user/</code>, <code>.Rhistory</code>, <code>.RData</code> (R/RStudio) - Editor temp files (vim, emacs, etc.) - And many other common cruft files</p>
+<p><strong>Benefits</strong>: - Prevents accidentally committing system/editor files - Keeps repositories clean across all projects - One-time setup applies to every git repository - Complements project-specific <code>.gitignore</code> files</p>
+<p><strong>Best Practice</strong>: Run this on every development machine once after installing R/RStudio.</p>
+</div>
+</div>
 <div class="section level2">
 <h2 id="github-api-access">GitHub API Access<a class="anchor" aria-label="anchor" href="#github-api-access"></a></h2>
 <p><strong>Accessing GitHub via CLI</strong>: Use <code>GITHUB_PAT</code> environment variable for authentication.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Set GH_TOKEN from GITHUB_PAT</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="bu">export</span> <span class="va">GH_TOKEN</span><span class="op">=</span><span class="va">$GITHUB_PAT</span></span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co"># Query open PRs</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="ex">gh</span> pr list <span class="at">--state</span> open <span class="at">--limit</span> 50 <span class="at">--json</span> number,title,headRefName</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co"># Query open issues</span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="ex">gh</span> issue list <span class="at">--state</span> open <span class="at">--limit</span> 50 <span class="at">--json</span> number,title,labels,createdAt</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co"># Get PR details</span></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="ex">gh</span> pr view 123 <span class="at">--json</span> number,title,state,mergeable</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Set GH_TOKEN from GITHUB_PAT</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="bu">export</span> <span class="va">GH_TOKEN</span><span class="op">=</span><span class="va">$GITHUB_PAT</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># Query open PRs</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="ex">gh</span> pr list <span class="at">--state</span> open <span class="at">--limit</span> 50 <span class="at">--json</span> number,title,headRefName</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co"># Query open issues</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="ex">gh</span> issue list <span class="at">--state</span> open <span class="at">--limit</span> 50 <span class="at">--json</span> number,title,labels,createdAt</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co"># Get PR details</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="ex">gh</span> pr view 123 <span class="at">--json</span> number,title,state,mergeable</span></code></pre></div>
 <p><strong>Key Learnings</strong> (Session 2025-12-23): - ✅ <code>GITHUB_PAT</code> works reliably for gh CLI authentication - ✅ Use for querying current PR/issue status (avoid stale documentation) - ✅ Always verify data freshness via API before making assumptions - ✅ Export as <code>GH_TOKEN</code> for gh CLI compatibility</p>
 <p><strong>Best Practices</strong>: - Always query GitHub API for ground truth (don’t trust old docs) - Use <code>--json</code> flag for structured output - Document API queries in session logs for reproducibility - Verify environment variable is set: <code>echo $GITHUB_PAT | head -c 20</code></p>
 </div>

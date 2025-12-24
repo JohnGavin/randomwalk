@@ -44,13 +44,14 @@ This vignette provides a **comprehensive interactive Shiny application** demonst
 cat("\n=== COMPREHENSIVE ASYNC DASHBOARD SETUP ===\n")
 cat("Timestamp:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
 
-cat("Installing randomwalk from R-Universe...\n")
+cat("Installing randomwalk from GitHub Pages WASM repo...\n")
 tryCatch({
   webr::install(
     "randomwalk",
     repos = c(
-      "https://johngavin.r-universe.dev",  # Stable randomwalk with WebR binaries
-      "https://repo.r-wasm.org"            # Standard webR packages
+      "https://johngavin.github.io/randomwalk/repo",  # Fast: GitHub Pages WASM repo (5-10 min)
+      "https://johngavin.r-universe.dev",              # Fallback: R-Universe (1-5 hours)
+      "https://repo.r-wasm.org"                        # Standard webR packages
     )
   )
   cat("✅ randomwalk installed\n")
@@ -591,12 +592,13 @@ if (workers > 0) {
 ### Package Installation
 
 ```r
-# Install from R-Universe (automatic WebR binary builds)
+# Install from GitHub Pages WASM repo (fast 5-10 min deployment)
 webr::install(
   "randomwalk",
   repos = c(
-    "https://johngavin.r-universe.dev",  # Stable randomwalk build
-    "https://repo.r-wasm.org"            # Standard webR packages
+    "https://johngavin.github.io/randomwalk/repo",  # Fast: GitHub Pages WASM repo
+    "https://johngavin.r-universe.dev",              # Fallback: R-Universe
+    "https://repo.r-wasm.org"                        # Standard webR packages
   )
 )
 ```
