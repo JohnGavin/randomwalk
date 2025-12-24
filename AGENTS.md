@@ -175,6 +175,29 @@ After pushing, the following workflows run automatically:
 - Include session logs IN the PR, not after merge
 - Update documentation when adding/modifying features
 
+### Git Configuration Best Practices
+
+**One-time global setup**: Run `usethis::git_vaccinate()` to add common temporary files to your global `.gitignore`:
+
+```r
+usethis::git_vaccinate()
+```
+
+This adds patterns to `~/.gitignore_global` for:
+- `.DS_Store` (macOS)
+- `Thumbs.db` (Windows)
+- `.Rproj.user/`, `.Rhistory`, `.RData` (R/RStudio)
+- Editor temp files (vim, emacs, etc.)
+- And many other common cruft files
+
+**Benefits**:
+- Prevents accidentally committing system/editor files
+- Keeps repositories clean across all projects
+- One-time setup applies to every git repository
+- Complements project-specific `.gitignore` files
+
+**Best Practice**: Run this on every development machine once after installing R/RStudio.
+
 ## GitHub API Access
 
 **Accessing GitHub via CLI**: Use `GITHUB_PAT` environment variable for authentication.
