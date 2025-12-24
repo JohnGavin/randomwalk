@@ -15,17 +15,9 @@ jobs:
     uses: r-wasm/actions/.github/workflows/deploy-cran-repo.yml@v2
     with:
       # Build randomwalk package and its dependencies for WebR
+      # Note: nanonext/mirai/crew must be available in default repos for this to work
       packages: |
         logger
         ggplot2
-        nanonext
-        mirai
-        crew
         shiny
         .
-      # Use r-lib.r-universe.dev for async packages (nanonext, mirai, crew)
-      repo-url: |
-        https://cran.r-project.org
-        https://r-lib.r-universe.dev
-      # Deploy to repo/ subdirectory on GitHub Pages
-      repo-subdir: 'repo'
