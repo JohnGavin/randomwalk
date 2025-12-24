@@ -1,21 +1,21 @@
-name: Build R-WASM Binary
+name: Build and deploy wasm R package repository
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
-
 jobs:
   deploy-cran-repo:
     uses: r-wasm/actions/.github/workflows/deploy-cran-repo.yml@v2
+    permissions:
+      # To download GitHub Packages within action
+      repository-projects: read
+      # For publishing to pages environment
+      pages: write
+      id-token: write
     with:
       # Build randomwalk package and its dependencies for WebR
-      # Note: nanonext/mirai/crew must be available in default repos for this to work
       packages: |
         logger
         ggplot2
