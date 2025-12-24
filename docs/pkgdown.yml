@@ -2,11 +2,9 @@ pandoc: 3.7.0.2
 pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
-  dashboard_async: dashboard_async.html
-  dashboard: dashboard.html
+  dashboard_comprehensive: dashboard_comprehensive.html
   dynamic_broadcasting: dynamic_broadcasting.html
-  telemetry: telemetry.html
-last_built: 2025-12-16T21:40Z
+last_built: 2025-12-23T21:49Z
 urls:
   reference: https://johngavin.github.io/randomwalk/reference
   article: https://johngavin.github.io/randomwalk/articles

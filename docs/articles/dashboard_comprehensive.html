@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
-
-<meta charset="utf-8">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta charset="UTF-8">
 <meta name="generator" content="quarto-1.7.34">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-
-
 <title>Comprehensive Async Parallel Random Walks Dashboard</title>
 <style>
 code{white-space: pre-wrap;}
@@ -56,64 +53,51 @@ div.sourceCode
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
-
-
-<script src="dashboard_comprehensive_files/libs/clipboard/clipboard.min.js"></script>
-<script src="dashboard_comprehensive_files/libs/quarto-html/quarto.js" type="module"></script>
-<script src="dashboard_comprehensive_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="dashboard_comprehensive_files/libs/quarto-html/popper.min.js"></script>
-<script src="dashboard_comprehensive_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="dashboard_comprehensive_files/libs/quarto-html/anchor.min.js"></script>
-<link href="dashboard_comprehensive_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<script src="dashboard_comprehensive_files/libs/clipboard/clipboard.min.js"></script><script src="dashboard_comprehensive_files/libs/quarto-html/quarto.js" type="module"></script><script src="dashboard_comprehensive_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script><script src="dashboard_comprehensive_files/libs/quarto-html/popper.min.js"></script><script src="dashboard_comprehensive_files/libs/quarto-html/tippy.umd.min.js"></script><script src="dashboard_comprehensive_files/libs/quarto-html/anchor.min.js"></script><link href="dashboard_comprehensive_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="dashboard_comprehensive_files/libs/quarto-html/quarto-syntax-highlighting-c8ad9e5dbd60b7b70b38521ab19b7da4.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="dashboard_comprehensive_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="dashboard_comprehensive_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<script src="dashboard_comprehensive_files/libs/bootstrap/bootstrap.min.js"></script><link href="dashboard_comprehensive_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="dashboard_comprehensive_files/libs/bootstrap/bootstrap-b232414f0569882df4359abfb7cfba3f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <meta name="shinylive:serviceworker_dir" content="..">
-<script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/load-shinylive-sw.js" type="module"></script>
-<script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/run-python-blocks.js" type="module"></script>
-<link href="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/shinylive.css" rel="stylesheet">
+<script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/load-shinylive-sw.js" type="module"></script><script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/run-python-blocks.js" type="module"></script><link href="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/shinylive.css" rel="stylesheet">
 <link href="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-quarto-css/shinylive-quarto.css" rel="stylesheet">
-
-
 </head>
-
 <body class="quarto-light">
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
 <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-  <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">Table of contents</h2>
+  <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#comprehensive-async-parallel-dashboard" id="toc-comprehensive-async-parallel-dashboard" class="nav-link active" data-scroll-target="#comprehensive-async-parallel-dashboard">Comprehensive Async Parallel Dashboard</a>
+<li>
+<a href="#comprehensive-async-parallel-dashboard" id="toc-comprehensive-async-parallel-dashboard" class="nav-link active" data-scroll-target="#comprehensive-async-parallel-dashboard">Comprehensive Async Parallel Dashboard</a>
   <ul class="collapse">
-  <li><a href="#interactive-dashboard" id="toc-interactive-dashboard" class="nav-link" data-scroll-target="#interactive-dashboard">Interactive Dashboard</a></li>
-  <li><a href="#features-demonstrated" id="toc-features-demonstrated" class="nav-link" data-scroll-target="#features-demonstrated">Features Demonstrated</a>
+<li><a href="#interactive-dashboard" id="toc-interactive-dashboard" class="nav-link" data-scroll-target="#interactive-dashboard">Interactive Dashboard</a></li>
+  <li>
+<a href="#features-demonstrated" id="toc-features-demonstrated" class="nav-link" data-scroll-target="#features-demonstrated">Features Demonstrated</a>
   <ul class="collapse">
-  <li><a href="#multiple-visualization-types" id="toc-multiple-visualization-types" class="nav-link" data-scroll-target="#multiple-visualization-types">1. <strong>Multiple Visualization Types</strong></a></li>
+<li><a href="#multiple-visualization-types" id="toc-multiple-visualization-types" class="nav-link" data-scroll-target="#multiple-visualization-types">1. <strong>Multiple Visualization Types</strong></a></li>
   <li><a href="#async-parallel-processing" id="toc-async-parallel-processing" class="nav-link" data-scroll-target="#async-parallel-processing">2. <strong>Async Parallel Processing</strong></a></li>
   <li><a href="#comprehensive-statistics" id="toc-comprehensive-statistics" class="nav-link" data-scroll-target="#comprehensive-statistics">3. <strong>Comprehensive Statistics</strong></a></li>
   <li><a href="#debug-information" id="toc-debug-information" class="nav-link" data-scroll-target="#debug-information">4. <strong>Debug Information</strong></a></li>
   <li><a href="#documentation-integration" id="toc-documentation-integration" class="nav-link" data-scroll-target="#documentation-integration">5. <strong>Documentation Integration</strong></a></li>
-  </ul></li>
+  </ul>
+</li>
   <li><a href="#differences-from-basic-vignette" id="toc-differences-from-basic-vignette" class="nav-link" data-scroll-target="#differences-from-basic-vignette">Differences from Basic Vignette</a></li>
-  <li><a href="#technical-details" id="toc-technical-details" class="nav-link" data-scroll-target="#technical-details">Technical Details</a>
+  <li>
+<a href="#technical-details" id="toc-technical-details" class="nav-link" data-scroll-target="#technical-details">Technical Details</a>
   <ul class="collapse">
-  <li><a href="#auto-backend-selection" id="toc-auto-backend-selection" class="nav-link" data-scroll-target="#auto-backend-selection">Auto-Backend Selection</a></li>
+<li><a href="#auto-backend-selection" id="toc-auto-backend-selection" class="nav-link" data-scroll-target="#auto-backend-selection">Auto-Backend Selection</a></li>
   <li><a href="#package-installation" id="toc-package-installation" class="nav-link" data-scroll-target="#package-installation">Package Installation</a></li>
   <li><a href="#error-handling" id="toc-error-handling" class="nav-link" data-scroll-target="#error-handling">Error Handling</a></li>
-  </ul></li>
+  </ul>
+</li>
   <li><a href="#try-it-yourself" id="toc-try-it-yourself" class="nav-link" data-scroll-target="#try-it-yourself">Try It Yourself</a></li>
   <li><a href="#related-documentation" id="toc-related-documentation" class="nav-link" data-scroll-target="#related-documentation">Related Documentation</a></li>
-  </ul></li>
   </ul>
-</nav>
+</li>
+  </ul></nav>
 </div>
-<main class="content" id="quarto-document-content">
-
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
 <h1 class="title">Comprehensive Async Parallel Random Walks Dashboard</h1>
 </div>
 
@@ -128,11 +112,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   
 
 
-</header>
-
-
-<section id="comprehensive-async-parallel-dashboard" class="level1">
-<h1>Comprehensive Async Parallel Dashboard</h1>
+</header><section id="comprehensive-async-parallel-dashboard" class="section level2"><h2>Comprehensive Async Parallel Dashboard</h2>
 <p>This vignette provides a <strong>comprehensive interactive Shiny application</strong> demonstrating all features of the randomwalk package with async parallel processing in WebAssembly.</p>
 <blockquote class="blockquote">
 <p><strong>Complete Showcase</strong>: This dashboard demonstrates <strong>all randomwalk capabilities</strong>:</p>
@@ -146,8 +126,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 </blockquote>
 <p><strong>Related Documentation:</strong> - <a href="https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md">WIKI_SHINYLIVE_LESSONS_LEARNED.md</a> - Complete lessons learned - <a href="https://github.com/JohnGavin/randomwalk/issues/129">Issue #129</a> - Async parallel support - <a href="https://github.com/JohnGavin/randomwalk/issues/136">Issue #136</a> - This comprehensive vignette</p>
-<section id="interactive-dashboard" class="level2">
-<h2 class="anchored" data-anchor-id="interactive-dashboard">Interactive Dashboard</h2>
+<section id="interactive-dashboard" class="level2"><h3 class="anchored" data-anchor-id="interactive-dashboard">Interactive Dashboard</h3>
 <pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
@@ -632,67 +611,54 @@ server &lt;- function(input, output, session) {
 # ============================================================================
 
 shinyApp(ui = ui, server = server)</code></pre>
-</section>
-<section id="features-demonstrated" class="level2">
-<h2 class="anchored" data-anchor-id="features-demonstrated">Features Demonstrated</h2>
+</section><section id="features-demonstrated" class="level2"><h3 class="anchored" data-anchor-id="features-demonstrated">Features Demonstrated</h3>
 <p>This comprehensive dashboard showcases:</p>
-<section id="multiple-visualization-types" class="level3">
-<h3 class="anchored" data-anchor-id="multiple-visualization-types">1. <strong>Multiple Visualization Types</strong></h3>
+<section id="multiple-visualization-types" class="level3"><h4 class="anchored" data-anchor-id="multiple-visualization-types">1. <strong>Multiple Visualization Types</strong>
+</h4>
 <ul>
-<li><strong>Fractal graphs</strong>: Black pixel patterns on grid</li>
-<li><strong>Walker paths</strong>: First 25 and last 25 trajectories</li>
-<li><strong>Distributions</strong>: Overall and by termination reason</li>
-<li><strong>Statistics</strong>: Comprehensive simulation metrics</li>
-</ul>
-</section>
-<section id="async-parallel-processing" class="level3">
-<h3 class="anchored" data-anchor-id="async-parallel-processing">2. <strong>Async Parallel Processing</strong></h3>
+<li>
+<strong>Fractal graphs</strong>: Black pixel patterns on grid</li>
+<li>
+<strong>Walker paths</strong>: First 25 and last 25 trajectories</li>
+<li>
+<strong>Distributions</strong>: Overall and by termination reason</li>
+<li>
+<strong>Statistics</strong>: Comprehensive simulation metrics</li>
+</ul></section><section id="async-parallel-processing" class="level3"><h4 class="anchored" data-anchor-id="async-parallel-processing">2. <strong>Async Parallel Processing</strong>
+</h4>
 <ul>
 <li>Auto-backend selection (mirai in WebR, crew in native R)</li>
 <li>True parallelization with workers=2-4</li>
 <li>Performance metrics and timing</li>
 <li>Backend information display</li>
-</ul>
-</section>
-<section id="comprehensive-statistics" class="level3">
-<h3 class="anchored" data-anchor-id="comprehensive-statistics">3. <strong>Comprehensive Statistics</strong></h3>
+</ul></section><section id="comprehensive-statistics" class="level3"><h4 class="anchored" data-anchor-id="comprehensive-statistics">3. <strong>Comprehensive Statistics</strong>
+</h4>
 <ul>
 <li>Grid statistics (black/white pixels)</li>
 <li>Walker statistics (completion rates)</li>
 <li>Step statistics (min/max/mean/median)</li>
 <li>Performance metrics (steps per second)</li>
 <li>Termination reason breakdown</li>
-</ul>
-</section>
-<section id="debug-information" class="level3">
-<h3 class="anchored" data-anchor-id="debug-information">4. <strong>Debug Information</strong></h3>
+</ul></section><section id="debug-information" class="level3"><h4 class="anchored" data-anchor-id="debug-information">4. <strong>Debug Information</strong>
+</h4>
 <ul>
 <li>Package versions</li>
 <li>Current input parameters</li>
 <li>Backend selection details</li>
 <li>Environment detection results</li>
 <li>Periodic updates</li>
-</ul>
-</section>
-<section id="documentation-integration" class="level3">
-<h3 class="anchored" data-anchor-id="documentation-integration">5. <strong>Documentation Integration</strong></h3>
+</ul></section><section id="documentation-integration" class="level3"><h4 class="anchored" data-anchor-id="documentation-integration">5. <strong>Documentation Integration</strong>
+</h4>
 <ul>
 <li>Links to wiki documentation</li>
 <li>Cross-references to related issues</li>
 <li>Implementation notes</li>
 <li>Known limitations</li>
-</ul>
-</section>
-</section>
-<section id="differences-from-basic-vignette" class="level2">
-<h2 class="anchored" data-anchor-id="differences-from-basic-vignette">Differences from Basic Vignette</h2>
+</ul></section></section><section id="differences-from-basic-vignette" class="level2"><h3 class="anchored" data-anchor-id="differences-from-basic-vignette">Differences from Basic Vignette</h3>
 <p><strong>dynamic_broadcasting.qmd</strong> (basic demo): - 5 walkers (simple) - 2 output pages (Grid, Paths, Stats) - Minimal statistics - Basic demo focus</p>
 <p><strong>dashboard_comprehensive.qmd</strong> (this vignette): - 10 walkers (more comprehensive) - 6 output pages (Fractal, Paths, Distributions, Stats, Debug, Notes) - Comprehensive statistics and visualizations - Production-ready showcase</p>
-</section>
-<section id="technical-details" class="level2">
-<h2 class="anchored" data-anchor-id="technical-details">Technical Details</h2>
-<section id="auto-backend-selection" class="level3">
-<h3 class="anchored" data-anchor-id="auto-backend-selection">Auto-Backend Selection</h3>
+</section><section id="technical-details" class="level2"><h3 class="anchored" data-anchor-id="technical-details">Technical Details</h3>
+<section id="auto-backend-selection" class="level3"><h4 class="anchored" data-anchor-id="auto-backend-selection">Auto-Backend Selection</h4>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># WebR environment detection (from Issue #129)</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>is_webr <span class="ot">&lt;-</span> <span class="fu">exists</span>(<span class="st">".webr_env"</span>, <span class="at">envir =</span> .GlobalEnv) <span class="sc">||</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>           <span class="fu">identical</span>(<span class="fu">Sys.getenv</span>(<span class="st">"WEBR"</span>), <span class="st">"1"</span>)</span>
@@ -707,9 +673,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    controller <span class="ot">&lt;-</span> crew<span class="sc">::</span><span class="fu">crew_controller_local</span>(workers, seconds_idle)</span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="package-installation" class="level3">
-<h3 class="anchored" data-anchor-id="package-installation">Package Installation</h3>
+</section><section id="package-installation" class="level3"><h4 class="anchored" data-anchor-id="package-installation">Package Installation</h4>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install from R-Universe (automatic WebR binary builds)</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>webr<span class="sc">::</span><span class="fu">install</span>(</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"randomwalk"</span>,</span>
@@ -718,9 +682,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://repo.r-wasm.org"</span>            <span class="co"># Standard webR packages</span></span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="error-handling" class="level3">
-<h3 class="anchored" data-anchor-id="error-handling">Error Handling</h3>
+</section><section id="error-handling" class="level3"><h4 class="anchored" data-anchor-id="error-handling">Error Handling</h4>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Comprehensive error handling with helpful messages</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tryCatch</span>({</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  result <span class="ot">&lt;-</span> <span class="fu">run_simulation</span>(...)</span>
@@ -736,34 +698,35 @@ shinyApp(ui = ui, server = server)</code></pre>
 <span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  })</span>
 <span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-</section>
-<section id="try-it-yourself" class="level2">
-<h2 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h2>
+</section></section><section id="try-it-yourself" class="level2"><h3 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h3>
 <p>Experiment with different parameters:</p>
 <ul>
-<li><strong>Larger grid</strong>: More exploration space (try 30-50)</li>
-<li><strong>More walkers</strong>: Higher density (try 20-50)</li>
-<li><strong>More workers</strong>: Increased parallelization (try 4)</li>
-<li><strong>8-hood</strong>: Enable diagonal movement</li>
-<li><strong>Wrap boundary</strong>: Toroidal grid (no boundaries)</li>
-</ul>
-</section>
-<section id="related-documentation" class="level2">
-<h2 class="anchored" data-anchor-id="related-documentation">Related Documentation</h2>
+<li>
+<strong>Larger grid</strong>: More exploration space (try 30-50)</li>
+<li>
+<strong>More walkers</strong>: Higher density (try 20-50)</li>
+<li>
+<strong>More workers</strong>: Increased parallelization (try 4)</li>
+<li>
+<strong>8-hood</strong>: Enable diagonal movement</li>
+<li>
+<strong>Wrap boundary</strong>: Toroidal grid (no boundaries)</li>
+</ul></section><section id="related-documentation" class="level2"><h3 class="anchored" data-anchor-id="related-documentation">Related Documentation</h3>
 <ul>
-<li><strong>Issue #129</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/129">Async parallel support in WebAssembly</a></li>
-<li><strong>Issue #136</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/136">This comprehensive vignette</a></li>
-<li><strong>Issue #130</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/130">Dynamic broadcasting via nanonext</a> (future work)</li>
-<li><strong>WIKI</strong>: <a href="https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md">WIKI_SHINYLIVE_LESSONS_LEARNED.md</a></li>
-<li><strong>randomwalk Website</strong>: https://johngavin.github.io/randomwalk/</li>
-</ul>
-</section>
-</section>
-
-</main>
-<!-- /main column -->
-<script id="quarto-html-after-body" type="application/javascript">
+<li>
+<strong>Issue #129</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/129">Async parallel support in WebAssembly</a>
+</li>
+<li>
+<strong>Issue #136</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/136">This comprehensive vignette</a>
+</li>
+<li>
+<strong>Issue #130</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/130">Dynamic broadcasting via nanonext</a> (future work)</li>
+<li>
+<strong>WIKI</strong>: <a href="https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md">WIKI_SHINYLIVE_LESSONS_LEARNED.md</a>
+</li>
+<li>
+<strong>randomwalk Website</strong>: https://johngavin.github.io/randomwalk/</li>
+</ul></section></section></main><!-- /main column --><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
     const anchorJS = new window.AnchorJS();
@@ -1167,4 +1130,5 @@ shinyApp(ui = ui, server = server)</code></pre>
 
 
 
-</body></html>
+</body>
+</html>

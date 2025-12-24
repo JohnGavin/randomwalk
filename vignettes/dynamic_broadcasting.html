@@ -133,12 +133,16 @@ cat("\nInstalling/loading required packages...\n")
 library(shiny)
 cat("✅ shiny loaded\n")
 
-# Install ggplot2 if not available (includes munsell dependency)
+# Install ggplot2 dependencies and ggplot2
 tryCatch({
   library(ggplot2)
   cat("✅ ggplot2 loaded\n")
 }, error = function(e) {
-  cat("⚠️  ggplot2 not found, installing...\n")
+  cat("⚠️  ggplot2 not found, installing dependencies...\n")
+  # Install munsell first (required ggplot2 dependency)
+  webr::install("munsell", repos = "https://repo.r-wasm.org")
+  cat("✅ munsell installed\n")
+  # Now install ggplot2
   webr::install("ggplot2", repos = "https://repo.r-wasm.org")
   library(ggplot2)
   cat("✅ ggplot2 installed and loaded\n")
@@ -173,9 +177,8 @@ ui &lt;- fluidPage(
       sliderInput("n_walkers", "Number of Walkers:",
                   min = 1, max = 20, value = 5, step = 1),
 
-      sliderInput("workers", "Parallel Workers:",
-                  min = 0, max = 4, value = 2, step = 1,
-                  help = "0 = synchronous, 2-4 = async parallel (requires webR with R 4.5+)"),
+      sliderInput("workers", "Parallel Workers (0=sync, 2-4=async):",
+                  min = 0, max = 4, value = 2, step = 1),
 
       selectInput("neighborhood", "Neighborhood:",
                   choices = c("4-hood", "8-hood"),
