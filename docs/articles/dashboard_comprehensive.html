@@ -78,38 +78,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </head>
 
-<body class="quarto-light">
+<body class="fullcontent quarto-light">
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-  <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">Table of contents</h2>
-   
-  <ul>
-  <li><a href="#comprehensive-async-parallel-dashboard" id="toc-comprehensive-async-parallel-dashboard" class="nav-link active" data-scroll-target="#comprehensive-async-parallel-dashboard">Comprehensive Async Parallel Dashboard</a>
-  <ul class="collapse">
-  <li><a href="#interactive-dashboard" id="toc-interactive-dashboard" class="nav-link" data-scroll-target="#interactive-dashboard">Interactive Dashboard</a></li>
-  <li><a href="#features-demonstrated" id="toc-features-demonstrated" class="nav-link" data-scroll-target="#features-demonstrated">Features Demonstrated</a>
-  <ul class="collapse">
-  <li><a href="#multiple-visualization-types" id="toc-multiple-visualization-types" class="nav-link" data-scroll-target="#multiple-visualization-types">1. <strong>Multiple Visualization Types</strong></a></li>
-  <li><a href="#async-parallel-processing" id="toc-async-parallel-processing" class="nav-link" data-scroll-target="#async-parallel-processing">2. <strong>Async Parallel Processing</strong></a></li>
-  <li><a href="#comprehensive-statistics" id="toc-comprehensive-statistics" class="nav-link" data-scroll-target="#comprehensive-statistics">3. <strong>Comprehensive Statistics</strong></a></li>
-  <li><a href="#debug-information" id="toc-debug-information" class="nav-link" data-scroll-target="#debug-information">4. <strong>Debug Information</strong></a></li>
-  <li><a href="#documentation-integration" id="toc-documentation-integration" class="nav-link" data-scroll-target="#documentation-integration">5. <strong>Documentation Integration</strong></a></li>
-  </ul></li>
-  <li><a href="#differences-from-basic-vignette" id="toc-differences-from-basic-vignette" class="nav-link" data-scroll-target="#differences-from-basic-vignette">Differences from Basic Vignette</a></li>
-  <li><a href="#technical-details" id="toc-technical-details" class="nav-link" data-scroll-target="#technical-details">Technical Details</a>
-  <ul class="collapse">
-  <li><a href="#auto-backend-selection" id="toc-auto-backend-selection" class="nav-link" data-scroll-target="#auto-backend-selection">Auto-Backend Selection</a></li>
-  <li><a href="#package-installation" id="toc-package-installation" class="nav-link" data-scroll-target="#package-installation">Package Installation</a></li>
-  <li><a href="#error-handling" id="toc-error-handling" class="nav-link" data-scroll-target="#error-handling">Error Handling</a></li>
-  </ul></li>
-  <li><a href="#try-it-yourself" id="toc-try-it-yourself" class="nav-link" data-scroll-target="#try-it-yourself">Try It Yourself</a></li>
-  <li><a href="#related-documentation" id="toc-related-documentation" class="nav-link" data-scroll-target="#related-documentation">Related Documentation</a></li>
-  </ul></li>
-  </ul>
-</nav>
-</div>
+
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -195,6 +167,17 @@ tryCatch({
   webr::install("ggplot2", repos = "https://repo.r-wasm.org")
   library(ggplot2)
   cat("✅ ggplot2 installed and loaded\n")
+})
+
+# Install mirai for async parallel processing in WebR
+tryCatch({
+  library(mirai)
+  cat("✅ mirai loaded\n")
+}, error = function(e) {
+  cat("⚠️  mirai not found, installing from r-lib.r-universe.dev...\n")
+  webr::install("mirai", repos = "https://r-lib.r-universe.dev")
+  library(mirai)
+  cat("✅ mirai installed and loaded\n")
 })
 
 tryCatch({

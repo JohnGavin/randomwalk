@@ -185,9 +185,10 @@
 <span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a></span>
 <span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co"># Or interactively</span></span>
 <span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="ex">R</span> <span class="at">--quiet</span> <span class="at">--no-save</span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="op">&gt;</span> devtools::load_all<span class="kw">(</span><span class="st">"."</span><span class="kw">)</span></span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="op">&gt;</span> result <span class="op">&lt;</span>- <span class="ex">run_simulation</span><span class="er">(</span><span class="ex">grid_size</span> = 20, n_walkers = 5<span class="kw">)</span></span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="op">&gt;</span> plot_grid<span class="kw">(</span><span class="ex">result</span><span class="kw">)</span></span></code></pre></div>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co"># Then inside R:</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="ex">devtools::load_all</span><span class="er">(</span><span class="st">"."</span><span class="kw">)</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="ex">result</span> <span class="op">&lt;</span>- run_simulation<span class="er">(</span><span class="ex">grid_size</span> = 20, n_walkers = 5<span class="kw">)</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="ex">plot_grid</span><span class="er">(</span><span class="ex">result</span><span class="kw">)</span></span></code></pre></div>
 <p><strong>Note</strong>: The nix shell provides a reproducible R environment. See <a href=".claude/NIX_QUICKREF.html"><code>.claude/NIX_QUICKREF.md</code></a> for troubleshooting.</p>
 </div>
 </div>

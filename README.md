@@ -109,9 +109,10 @@ Rscript -e 'devtools::load_all("."); result <- run_simulation(grid_size = 20, n_
 
 # Or interactively
 R --quiet --no-save
-> devtools::load_all(".")
-> result <- run_simulation(grid_size = 20, n_walkers = 5)
-> plot_grid(result)
+# Then inside R:
+devtools::load_all(".")
+result <- run_simulation(grid_size = 20, n_walkers = 5)
+plot_grid(result)
 ```
 
 **Note**: The nix shell provides a reproducible R environment. See [`.claude/NIX_QUICKREF.md`](.claude/NIX_QUICKREF.md) for troubleshooting.

@@ -4,8 +4,7 @@ format:
   html:
     code-fold: true
     code-summary: "Show code"
-    toc: true
-    toc-depth: 3
+    toc: false
     embed-resources: false
     resources:
       - shinylive-sw.js
@@ -78,6 +77,17 @@ tryCatch({
   webr::install("ggplot2", repos = "https://repo.r-wasm.org")
   library(ggplot2)
   cat("✅ ggplot2 installed and loaded\n")
+})
+
+# Install mirai for async parallel processing in WebR
+tryCatch({
+  library(mirai)
+  cat("✅ mirai loaded\n")
+}, error = function(e) {
+  cat("⚠️  mirai not found, installing from r-lib.r-universe.dev...\n")
+  webr::install("mirai", repos = "https://r-lib.r-universe.dev")
+  library(mirai)
+  cat("✅ mirai installed and loaded\n")
 })
 
 tryCatch({
