@@ -93,6 +93,29 @@ library(randomwalk)
 run_dashboard()
 ```
 
+### Using Nix Shell
+
+```bash
+# Start the nix shell (one-time per session)
+caffeinate -i ~/docs_gh/rix.setup/default.sh
+
+# Verify you're in the nix environment
+echo $IN_NIX_SHELL  # Should output: 1 or impure
+which R             # Should output: /nix/store/.../bin/R
+
+# Run R code with randomwalk
+cd /path/to/randomwalk
+Rscript -e 'devtools::load_all("."); result <- run_simulation(grid_size = 20, n_walkers = 5); print(result$statistics)'
+
+# Or interactively
+R --quiet --no-save
+> devtools::load_all(".")
+> result <- run_simulation(grid_size = 20, n_walkers = 5)
+> plot_grid(result)
+```
+
+**Note**: The nix shell provides a reproducible R environment. See [`.claude/NIX_QUICKREF.md`](.claude/NIX_QUICKREF.md) for troubleshooting.
+
 ## Simulation Parameters
 
 - **Grid Size**: n×n simulation grid (default 10×10)
