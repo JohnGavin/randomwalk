@@ -43,9 +43,9 @@ tryCatch({
   webr::install(
     "randomwalk",
     repos = c(
-      "https://johngavin.github.io/randomwalk/repo",  # Fast: GitHub Pages WASM repo (5-10 min)
-      "https://johngavin.r-universe.dev",              # Fallback: R-Universe (1-5 hours)
-      "https://repo.r-wasm.org"                        # Standard webR packages
+      "https://johngavin.github.io/randomwalk",  # Fast: GitHub Pages WASM repo (5-10 min)
+      "https://johngavin.r-universe.dev",        # Fallback: R-Universe (1-5 hours)
+      "https://repo.r-wasm.org"                  # Standard webR packages
     )
   )
   cat("✅ randomwalk installed\n")

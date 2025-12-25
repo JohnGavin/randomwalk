@@ -66,11 +66,11 @@ jobs:
           ls -la docs/bin/emscripten/contrib/ || echo "Warning: No contrib/ directory"
           find docs/bin -name "PACKAGES" -exec echo "Found: {}" \; || echo "Warning: No PACKAGES file"
 
-          # Create R 4.4 symlink for compatibility (webR builds for 4.5 but vignettes may use 4.4)
-          echo "Creating R 4.4 compatibility symlink..."
+          # Create R 4.4 compatibility directory (GitHub Pages doesn't support symlinks)
+          echo "Creating R 4.4 compatibility directory..."
           if [ -d "docs/bin/emscripten/contrib/4.5" ]; then
-            ln -s 4.5 docs/bin/emscripten/contrib/4.4
-            echo "Symlink created: 4.4 -> 4.5"
+            cp -r docs/bin/emscripten/contrib/4.5 docs/bin/emscripten/contrib/4.4
+            echo "Directory created: 4.4 (copy of 4.5)"
             ls -la docs/bin/emscripten/contrib/
           fi
 
