@@ -7,9 +7,6 @@ format:
     toc: true
     toc-depth: 3
     embed-resources: false
-    include-in-header:
-      - text: |
-          <meta name="shinylive:serviceworker_dir" content="..">
     resources:
       - shinylive-sw.js
 filters:
