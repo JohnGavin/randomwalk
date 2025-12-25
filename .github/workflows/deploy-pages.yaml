@@ -24,6 +24,17 @@ jobs:
           packages: "local::."
           repo-path: _site
 
+      - name: Debug - Show webR build output structure
+        run: |
+          echo "=== Contents of _site/ after build-rwasm ==="
+          ls -laR _site/ || echo "ERROR: _site/ directory not found"
+          echo ""
+          echo "=== Disk usage of _site/ ==="
+          du -sh _site/* 2>/dev/null || echo "No files in _site/"
+          echo ""
+          echo "=== Looking for PACKAGES files ==="
+          find _site -name "PACKAGES*" -exec echo "Found: {}" \; -exec head -5 {} \; || echo "No PACKAGES files found"
+
       - name: Upload webR binaries as artifact
         uses: actions/upload-artifact@v4
         with:
@@ -53,6 +64,17 @@ jobs:
           name: webr-repo
           path: webr-temp/
 
+      - name: Debug - Show downloaded artifact contents
+        run: |
+          echo "=== Contents of webr-temp/ after download ==="
+          ls -laR webr-temp/ || echo "ERROR: webr-temp/ directory not found"
+          echo ""
+          echo "=== Disk usage of webr-temp/ ==="
+          du -sh webr-temp/* 2>/dev/null || echo "No files in webr-temp/"
+          echo ""
+          echo "=== Looking for bin/ directory ==="
+          find webr-temp -type d -name "bin" -exec echo "Found bin at: {}" \; -exec ls -la {} \; || echo "No bin/ directory found"
+
       - name: Merge webR binaries into docs
         run: |
           # Copy webR repository structure into docs/ directory
@@ -73,6 +95,24 @@ jobs:
             echo "Directory created: 4.4 (copy of 4.5)"
             ls -la docs/bin/emscripten/contrib/
           fi
+
+      - name: Debug - Show final docs/ structure before upload
+        run: |
+          echo "=== Top-level docs/ contents ==="
+          ls -la docs/ | head -30
+          echo ""
+          echo "=== docs/bin/ structure (if exists) ==="
+          if [ -d "docs/bin" ]; then
+            tree -L 4 docs/bin/ || find docs/bin -type f -o -type d | head -50
+            echo ""
+            echo "=== File count in docs/bin/ ==="
+            find docs/bin -type f | wc -l
+          else
+            echo "ERROR: docs/bin/ does not exist!"
+          fi
+          echo ""
+          echo "=== Total size of docs/ to be uploaded ==="
+          du -sh docs/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
