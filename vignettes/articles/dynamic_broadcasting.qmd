@@ -1,0 +1,314 @@
+---
+title: "hello Async Parallel Random Walks Dashboard"
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
+    toc: true
+    toc-depth: 3
+    embed-resources: false
+    resources:
+      - shinylive-sw.js
+filters:
+  - shinylive
+---
+
+# Async Parallel Random Walks
+
+This vignette provides a **fully interactive Shiny application** demonstrating async parallel random walk simulations running directly in your browser using WebAssembly.
+
+> **Note:** This demonstrates **Issue #129** - mirai-based async support for WebAssembly! The randomwalk package auto-detects your environment and selects the appropriate backend:
+>
+> - **WebR/Browser:** Uses `mirai` backend with `nanonext` from r-lib.r-universe.dev
+> - **Native R:** Uses `crew` backend
+>
+> Both environments support `workers=2` for true async parallel processing!
+
+## Interactive Dashboard
+
+```{shinylive-r}
+#| standalone: true
+#| viewerHeight: 900
+
+# ============================================================================
+# Package Installation with nanonext from r-lib.r-universe.dev
+# ============================================================================
+
+cat("\n=== ASYNC PARALLEL SETUP (dynamic_broadcasting.qmd) ===\n")
+cat("Timestamp:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
+
+cat("Installing randomwalk...\n")
+cat("Note: Async mode requires webR with R 4.5.1+ (includes nanonext support)\n\n")
+tryCatch({
+  webr::install(
+    "randomwalk",
+    repos = c(
+      "https://johngavin.github.io/randomwalk",  # Fast: GitHub Pages WASM repo (5-10 min)
+      "https://johngavin.r-universe.dev",        # Fallback: R-Universe (1-5 hours)
+      "https://repo.r-wasm.org"                  # Standard webR packages
+    )
+  )
+  cat("✅ randomwalk installed\n")
+}, error = function(e) {
+  cat("❌ ERROR installing randomwalk:", e$message, "\n")
+})
+
+cat("\nInstalling/loading required packages...\n")
+# shiny is usually pre-installed in webR, but load it explicitly
+library(shiny)
+cat("✅ shiny loaded\n")
+
+# Install ggplot2 dependencies and ggplot2
+tryCatch({
+  library(ggplot2)
+  cat("✅ ggplot2 loaded\n")
+}, error = function(e) {
+  cat("⚠️  ggplot2 not found, installing dependencies...\n")
+  # Install munsell first (required ggplot2 dependency)
+  webr::install("munsell", repos = "https://repo.r-wasm.org")
+  cat("✅ munsell installed\n")
+  # Now install ggplot2
+  webr::install("ggplot2", repos = "https://repo.r-wasm.org")
+  library(ggplot2)
+  cat("✅ ggplot2 installed and loaded\n")
+})
+
+tryCatch({
+  library(randomwalk)
+  cat("✅ randomwalk loaded\n")
+  cat("Available functions:", paste(head(ls("package:randomwalk"), 10), collapse=", "), "\n")
+}, error = function(e) {
+  cat("❌ ERROR loading randomwalk:", e$message, "\n")
+  cat("Packages available:\n")
+  print(installed.packages()[, c("Package", "Version")])
+})
+
+cat("\n=== SETUP COMPLETE ===\n\n")
+
+# ============================================================================
+# Shiny UI
+# ============================================================================
+
+ui <- fluidPage(
+  titlePanel("Async Parallel Random Walks (Issue #129 ✅)"),
+
+  sidebarLayout(
+    sidebarPanel(
+      h4("Simulation Parameters"),
+
+      sliderInput("grid_size", "Grid Size:",
+                  min = 10, max = 50, value = 20, step = 5),
+
+      sliderInput("n_walkers", "Number of Walkers:",
+                  min = 1, max = 20, value = 5, step = 1),
+
+      sliderInput("workers", "Parallel Workers (0=sync, 2-4=async):",
+                  min = 0, max = 4, value = 2, step = 1),
+
+      selectInput("neighborhood", "Neighborhood:",
+                  choices = c("4-hood", "8-hood"),
+                  selected = "4-hood"),
+
+      selectInput("boundary", "Boundary Behavior:",
+                  choices = c("terminate", "wrap"),
+                  selected = "terminate"),
+
+      sliderInput("max_steps", "Max Steps per Walker:",
+                  min = 100, max = 10000, value = 5000, step = 100),
+
+      actionButton("run_sim", "Run Simulation",
+                   class = "btn-primary btn-lg"),
+
+      hr(),
+
+      h5("Status:"),
+      verbatimTextOutput("status")
+    ),
+
+    mainPanel(
+      tabsetPanel(
+        id = "tabs",
+
+        tabPanel("Grid",
+                 plotOutput("grid_plot", height = "600px")),
+
+        tabPanel("Walker Paths",
+                 plotOutput("paths_plot", height = "600px")),
+
+        tabPanel("Statistics",
+                 h4("Simulation Statistics"),
+                 verbatimTextOutput("stats_text"),
+                 hr(),
+                 h5("Backend Information"),
+                 verbatimTextOutput("backend_info"))
+      )
+    )
+  )
+)
+
+# ============================================================================
+# Shiny Server
+# ============================================================================
+
+server <- function(input, output, session) {
+
+  # Reactive value to store simulation result
+  sim_result <- reactiveVal(NULL)
+
+  # Run simulation when button clicked
+  observeEvent(input$run_sim, {
+    output$status <- renderText({
+      paste0(
+        "Running simulation...\n",
+        "Grid: ", input$grid_size, "×", input$grid_size, "\n",
+        "Walkers: ", input$n_walkers, "\n",
+        "Workers: ", input$workers,
+        if (input$workers > 0) " (async)" else " (sync)"
+      )
+    })
+
+    tryCatch({
+      # Run simulation with async support
+      result <- run_simulation(
+        grid_size = input$grid_size,
+        n_walkers = input$n_walkers,
+        neighborhood = input$neighborhood,
+        boundary = input$boundary,
+        max_steps = input$max_steps,
+        workers = input$workers,  # Auto-detects backend (mirai in WebR)
+        sync_mode = "static",     # Grid snapshots (dynamic is Issue #130)
+        verbose = FALSE
+      )
+
+      sim_result(result)
+
+      output$status <- renderText({
+        paste0(
+          "✅ Simulation complete!\n",
+          "Elapsed time: ", sprintf("%.2f", result$statistics$elapsed_time_secs), "s\n",
+          "Backend: ", if (input$workers > 0) "mirai" else "synchronous"
+        )
+      })
+
+    }, error = function(e) {
+      output$status <- renderText({
+        paste0("❌ ERROR:\n", e$message)
+      })
+    })
+  })
+
+  # Grid plot
+  output$grid_plot <- renderPlot({
+    req(sim_result())
+    plot_grid(sim_result(), main = "Final Grid State")
+  })
+
+  # Walker paths plot
+  output$paths_plot <- renderPlot({
+    req(sim_result())
+    plot_walker_paths(sim_result())
+  })
+
+  # Statistics text
+  output$stats_text <- renderText({
+    req(sim_result())
+    stats <- sim_result()$statistics
+
+    paste0(
+      "Grid Size: ", stats$grid_size, "×", stats$grid_size, "\n",
+      "Black Pixels: ", stats$black_pixels,
+      sprintf(" (%.2f%%)\n", stats$black_percentage),
+      "\nWalkers:\n",
+      "  Total: ", stats$total_walkers, "\n",
+      "  Completed: ", stats$completed_walkers, "\n",
+      "\nSteps:\n",
+      "  Total: ", stats$total_steps, "\n",
+      "  Min: ", stats$min_steps, "\n",
+      "  Max: ", stats$max_steps, "\n",
+      "  Mean: ", sprintf("%.1f", stats$mean_steps), "\n",
+      "  Median: ", stats$median_steps, "\n",
+      "\nPerformance:\n",
+      "  Elapsed Time: ", sprintf("%.2f", stats$elapsed_time_secs), "s\n",
+      "\nTermination Reasons:\n",
+      paste(sprintf("  %s: %d", names(stats$termination_reasons),
+                    stats$termination_reasons), collapse = "\n")
+    )
+  })
+
+  # Backend information
+  output$backend_info <- renderText({
+    is_webr <- exists(".webr_env", envir = .GlobalEnv) ||
+               identical(Sys.getenv("WEBR"), "1")
+
+    paste0(
+      "Environment: ", if (is_webr) "WebR/Browser" else "Native R", "\n",
+      "Backend: ", if (input$workers > 0) {
+        if (is_webr) "mirai (WebAssembly-compatible)" else "crew"
+      } else {
+        "synchronous (no parallelization)"
+      }, "\n",
+      "\nPackage Versions:\n",
+      "  randomwalk: ", packageVersion("randomwalk"), "\n",
+      if (requireNamespace("mirai", quietly = TRUE)) {
+        paste0("  mirai: ", packageVersion("mirai"), "\n")
+      } else "",
+      if (requireNamespace("nanonext", quietly = TRUE)) {
+        paste0("  nanonext: ", packageVersion("nanonext"), "\n")
+      } else "",
+      if (requireNamespace("crew", quietly = TRUE)) {
+        paste0("  crew: ", packageVersion("crew"), "\n")
+      } else "",
+      "\nIssue #129: ✅ Async parallel support in WebAssembly\n",
+      "Issue #130: ⏳ Dynamic broadcasting (future work)"
+    )
+  })
+}
+
+# ============================================================================
+# Run Shiny App
+# ============================================================================
+
+shinyApp(ui = ui, server = server)
+```
+
+## Features
+
+This dashboard demonstrates:
+
+1. **Auto-backend Selection**: Automatically uses mirai in WebR, crew in native R
+2. **True Async Parallelization**: Workers > 0 enables parallel processing in browser!
+3. **Real-time Visualization**: Grid state, walker paths, and statistics
+4. **Parameter Tuning**: Adjust simulation parameters interactively
+
+## Technical Details
+
+### Package Sources
+
+- **randomwalk**: https://johngavin.github.io/randomwalk/
+- **nanonext & mirai**: https://r-lib.r-universe.dev
+
+### Backend Selection (Issue #129 ✅)
+
+**In WebR/Browser:**
+- Uses `mirai` backend for async parallelization
+- `nanonext` package from r-lib.r-universe.dev
+- All computation happens client-side
+
+**In Native R:**
+- Uses `crew` backend (preferred for better abstractions)
+- `crew` internally uses `mirai`
+
+### Sync Modes
+
+- **`sync_mode="static"`**: Workers get grid snapshots (current, used in WebR)
+- **`sync_mode="dynamic"`**: Real-time broadcasting via nanonext (Issue #130, future work)
+
+## Try It Yourself
+
+Experiment with different parameters:
+
+- **Larger grid**: More exploration space (try 30 or 40)
+- **More walkers**: Increase density (try 10 or 15)
+- **More workers**: Increase parallelization (try 4)
+- **8-hood**: Enable diagonal movement
+- **Wrap boundary**: Toroidal grid (no boundaries)
