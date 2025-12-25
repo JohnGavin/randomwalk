@@ -32,6 +32,8 @@
 ^benchmarks/$
 ^_extensions$
 ^_extensions/
+^vignettes/_extensions$
+^vignettes/_extensions/
 ^_quarto\.yml$
 
 # Ignore other hidden files/directories found by R CMD check at top level
@@ -47,6 +49,10 @@
 ^vignettes/.*_files/
 ^vignettes/_targets\.yaml$
 ^vignettes/\.quarto$
+
+# Exclude Shinylive articles (pkgdown only, not R vignettes)
+^vignettes/articles$
+^vignettes/articles/
 
 # Exclude disabled vignettes (Issue #132)
 ^vignettes/.*\.qmd\.disabled$
