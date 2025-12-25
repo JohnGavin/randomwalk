@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
-<head>
-<meta charset="UTF-8">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
 <meta name="generator" content="quarto-1.7.34">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
 <title>hello Async Parallel Random Walks Dashboard</title>
 <style>
 code{white-space: pre-wrap;}
@@ -18,40 +21,55 @@ ul.task-list li input[type="checkbox"] {
   vertical-align: middle;
 }
 </style>
-<script src="dynamic_broadcasting_files/libs/clipboard/clipboard.min.js"></script><script src="dynamic_broadcasting_files/libs/quarto-html/quarto.js" type="module"></script><script src="dynamic_broadcasting_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script><script src="dynamic_broadcasting_files/libs/quarto-html/popper.min.js"></script><script src="dynamic_broadcasting_files/libs/quarto-html/tippy.umd.min.js"></script><script src="dynamic_broadcasting_files/libs/quarto-html/anchor.min.js"></script><link href="dynamic_broadcasting_files/libs/quarto-html/tippy.css" rel="stylesheet">
+
+
+<script src="dynamic_broadcasting_files/libs/clipboard/clipboard.min.js"></script>
+<script src="dynamic_broadcasting_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="dynamic_broadcasting_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="dynamic_broadcasting_files/libs/quarto-html/popper.min.js"></script>
+<script src="dynamic_broadcasting_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="dynamic_broadcasting_files/libs/quarto-html/anchor.min.js"></script>
+<link href="dynamic_broadcasting_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="dynamic_broadcasting_files/libs/quarto-html/quarto-syntax-highlighting-c8ad9e5dbd60b7b70b38521ab19b7da4.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="dynamic_broadcasting_files/libs/bootstrap/bootstrap.min.js"></script><link href="dynamic_broadcasting_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<script src="dynamic_broadcasting_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="dynamic_broadcasting_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="dynamic_broadcasting_files/libs/bootstrap/bootstrap-b232414f0569882df4359abfb7cfba3f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
-<meta name="shinylive:serviceworker_dir" content="..">
-<script src="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/load-shinylive-sw.js" type="module"></script><script src="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/run-python-blocks.js" type="module"></script><link href="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/shinylive.css" rel="stylesheet">
+<meta name="shinylive:serviceworker_dir" content="../..">
+<script src="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/load-shinylive-sw.js" type="module"></script>
+<script src="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/run-python-blocks.js" type="module"></script>
+<link href="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/shinylive.css" rel="stylesheet">
 <link href="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-quarto-css/shinylive-quarto.css" rel="stylesheet">
+
+
 </head>
+
 <body class="quarto-light">
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
 <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-  <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-<li>
-<a href="#async-parallel-random-walks" id="toc-async-parallel-random-walks" class="nav-link active" data-scroll-target="#async-parallel-random-walks">Async Parallel Random Walks</a>
+  <li><a href="#async-parallel-random-walks" id="toc-async-parallel-random-walks" class="nav-link active" data-scroll-target="#async-parallel-random-walks">Async Parallel Random Walks</a>
   <ul class="collapse">
-<li><a href="#interactive-dashboard" id="toc-interactive-dashboard" class="nav-link" data-scroll-target="#interactive-dashboard">Interactive Dashboard</a></li>
+  <li><a href="#interactive-dashboard" id="toc-interactive-dashboard" class="nav-link" data-scroll-target="#interactive-dashboard">Interactive Dashboard</a></li>
   <li><a href="#features" id="toc-features" class="nav-link" data-scroll-target="#features">Features</a></li>
-  <li>
-<a href="#technical-details" id="toc-technical-details" class="nav-link" data-scroll-target="#technical-details">Technical Details</a>
+  <li><a href="#technical-details" id="toc-technical-details" class="nav-link" data-scroll-target="#technical-details">Technical Details</a>
   <ul class="collapse">
-<li><a href="#package-sources" id="toc-package-sources" class="nav-link" data-scroll-target="#package-sources">Package Sources</a></li>
+  <li><a href="#package-sources" id="toc-package-sources" class="nav-link" data-scroll-target="#package-sources">Package Sources</a></li>
   <li><a href="#backend-selection-issue-129" id="toc-backend-selection-issue-129" class="nav-link" data-scroll-target="#backend-selection-issue-129">Backend Selection (Issue #129 ✅)</a></li>
   <li><a href="#sync-modes" id="toc-sync-modes" class="nav-link" data-scroll-target="#sync-modes">Sync Modes</a></li>
-  </ul>
-</li>
+  </ul></li>
   <li><a href="#try-it-yourself" id="toc-try-it-yourself" class="nav-link" data-scroll-target="#try-it-yourself">Try It Yourself</a></li>
+  </ul></li>
   </ul>
-</li>
-  </ul></nav>
+</nav>
 </div>
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
 <h1 class="title">hello Async Parallel Random Walks Dashboard</h1>
 </div>
 
@@ -66,19 +84,22 @@ ul.task-list li input[type="checkbox"] {
   
 
 
-</header><section id="async-parallel-random-walks" class="section level2"><h2>Async Parallel Random Walks</h2>
+</header>
+
+
+<section id="async-parallel-random-walks" class="level1">
+<h1>Async Parallel Random Walks</h1>
 <p>This vignette provides a <strong>fully interactive Shiny application</strong> demonstrating async parallel random walk simulations running directly in your browser using WebAssembly.</p>
 <blockquote class="blockquote">
 <p><strong>Note:</strong> This demonstrates <strong>Issue #129</strong> - mirai-based async support for WebAssembly! The randomwalk package auto-detects your environment and selects the appropriate backend:</p>
 <ul>
-<li>
-<strong>WebR/Browser:</strong> Uses <code>mirai</code> backend with <code>nanonext</code> from r-lib.r-universe.dev</li>
-<li>
-<strong>Native R:</strong> Uses <code>crew</code> backend</li>
+<li><strong>WebR/Browser:</strong> Uses <code>mirai</code> backend with <code>nanonext</code> from r-lib.r-universe.dev</li>
+<li><strong>Native R:</strong> Uses <code>crew</code> backend</li>
 </ul>
 <p>Both environments support <code>workers=2</code> for true async parallel processing!</p>
 </blockquote>
-<section id="interactive-dashboard" class="level2"><h3 class="anchored" data-anchor-id="interactive-dashboard">Interactive Dashboard</h3>
+<section id="interactive-dashboard" class="level2">
+<h2 class="anchored" data-anchor-id="interactive-dashboard">Interactive Dashboard</h2>
 <pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
@@ -98,8 +119,9 @@ tryCatch({
   webr::install(
     "randomwalk",
     repos = c(
-      "https://johngavin.r-universe.dev",  # Stable randomwalk build
-      "https://repo.r-wasm.org"            # Standard webR packages
+      "https://johngavin.github.io/randomwalk",  # Fast: GitHub Pages WASM repo (5-10 min)
+      "https://johngavin.r-universe.dev",        # Fallback: R-Universe (1-5 hours)
+      "https://repo.r-wasm.org"                  # Standard webR packages
     )
   )
   cat("✅ randomwalk installed\n")
@@ -156,9 +178,8 @@ ui &lt;- fluidPage(
       sliderInput("n_walkers", "Number of Walkers:",
                   min = 1, max = 20, value = 5, step = 1),
 
-      sliderInput("workers", "Parallel Workers:",
-                  min = 0, max = 4, value = 2, step = 1,
-                  help = "0 = synchronous, 2-4 = async parallel (requires webR with R 4.5+)"),
+      sliderInput("workers", "Parallel Workers (0=sync, 2-4=async):",
+                  min = 0, max = 4, value = 2, step = 1),
 
       selectInput("neighborhood", "Neighborhood:",
                   choices = c("4-hood", "8-hood"),
@@ -324,47 +345,55 @@ server &lt;- function(input, output, session) {
 # ============================================================================
 
 shinyApp(ui = ui, server = server)</code></pre>
-</section><section id="features" class="level2"><h3 class="anchored" data-anchor-id="features">Features</h3>
+</section>
+<section id="features" class="level2">
+<h2 class="anchored" data-anchor-id="features">Features</h2>
 <p>This dashboard demonstrates:</p>
 <ol type="1">
-<li>
-<strong>Auto-backend Selection</strong>: Automatically uses mirai in WebR, crew in native R</li>
-<li>
-<strong>True Async Parallelization</strong>: Workers &gt; 0 enables parallel processing in browser!</li>
-<li>
-<strong>Real-time Visualization</strong>: Grid state, walker paths, and statistics</li>
-<li>
-<strong>Parameter Tuning</strong>: Adjust simulation parameters interactively</li>
-</ol></section><section id="technical-details" class="level2"><h3 class="anchored" data-anchor-id="technical-details">Technical Details</h3>
-<section id="package-sources" class="level3"><h4 class="anchored" data-anchor-id="package-sources">Package Sources</h4>
+<li><strong>Auto-backend Selection</strong>: Automatically uses mirai in WebR, crew in native R</li>
+<li><strong>True Async Parallelization</strong>: Workers &gt; 0 enables parallel processing in browser!</li>
+<li><strong>Real-time Visualization</strong>: Grid state, walker paths, and statistics</li>
+<li><strong>Parameter Tuning</strong>: Adjust simulation parameters interactively</li>
+</ol>
+</section>
+<section id="technical-details" class="level2">
+<h2 class="anchored" data-anchor-id="technical-details">Technical Details</h2>
+<section id="package-sources" class="level3">
+<h3 class="anchored" data-anchor-id="package-sources">Package Sources</h3>
 <ul>
-<li>
-<strong>randomwalk</strong>: https://johngavin.github.io/randomwalk/</li>
-<li>
-<strong>nanonext &amp; mirai</strong>: https://r-lib.r-universe.dev</li>
-</ul></section><section id="backend-selection-issue-129" class="level3"><h4 class="anchored" data-anchor-id="backend-selection-issue-129">Backend Selection (Issue #129 ✅)</h4>
+<li><strong>randomwalk</strong>: https://johngavin.github.io/randomwalk/</li>
+<li><strong>nanonext &amp; mirai</strong>: https://r-lib.r-universe.dev</li>
+</ul>
+</section>
+<section id="backend-selection-issue-129" class="level3">
+<h3 class="anchored" data-anchor-id="backend-selection-issue-129">Backend Selection (Issue #129 ✅)</h3>
 <p><strong>In WebR/Browser:</strong> - Uses <code>mirai</code> backend for async parallelization - <code>nanonext</code> package from r-lib.r-universe.dev - All computation happens client-side</p>
 <p><strong>In Native R:</strong> - Uses <code>crew</code> backend (preferred for better abstractions) - <code>crew</code> internally uses <code>mirai</code></p>
-</section><section id="sync-modes" class="level3"><h4 class="anchored" data-anchor-id="sync-modes">Sync Modes</h4>
+</section>
+<section id="sync-modes" class="level3">
+<h3 class="anchored" data-anchor-id="sync-modes">Sync Modes</h3>
 <ul>
-<li>
-<strong><code>sync_mode="static"</code></strong>: Workers get grid snapshots (current, used in WebR)</li>
-<li>
-<strong><code>sync_mode="dynamic"</code></strong>: Real-time broadcasting via nanonext (Issue #130, future work)</li>
-</ul></section></section><section id="try-it-yourself" class="level2"><h3 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h3>
+<li><strong><code>sync_mode="static"</code></strong>: Workers get grid snapshots (current, used in WebR)</li>
+<li><strong><code>sync_mode="dynamic"</code></strong>: Real-time broadcasting via nanonext (Issue #130, future work)</li>
+</ul>
+</section>
+</section>
+<section id="try-it-yourself" class="level2">
+<h2 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h2>
 <p>Experiment with different parameters:</p>
 <ul>
-<li>
-<strong>Larger grid</strong>: More exploration space (try 30 or 40)</li>
-<li>
-<strong>More walkers</strong>: Increase density (try 10 or 15)</li>
-<li>
-<strong>More workers</strong>: Increase parallelization (try 4)</li>
-<li>
-<strong>8-hood</strong>: Enable diagonal movement</li>
-<li>
-<strong>Wrap boundary</strong>: Toroidal grid (no boundaries)</li>
-</ul></section></section></main><!-- /main column --><script id="quarto-html-after-body" type="application/javascript">
+<li><strong>Larger grid</strong>: More exploration space (try 30 or 40)</li>
+<li><strong>More walkers</strong>: Increase density (try 10 or 15)</li>
+<li><strong>More workers</strong>: Increase parallelization (try 4)</li>
+<li><strong>8-hood</strong>: Enable diagonal movement</li>
+<li><strong>Wrap boundary</strong>: Toroidal grid (no boundaries)</li>
+</ul>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
     const anchorJS = new window.AnchorJS();
@@ -768,5 +797,4 @@ shinyApp(ui = ui, server = server)</code></pre>
 
 
 
-</body>
-</html>
+</body></html>
