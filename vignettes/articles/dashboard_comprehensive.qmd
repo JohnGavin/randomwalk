@@ -6,6 +6,9 @@ format:
     code-summary: "Show code"
     toc: false
     embed-resources: false
+    include-in-header:
+      text: |
+        <meta name="shinylive:serviceworker_dir" content=".">
     resources:
       - shinylive-sw.js
 filters:
