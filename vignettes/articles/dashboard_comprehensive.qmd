@@ -6,8 +6,9 @@ format:
     code-summary: "Show code"
     toc: false
     embed-resources: false
-    resources:
-      - shinylive-sw.js
+    include-in-header:
+      - text: |
+          <meta name="shinylive:serviceworker_dir" content="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.10.7">
 filters:
   - shinylive
 ---
