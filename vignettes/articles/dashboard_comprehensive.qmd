@@ -8,7 +8,9 @@ format:
     embed-resources: false
     include-in-header:
       - text: |
-          <meta name="shinylive:serviceworker_dir" content="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.10.7">
+          <meta name="shinylive:serviceworker_dir" content=".">
+    resources:
+      - shinylive-sw.js
 filters:
   - shinylive
 ---
