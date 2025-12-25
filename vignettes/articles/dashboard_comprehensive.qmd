@@ -7,8 +7,8 @@ format:
     toc: false
     embed-resources: false
     include-in-header:
-      text: |
-        <meta name="shinylive:serviceworker_dir" content=".">
+      - text: |
+          <meta name="shinylive:serviceworker_dir" content="..">
     resources:
       - shinylive-sw.js
 filters:

@@ -4,7 +4,7 @@ pkgdown_sha: ~
 articles:
   articles/dashboard_comprehensive: dashboard_comprehensive.html
   articles/dynamic_broadcasting: dynamic_broadcasting.html
-last_built: 2025-12-25T14:44Z
+last_built: 2025-12-25T19:01Z
 urls:
   reference: https://johngavin.github.io/randomwalk/reference
   article: https://johngavin.github.io/randomwalk/articles

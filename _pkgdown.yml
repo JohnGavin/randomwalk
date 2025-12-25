@@ -3,6 +3,9 @@ url: https://johngavin.github.io/randomwalk/
 template:
   bootstrap: 5
   bootswatch: cosmo
+  includes:
+    in_header: |
+      <meta name="shinylive:serviceworker_dir" content="..">
 
 home:
   title: randomwalk - Asynchronous Pixel Walking Simulation
