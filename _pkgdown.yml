@@ -34,15 +34,13 @@ navbar:
       #   href: articles/telemetry.html
 
 articles:
-- title: Vignettes
+- title: Interactive Demos
   navbar: ~
   contents:
-  # NOTE: Disabled broken vignettes (Issue #132)
-  # - dashboard
-  # - dashboard_async
-  - dynamic_broadcasting
-  - dashboard_comprehensive
-  # - telemetry
+  # NOTE: Articles in vignettes/articles/ are auto-discovered by pkgdown
+  # Shinylive demos (not standard R vignettes):
+  - articles/dynamic_broadcasting
+  - articles/dashboard_comprehensive
 
 footer:
   structure:

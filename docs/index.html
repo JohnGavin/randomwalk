@@ -169,6 +169,27 @@
 <span><span class="co"># Launch the Shiny app</span></span>
 <span><span class="fu"><a href="reference/run_dashboard.html">run_dashboard</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
+<div class="section level3">
+<h3 id="using-nix-shell">Using Nix Shell<a class="anchor" aria-label="anchor" href="#using-nix-shell"></a>
+</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Start the nix shell (one-time per session)</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="ex">caffeinate</span> <span class="at">-i</span> ~/docs_gh/rix.setup/default.sh</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co"># Verify you're in the nix environment</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$IN_NIX_SHELL</span>  <span class="co"># Should output: 1 or impure</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="fu">which</span> R             <span class="co"># Should output: /nix/store/.../bin/R</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co"># Run R code with randomwalk</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="bu">cd</span> /path/to/randomwalk</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'devtools::load_all("."); result &lt;- run_simulation(grid_size = 20, n_walkers = 5); print(result$statistics)'</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co"># Or interactively</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="ex">R</span> <span class="at">--quiet</span> <span class="at">--no-save</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="op">&gt;</span> devtools::load_all<span class="kw">(</span><span class="st">"."</span><span class="kw">)</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="op">&gt;</span> result <span class="op">&lt;</span>- <span class="ex">run_simulation</span><span class="er">(</span><span class="ex">grid_size</span> = 20, n_walkers = 5<span class="kw">)</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="op">&gt;</span> plot_grid<span class="kw">(</span><span class="ex">result</span><span class="kw">)</span></span></code></pre></div>
+<p><strong>Note</strong>: The nix shell provides a reproducible R environment. See <a href=".claude/NIX_QUICKREF.html"><code>.claude/NIX_QUICKREF.md</code></a> for troubleshooting.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="simulation-parameters">Simulation Parameters<a class="anchor" aria-label="anchor" href="#simulation-parameters"></a>
