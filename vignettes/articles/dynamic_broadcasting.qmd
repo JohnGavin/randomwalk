@@ -1,11 +1,10 @@
 ---
-title: "hello Async Parallel Random Walks Dashboard"
+title: "Random Walks Dashboard (Synchronous Mode in WebR)"
 format:
   html:
     code-fold: true
     code-summary: "Show code"
-    toc: true
-    toc-depth: 3
+    toc: false
     embed-resources: false
     include-in-header:
       - text: |
@@ -26,16 +25,16 @@ filters:
   - shinylive
 ---
 
-# Async Parallel Random Walks
+# Random Walks Dashboard
 
-This vignette provides a **fully interactive Shiny application** demonstrating async parallel random walk simulations running directly in your browser using WebAssembly.
+This vignette provides a **fully interactive Shiny application** for random walk simulations running directly in your browser using WebAssembly.
 
-> **Note:** This demonstrates async/parallel random walk simulations. The randomwalk package auto-detects your environment and selects the appropriate backend:
+> **Note:** This dashboard runs in **synchronous mode** in WebR (no parallel processing). The randomwalk package auto-detects your environment:
 >
-> - **WebR/Browser:** Currently runs in **synchronous mode (workers=1)** due to mirai/nanonext compatibility issues in WebAssembly
-> - **Native R:** Uses `crew` backend with full async support (`workers=2`)
+> - **WebR/Browser:** Synchronous mode only (workers=0) due to mirai/nanonext compatibility limitations in WebAssembly
+> - **Native R:** Supports async/parallel processing with `crew` backend (workers=2+)
 >
-> The WebR async limitation is tracked in Issue #158. The dashboard is fully functional in the browser, just without parallel processing.
+> The WebR limitation is tracked in Issue #158. The dashboard is fully functional in the browser for visualizing random walk dynamics.
 
 ## Interactive Dashboard
 
