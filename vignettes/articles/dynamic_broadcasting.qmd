@@ -22,7 +22,7 @@ This vignette provides a **fully interactive Shiny application** demonstrating a
 
 > **Note:** This demonstrates **Issue #129** - mirai-based async support for WebAssembly! The randomwalk package auto-detects your environment and selects the appropriate backend:
 >
-> - **WebR/Browser:** Uses `mirai` backend with `nanonext` from r-lib.r-universe.dev
+> - **WebR/Browser:** Uses `mirai` backend with `nanonext` 1.7.2.9000 from r-lib.r-universe.dev
 > - **Native R:** Uses `crew` backend
 >
 > Both environments support `workers=2` for true async parallel processing!
@@ -34,7 +34,7 @@ This vignette provides a **fully interactive Shiny application** demonstrating a
 #| viewerHeight: 900
 
 # ============================================================================
-# Package Installation with nanonext from r-lib.r-universe.dev
+# Package Installation with mirai/nanonext dev versions from r-lib.r-universe.dev
 # ============================================================================
 
 cat("\n=== ASYNC PARALLEL SETUP (dynamic_broadcasting.qmd) ===\n")
@@ -81,9 +81,9 @@ tryCatch({
   library(mirai)
   cat("✅ mirai loaded\n")
 }, error = function(e) {
-  cat("⚠️  mirai not found, installing from johngavin.github.io/randomwalk...\n")
-  cat("Installing nanonext 1.7.2 and mirai 2.5.3 (compatible versions)...\n")
-  webr::install(c("nanonext", "mirai"), repos = "https://johngavin.github.io/randomwalk")
+  cat("⚠️  mirai not found, installing from r-lib.r-universe.dev...\n")
+  cat("Installing nanonext 1.7.2.9000 and mirai 2.5.3.9000 (development versions with .dispatcher support)...\n")
+  webr::install(c("nanonext", "mirai"), repos = "https://r-lib.r-universe.dev")
   library(mirai)
   cat("✅ mirai installed and loaded\n")
   cat("✅ nanonext installed (version", as.character(packageVersion("nanonext")), ")\n")
