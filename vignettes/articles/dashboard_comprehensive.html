@@ -226,7 +226,7 @@ ui &lt;- fluidPage(
                   min = 10, max = 50, value = 20, step = 5),
 
       sliderInput("n_walkers", "Number of Walkers:",
-                  min = 1, max = 50, value = 10, step = 1),
+                  min = 1, max = 5000, value = 200, step = 50),
 
       sliderInput("workers", "Parallel Workers:",
                   min = 0, max = 4, value = 0, step = 1),
@@ -270,11 +270,16 @@ ui &lt;- fluidPage(
         # PAGE 2: Walker Paths (First 25 and Last 25)
         tabPanel("Walker Paths",
                  h4("Walker Trajectories"),
-                 plotOutput("paths_plot_first25", height = "400px"),
-                 h5("First 25 Walkers (if available)"),
-                 hr(),
-                 plotOutput("paths_plot_last25", height = "400px"),
-                 h5("Last 25 Walkers (if available)")),
+                 fluidRow(
+                   column(6,
+                     sliderInput("first_n_paths", "First N paths:",
+                                min = 0, max = 20, value = 5, step = 1)),
+                   column(6,
+                     sliderInput("last_n_paths", "Last N paths:",
+                                min = 0, max = 20, value = 5, step = 1))
+                 ),
+                 helpText("Select first N and/or last N walker paths to display (max 40 total)"),
+                 plotOutput("paths_plot_first25", height = "500px")),
 
         # PAGE 3: Distributions (Path Lengths by Termination Reason)
         tabPanel("Distributions",
@@ -445,28 +450,29 @@ server &lt;- function(input, output, session) {
     n_walkers &lt;- length(result$walkers)
 
     if (n_walkers &gt;= 1) {
-      first_n &lt;- min(25, n_walkers)
-      plot_walker_paths(result, walker_ids = 1:first_n,
-                        main = paste("First", first_n, "Walkers"))
+      first_n &lt;- min(input$first_n_paths, n_walkers)
+      last_n &lt;- min(input$last_n_paths, n_walkers)
+
+      # Select walker IDs: first N and last N
+      walker_ids &lt;- unique(c(
+        if(first_n &gt; 0) 1:first_n else NULL,
+        if(last_n &gt; 0) (n_walkers - last_n + 1):n_walkers else NULL
+      ))
+
+      if (length(walker_ids) &gt; 0) {
+        # Plot only selected walkers' paths
+        filtered_walkers &lt;- result$walkers[walker_ids]
+        result_filtered &lt;- result
+        result_filtered$walkers &lt;- filtered_walkers
+        plot_walker_paths(result_filtered,
+                          main = paste(length(walker_ids), "Selected Walker Paths"))
+      } else {
+        plot.new()
+        text(0.5, 0.5, "No walkers selected")
+      }
     } else {
       plot.new()
       text(0.5, 0.5, "No walkers available")
-    }
-  })
-
-  output$paths_plot_last25 &lt;- renderPlot({
-    req(sim_result())
-    result &lt;- sim_result()
-    n_walkers &lt;- length(result$walkers)
-
-    if (n_walkers &gt; 25) {
-      last_n &lt;- min(25, n_walkers)
-      start_id &lt;- n_walkers - last_n + 1
-      plot_walker_paths(result, walker_ids = start_id:n_walkers,
-                        main = paste("Last", last_n, "Walkers"))
-    } else {
-      plot.new()
-      text(0.5, 0.5, "Less than 25 walkers total - see first panel")
     }
   })
 
@@ -477,6 +483,13 @@ server &lt;- function(input, output, session) {
 
     # Extract path lengths
     path_lengths &lt;- sapply(result$walkers, function(w) nrow(w$path))
+
+    # Check if we have valid data
+    if (length(path_lengths) == 0 || all(is.na(path_lengths))) {
+      plot.new()
+      text(0.5, 0.5, "No path data available")
+      return()
+    }
 
     # Plot histogram
     hist(path_lengths,
@@ -500,9 +513,22 @@ server &lt;- function(input, output, session) {
     result &lt;- sim_result()
 
     # Extract termination reasons and path lengths
+    path_lengths &lt;- sapply(result$walkers, function(w) nrow(w$path))
+    reasons &lt;- sapply(result$walkers, function(w) {
+      if (!is.null(w$termination_reason)) w$termination_reason else "unknown"
+    })
+
+    # Check if we have valid data
+    if (length(path_lengths) == 0 || length(reasons) == 0) {
+      plot.new()
+      text(0.5, 0.5, "No termination data available")
+      return()
+    }
+
     walkers_data &lt;- data.frame(
-      path_length = sapply(result$walkers, function(w) nrow(w$path)),
-      reason = sapply(result$walkers, function(w) w$termination_reason)
+      path_length = path_lengths,
+      reason = reasons,
+      stringsAsFactors = FALSE
     )
 
     # Plot boxplot by termination reason
@@ -519,7 +545,14 @@ server &lt;- function(input, output, session) {
   # PAGE 4: Statistics
   output$stats_comprehensive &lt;- renderText({
     req(sim_result())
-    stats &lt;- sim_result()$statistics
+    result &lt;- sim_result()
+    stats &lt;- result$statistics
+
+    # Safely extract values with defaults
+    safe_get &lt;- function(x, default = 0) {
+      if (is.null(x) || !is.atomic(x) || length(x) == 0) return(default)
+      return(x)
+    }
 
     paste0(
       "=== GRID STATISTICS ===\n",

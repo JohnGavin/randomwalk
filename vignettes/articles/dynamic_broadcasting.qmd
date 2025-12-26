@@ -155,13 +155,25 @@ ui <- fluidPage(
                  plotOutput("grid_plot", height = "600px")),
 
         tabPanel("Walker Paths",
+                 fluidRow(
+                   column(6,
+                     sliderInput("first_n_paths", "First N paths:",
+                                min = 0, max = 20, value = 5, step = 1)),
+                   column(6,
+                     sliderInput("last_n_paths", "Last N paths:",
+                                min = 0, max = 20, value = 5, step = 1))
+                 ),
+                 helpText("Select first N and/or last N walker paths to display (max 40 total)"),
                  plotOutput("paths_plot", height = "600px")),
 
         tabPanel("Statistics",
-                 h4("Simulation Statistics"),
-                 verbatimTextOutput("stats_text"),
-                 hr(),
-                 h5("Backend Information"),
+                 verbatimTextOutput("stats_text")),
+
+        tabPanel("Details",
+                 h4("Package Information"),
+                 verbatimTextOutput("package_details")),
+
+        tabPanel("Debug",
                  verbatimTextOutput("backend_info"))
       )
     )
@@ -205,9 +217,12 @@ server <- function(input, output, session) {
       sim_result(result)
 
       output$status <- renderText({
+        stats <- result$statistics
         paste0(
           "✅ Simulation complete!\n",
-          "Elapsed time: ", sprintf("%.2f", result$statistics$elapsed_time_secs), "s\n",
+          "Black Pixels: ", stats$black_pixels,
+          " (", sprintf("%.1f%%", stats$black_percentage), ")\n",
+          "Elapsed time: ", sprintf("%.2f", stats$elapsed_time_secs), "s\n",
           "Backend: ", if (input$workers > 0) "mirai" else "synchronous"
         )
       })
@@ -228,7 +243,33 @@ server <- function(input, output, session) {
   # Walker paths plot
   output$paths_plot <- renderPlot({
     req(sim_result())
-    plot_walker_paths(sim_result())
+    result <- sim_result()
+    n_walkers <- length(result$walkers)
+
+    if (n_walkers >= 1) {
+      first_n <- min(input$first_n_paths, n_walkers)
+      last_n <- min(input$last_n_paths, n_walkers)
+
+      # Select walker IDs: first N and last N
+      walker_ids <- unique(c(
+        if(first_n > 0) 1:first_n else NULL,
+        if(last_n > 0) (n_walkers - last_n + 1):n_walkers else NULL
+      ))
+
+      if (length(walker_ids) > 0) {
+        # Plot only selected walkers' paths
+        filtered_walkers <- result$walkers[walker_ids]
+        result_filtered <- result
+        result_filtered$walkers <- filtered_walkers
+        plot_walker_paths(result_filtered)
+      } else {
+        plot.new()
+        text(0.5, 0.5, "No walkers selected")
+      }
+    } else {
+      plot.new()
+      text(0.5, 0.5, "No walkers available")
+    }
   })
 
   # Statistics text
@@ -284,6 +325,35 @@ server <- function(input, output, session) {
       "Issue #130: ⏳ Dynamic broadcasting (future work)"
     )
   })
+
+  # Package details
+  output$package_details <- renderText({
+    paste0(
+      "=== PACKAGE SOURCES ===\n\n",
+      "randomwalk:\n",
+      "  https://johngavin.github.io/randomwalk/\n\n",
+      "WebR packages (NOT installed - async disabled):\n",
+      "  nanonext & mirai: https://r-lib.r-universe.dev\n",
+      "  Note: These packages are not compatible with WebR currently\n\n",
+      "=== BACKEND SELECTION (Issue #129) ===\n\n",
+      "WebR/Browser Mode:\n",
+      "  - Runs in synchronous mode (workers=0)\n",
+      "  - No mirai/nanonext due to compatibility issues\n",
+      "  - All computation happens client-side in browser\n\n",
+      "Native R Mode:\n",
+      "  - Uses crew backend for async parallelization\n",
+      "  - crew internally uses mirai\n",
+      "  - Supports workers=2+ for parallel processing\n\n",
+      "=== SYNC MODES ===\n\n",
+      "sync_mode='static' (current):\n",
+      "  - Workers get grid snapshots\n",
+      "  - Used in both WebR and native R\n\n",
+      "sync_mode='dynamic' (future):\n",
+      "  - Real-time broadcasting via nanonext\n",
+      "  - Issue #130 - future work\n",
+      "  - Requires nanonext WebR compatibility"
+    )
+  })
 }
 
 # ============================================================================
@@ -297,33 +367,16 @@ shinyApp(ui = ui, server = server)
 
 This dashboard demonstrates:
 
-1. **Auto-backend Selection**: Automatically uses mirai in WebR, crew in native R
-2. **True Async Parallelization**: Workers > 0 enables parallel processing in browser!
-3. **Real-time Visualization**: Grid state, walker paths, and statistics
-4. **Parameter Tuning**: Adjust simulation parameters interactively
+1. **Browser-based Simulation**: Runs entirely in your browser via WebAssembly (no server required)
+2. **Real-time Visualization**: Grid state, walker paths, and statistics
+3. **Parameter Tuning**: Adjust grid size, walkers, boundaries interactively
+4. **Path Filtering**: View first N and/or last N walker paths (Details page for technical info)
 
-## Technical Details
+## Notes
 
-### Package Sources
-
-- **randomwalk**: https://johngavin.github.io/randomwalk/
-- **nanonext & mirai**: https://r-lib.r-universe.dev
-
-### Backend Selection (Issue #129 ✅)
-
-**In WebR/Browser:**
-- Uses `mirai` backend for async parallelization
-- `nanonext` package from r-lib.r-universe.dev
-- All computation happens client-side
-
-**In Native R:**
-- Uses `crew` backend (preferred for better abstractions)
-- `crew` internally uses `mirai`
-
-### Sync Modes
-
-- **`sync_mode="static"`**: Workers get grid snapshots (current, used in WebR)
-- **`sync_mode="dynamic"`**: Real-time broadcasting via nanonext (Issue #130, future work)
+- **WebR Mode**: Runs in synchronous mode (workers=0) - no parallel processing
+- **Native R Mode**: Supports async/parallel with crew backend (workers=2+)
+- See **Details** tab in the app for package sources and technical information
 
 ## Try It Yourself
 
@@ -331,6 +384,8 @@ Experiment with different parameters:
 
 - **Larger grid**: More exploration space (try 30 or 40)
 - **More walkers**: Increase density (try 10 or 15)
-- **More workers**: Increase parallelization (try 4)
-- **8-hood**: Enable diagonal movement
+- **Path filters**: Adjust first_n/last_n sliders on Walker Paths tab
+- **8-hood**: Enable diagonal movement for more path options
 - **Wrap boundary**: Toroidal grid (no boundaries)
+
+Note: Keep workers=0 in WebR mode
