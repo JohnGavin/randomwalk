@@ -1,5 +1,5 @@
 ---
-title: "Random Walks Dashboard (Synchronous Mode in WebR)"
+title: "Sync Sequential Random Walks Dashboard"
 format:
   html:
     code-fold: true
@@ -24,19 +24,6 @@ format:
 filters:
   - shinylive
 ---
-
-# Random Walks Dashboard
-
-This vignette provides a **fully interactive Shiny application** for random walk simulations running directly in your browser using WebAssembly.
-
-> **Note:** This dashboard runs in **synchronous mode** in WebR (no parallel processing). The randomwalk package auto-detects your environment:
->
-> - **WebR/Browser:** Synchronous mode only (workers=0) due to mirai/nanonext compatibility limitations in WebAssembly
-> - **Native R:** Supports async/parallel processing with `crew` backend (workers=2+)
->
-> The WebR limitation is tracked in Issue #158. The dashboard is fully functional in the browser for visualizing random walk dynamics.
-
-## Interactive Dashboard
 
 ```{shinylive-r}
 #| standalone: true
@@ -305,10 +292,10 @@ server <- function(input, output, session) {
 
     paste0(
       "Environment: ", if (is_webr) "WebR/Browser" else "Native R", "\n",
-      "Backend: ", if (input$workers > 0) {
-        if (is_webr) "mirai (WebAssembly-compatible)" else "crew"
+      "Mode: ", if (input$workers > 0) {
+        if (is_webr) "mirai (not available - running sync sequential)" else "async parallel (crew)"
       } else {
-        "synchronous (no parallelization)"
+        if (is_webr) "sync sequential (browser limitation)" else "sync sequential (workers=0)"
       }, "\n",
       "\nPackage Versions:\n",
       "  randomwalk: ", packageVersion("randomwalk"), "\n",
@@ -321,8 +308,10 @@ server <- function(input, output, session) {
       if (requireNamespace("crew", quietly = TRUE)) {
         paste0("  crew: ", packageVersion("crew"), "\n")
       } else "",
-      "\nIssue #129: ✅ Async parallel support in WebAssembly\n",
-      "Issue #130: ⏳ Dynamic broadcasting (future work)"
+      "\nProcessing:\n",
+      "  Browser: Sync sequential only\n",
+      "  Native R: Async parallel available (Issue #129 ✅)\n",
+      "\nIssue #130: ⏳ Dynamic broadcasting (future work)"
     )
   })
 
@@ -332,26 +321,31 @@ server <- function(input, output, session) {
       "=== PACKAGE SOURCES ===\n\n",
       "randomwalk:\n",
       "  https://johngavin.github.io/randomwalk/\n\n",
-      "WebR packages (NOT installed - async disabled):\n",
+      "WebR packages (NOT installed - parallel processing disabled):\n",
       "  nanonext & mirai: https://r-lib.r-universe.dev\n",
-      "  Note: These packages are not compatible with WebR currently\n\n",
-      "=== BACKEND SELECTION (Issue #129) ===\n\n",
-      "WebR/Browser Mode:\n",
-      "  - Runs in synchronous mode (workers=0)\n",
-      "  - No mirai/nanonext due to compatibility issues\n",
+      "  Note: Not compatible with WebR - causes browser version to run sync sequential\n\n",
+      "=== PROCESSING MODES ===\n\n",
+      "THIS BROWSER VERSION (WebR):\n",
+      "  - Sync Sequential Mode (workers=0)\n",
+      "  - Processes one walker at a time sequentially\n",
+      "  - No parallel processing available\n",
       "  - All computation happens client-side in browser\n\n",
-      "Native R Mode:\n",
+      "R CODE OUTSIDE WEBPAGE (Native R):\n",
+      "  - Async Parallel Mode (workers=2+)\n",
       "  - Uses crew backend for async parallelization\n",
-      "  - crew internally uses mirai\n",
-      "  - Supports workers=2+ for parallel processing\n\n",
-      "=== SYNC MODES ===\n\n",
+      "  - crew internally uses mirai for parallel processing\n",
+      "  - Can process multiple walkers simultaneously\n",
+      "  - Full async/parallel capabilities when running randomwalk package\n",
+      "    in regular R (not in browser)\n\n",
+      "=== SYNC MODES (Both Environments) ===\n\n",
       "sync_mode='static' (current):\n",
       "  - Workers get grid snapshots\n",
-      "  - Used in both WebR and native R\n\n",
+      "  - Used in native R async parallel mode\n",
+      "  - Not applicable in browser (no workers)\n\n",
       "sync_mode='dynamic' (future):\n",
       "  - Real-time broadcasting via nanonext\n",
       "  - Issue #130 - future work\n",
-      "  - Requires nanonext WebR compatibility"
+      "  - Would require nanonext WebR compatibility"
     )
   })
 }
@@ -362,6 +356,17 @@ server <- function(input, output, session) {
 
 shinyApp(ui = ui, server = server)
 ```
+
+## Sync Sequential Random Walks
+
+This vignette provides a **fully interactive Shiny application** for sync sequential random walk simulations running directly in your browser using WebAssembly.
+
+> **Important:** This browser-based dashboard runs in **sync sequential mode** (no parallel processing):
+>
+> - **WebR/Browser:** Sync sequential mode only (workers=0) - processes one walker at a time
+> - **Native R (outside webpage):** The randomwalk package supports **async parallel** processing with `crew` backend (workers=2+) when run in regular R
+>
+> The WebR limitation is due to mirai/nanonext compatibility issues in WebAssembly (tracked in Issue #158). The dashboard is fully functional for visualizing random walk dynamics in the browser.
 
 ## Features
 
@@ -374,9 +379,9 @@ This dashboard demonstrates:
 
 ## Notes
 
-- **WebR Mode**: Runs in synchronous mode (workers=0) - no parallel processing
-- **Native R Mode**: Supports async/parallel with crew backend (workers=2+)
-- See **Details** tab in the app for package sources and technical information
+- **This Browser Version**: Sync sequential mode (workers=0) - processes walkers one at a time
+- **R Code Outside Webpage**: Full async parallel support with crew backend (workers=2+) when running randomwalk package in native R
+- See **Details** tab in the app for technical information about implementation differences
 
 ## Try It Yourself
 
