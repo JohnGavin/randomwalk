@@ -48,8 +48,12 @@ their starting positions, trajectories, and termination points.
 }
 \details{
 Walker paths are shown in different colors. Starting positions are marked
-with circles. Ending positions are marked with squares (if terminated due
-to black neighbor) or triangles (if hit boundary).
+with circles (pch 19). Ending positions use different markers:
+\itemize{
+\item Square (pch 15): Terminated due to black pixel (black_neighbor or touched_black)
+\item Triangle (pch 17): Terminated at boundary (hit_boundary)
+\item X (pch 4): Terminated at max steps (max_steps)
+}
 }
 \examples{
 \dontrun{

@@ -83,8 +83,12 @@ plot_grid <- function(result,
 #'
 #' @details
 #' Walker paths are shown in different colors. Starting positions are marked
-#' with circles. Ending positions are marked with squares (if terminated due
-#' to black neighbor) or triangles (if hit boundary).
+#' with circles (pch 19). Ending positions use different markers:
+#' \itemize{
+#'   \item Square (pch 15): Terminated due to black pixel (black_neighbor or touched_black)
+#'   \item Triangle (pch 17): Terminated at boundary (hit_boundary)
+#'   \item X (pch 4): Terminated at max steps (max_steps)
+#' }
 #'
 #' @examples
 #' \dontrun{
@@ -151,7 +155,14 @@ plot_walker_paths <- function(result,
     }
     
     # Mark ending position with different shapes based on termination reason
-    end_pch <- if (walker$termination_reason == "black_neighbor") 15 else 17
+    # Square (15) for black-related, Triangle (17) for boundary, X (4) for max steps
+    end_pch <- if (walker$termination_reason %in% c("black_neighbor", "touched_black")) {
+      15  # Square for black-related terminations
+    } else if (walker$termination_reason == "hit_boundary") {
+      17  # Triangle for boundary
+    } else {
+      4   # X for max_steps or other
+    }
     points(walker$pos[2], walker$pos[1],
            pch = end_pch, col = colors[i], cex = cex_end)
   }
@@ -159,8 +170,8 @@ plot_walker_paths <- function(result,
   # Add legend
   if (legend) {
     legend(legend_pos,
-           legend = c("Start", "End (black neighbor)", "End (boundary)"),
-           pch = c(19, 15, 17),
+           legend = c("Start", "End (black)", "End (boundary)", "End (max steps)"),
+           pch = c(19, 15, 17, 4),
            col = "black",
            cex = 0.8,
            bg = "white")
