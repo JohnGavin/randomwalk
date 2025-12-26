@@ -8,7 +8,17 @@ format:
     embed-resources: false
     include-in-header:
       - text: |
-          <meta name="shinylive:serviceworker_dir" content=".">
+          <script>
+          // Fix serviceworker_dir meta tag BEFORE Shinylive loads
+          (function() {
+            // Find the first meta tag (Quarto's default)
+            const firstMeta = document.querySelector('meta[name="shinylive:serviceworker_dir"]');
+            if (firstMeta) {
+              // Update it to point to current directory
+              firstMeta.setAttribute('content', '.');
+            }
+          })();
+          </script>
     resources:
       - shinylive-sw.js
 filters:
@@ -40,8 +50,10 @@ This vignette provides a **comprehensive interactive Shiny application** demonst
 #| viewerHeight: 900
 
 # ============================================================================
-# Package Installation with mirai/nanonext dev versions from r-lib.r-universe.dev
+# Package Installation (WebR - Synchronous Mode)
 # ============================================================================
+# Note: Async parallel processing disabled in WebR due to mirai/nanonext
+# compatibility issues. The app runs in synchronous mode (workers=1).
 
 cat("\n=== COMPREHENSIVE ASYNC DASHBOARD SETUP ===\n")
 cat("Timestamp:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
@@ -82,18 +94,13 @@ tryCatch({
   cat("✅ ggplot2 installed and loaded\n")
 })
 
-# Install mirai + nanonext for async parallel processing in WebR
-tryCatch({
-  library(mirai)
-  cat("✅ mirai loaded\n")
-}, error = function(e) {
-  cat("⚠️  mirai not found, installing from r-lib.r-universe.dev...\n")
-  cat("Installing nanonext 1.7.2.9000 and mirai 2.5.3.9000 (development versions with .dispatcher support)...\n")
-  webr::install(c("nanonext", "mirai"), repos = "https://r-lib.r-universe.dev")
-  library(mirai)
-  cat("✅ mirai installed and loaded\n")
-  cat("✅ nanonext installed (version", as.character(packageVersion("nanonext")), ")\n")
-})
+# Note: Async parallel processing currently not supported in WebR
+# Issue: mirai/nanonext have unresolved compatibility issues in WebAssembly
+# The app will run in synchronous mode (workers=1) in WebR
+cat("⚠️  Running in WebR - async parallel processing disabled\n")
+cat("   Reason: mirai/nanonext compatibility issues in WebAssembly\n")
+cat("   Using synchronous mode (workers=1) for browser compatibility\n")
+cat("   Note: Async works in native R with crew backend\n")
 
 tryCatch({
   library(randomwalk)

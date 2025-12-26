@@ -39,7 +39,17 @@ ul.task-list li input[type="checkbox"] {
 <script src="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-0.10.7/shinylive/run-python-blocks.js" type="module"></script>
 <link href="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-0.10.7/shinylive/shinylive.css" rel="stylesheet">
 <link href="dynamic_broadcasting_files/libs/quarto-contrib/shinylive-quarto-css/shinylive-quarto.css" rel="stylesheet">
-<meta name="shinylive:serviceworker_dir" content=".">
+<script>
+// Fix serviceworker_dir meta tag BEFORE Shinylive loads
+(function() {
+  // Find the first meta tag (Quarto's default)
+  const firstMeta = document.querySelector('meta[name="shinylive:serviceworker_dir"]');
+  if (firstMeta) {
+    // Update it to point to current directory
+    firstMeta.setAttribute('content', '.');
+  }
+})();
+</script>
 
 
 </head>
@@ -92,12 +102,12 @@ ul.task-list li input[type="checkbox"] {
 <h1>Async Parallel Random Walks</h1>
 <p>This vignette provides a <strong>fully interactive Shiny application</strong> demonstrating async parallel random walk simulations running directly in your browser using WebAssembly.</p>
 <blockquote class="blockquote">
-<p><strong>Note:</strong> This demonstrates <strong>Issue #129</strong> - mirai-based async support for WebAssembly! The randomwalk package auto-detects your environment and selects the appropriate backend:</p>
+<p><strong>Note:</strong> This demonstrates async/parallel random walk simulations. The randomwalk package auto-detects your environment and selects the appropriate backend:</p>
 <ul>
-<li><strong>WebR/Browser:</strong> Uses <code>mirai</code> backend with <code>nanonext</code> 1.7.2.9000 from r-lib.r-universe.dev</li>
-<li><strong>Native R:</strong> Uses <code>crew</code> backend</li>
+<li><strong>WebR/Browser:</strong> Currently runs in <strong>synchronous mode (workers=1)</strong> due to mirai/nanonext compatibility issues in WebAssembly</li>
+<li><strong>Native R:</strong> Uses <code>crew</code> backend with full async support (<code>workers=2</code>)</li>
 </ul>
-<p>Both environments support <code>workers=2</code> for true async parallel processing!</p>
+<p>The WebR async limitation is tracked in Issue #158. The dashboard is fully functional in the browser, just without parallel processing.</p>
 </blockquote>
 <section id="interactive-dashboard" class="level2">
 <h2 class="anchored" data-anchor-id="interactive-dashboard">Interactive Dashboard</h2>
@@ -108,8 +118,10 @@ ul.task-list li input[type="checkbox"] {
 #| viewerHeight: 900
 
 # ============================================================================
-# Package Installation with mirai/nanonext dev versions from r-lib.r-universe.dev
+# Package Installation (WebR - Synchronous Mode)
 # ============================================================================
+# Note: Async parallel processing disabled in WebR due to mirai/nanonext
+# compatibility issues. The app runs in synchronous mode (workers=1).
 
 cat("\n=== ASYNC PARALLEL SETUP (dynamic_broadcasting.qmd) ===\n")
 cat("Timestamp:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
@@ -150,18 +162,13 @@ tryCatch({
   cat("✅ ggplot2 installed and loaded\n")
 })
 
-# Install mirai + nanonext for async parallel processing in WebR
-tryCatch({
-  library(mirai)
-  cat("✅ mirai loaded\n")
-}, error = function(e) {
-  cat("⚠️  mirai not found, installing from r-lib.r-universe.dev...\n")
-  cat("Installing nanonext 1.7.2.9000 and mirai 2.5.3.9000 (development versions with .dispatcher support)...\n")
-  webr::install(c("nanonext", "mirai"), repos = "https://r-lib.r-universe.dev")
-  library(mirai)
-  cat("✅ mirai installed and loaded\n")
-  cat("✅ nanonext installed (version", as.character(packageVersion("nanonext")), ")\n")
-})
+# Note: Async parallel processing currently not supported in WebR
+# Issue: mirai/nanonext have unresolved compatibility issues in WebAssembly
+# The app will run in synchronous mode (workers=1) in WebR
+cat("⚠️  Running in WebR - async parallel processing disabled\n")
+cat("   Reason: mirai/nanonext compatibility issues in WebAssembly\n")
+cat("   Using synchronous mode (workers=1) for browser compatibility\n")
+cat("   Note: Async works in native R with crew backend\n")
 
 tryCatch({
   library(randomwalk)
