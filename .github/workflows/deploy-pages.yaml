@@ -21,9 +21,12 @@ jobs:
       - name: Build webR binaries
         uses: r-wasm/actions/build-rwasm@v2
         with:
-          packages: "local::."
+          packages: |
+            github::shikokuchuo/nanonext@v1.7.2
+            github::shikokuchuo/mirai@v2.5.3
+            local::.
           repo-path: _site
-          webr-image: ghcr.io/r-wasm/webr:v0.5.8  # R 4.5.1 for nanonext support
+          webr-image: ghcr.io/r-wasm/webr:v0.5.8  # R 4.5.1 for nanonext/mirai support
 
       - name: Debug - Show webR build output structure
         run: |
