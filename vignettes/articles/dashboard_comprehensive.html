@@ -114,23 +114,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="comprehensive-async-parallel-dashboard" class="level1">
-<h1>Comprehensive Async Parallel Dashboard</h1>
-<p>This vignette provides a <strong>comprehensive interactive Shiny application</strong> demonstrating all features of the randomwalk package with async parallel processing in WebAssembly.</p>
-<blockquote class="blockquote">
-<p><strong>Complete Showcase</strong>: This dashboard demonstrates <strong>all randomwalk capabilities</strong>:</p>
-<ul>
-<li>✅ Async parallel processing (mirai in WebR, crew in native R)</li>
-<li>✅ Multiple visualizations (fractal plots, path plots, distributions)</li>
-<li>✅ Comprehensive statistics and debugging information</li>
-<li>✅ Real-time parameter tuning</li>
-<li>✅ Error handling and status updates</li>
-<li>✅ Cross-references to documentation</li>
-</ul>
-</blockquote>
-<p><strong>Related Documentation:</strong> - <a href="https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md">WIKI_SHINYLIVE_LESSONS_LEARNED.md</a> - Complete lessons learned - <a href="https://github.com/JohnGavin/randomwalk/issues/129">Issue #129</a> - Async parallel support - <a href="https://github.com/JohnGavin/randomwalk/issues/136">Issue #136</a> - This comprehensive vignette</p>
-<section id="interactive-dashboard" class="level2">
-<h2 class="anchored" data-anchor-id="interactive-dashboard">Interactive Dashboard</h2>
 <pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
@@ -659,6 +642,18 @@ server &lt;- function(input, output, session) {
 # ============================================================================
 
 shinyApp(ui = ui, server = server)</code></pre>
+<section id="comprehensive-random-walks-dashboard" class="level2">
+<h2 class="anchored" data-anchor-id="comprehensive-random-walks-dashboard">Comprehensive Random Walks Dashboard</h2>
+<p>This vignette provides a <strong>comprehensive interactive Shiny application</strong> for random walk simulations running in your browser using WebAssembly.</p>
+<blockquote class="blockquote">
+<p><strong>Important:</strong> This browser-based dashboard runs in <strong>sync sequential mode</strong> (no parallel processing):</p>
+<ul>
+<li><strong>WebR/Browser:</strong> Sync sequential mode only (workers=0) - processes one walker at a time</li>
+<li><strong>Native R (outside webpage):</strong> The randomwalk package supports <strong>async parallel</strong> processing with <code>crew</code> backend (workers=2+) when run in regular R</li>
+</ul>
+<p>The WebR limitation is due to mirai/nanonext compatibility issues in WebAssembly. The dashboard is fully functional for visualizing random walk dynamics in the browser.</p>
+</blockquote>
+<p><strong>Related Documentation:</strong> - <a href="https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md">WIKI_SHINYLIVE_LESSONS_LEARNED.md</a> - Complete lessons learned - <a href="https://github.com/JohnGavin/randomwalk/issues/129">Issue #129</a> - Async parallel support (native R only) - <a href="https://github.com/JohnGavin/randomwalk/issues/136">Issue #136</a> - This comprehensive vignette</p>
 </section>
 <section id="features-demonstrated" class="level2">
 <h2 class="anchored" data-anchor-id="features-demonstrated">Features Demonstrated</h2>
@@ -786,7 +781,6 @@ shinyApp(ui = ui, server = server)</code></pre>
 <li><strong>WIKI</strong>: <a href="https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md">WIKI_SHINYLIVE_LESSONS_LEARNED.md</a></li>
 <li><strong>randomwalk Website</strong>: https://johngavin.github.io/randomwalk/</li>
 </ul>
-</section>
 </section>
 
 </main>

@@ -25,26 +25,6 @@ filters:
   - shinylive
 ---
 
-# Comprehensive Async Parallel Dashboard
-
-This vignette provides a **comprehensive interactive Shiny application** demonstrating all features of the randomwalk package with async parallel processing in WebAssembly.
-
-> **Complete Showcase**: This dashboard demonstrates **all randomwalk capabilities**:
->
-> - ✅ Async parallel processing (mirai in WebR, crew in native R)
-> - ✅ Multiple visualizations (fractal plots, path plots, distributions)
-> - ✅ Comprehensive statistics and debugging information
-> - ✅ Real-time parameter tuning
-> - ✅ Error handling and status updates
-> - ✅ Cross-references to documentation
-
-**Related Documentation:**
-- [WIKI_SHINYLIVE_LESSONS_LEARNED.md](https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md) - Complete lessons learned
-- [Issue #129](https://github.com/JohnGavin/randomwalk/issues/129) - Async parallel support
-- [Issue #136](https://github.com/JohnGavin/randomwalk/issues/136) - This comprehensive vignette
-
-## Interactive Dashboard
-
 ```{shinylive-r}
 #| standalone: true
 #| viewerHeight: 900
@@ -572,6 +552,22 @@ server <- function(input, output, session) {
 
 shinyApp(ui = ui, server = server)
 ```
+
+## Comprehensive Random Walks Dashboard
+
+This vignette provides a **comprehensive interactive Shiny application** for random walk simulations running in your browser using WebAssembly.
+
+> **Important:** This browser-based dashboard runs in **sync sequential mode** (no parallel processing):
+>
+> - **WebR/Browser:** Sync sequential mode only (workers=0) - processes one walker at a time
+> - **Native R (outside webpage):** The randomwalk package supports **async parallel** processing with `crew` backend (workers=2+) when run in regular R
+>
+> The WebR limitation is due to mirai/nanonext compatibility issues in WebAssembly. The dashboard is fully functional for visualizing random walk dynamics in the browser.
+
+**Related Documentation:**
+- [WIKI_SHINYLIVE_LESSONS_LEARNED.md](https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md) - Complete lessons learned
+- [Issue #129](https://github.com/JohnGavin/randomwalk/issues/129) - Async parallel support (native R only)
+- [Issue #136](https://github.com/JohnGavin/randomwalk/issues/136) - This comprehensive vignette
 
 ## Features Demonstrated
 
