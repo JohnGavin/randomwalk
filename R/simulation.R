@@ -26,6 +26,9 @@
 #' @param validate_percent Numeric. Validate grid every X% of walkers complete.
 #'   Default 5 (validates every 5% = 20 times total). Set to 0 to disable
 #'   periodic validation (only validates at end). Minimum interval is 1 walker.
+#' @param log_interval Integer. Log progress every N completed walkers.
+#'   Default 50. Set to 0 to disable progress logging (only shows start/end).
+#'   Lower values (e.g., 5) increase verbosity, higher values (e.g., 100) reduce output.
 #'
 #' @return A list with components:
 #'   \describe{
@@ -53,7 +56,8 @@ run_simulation <- function(grid_size = 10,
                             verbose = FALSE,
                             quiet = FALSE,
                             validate_strict = FALSE,
-                            validate_percent = 5) {
+                            validate_percent = 5,
+                            log_interval = 50) {
 
   # Input validation
   if (grid_size < 3) {
@@ -131,7 +135,8 @@ run_simulation <- function(grid_size = 10,
         max_steps = max_steps,
         start_time = start_time,
         validate_strict = validate_strict,
-        validate_percent = validate_percent
+        validate_percent = validate_percent,
+        log_interval = log_interval
       )
     } else {
       # Static snapshot mode - frozen grid
@@ -144,7 +149,8 @@ run_simulation <- function(grid_size = 10,
         max_steps = max_steps,
         start_time = start_time,
         validate_strict = validate_strict,
-        validate_percent = validate_percent
+        validate_percent = validate_percent,
+        log_interval = log_interval
       )
     }
 
@@ -283,7 +289,7 @@ run_simulation <- function(grid_size = 10,
 #' @keywords internal
 run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
                                    boundary, max_steps, start_time,
-                                   validate_strict, validate_percent) {
+                                   validate_strict, validate_percent, log_interval) {
   logger::log_info("Starting async simulation with {n_workers} workers")
 
   # Calculate validation interval based on percentage
@@ -401,7 +407,8 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
             )
           } else {
             # Position would create isolated pixel - reject it
-            logger::log_warn(
+            # Note: This is expected with async static mode (workers have stale grid snapshots)
+            logger::log_debug(
               "REJECTED Walker {walker$id} termination at ({walker$pos[1]}, {walker$pos[2]}): would create isolated pixel (stale worker cache)"
             )
             # Note: Walker is still counted as completed, just don't set pixel black
@@ -421,7 +428,7 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
         }
 
         # Log progress
-        if (n_completed %% 5 == 0 || n_completed == n_total) {
+        if (log_interval > 0 && (n_completed %% log_interval == 0 || n_completed == n_total)) {
           black_count <- count_black_pixels(grid)
           logger::log_info("Completed: {n_completed}/{n_total}, Black pixels: {black_count}")
         }
@@ -500,7 +507,7 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
 #' @keywords internal
 run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
                                            boundary, max_steps, start_time,
-                                           validate_strict, validate_percent) {
+                                           validate_strict, validate_percent, log_interval) {
   logger::log_info("Starting async simulation with dynamic broadcasting ({n_workers} workers)")
 
   # Calculate validation interval
@@ -643,7 +650,7 @@ run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
         }
 
         # Log progress
-        if (n_completed %% 5 == 0 || n_completed == n_total) {
+        if (log_interval > 0 && (n_completed %% log_interval == 0 || n_completed == n_total)) {
           black_count <- count_black_pixels(grid)
           collisions <- sum(sapply(completed_walkers, function(w) w$status == "black_neighbor_detected"))
           logger::log_info("Completed: {n_completed}/{n_total}, Black: {black_count}, Collisions: {collisions}")

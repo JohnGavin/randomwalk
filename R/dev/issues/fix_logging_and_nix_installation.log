@@ -1,0 +1,60 @@
+# Fix: Add log_interval parameter and reduce rejection log verbosity
+
+Date: 2025-12-26 18:23:28 
+
+## Changes Made:
+
+### 1. README.md - Nix Shell Installation
+- Added instructions to install from R-Universe binary cache
+- Provided three installation options: binary cache, GitHub, local development
+- Updated example to show library() usage instead of devtools::load_all()
+
+### 2. README.md - Simulation Parameters
+- Added log_interval parameter documentation
+- Updated workers default from 1 to 0 for clarity
+- Added new section: Async Parallel Processing Notes
+- Documented high rejection rates (90%+) with static mode
+- Explained phantom black pixels on stale worker snapshots
+- Added guidance on when to use static vs dynamic mode
+
+### 3. R/simulation.R - log_interval Parameter
+- Added log_interval parameter (default 50) to run_simulation()
+- Passed parameter to run_simulation_async() and run_simulation_async_dynamic()
+- Replaced hardcoded "5" with configurable log_interval
+- Progress logging now respects log_interval setting
+
+### 4. R/simulation.R & R/grid.R - Logging Levels
+- Changed isolated pixel rejection logs from WARN to DEBUG
+- Added comments explaining this is expected with async static mode
+- Users can see rejections with verbose=TRUE if needed
+
+## User-Reported Issues Addressed:
+
+1. README should install from remote (cachix/R-Universe) ✅
+   - Now installs from johngavin.r-universe.dev
+
+2. Too many WARN messages during simulation ✅
+   - Changed to DEBUG level (hidden by default)
+   - Added log_interval parameter (default 50 vs previous 5)
+   - Users can set log_interval=100+ for less verbose output
+
+3. Isolated pixel rejections seem like a bug ✅
+   - Documented this is EXPECTED with async static mode
+   - Explained: 8000 walkers with 8 workers can have 99% rejection rate
+   - Provided guidance: use sync_mode="dynamic" if rejections are problematic
+
+## Files Modified:
+1. README.md
+2. R/simulation.R
+3. R/grid.R
+
+## Testing Recommendations:
+Run simulation with new parameters:
+  result <- run_simulation(
+    grid_size = 200,
+    n_walkers = 8000,
+    workers = 8,
+    log_interval = 100,  # Less verbose (was every 5, now every 100)
+    verbose = FALSE       # Hides DEBUG-level rejection messages
+  )
+

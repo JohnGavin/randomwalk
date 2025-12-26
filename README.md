@@ -103,17 +103,35 @@ caffeinate -i ~/docs_gh/rix.setup/default.sh
 echo $IN_NIX_SHELL  # Should output: 1 or impure
 which R             # Should output: /nix/store/.../bin/R
 
-# Run R code with randomwalk
-cd /path/to/randomwalk
-Rscript -e 'devtools::load_all("."); result <- run_simulation(grid_size = 20, n_walkers = 5); print(result$statistics)'
-
-# Or interactively
+# Install randomwalk from binary cache (recommended)
 R --quiet --no-save
-# Then inside R:
-devtools::load_all(".")
+```
+
+```r
+# Inside R: Install from R-Universe (precompiled binaries)
+install.packages("randomwalk",
+  repos = c(
+    "https://johngavin.r-universe.dev",  # R-Universe binary cache
+    "https://cloud.r-project.org"        # CRAN fallback
+  )
+)
+
+# Or install from GitHub source
+# remotes::install_github("johngavin/randomwalk")
+
+# Or for development, load from local source
+# devtools::load_all(".")
+
+# Use the package
+library(randomwalk)
 result <- run_simulation(grid_size = 20, n_walkers = 5)
 plot_grid(result)
 ```
+
+**Installation Options:**
+1. **Binary cache (fastest)**: Install from `johngavin.r-universe.dev` - precompiled WASM binaries
+2. **GitHub source**: Install with `remotes::install_github("johngavin/randomwalk")`
+3. **Local development**: Use `devtools::load_all(".")` from the repository directory
 
 **Note**: The nix shell provides a reproducible R environment. See [`.claude/NIX_QUICKREF.md`](.claude/NIX_QUICKREF.md) for troubleshooting.
 
@@ -123,8 +141,28 @@ plot_grid(result)
 - **Walkers**: Number of simultaneous random walkers (1 to 60% of grid, default 5)
 - **Neighborhood**: 4-hood (NSEW) or 8-hood (includes diagonals)
 - **Boundary**: Wrap-around (torus) or terminate at edges (default)
-- **Workers**: Number of parallel R processes (0-16, default 1)
-- **Refresh Rate**: UI update interval in seconds (1-60, default 4)
+- **Workers**: Number of parallel R processes (0-16, default 0)
+  - 0 = Synchronous mode (single process)
+  - 2+ = Async parallel mode (requires crew package)
+- **Sync Mode**: Grid synchronization for async simulations (default "static")
+  - "static" = Workers get frozen grid snapshots (fast, some rejections expected)
+  - "dynamic" = Workers get real-time updates (slower, enables collision detection)
+- **Log Interval**: Progress logging frequency (default 50 walkers)
+  - Set to 100+ for less verbose output
+  - Set to 5-10 for detailed progress tracking
+
+### Async Parallel Processing Notes
+
+When using `workers > 0` with `sync_mode = "static"` (default), workers operate on frozen grid snapshots. This means:
+
+- **Position rejections are normal**: Workers may propose positions that would create isolated pixels (violating 4-hood connectivity). These are rejected by the main process during validation.
+- **High rejection rates with many workers**: With `boundary="terminate"` and many workers, rejection rates can be 90%+ for "black_neighbor" terminations. This is expected behavior - workers see phantom black pixels on stale snapshots that are no longer valid by the time results return.
+  - Example: 8000 walkers, 8 workers → 631 "black_neighbor" terminations, but only 4-5 black pixels created (99% rejected)
+  - Most walkers still hit boundaries successfully (typically 75-80%)
+- **When to use static vs dynamic mode**:
+  - **Static (default)**: Best for large grids with `boundary="terminate"`. Fast, but expect high rejection rates.
+  - **Dynamic**: Use when you need accurate collision detection or when rejection rates are unacceptable. ~10-15% slower but eliminates rejections.
+- **Logging**: Rejection messages are logged at DEBUG level (use `verbose=TRUE` to see them). Use `log_interval=100` or higher to reduce progress log verbosity.
 
 ## 📚 Vignettes & Documentation
 

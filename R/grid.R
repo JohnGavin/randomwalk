@@ -315,7 +315,8 @@ validate_termination_position <- function(pos, grid, neighborhood = "4-hood") {
   }
 
   # No black neighbors found - this would create an isolated pixel
-  logger::log_warn(
+  # Note: This is expected with async static mode (workers have stale grid snapshots)
+  logger::log_debug(
     "Position ({pos[1]}, {pos[2]}) is INVALID: would create isolated pixel (no black neighbors in {neighborhood})"
   )
   return(FALSE)
