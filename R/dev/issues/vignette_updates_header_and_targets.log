@@ -1,0 +1,39 @@
+# Vignette Updates: Header Fix and New Targets Vignette
+
+Date: 2025-12-26 18:15:42 
+
+## Changes Made:
+
+### 1. dynamic_broadcasting.qmd
+- Changed titlePanel header from "Async Parallel Random Walks (Issue #129 ✅)" to "Sync Sequential Random Walks"
+- Line 102 updated for consistency with vignette terminology
+
+### 2. step_distribution_analysis.qmd (NEW)
+- Created comprehensive targets-based analysis vignette
+- Analyzes step distribution relationships:
+  * By grid size (20, 40, 60, 80, 100)
+  * By walker order/percentile (quartiles)
+  * By termination reason
+- Includes:
+  * extract_step_data() function
+  * analyze_by_termination() function
+  * analyze_by_walker_order() function
+  * Multiple plotting functions
+  * Full targets pipeline definition with dynamic branching
+  * Simplified execution example for vignette
+  * Results and interpretation sections
+  * Example of factorial design with tar_map()
+- All execution chunks set to eval=false for demonstration purposes
+
+## Files Modified:
+1. vignettes/articles/dynamic_broadcasting.qmd
+2. vignettes/articles/step_distribution_analysis.qmd (NEW)
+3. vignettes/articles/dynamic_broadcasting.html (rendered)
+4. vignettes/articles/step_distribution_analysis.html (rendered)
+5. docs/articles/dynamic_broadcasting.html (deployed)
+6. docs/articles/step_distribution_analysis.html (deployed)
+
+## User Requirements Addressed:
+1. Replace "Async Parallel Random Walks (Issue #129 ✅)" with "Sync Sequential Random Walks" ✅
+2. Create targets vignette for step distribution analysis ✅
+

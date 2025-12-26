@@ -99,7 +99,7 @@ cat("\n=== SETUP COMPLETE ===\n\n")
 # ============================================================================
 
 ui <- fluidPage(
-  titlePanel("Async Parallel Random Walks (Issue #129 ✅)"),
+  titlePanel("Sync Sequential Random Walks"),
 
   sidebarLayout(
     sidebarPanel(
