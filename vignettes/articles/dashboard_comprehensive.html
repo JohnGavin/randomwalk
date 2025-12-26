@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Comprehensive Async Parallel Random Walks Dashboard</title>
+<title>Comprehensive Sync Sequential Random Walks Dashboard</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,41 +19,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -97,7 +62,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Comprehensive Async Parallel Random Walks Dashboard</h1>
+<h1 class="title">Comprehensive Sync Sequential Random Walks Dashboard</h1>
 </div>
 
 
@@ -315,14 +280,19 @@ ui &lt;- fluidPage(
                    tags$li(tags$a(href="https://johngavin.github.io/randomwalk/", "randomwalk website"), " - Package documentation")
                  ),
                  hr(),
-                 h5("Implementation Notes"),
-                 tags$ul(
-                   tags$li(strong("Auto-backend selection:"), " Automatically uses mirai in WebR, crew in native R"),
-                   tags$li(strong("WebR environment detection:"), " Uses exists('.webr_env') || Sys.getenv('WEBR')"),
-                   tags$li(strong("Package installation:"), " Uses webr::install() from R-Universe"),
-                   tags$li(strong("Sync mode:"), " Uses 'static' (grid snapshots) for WebR compatibility"),
-                   tags$li(strong("Error handling:"), " Comprehensive try-catch blocks with helpful messages")
-                 ),
+                h5("Technical Details"),
+                tags$div(
+                  tags$h6("WebR Environment Detection"),
+                  tags$pre("is_webr &lt;- exists('.webr_env', envir = .GlobalEnv) ||\n          identical(Sys.getenv('WEBR'), '1')"),
+                  tags$h6("Backend Selection"),
+                  tags$p(strong("Browser (WebR):"), " Sync sequential mode (workers=0) - one walker at a time"),
+                  tags$p(strong("Native R:"), " Async parallel mode with crew backend (workers=2+)"),
+                  tags$pre("if (workers &gt; 0) {\n  if (is_webr) {\n    # mirai (not available in WebR)\n  } else {\n    # crew backend (native R)\n    controller &lt;- crew::crew_controller_local(workers)\n  }\n}"),
+                  tags$h6("Package Installation"),
+                  tags$pre("webr::install('randomwalk',\n  repos = c(\n    'https://johngavin.github.io/randomwalk',\n    'https://johngavin.r-universe.dev',\n    'https://repo.r-wasm.org'\n  ))"),
+                  tags$h6("Error Handling"),
+                  tags$p("Comprehensive try-catch blocks with status updates and troubleshooting hints")
+                ),
                  hr(),
                  h5("Known Limitations"),
                  tags$ul(
@@ -710,56 +680,6 @@ shinyApp(ui = ui, server = server)</code></pre>
 <h2 class="anchored" data-anchor-id="differences-from-basic-vignette">Differences from Basic Vignette</h2>
 <p><strong>dynamic_broadcasting.qmd</strong> (basic demo): - 5 walkers (simple) - 2 output pages (Grid, Paths, Stats) - Minimal statistics - Basic demo focus</p>
 <p><strong>dashboard_comprehensive.qmd</strong> (this vignette): - 10 walkers (more comprehensive) - 6 output pages (Fractal, Paths, Distributions, Stats, Debug, Notes) - Comprehensive statistics and visualizations - Production-ready showcase</p>
-</section>
-<section id="technical-details" class="level2">
-<h2 class="anchored" data-anchor-id="technical-details">Technical Details</h2>
-<section id="auto-backend-selection" class="level3">
-<h3 class="anchored" data-anchor-id="auto-backend-selection">Auto-Backend Selection</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># WebR environment detection (from Issue #129)</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>is_webr <span class="ot">&lt;-</span> <span class="fu">exists</span>(<span class="st">".webr_env"</span>, <span class="at">envir =</span> .GlobalEnv) <span class="sc">||</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>           <span class="fu">identical</span>(<span class="fu">Sys.getenv</span>(<span class="st">"WEBR"</span>), <span class="st">"1"</span>)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Backend selection in run_simulation()</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (workers <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (is_webr) {</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Use mirai backend in WebAssembly</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    controller <span class="ot">&lt;-</span> <span class="fu">create_mirai_controller</span>(workers, seconds_idle)</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Use crew backend in native R</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    controller <span class="ot">&lt;-</span> crew<span class="sc">::</span><span class="fu">crew_controller_local</span>(workers, seconds_idle)</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="package-installation" class="level3">
-<h3 class="anchored" data-anchor-id="package-installation">Package Installation</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install from GitHub Pages WASM repo (fast 5-10 min deployment)</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>webr<span class="sc">::</span><span class="fu">install</span>(</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"randomwalk"</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">repos =</span> <span class="fu">c</span>(</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://johngavin.github.io/randomwalk/repo"</span>,  <span class="co"># Fast: GitHub Pages WASM repo</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://johngavin.r-universe.dev"</span>,              <span class="co"># Fallback: R-Universe</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://repo.r-wasm.org"</span>                        <span class="co"># Standard webR packages</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="error-handling" class="level3">
-<h3 class="anchored" data-anchor-id="error-handling">Error Handling</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Comprehensive error handling with helpful messages</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tryCatch</span>({</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  result <span class="ot">&lt;-</span> <span class="fu">run_simulation</span>(...)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sim_result</span>(result)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}, <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  output<span class="sc">$</span>status <span class="ot">&lt;-</span> <span class="fu">renderText</span>({</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste0</span>(</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>      <span class="st">"❌ ERROR:</span><span class="sc">\n</span><span class="st">"</span>, e<span class="sc">$</span>message, <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>,</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Troubleshooting:</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>      <span class="st">"- Check JavaScript console (F12)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>      <span class="st">"- Verify randomwalk package loaded</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>      <span class="st">"- See WIKI_SHINYLIVE_LESSONS_LEARNED.md"</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  })</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
 </section>
 <section id="try-it-yourself" class="level2">
 <h2 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h2>

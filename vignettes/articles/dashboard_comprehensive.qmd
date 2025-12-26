@@ -1,5 +1,5 @@
 ---
-title: "Comprehensive Async Parallel Random Walks Dashboard"
+title: "Comprehensive Sync Sequential Random Walks Dashboard"
 format:
   html:
     code-fold: true
@@ -224,14 +224,19 @@ ui <- fluidPage(
                    tags$li(tags$a(href="https://johngavin.github.io/randomwalk/", "randomwalk website"), " - Package documentation")
                  ),
                  hr(),
-                 h5("Implementation Notes"),
-                 tags$ul(
-                   tags$li(strong("Auto-backend selection:"), " Automatically uses mirai in WebR, crew in native R"),
-                   tags$li(strong("WebR environment detection:"), " Uses exists('.webr_env') || Sys.getenv('WEBR')"),
-                   tags$li(strong("Package installation:"), " Uses webr::install() from R-Universe"),
-                   tags$li(strong("Sync mode:"), " Uses 'static' (grid snapshots) for WebR compatibility"),
-                   tags$li(strong("Error handling:"), " Comprehensive try-catch blocks with helpful messages")
-                 ),
+                h5("Technical Details"),
+                tags$div(
+                  tags$h6("WebR Environment Detection"),
+                  tags$pre("is_webr <- exists('.webr_env', envir = .GlobalEnv) ||\n          identical(Sys.getenv('WEBR'), '1')"),
+                  tags$h6("Backend Selection"),
+                  tags$p(strong("Browser (WebR):"), " Sync sequential mode (workers=0) - one walker at a time"),
+                  tags$p(strong("Native R:"), " Async parallel mode with crew backend (workers=2+)"),
+                  tags$pre("if (workers > 0) {\n  if (is_webr) {\n    # mirai (not available in WebR)\n  } else {\n    # crew backend (native R)\n    controller <- crew::crew_controller_local(workers)\n  }\n}"),
+                  tags$h6("Package Installation"),
+                  tags$pre("webr::install('randomwalk',\n  repos = c(\n    'https://johngavin.github.io/randomwalk',\n    'https://johngavin.r-universe.dev',\n    'https://repo.r-wasm.org'\n  ))"),
+                  tags$h6("Error Handling"),
+                  tags$p("Comprehensive try-catch blocks with status updates and troubleshooting hints")
+                ),
                  hr(),
                  h5("Known Limitations"),
                  tags$ul(
@@ -618,61 +623,6 @@ This comprehensive dashboard showcases:
 - 6 output pages (Fractal, Paths, Distributions, Stats, Debug, Notes)
 - Comprehensive statistics and visualizations
 - Production-ready showcase
-
-## Technical Details
-
-### Auto-Backend Selection
-
-```r
-# WebR environment detection (from Issue #129)
-is_webr <- exists(".webr_env", envir = .GlobalEnv) ||
-           identical(Sys.getenv("WEBR"), "1")
-
-# Backend selection in run_simulation()
-if (workers > 0) {
-  if (is_webr) {
-    # Use mirai backend in WebAssembly
-    controller <- create_mirai_controller(workers, seconds_idle)
-  } else {
-    # Use crew backend in native R
-    controller <- crew::crew_controller_local(workers, seconds_idle)
-  }
-}
-```
-
-### Package Installation
-
-```r
-# Install from GitHub Pages WASM repo (fast 5-10 min deployment)
-webr::install(
-  "randomwalk",
-  repos = c(
-    "https://johngavin.github.io/randomwalk/repo",  # Fast: GitHub Pages WASM repo
-    "https://johngavin.r-universe.dev",              # Fallback: R-Universe
-    "https://repo.r-wasm.org"                        # Standard webR packages
-  )
-)
-```
-
-### Error Handling
-
-```r
-# Comprehensive error handling with helpful messages
-tryCatch({
-  result <- run_simulation(...)
-  sim_result(result)
-}, error = function(e) {
-  output$status <- renderText({
-    paste0(
-      "❌ ERROR:\n", e$message, "\n\n",
-      "Troubleshooting:\n",
-      "- Check JavaScript console (F12)\n",
-      "- Verify randomwalk package loaded\n",
-      "- See WIKI_SHINYLIVE_LESSONS_LEARNED.md"
-    )
-  })
-})
-```
 
 ## Try It Yourself
 
