@@ -295,6 +295,25 @@ server <- function(input, output, session) {
 
       sim_result(result)
 
+      # Browser console logging for WebR diagnostics (Issue #157)
+      message(sprintf("\n=== SIMULATION COMPLETE ==="))
+      message(sprintf("Grid size: %dx%d", input$grid_size, input$grid_size))
+      message(sprintf("Walkers: %d", input$n_walkers))
+      message(sprintf("Black pixels: %d", sum(result$grid == 1)))
+      message(sprintf("Elapsed time: %.2f seconds", elapsed))
+
+      # CRITICAL: Check for isolated pixels
+      isolated_check <- find_isolated_pixels(result$grid, input$neighborhood)
+      if (length(isolated_check) > 0) {
+        message(sprintf("⚠️  WARNING: Found %d isolated pixel(s)!", length(isolated_check)))
+        message("Isolated positions: ", paste(sapply(isolated_check,
+          function(p) sprintf("(%d,%d)", p[1], p[2])), collapse=", "))
+        message("This indicates a WebR reactive timing issue (Issue #157)")
+      } else {
+        message(sprintf("✅ Grid validation passed: No isolated pixels"))
+      }
+      message(sprintf("==========================\n"))
+
       output$status <- renderText({
         paste0(
           "✅ Simulation complete!\n",
@@ -326,7 +345,31 @@ server <- function(input, output, session) {
   # PAGE 1: Fractal Graph
   output$fractal_plot <- renderPlot({
     req(sim_result())
-    plot_grid(sim_result(), main = "Fractal Pattern - Black Pixels on Grid")
+    result <- sim_result()
+
+    # Defensive checks for WebR environment (Issue #157)
+    req(!is.null(result$grid))
+    req(nrow(result$grid) > 0)
+    req(sum(result$grid == 1) > 0)  # Ensure has black pixels
+
+    # CRITICAL: Validate grid connectivity before plotting
+    # This catches any isolated pixels from WebR reactive timing issues
+    isolated <- find_isolated_pixels(result$grid, result$parameters$neighborhood)
+
+    if (length(isolated) > 0) {
+      # Log warning to R console (appears in browser console via Shinylive)
+      message(sprintf("WebR: Found %d isolated pixels in grid!", length(isolated)))
+      message("Isolated positions: ", paste(sapply(isolated,
+        function(p) sprintf("(%d,%d)", p[1], p[2])), collapse=", "))
+
+      # Still plot but add warning to title
+      plot_grid(
+        result,
+        main = paste0("WARNING: ", length(isolated), " isolated pixel(s) detected")
+      )
+    } else {
+      plot_grid(result, main = "Fractal Pattern - Black Pixels on Grid")
+    }
   })
 
   output$fractal_stats <- renderText({
