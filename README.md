@@ -133,7 +133,18 @@ library(randomwalk)
 
 # Launch the Shiny app
 run_dashboard()
+
+# In Nix shell or iTerm: disable auto-launch if browser fails
+run_dashboard(launch.browser = FALSE)
+# Then manually open http://127.0.0.1:4596 in your browser
+
+# Or specify a custom browser function
+run_dashboard(launch.browser = function(url) {
+  system(paste0("open ", shQuote(url)))  # macOS default browser
+})
 ```
+
+**Note**: If you see `Error in utils::browseURL(appUrl): 'browser' must be a non-empty character string`, use `launch.browser = FALSE` and manually open the URL printed to the console.
 
 ### Using Nix Shell
 
