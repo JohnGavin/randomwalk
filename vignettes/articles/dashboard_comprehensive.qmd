@@ -263,8 +263,32 @@ server <- function(input, output, session) {
   sim_start_time <- reactiveVal(NULL)
   sim_end_time <- reactiveVal(NULL)
 
-  # Periodic timer for debug updates
+  # Periodic timer for debug updates and status indicator
   timer <- reactiveTimer(1000)  # Update every second
+
+  # Update status display with ticking clock during execution
+  observe({
+    timer()  # Depend on timer
+
+    if (sim_state() == "running" && !is.null(sim_start_time())) {
+      elapsed <- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+
+      output$status <- renderText({
+        paste0(
+          "🏃 SIMULATION RUNNING...\n",
+          "Run #", sim_count(), "\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
+          "Elapsed:  ", sprintf("%.0f", elapsed), " seconds\n",
+          "Status:   ", rep(c("⏳", "⌛"), ceiling(elapsed))[elapsed %% 2 + 1], " Processing...\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Grid: ", input$grid_size, "×", input$grid_size, "\n",
+          "Walkers: ", input$n_walkers, "\n",
+          "Workers: ", input$workers, if (input$workers > 0) " (async)" else " (sync)"
+        )
+      })
+    }
+  })
 
   # Run simulation when button clicked
   observeEvent(input$run_sim, {
@@ -467,30 +491,43 @@ server <- function(input, output, session) {
       numeric(0)
     })
 
-    # Remove NAs and check if we have valid numeric data
-    path_lengths <- path_lengths[!is.na(path_lengths)]
+    # Remove NAs and ensure numeric type
+    path_lengths <- as.numeric(path_lengths[!is.na(path_lengths)])
 
-    if (length(path_lengths) == 0) {
+    if (length(path_lengths) == 0 || !is.numeric(path_lengths)) {
       plot.new()
-      text(0.5, 0.5, "No path data available", cex = 1.5, col = "gray")
+      text(0.5, 0.5, "No valid path data available", cex = 1.5, col = "gray")
       return()
     }
 
-    # Plot histogram
-    hist(path_lengths,
-         breaks = 30,
-         col = "steelblue",
-         border = "white",
-         main = "Overall Path Length Distribution",
-         xlab = "Path Length (steps)",
-         ylab = "Frequency")
-    abline(v = median(path_lengths), col = "red", lwd = 2, lty = 2)
-    legend("topright",
-           legend = c(paste("Median:", median(path_lengths)),
-                     paste("Mean:", sprintf("%.1f", mean(path_lengths)))),
-           col = c("red", "black"),
-           lty = c(2, 1),
-           lwd = 2)
+    # Need at least 2 values for meaningful distribution
+    if (length(path_lengths) < 2) {
+      plot.new()
+      text(0.5, 0.5, paste0("Only ", length(path_lengths), " path - need at least 2"),
+           cex = 1.2, col = "gray")
+      return()
+    }
+
+    # Plot histogram with error handling
+    tryCatch({
+      hist(path_lengths,
+           breaks = min(30, max(5, length(unique(path_lengths)))),
+           col = "steelblue",
+           border = "white",
+           main = "Overall Path Length Distribution",
+           xlab = "Path Length (steps)",
+           ylab = "Frequency")
+      abline(v = median(path_lengths), col = "red", lwd = 2, lty = 2)
+      legend("topright",
+             legend = c(paste("Median:", median(path_lengths)),
+                       paste("Mean:", sprintf("%.1f", mean(path_lengths)))),
+             col = c("red", "black"),
+             lty = c(2, 1),
+             lwd = 2)
+    }, error = function(e) {
+      plot.new()
+      text(0.5, 0.5, paste0("Error creating plot:\n", e$message), cex = 1, col = "red")
+    })
   })
 
   output$dist_by_reason <- renderPlot({
@@ -517,45 +554,92 @@ server <- function(input, output, session) {
       })
     }, error = function(e) character(0))
 
-    # Remove NAs
+    # Remove NAs and ensure same length
     valid_idx <- !is.na(path_lengths)
-    path_lengths <- path_lengths[valid_idx]
-    reasons <- reasons[valid_idx]
+    path_lengths <- as.numeric(path_lengths[valid_idx])
+    reasons <- as.character(reasons[valid_idx])
+
+    # Defensive check: ensure vectors are same length
+    min_len <- min(length(path_lengths), length(reasons))
+    if (min_len < length(path_lengths) || min_len < length(reasons)) {
+      path_lengths <- path_lengths[1:min_len]
+      reasons <- reasons[1:min_len]
+    }
 
     # Check if we have valid data
-    if (length(path_lengths) == 0 || length(reasons) == 0) {
+    if (length(path_lengths) == 0 || length(reasons) == 0 ||
+        !is.numeric(path_lengths) || !is.character(reasons)) {
       plot.new()
-      text(0.5, 0.5, "No termination data available", cex = 1.5, col = "gray")
+      text(0.5, 0.5, "No valid termination data available", cex = 1.5, col = "gray")
       return()
     }
 
-    walkers_data <- data.frame(
-      path_length = path_lengths,
-      reason = reasons,
-      stringsAsFactors = FALSE
-    )
+    # Need at least 2 data points
+    if (length(path_lengths) < 2) {
+      plot.new()
+      text(0.5, 0.5, "Need at least 2 walkers for distribution", cex = 1.2, col = "gray")
+      return()
+    }
 
-    # Plot boxplot by termination reason
-    ggplot(walkers_data, aes(x = reason, y = path_length, fill = reason)) +
-      geom_boxplot(alpha = 0.7) +
-      geom_jitter(width = 0.2, alpha = 0.3) +
-      labs(title = "Path Lengths by Termination Reason",
-           x = "Termination Reason",
-           y = "Path Length (steps)") +
-      theme_minimal() +
-      theme(legend.position = "none")
+    # Create data frame with error handling
+    walkers_data <- tryCatch({
+      data.frame(
+        path_length = path_lengths,
+        reason = reasons,
+        stringsAsFactors = FALSE
+      )
+    }, error = function(e) {
+      NULL
+    })
+
+    if (is.null(walkers_data)) {
+      plot.new()
+      text(0.5, 0.5, "Error creating data frame", cex = 1.2, col = "red")
+      return()
+    }
+
+    # Plot boxplot by termination reason with error handling
+    tryCatch({
+      print(
+        ggplot(walkers_data, aes(x = reason, y = path_length, fill = reason)) +
+          geom_boxplot(alpha = 0.7) +
+          geom_jitter(width = 0.2, alpha = 0.3) +
+          labs(title = "Path Lengths by Termination Reason",
+               x = "Termination Reason",
+               y = "Path Length (steps)") +
+          theme_minimal() +
+          theme(legend.position = "none")
+      )
+    }, error = function(e) {
+      plot.new()
+      text(0.5, 0.5, paste0("Error creating plot:\n", e$message), cex = 1, col = "red")
+    })
   })
 
   # PAGE 4: Statistics
   output$stats_comprehensive <- renderText({
     req(sim_result())
     result <- sim_result()
+
+    # Defensive check for statistics
+    if (is.null(result$statistics)) {
+      return("No statistics available. Run a simulation first.")
+    }
+
     stats <- result$statistics
 
-    # Safely extract values with defaults
+    # Safely extract values with defaults - improved version
     safe_get <- function(x, default = 0) {
-      if (is.null(x) || !is.atomic(x) || length(x) == 0) return(default)
-      return(x)
+      tryCatch({
+        if (is.null(x)) return(default)
+        if (length(x) == 0) return(default)
+        if (!is.atomic(x)) return(default)
+        # Ensure single value for calculations
+        if (length(x) > 1) return(x[1])
+        return(as.numeric(x))
+      }, error = function(e) {
+        default
+      })
     }
 
     # Calculate std dev safely
@@ -563,49 +647,70 @@ server <- function(input, output, session) {
       path_lengths <- sapply(result$walkers, function(w) {
         if (!is.null(w$path) && is.matrix(w$path)) nrow(w$path) else NA
       })
-      path_lengths <- path_lengths[!is.na(path_lengths)]
-      if (length(path_lengths) > 0) {
+      path_lengths <- as.numeric(path_lengths[!is.na(path_lengths)])
+      if (length(path_lengths) > 1) {
         sd(path_lengths)
       } else {
         0
       }
     }, error = function(e) 0)
 
-    paste0(
-      "=== GRID STATISTICS ===\n",
-      "Grid Size: ", safe_get(stats$grid_size), "×", safe_get(stats$grid_size), "\n",
-      "Total Cells: ", safe_get(stats$grid_size)^2, "\n",
-      "Black Pixels: ", safe_get(stats$black_pixels),
-      sprintf(" (%.2f%%)\n", safe_get(stats$black_percentage)),
-      "White Pixels: ", safe_get(stats$grid_size)^2 - safe_get(stats$black_pixels),
-      sprintf(" (%.2f%%)\n", 100 - safe_get(stats$black_percentage)),
-      "\n=== WALKER STATISTICS ===\n",
-      "Total Walkers: ", safe_get(stats$total_walkers), "\n",
-      "Completed: ", safe_get(stats$completed_walkers), "\n",
-      "Success Rate: ",
-      sprintf("%.1f%%", 100 * safe_get(stats$completed_walkers) / max(safe_get(stats$total_walkers), 1)), "\n",
-      "\n=== STEP STATISTICS ===\n",
-      "Total Steps: ", safe_get(stats$total_steps), "\n",
-      "Min Steps: ", safe_get(stats$min_steps), "\n",
-      "Max Steps: ", safe_get(stats$max_steps), "\n",
-      "Mean Steps: ", sprintf("%.1f", safe_get(stats$mean_steps)), "\n",
-      "Median Steps: ", safe_get(stats$median_steps), "\n",
-      "Std Dev: ", sprintf("%.1f", std_dev), "\n",
-      "\n=== PERFORMANCE ===\n",
-      "Elapsed Time: ", sprintf("%.2f", safe_get(stats$elapsed_time_secs)), " seconds\n",
-      "Steps per Second: ",
-      sprintf("%.0f", safe_get(stats$total_steps) / max(safe_get(stats$elapsed_time_secs), 0.001)), "\n",
-      "\n=== TERMINATION REASONS ===\n",
-      if (!is.null(stats$termination_reasons) && length(stats$termination_reasons) > 0) {
-        paste(sprintf("  %s: %d (%.1f%%)",
-                      names(stats$termination_reasons),
-                      stats$termination_reasons,
-                      100 * stats$termination_reasons / max(safe_get(stats$total_walkers), 1)),
-              collapse = "\n")
-      } else {
-        "  No data available"
-      }
-    )
+    # Extract grid size safely
+    grid_size <- safe_get(stats$grid_size, default = 0)
+    black_pixels <- safe_get(stats$black_pixels, default = 0)
+    black_pct <- safe_get(stats$black_percentage, default = 0)
+    total_walkers <- safe_get(stats$total_walkers, default = 1)
+    completed_walkers <- safe_get(stats$completed_walkers, default = 0)
+    total_steps <- safe_get(stats$total_steps, default = 0)
+    elapsed_time <- safe_get(stats$elapsed_time_secs, default = 0.001)
+
+    # Build output with error handling
+    tryCatch({
+      paste0(
+        "=== GRID STATISTICS ===\n",
+        "Grid Size: ", grid_size, "×", grid_size, "\n",
+        "Total Cells: ", grid_size^2, "\n",
+        "Black Pixels: ", black_pixels,
+        sprintf(" (%.2f%%)\n", black_pct),
+        "White Pixels: ", grid_size^2 - black_pixels,
+        sprintf(" (%.2f%%)\n", 100 - black_pct),
+        "\n=== WALKER STATISTICS ===\n",
+        "Total Walkers: ", total_walkers, "\n",
+        "Completed: ", completed_walkers, "\n",
+        "Success Rate: ",
+        sprintf("%.1f%%", 100 * completed_walkers / max(total_walkers, 1)), "\n",
+        "\n=== STEP STATISTICS ===\n",
+        "Total Steps: ", total_steps, "\n",
+        "Min Steps: ", safe_get(stats$min_steps, 0), "\n",
+        "Max Steps: ", safe_get(stats$max_steps, 0), "\n",
+        "Mean Steps: ", sprintf("%.1f", safe_get(stats$mean_steps, 0)), "\n",
+        "Median Steps: ", safe_get(stats$median_steps, 0), "\n",
+        "Std Dev: ", sprintf("%.1f", std_dev), "\n",
+        "\n=== PERFORMANCE ===\n",
+        "Elapsed Time: ", sprintf("%.2f", elapsed_time), " seconds\n",
+        "Steps per Second: ",
+        sprintf("%.0f", total_steps / max(elapsed_time, 0.001)), "\n",
+        "\n=== TERMINATION REASONS ===\n",
+        if (!is.null(stats$termination_reasons) && length(stats$termination_reasons) > 0) {
+          tryCatch({
+            reasons_vec <- as.numeric(stats$termination_reasons)
+            reasons_names <- names(stats$termination_reasons)
+            if (is.null(reasons_names)) reasons_names <- paste0("Reason_", seq_along(reasons_vec))
+            paste(sprintf("  %s: %d (%.1f%%)",
+                          reasons_names,
+                          reasons_vec,
+                          100 * reasons_vec / max(total_walkers, 1)),
+                  collapse = "\n")
+          }, error = function(e) {
+            "  Error formatting termination reasons"
+          })
+        } else {
+          "  No data available"
+        }
+      )
+    }, error = function(e) {
+      paste0("Error displaying statistics:\n", e$message)
+    })
   })
 
   # PAGE 5: Debug - Versions
@@ -666,11 +771,55 @@ server <- function(input, output, session) {
     # Depend on timer to update every second
     timer()
 
+    # Enhanced debug info during execution
+    state_info <- switch(sim_state(),
+      "idle" = "💤 Idle - waiting for user to click 'Run Simulation'",
+      "running" = {
+        elapsed <- if (!is.null(sim_start_time())) {
+          as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+        } else {
+          0
+        }
+        paste0("🏃 Running - ", sprintf("%.0f", elapsed), " seconds elapsed")
+      },
+      "complete" = {
+        elapsed <- if (!is.null(sim_end_time()) && !is.null(sim_start_time())) {
+          as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
+        } else {
+          0
+        }
+        paste0("✅ Complete - took ", sprintf("%.2f", elapsed), " seconds")
+      },
+      "error" = "❌ Error - see status tab for details",
+      "Unknown state"
+    )
+
     paste0(
       "=== PERIODIC UPDATES ===\n",
       "Current Time: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n",
-      "Simulation Result: ", if (is.null(sim_result())) "Not yet run" else "Available", "\n",
-      "Active Tab: ", input$tabs
+      "Simulation State: ", state_info, "\n",
+      "Simulation Count: ", sim_count(), "\n",
+      "Result Available: ", if (is.null(sim_result())) "No" else "Yes", "\n",
+      "Active Tab: ", input$tabs, "\n",
+      if (sim_state() == "running" && !is.null(sim_start_time())) {
+        paste0(
+          "\n=== EXECUTION INFO ===\n",
+          "Grid Size: ", input$grid_size, "×", input$grid_size, "\n",
+          "Walkers: ", input$n_walkers, "\n",
+          "Workers: ", input$workers, "\n",
+          "Backend: ", if (input$workers > 0) {
+            if (exists(".webr_env", envir = .GlobalEnv) || identical(Sys.getenv("WEBR"), "1")) {
+              "mirai (WebR)"
+            } else {
+              "crew (native R)"
+            }
+          } else {
+            "synchronous"
+          }
+        )
+      } else {
+        ""
+      }
     )
   })
 }
