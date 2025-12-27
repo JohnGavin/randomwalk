@@ -209,6 +209,42 @@ list(
     }
   ),
 
+  # 9. Code coverage analysis (Issue #160)
+  tar_target(
+    name = code_coverage,
+    command = {
+      library(covr)
+      devtools::load_all()  # Load package in Nix environment
+      logger::log_info("Generating code coverage report")
+
+      # Generate coverage
+      coverage <- package_coverage()
+
+      # Calculate overall percentage
+      overall_pct <- percent_coverage(coverage)
+
+      # Create file summary
+      file_coverage <- tidy(coverage)
+
+      file_summary <- file_coverage %>%
+        group_by(filename) %>%
+        summarise(
+          lines_total = n(),
+          lines_covered = sum(value > 0),
+          coverage_pct = (lines_covered / lines_total) * 100,
+          .groups = "drop"
+        ) %>%
+        arrange(desc(coverage_pct))
+
+      # Return structured coverage data
+      list(
+        overall_pct = overall_pct,
+        file_summary = file_summary,
+        coverage_obj = coverage
+      )
+    }
+  ),
+
   # ============================================================================
   # Dynamic Broadcasting Simulations (Issue #51)
   # ============================================================================

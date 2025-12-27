@@ -2,6 +2,7 @@
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/JohnGavin/randomwalk/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JohnGavin/randomwalk/actions/workflows/R-CMD-check.yaml)
+[![codecov](https://codecov.io/gh/JohnGavin/randomwalk/branch/main/graph/badge.svg)](https://codecov.io/gh/JohnGavin/randomwalk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Project Status: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 <!-- badges: end -->
