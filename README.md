@@ -72,16 +72,18 @@ Both dashboards run entirely in your browser using WebAssembly via [WebR](https:
 
 ### Programmatic Usage (No GUI)
 
+#### Basic Example
+
 ```r
 library(randomwalk)
 
-# Run a simulation directly
+# Run a simulation directly (synchronous mode)
 result <- run_simulation(
   grid_size = 20,
   n_walkers = 8,
   neighborhood = "4-hood",
   boundary = "terminate",
-  workers = 3
+  workers = 0  # Synchronous mode
 )
 
 # Access simulation results
@@ -89,6 +91,39 @@ result$grid           # Final grid state
 result$statistics     # Statistics
 result$walker_paths   # Walker trajectories
 ```
+
+#### Async Parallel with Dynamic Broadcasting (nanonext)
+
+The package supports two async synchronization modes when using `workers > 0`:
+
+```r
+library(randomwalk)
+
+# Dynamic mode: Real-time grid broadcasting via nanonext pub/sub
+# - Walkers receive grid updates as they happen
+# - More realistic collision detection
+# - Requires nanonext package
+result_dynamic <- run_simulation(
+  grid_size = 20,
+  n_walkers = 8,
+  neighborhood = "4-hood",
+  sync_mode = "dynamic",  # Use nanonext broadcasting
+  workers = 2
+)
+
+# Static mode: Snapshot-based synchronization (original)
+# - Walkers work on grid snapshots
+# - Faster but less accurate collision detection
+# - Default async mode
+result_static <- run_simulation(
+  grid_size = 20,
+  n_walkers = 8,
+  sync_mode = "static",  # Snapshot mode
+  workers = 2
+)
+```
+
+**Note on WebR/Browser**: The browser demos currently use `workers = 0` (synchronous mode) due to mirai/nanonext compatibility issues in WebAssembly. Async parallel processing with nanonext works in native R.
 
 ### Interactive Shiny Interface
 
