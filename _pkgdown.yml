@@ -29,12 +29,14 @@ navbar:
       #   href: articles/dashboard.html
       # - text: Async/Parallel Dashboard
       #   href: articles/dashboard_async.html
-      - text: Async Parallel Random Walks (Basic)
+      - text: Sync Sequential Random Walks
         href: articles/dynamic_broadcasting.html
-      - text: Comprehensive Async Dashboard (NEW)
+      - text: Comprehensive Dashboard (All Features)
         href: articles/dashboard_comprehensive.html
-      # - text: Telemetry and Pipeline Statistics
-      #   href: articles/telemetry.html
+      - text: Step Distribution Analysis
+        href: articles/step_distribution_analysis.html
+      - text: Telemetry and Pipeline Performance
+        href: articles/telemetry.html
 
 articles:
 - title: Interactive Demos
@@ -44,6 +46,8 @@ articles:
   # Shinylive demos (not standard R vignettes):
   - articles/dynamic_broadcasting
   - articles/dashboard_comprehensive
+  - articles/step_distribution_analysis
+  - articles/telemetry
 
 footer:
   structure:
