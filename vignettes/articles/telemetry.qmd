@@ -75,16 +75,12 @@ Test coverage provides insight into which code paths are exercised by the test s
 ## Overall Coverage
 
 ```{r coverage-summary}
-#| eval: false
+#| eval: true
 
-# Generate coverage report
-library(covr)
-coverage <- package_coverage()
+# Load pre-computed coverage from targets pipeline
+cov_data <- tar_read(code_coverage)
 
-# Overall coverage percentage
-overall_pct <- percent_coverage(coverage)
-
-cat(sprintf("Overall Test Coverage: %.1f%%\n", overall_pct))
+cat(sprintf("Overall Test Coverage: %.1f%%\n", cov_data$overall_pct))
 ```
 
 **Note**: Run `covr::package_coverage()` locally to generate coverage reports.
@@ -92,20 +88,10 @@ cat(sprintf("Overall Test Coverage: %.1f%%\n", overall_pct))
 ## Coverage by File
 
 ```{r coverage-by-file}
-#| eval: false
+#| eval: true
 
-# Coverage breakdown by file
-file_coverage <- tidy(coverage)
-
-file_summary <- file_coverage %>%
-  group_by(filename) %>%
-  summarise(
-    lines_total = n(),
-    lines_covered = sum(value > 0),
-    coverage_pct = (lines_covered / lines_total) * 100,
-    .groups = "drop"
-  ) %>%
-  arrange(desc(coverage_pct))
+# Use pre-computed file summary from targets
+file_summary <- cov_data$file_summary
 
 file_summary %>%
   kable(
@@ -118,7 +104,8 @@ file_summary %>%
 ## Coverage Visualization
 
 ```{r coverage-plot}
-#| eval: false
+#| eval: true
+#| cache: true
 #| fig.cap: "Test coverage by file"
 
 file_summary %>%
@@ -147,7 +134,8 @@ file_summary %>%
 Files with low coverage that need additional tests:
 
 ```{r untested-hotspots}
-#| eval: false
+#| eval: true
+#| cache: true
 
 low_coverage <- file_summary %>%
   filter(coverage_pct < 80) %>%
