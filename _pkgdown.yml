@@ -13,8 +13,18 @@ home:
     Parallel random walk simulations that create fractal graphs through
     asynchronous pixel walking on a grid.
   links:
-  - text: Try Async Parallel Demo
+  - text: Async Parallel Demo
     href: articles/dynamic_broadcasting.html
+  - text: Comprehensive Dashboard
+    href: articles/dashboard_comprehensive.html
+  - text: Step Distribution Analysis
+    href: articles/step_distribution_analysis.html
+  - text: Telemetry & Performance
+    href: articles/telemetry.html
+  - text: GitHub Repository
+    href: https://github.com/JohnGavin/randomwalk
+  - text: Project Wiki
+    href: https://github.com/JohnGavin/randomwalk/wiki
 
 navbar:
   structure:
