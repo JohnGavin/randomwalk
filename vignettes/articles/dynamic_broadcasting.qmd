@@ -465,34 +465,100 @@ server <- function(input, output, session) {
     )
   })
 
-  # Backend information
+  # Backend information with dynamic simulation data
   output$backend_info <- renderText({
     is_webr <- exists(".webr_env", envir = .GlobalEnv) ||
                identical(Sys.getenv("WEBR"), "1")
 
-    paste0(
-      "Environment: ", if (is_webr) "WebR/Browser" else "Native R", "\n",
+    # Static environment info
+    env_info <- paste0(
+      "=== ENVIRONMENT ===\n",
+      "Runtime: ", if (is_webr) "WebR/Browser" else "Native R", "\n",
       "Mode: ", if (input$workers > 0) {
         if (is_webr) "mirai (not available - running sync sequential)" else "async parallel (crew)"
       } else {
         if (is_webr) "sync sequential (browser limitation)" else "sync sequential (workers=0)"
       }, "\n",
-      "\nPackage Versions:\n",
-      "  randomwalk: ", packageVersion("randomwalk"), "\n",
+      "\n=== PACKAGE VERSIONS ===\n",
+      "randomwalk: ", packageVersion("randomwalk"), "\n",
       if (requireNamespace("mirai", quietly = TRUE)) {
-        paste0("  mirai: ", packageVersion("mirai"), "\n")
+        paste0("mirai: ", packageVersion("mirai"), "\n")
       } else "",
       if (requireNamespace("nanonext", quietly = TRUE)) {
-        paste0("  nanonext: ", packageVersion("nanonext"), "\n")
+        paste0("nanonext: ", packageVersion("nanonext"), "\n")
       } else "",
       if (requireNamespace("crew", quietly = TRUE)) {
-        paste0("  crew: ", packageVersion("crew"), "\n")
-      } else "",
-      "\nProcessing:\n",
-      "  Browser: Sync sequential only\n",
-      "  Native R: Async parallel available (Issue #129 ✅)\n",
-      "\nIssue #130: ⏳ Dynamic broadcasting (future work)"
+        paste0("crew: ", packageVersion("crew"), "\n")
+      } else ""
     )
+
+    # Dynamic simulation data (if available)
+    result <- sim_result()
+    if (is.null(result)) {
+      paste0(
+        env_info,
+        "\n=== SIMULATION DATA ===\n",
+        "No simulation run yet - click 'Run Simulation' to generate data\n",
+        "\n=== STATUS ===\n",
+        "State: ", sim_state(), "\n",
+        "Total Runs: ", sim_count()
+      )
+    } else {
+      stats <- result$statistics
+
+      # Check for isolated pixels
+      isolated_check <- find_isolated_pixels(result$grid, input$neighborhood)
+      isolated_warning <- if (length(isolated_check) > 0) {
+        paste0(
+          "\n⚠️  VALIDATION WARNING\n",
+          "Found ", length(isolated_check), " isolated pixel(s)\n",
+          "Positions: ", paste(sapply(isolated_check,
+            function(p) sprintf("(%d,%d)", p[1], p[2])), collapse=", "), "\n",
+          "This indicates WebR reactive timing issue (Issue #157)\n"
+        )
+      } else {
+        "\n✅ Grid validation passed: No isolated pixels\n"
+      }
+
+      paste0(
+        env_info,
+        "\n=== SIMULATION DATA (Run #", sim_count(), ") ===\n",
+        "State: ", sim_state(), "\n",
+        if (!is.null(sim_start_time()) && !is.null(sim_end_time())) {
+          paste0(
+            "Started: ", format(sim_start_time(), "%H:%M:%S"), "\n",
+            "Finished: ", format(sim_end_time(), "%H:%M:%S"), "\n",
+            "Elapsed: ", sprintf("%.2f", as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))), " seconds\n"
+          )
+        } else "",
+        "\n=== GRID STATE ===\n",
+        "Size: ", stats$grid_size, "×", stats$grid_size, "\n",
+        "Black Pixels: ", stats$black_pixels, " (", sprintf("%.1f%%", stats$black_percentage), ")\n",
+        "White Pixels: ", stats$grid_size^2 - stats$black_pixels, " (", sprintf("%.1f%%", 100 - stats$black_percentage), ")\n",
+        "\n=== WALKER STATISTICS ===\n",
+        "Total: ", stats$total_walkers, "\n",
+        "Completed: ", stats$completed_walkers, "\n",
+        "Steps (Total): ", stats$total_steps, "\n",
+        "Steps (Mean): ", sprintf("%.1f", stats$mean_steps), "\n",
+        "Steps (Median): ", stats$median_steps, "\n",
+        "Steps (Min): ", stats$min_steps, "\n",
+        "Steps (Max): ", stats$max_steps, "\n",
+        "\n=== TERMINATION REASONS ===\n",
+        if (!is.null(stats$termination_reasons) && length(stats$termination_reasons) > 0) {
+          paste(sprintf("%s: %d (%.1f%%)",
+                        names(stats$termination_reasons),
+                        stats$termination_reasons,
+                        100 * stats$termination_reasons / stats$total_walkers),
+                collapse = "\n")
+        } else {
+          "No data"
+        },
+        isolated_warning,
+        "\n=== PERFORMANCE ===\n",
+        "Elapsed: ", sprintf("%.2f", stats$elapsed_time_secs), " seconds\n",
+        "Steps/Second: ", sprintf("%.0f", stats$total_steps / max(stats$elapsed_time_secs, 0.001)), "\n"
+      )
+    }
   })
 
   # Package details
