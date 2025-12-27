@@ -35,11 +35,11 @@ filters:
 # Note: Async parallel processing disabled in WebR due to mirai/nanonext
 # compatibility issues. The app runs in synchronous mode (workers=1).
 
-cat("\n=== ASYNC PARALLEL SETUP (dynamic_broadcasting.qmd) ===\n")
+cat("\n=== SYNC SEQUENTIAL SETUP (dynamic_broadcasting.qmd) ===\n")
 cat("Timestamp:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
 
 cat("Installing randomwalk...\n")
-cat("Note: Async mode requires webR with R 4.5.1+ (includes nanonext support)\n\n")
+cat("Note: WebR runs in sync sequential mode (workers=0)\n\n")
 tryCatch({
   webr::install(
     "randomwalk",
@@ -152,6 +152,14 @@ ui <- fluidPage(
                  ),
                  helpText("Select first N and/or last N walker paths to display (max 40 total)"),
                  plotOutput("paths_plot", height = "600px")),
+
+        tabPanel("Distributions",
+                 h4("Path Length Distributions"),
+                 plotOutput("dist_overall", height = "300px"),
+                 h5("Overall Distribution"),
+                 hr(),
+                 plotOutput("dist_by_reason", height = "300px"),
+                 h5("By Termination Reason")),
 
         tabPanel("Statistics",
                  verbatimTextOutput("stats_text")),
@@ -296,6 +304,102 @@ server <- function(input, output, session) {
       plot.new()
       text(0.5, 0.5, "No walkers available")
     }
+  })
+
+  # Distributions
+  output$dist_overall <- renderPlot({
+    req(sim_result())
+    result <- sim_result()
+
+    # Defensive check for walkers
+    if (is.null(result$walkers) || length(result$walkers) == 0) {
+      plot.new()
+      text(0.5, 0.5, "Run a simulation first", cex = 1.5, col = "gray")
+      return()
+    }
+
+    # Extract path lengths safely
+    path_lengths <- tryCatch({
+      sapply(result$walkers, function(w) {
+        if (!is.null(w$path) && is.matrix(w$path)) nrow(w$path) else NA
+      })
+    }, error = function(e) numeric(0))
+
+    path_lengths <- path_lengths[!is.na(path_lengths)]
+
+    if (length(path_lengths) == 0) {
+      plot.new()
+      text(0.5, 0.5, "No path data available", cex = 1.5, col = "gray")
+      return()
+    }
+
+    # Plot histogram
+    hist(path_lengths,
+         breaks = 30,
+         col = "steelblue",
+         border = "white",
+         main = "Overall Path Length Distribution",
+         xlab = "Path Length (steps)",
+         ylab = "Frequency")
+    abline(v = median(path_lengths), col = "red", lwd = 2, lty = 2)
+    legend("topright",
+           legend = c(paste("Median:", median(path_lengths)),
+                     paste("Mean:", sprintf("%.1f", mean(path_lengths)))),
+           col = c("red", "black"),
+           lty = c(2, 1),
+           lwd = 2)
+  })
+
+  output$dist_by_reason <- renderPlot({
+    req(sim_result())
+    result <- sim_result()
+
+    # Defensive check for walkers
+    if (is.null(result$walkers) || length(result$walkers) == 0) {
+      plot.new()
+      text(0.5, 0.5, "Run a simulation first", cex = 1.5, col = "gray")
+      return()
+    }
+
+    # Extract data safely
+    path_lengths <- tryCatch({
+      sapply(result$walkers, function(w) {
+        if (!is.null(w$path) && is.matrix(w$path)) nrow(w$path) else NA
+      })
+    }, error = function(e) numeric(0))
+
+    reasons <- tryCatch({
+      sapply(result$walkers, function(w) {
+        if (!is.null(w$termination_reason)) w$termination_reason else "unknown"
+      })
+    }, error = function(e) character(0))
+
+    # Remove NAs
+    valid_idx <- !is.na(path_lengths)
+    path_lengths <- path_lengths[valid_idx]
+    reasons <- reasons[valid_idx]
+
+    if (length(path_lengths) == 0 || length(reasons) == 0) {
+      plot.new()
+      text(0.5, 0.5, "No termination data available", cex = 1.5, col = "gray")
+      return()
+    }
+
+    walkers_data <- data.frame(
+      path_length = path_lengths,
+      reason = reasons,
+      stringsAsFactors = FALSE
+    )
+
+    # Plot boxplot by termination reason
+    ggplot(walkers_data, aes(x = reason, y = path_length, fill = reason)) +
+      geom_boxplot(alpha = 0.7) +
+      geom_jitter(width = 0.2, alpha = 0.3) +
+      labs(title = "Path Lengths by Termination Reason",
+           x = "Termination Reason",
+           y = "Path Length (steps)") +
+      theme_minimal() +
+      theme(legend.position = "none")
   })
 
   # Statistics text

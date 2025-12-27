@@ -421,13 +421,32 @@ server <- function(input, output, session) {
     req(sim_result())
     result <- sim_result()
 
-    # Extract path lengths
-    path_lengths <- sapply(result$walkers, function(w) nrow(w$path))
-
-    # Check if we have valid data
-    if (length(path_lengths) == 0 || all(is.na(path_lengths))) {
+    # Defensive check for walkers
+    if (is.null(result$walkers) || length(result$walkers) == 0) {
       plot.new()
-      text(0.5, 0.5, "No path data available")
+      text(0.5, 0.5, "Run a simulation first", cex = 1.5, col = "gray")
+      return()
+    }
+
+    # Extract path lengths safely
+    path_lengths <- tryCatch({
+      sapply(result$walkers, function(w) {
+        if (!is.null(w$path) && is.matrix(w$path)) {
+          nrow(w$path)
+        } else {
+          NA
+        }
+      })
+    }, error = function(e) {
+      numeric(0)
+    })
+
+    # Remove NAs and check if we have valid numeric data
+    path_lengths <- path_lengths[!is.na(path_lengths)]
+
+    if (length(path_lengths) == 0) {
+      plot.new()
+      text(0.5, 0.5, "No path data available", cex = 1.5, col = "gray")
       return()
     }
 
@@ -452,16 +471,35 @@ server <- function(input, output, session) {
     req(sim_result())
     result <- sim_result()
 
-    # Extract termination reasons and path lengths
-    path_lengths <- sapply(result$walkers, function(w) nrow(w$path))
-    reasons <- sapply(result$walkers, function(w) {
-      if (!is.null(w$termination_reason)) w$termination_reason else "unknown"
-    })
+    # Defensive check for walkers
+    if (is.null(result$walkers) || length(result$walkers) == 0) {
+      plot.new()
+      text(0.5, 0.5, "Run a simulation first", cex = 1.5, col = "gray")
+      return()
+    }
+
+    # Extract termination reasons and path lengths safely
+    path_lengths <- tryCatch({
+      sapply(result$walkers, function(w) {
+        if (!is.null(w$path) && is.matrix(w$path)) nrow(w$path) else NA
+      })
+    }, error = function(e) numeric(0))
+
+    reasons <- tryCatch({
+      sapply(result$walkers, function(w) {
+        if (!is.null(w$termination_reason)) w$termination_reason else "unknown"
+      })
+    }, error = function(e) character(0))
+
+    # Remove NAs
+    valid_idx <- !is.na(path_lengths)
+    path_lengths <- path_lengths[valid_idx]
+    reasons <- reasons[valid_idx]
 
     # Check if we have valid data
     if (length(path_lengths) == 0 || length(reasons) == 0) {
       plot.new()
-      text(0.5, 0.5, "No termination data available")
+      text(0.5, 0.5, "No termination data available", cex = 1.5, col = "gray")
       return()
     }
 
@@ -494,36 +532,53 @@ server <- function(input, output, session) {
       return(x)
     }
 
+    # Calculate std dev safely
+    std_dev <- tryCatch({
+      path_lengths <- sapply(result$walkers, function(w) {
+        if (!is.null(w$path) && is.matrix(w$path)) nrow(w$path) else NA
+      })
+      path_lengths <- path_lengths[!is.na(path_lengths)]
+      if (length(path_lengths) > 0) {
+        sd(path_lengths)
+      } else {
+        0
+      }
+    }, error = function(e) 0)
+
     paste0(
       "=== GRID STATISTICS ===\n",
-      "Grid Size: ", stats$grid_size, "×", stats$grid_size, "\n",
-      "Total Cells: ", stats$grid_size^2, "\n",
-      "Black Pixels: ", stats$black_pixels,
-      sprintf(" (%.2f%%)\n", stats$black_percentage),
-      "White Pixels: ", stats$grid_size^2 - stats$black_pixels,
-      sprintf(" (%.2f%%)\n", 100 - stats$black_percentage),
+      "Grid Size: ", safe_get(stats$grid_size), "×", safe_get(stats$grid_size), "\n",
+      "Total Cells: ", safe_get(stats$grid_size)^2, "\n",
+      "Black Pixels: ", safe_get(stats$black_pixels),
+      sprintf(" (%.2f%%)\n", safe_get(stats$black_percentage)),
+      "White Pixels: ", safe_get(stats$grid_size)^2 - safe_get(stats$black_pixels),
+      sprintf(" (%.2f%%)\n", 100 - safe_get(stats$black_percentage)),
       "\n=== WALKER STATISTICS ===\n",
-      "Total Walkers: ", stats$total_walkers, "\n",
-      "Completed: ", stats$completed_walkers, "\n",
+      "Total Walkers: ", safe_get(stats$total_walkers), "\n",
+      "Completed: ", safe_get(stats$completed_walkers), "\n",
       "Success Rate: ",
-      sprintf("%.1f%%", 100 * stats$completed_walkers / stats$total_walkers), "\n",
+      sprintf("%.1f%%", 100 * safe_get(stats$completed_walkers) / max(safe_get(stats$total_walkers), 1)), "\n",
       "\n=== STEP STATISTICS ===\n",
-      "Total Steps: ", stats$total_steps, "\n",
-      "Min Steps: ", stats$min_steps, "\n",
-      "Max Steps: ", stats$max_steps, "\n",
-      "Mean Steps: ", sprintf("%.1f", stats$mean_steps), "\n",
-      "Median Steps: ", stats$median_steps, "\n",
-      "Std Dev: ", sprintf("%.1f", sd(sapply(sim_result()$walkers, function(w) nrow(w$path)))), "\n",
+      "Total Steps: ", safe_get(stats$total_steps), "\n",
+      "Min Steps: ", safe_get(stats$min_steps), "\n",
+      "Max Steps: ", safe_get(stats$max_steps), "\n",
+      "Mean Steps: ", sprintf("%.1f", safe_get(stats$mean_steps)), "\n",
+      "Median Steps: ", safe_get(stats$median_steps), "\n",
+      "Std Dev: ", sprintf("%.1f", std_dev), "\n",
       "\n=== PERFORMANCE ===\n",
-      "Elapsed Time: ", sprintf("%.2f", stats$elapsed_time_secs), " seconds\n",
+      "Elapsed Time: ", sprintf("%.2f", safe_get(stats$elapsed_time_secs)), " seconds\n",
       "Steps per Second: ",
-      sprintf("%.0f", stats$total_steps / stats$elapsed_time_secs), "\n",
+      sprintf("%.0f", safe_get(stats$total_steps) / max(safe_get(stats$elapsed_time_secs), 0.001)), "\n",
       "\n=== TERMINATION REASONS ===\n",
-      paste(sprintf("  %s: %d (%.1f%%)",
-                    names(stats$termination_reasons),
-                    stats$termination_reasons,
-                    100 * stats$termination_reasons / stats$total_walkers),
-            collapse = "\n")
+      if (!is.null(stats$termination_reasons) && length(stats$termination_reasons) > 0) {
+        paste(sprintf("  %s: %d (%.1f%%)",
+                      names(stats$termination_reasons),
+                      stats$termination_reasons,
+                      100 * stats$termination_reasons / max(safe_get(stats$total_walkers), 1)),
+              collapse = "\n")
+      } else {
+        "  No data available"
+      }
     )
   })
 
