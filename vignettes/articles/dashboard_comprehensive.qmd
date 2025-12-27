@@ -256,22 +256,33 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
 
-  # Reactive value to store simulation result
+  # Reactive values for simulation state and history
   sim_result <- reactiveVal(NULL)
+  sim_count <- reactiveVal(0)  # Count total simulations run
+  sim_state <- reactiveVal("idle")  # States: idle, running, complete, error
+  sim_start_time <- reactiveVal(NULL)
+  sim_end_time <- reactiveVal(NULL)
 
   # Periodic timer for debug updates
   timer <- reactiveTimer(1000)  # Update every second
 
   # Run simulation when button clicked
   observeEvent(input$run_sim, {
+    # Update state to running
+    sim_state("running")
+    sim_start_time(Sys.time())
+    sim_count(sim_count() + 1)
+
     output$status <- renderText({
       paste0(
-        "🏃 Running simulation...\n",
+        "🏃 SIMULATION RUNNING...\n",
+        "Run #", sim_count(), "\n",
         "Grid: ", input$grid_size, "×", input$grid_size, "\n",
         "Walkers: ", input$n_walkers, "\n",
         "Workers: ", input$workers,
         if (input$workers > 0) " (async)" else " (sync)", "\n",
-        "Started: ", format(Sys.time(), "%H:%M:%S")
+        "Started: ", format(sim_start_time(), "%H:%M:%S"), "\n",
+        "Status: Processing..."
       )
     })
 
@@ -293,6 +304,9 @@ server <- function(input, output, session) {
       end_time <- Sys.time()
       elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
 
+      # Update state variables
+      sim_state("complete")
+      sim_end_time(end_time)
       sim_result(result)
 
       # Browser console logging for WebR diagnostics (Issue #157)
@@ -316,22 +330,34 @@ server <- function(input, output, session) {
 
       output$status <- renderText({
         paste0(
-          "✅ Simulation complete!\n",
-          "Elapsed: ", sprintf("%.2f", elapsed), "s\n",
+          "✅ SIMULATION COMPLETE\n",
+          "Run #", sim_count(), "\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
+          "Finished: ", format(sim_end_time(), "%H:%M:%S"), "\n",
+          "Elapsed:  ", sprintf("%.2f", elapsed), " seconds\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Backend: ", if (input$workers > 0) {
             if (is_webr()) "mirai (WebR)" else "crew (native R)"
           } else {
             "synchronous"
           }, "\n",
-          "Completed: ", format(end_time, "%H:%M:%S")
+          "Black Pixels: ", sum(result$grid == 1), "\n",
+          "Walkers: ", input$n_walkers, " completed"
         )
       })
 
     }, error = function(e) {
+      sim_state("error")
+      sim_end_time(Sys.time())
+
       output$status <- renderText({
         paste0(
-          "❌ ERROR:\n",
-          e$message, "\n\n",
+          "❌ SIMULATION ERROR\n",
+          "Run #", sim_count(), "\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Error: ", e$message, "\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Troubleshooting:\n",
           "- Check JavaScript console (F12)\n",
           "- Verify randomwalk package loaded\n",
