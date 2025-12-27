@@ -231,36 +231,36 @@ list(
     }
   ),
 
-  # Medium dynamic simulation (4000 steps) - Balanced performance
+  # Medium dynamic simulation (3000 steps) - Balanced performance (optimized for #124)
   tar_target(
     name = sim_dynamic_medium,
     command = {
       devtools::load_all()
       logger::log_info("Running medium dynamic broadcasting simulation (fallback to static due to #51)")
       randomwalk::run_simulation(
-        grid_size = 100,
-        n_walkers = 20,
+        grid_size = 75,  # Reduced from 100 for faster testing (#124)
+        n_walkers = 15,  # Reduced from 20 for faster testing (#124)
         workers = 4,
         sync_mode = "static", # FIXME: Revert to "dynamic" once #51 is resolved
-        max_steps = 4000,
+        max_steps = 3000,  # Reduced from 4000 for faster testing (#124)
         neighborhood = "4-hood",
         boundary = "terminate"
       )
     }
   ),
 
-  # Large dynamic simulation (12000 steps) - Stress test
+  # Large dynamic simulation (8000 steps) - Stress test (optimized for #124)
   tar_target(
     name = sim_dynamic_large,
     command = {
       devtools::load_all()
       logger::log_info("Running large dynamic broadcasting simulation (fallback to static due to #51)")
       randomwalk::run_simulation(
-        grid_size = 200,
-        n_walkers = 50,
+        grid_size = 150,  # Reduced from 200 for faster testing (#124)
+        n_walkers = 35,   # Reduced from 50 for faster testing (#124)
         workers = 8,
         sync_mode = "static", # FIXME: Revert to "dynamic" once #51 is resolved
-        max_steps = 12000,
+        max_steps = 8000,  # Reduced from 12000 for faster testing (#124)
         neighborhood = "4-hood",
         boundary = "terminate"
       )
@@ -291,11 +291,11 @@ list(
       devtools::load_all()
       logger::log_info("Running medium static simulation (comparison)")
       randomwalk::run_simulation(
-        grid_size = 100,
-        n_walkers = 20,
+        grid_size = 75,  # Reduced from 100 for faster testing (#124)
+        n_walkers = 15,  # Reduced from 20 for faster testing (#124)
         workers = 4,
         sync_mode = "static",
-        max_steps = 4000,
+        max_steps = 3000,  # Reduced from 4000 for faster testing (#124)
         neighborhood = "4-hood",
         boundary = "terminate"
       )
@@ -308,11 +308,11 @@ list(
       devtools::load_all()
       logger::log_info("Running large static simulation (comparison)")
       randomwalk::run_simulation(
-        grid_size = 200,
-        n_walkers = 50,
+        grid_size = 150,  # Reduced from 200 for faster testing (#124)
+        n_walkers = 35,   # Reduced from 50 for faster testing (#124)
         workers = 8,
         sync_mode = "static",
-        max_steps = 12000,
+        max_steps = 8000,  # Reduced from 12000 for faster testing (#124)
         neighborhood = "4-hood",
         boundary = "terminate"
       )
@@ -348,7 +348,7 @@ list(
       devtools::load_all()
       randomwalk::plot_grid(
         sim_dynamic_medium,
-        main = "Dynamic Broadcasting - Medium (100×100, 4000 steps)"
+        main = "Dynamic Broadcasting - Medium (75×75, 3000 steps)"
       )
     }
   ),
@@ -359,7 +359,7 @@ list(
       devtools::load_all()
       randomwalk::plot_grid(
         sim_static_medium,
-        main = "Static Snapshot - Medium (100×100, 4000 steps)"
+        main = "Static Snapshot - Medium (75×75, 3000 steps)"
       )
     }
   ),
