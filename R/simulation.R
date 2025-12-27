@@ -394,6 +394,13 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
         if (!walker$active && walker$termination_reason != "hit_boundary") {
           # FIX FOR ISSUE #63: Validate termination position before setting black
           # Workers operate on stale snapshots, so re-validate position in main process
+
+          # DEBUG: Log current grid state
+          current_black_pixels <- which(grid == 1, arr.ind = TRUE)
+          logger::log_trace(
+            "Validating walker {walker$id} at ({walker$pos[1]}, {walker$pos[2]}). Grid has {nrow(current_black_pixels)} black pixels."
+          )
+
           if (validate_termination_position(walker$pos, grid, neighborhood)) {
             grid <- set_pixel_black(grid, walker$pos, boundary)
 
@@ -403,13 +410,13 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
             grid_state$black_pixels[[pos_key]] <- walker$pos
 
             logger::log_debug(
-              "Walker {walker$id} terminated: {walker$termination_reason} at ({walker$pos[1]}, {walker$pos[2]}) after {walker$steps} steps"
+              "ACCEPTED Walker {walker$id} terminated: {walker$termination_reason} at ({walker$pos[1]}, {walker$pos[2]}) after {walker$steps} steps"
             )
           } else {
             # Position would create isolated pixel - reject it
             # Note: This is expected with async static mode (workers have stale grid snapshots)
             logger::log_debug(
-              "REJECTED Walker {walker$id} termination at ({walker$pos[1]}, {walker$pos[2]}): would create isolated pixel (stale worker cache)"
+              "REJECTED Walker {walker$id} at ({walker$pos[1]}, {walker$pos[2]}): would create isolated pixel. Grid has {nrow(current_black_pixels)} black pixels"
             )
             # Note: Walker is still counted as completed, just don't set pixel black
           }

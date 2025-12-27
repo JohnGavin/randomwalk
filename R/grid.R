@@ -321,3 +321,82 @@ validate_termination_position <- function(pos, grid, neighborhood = "4-hood") {
   )
   return(FALSE)
 }
+
+#' Find Isolated Pixels in Grid
+#'
+#' Scans the grid to find black pixels that have no black neighbors,
+#' which violates the connectivity requirement for DLA simulations.
+#'
+#' @param grid Numeric matrix representing the grid state (0 = white, 1 = black)
+#' @param neighborhood Character string specifying neighborhood type:
+#'   \code{"4-hood"} (orthogonal) or \code{"8-hood"} (includes diagonals)
+#'
+#' @return List of isolated pixel positions (each element is a 2-element numeric vector with row and column indices).
+#'   Returns empty list if no isolated pixels found.
+#'
+#' @details
+#' This function is useful for:
+#' \itemize{
+#'   \item Debugging WebR/Shiny reactive timing issues
+#'   \item Validating grid state after async simulations
+#'   \item Testing grid connectivity requirements
+#' }
+#'
+#' A pixel is considered isolated if:
+#' \itemize{
+#'   \item It is black (value = 1)
+#'   \item None of its neighbors (in the specified neighborhood) are black
+#' }
+#'
+#' Note: The center pixel is never considered isolated (it's the seed).
+#'
+#' @examples
+#' grid <- initialize_grid(10)
+#' grid[3, 3] <- 1  # Add isolated pixel far from center
+#' isolated <- find_isolated_pixels(grid, "4-hood")
+#' length(isolated)  # Should be 1
+#'
+#' @seealso \code{\link{validate_termination_position}}, \code{\link{validate_no_isolated_pixels}}
+#'
+#' @export
+find_isolated_pixels <- function(grid, neighborhood = "4-hood") {
+  black_positions <- which(grid == 1, arr.ind = TRUE)
+
+  # No black pixels or only center pixel - no isolated pixels possible
+  if (nrow(black_positions) <= 1) {
+    return(list())
+  }
+
+  n <- nrow(grid)
+  isolated <- list()
+
+  for (i in seq_len(nrow(black_positions))) {
+    pos <- black_positions[i, ]
+    neighbors <- get_neighbors(pos, neighborhood)
+
+    has_black_neighbor <- FALSE
+    for (neighbor_pos in neighbors) {
+      if (is_within_bounds(neighbor_pos, n)) {
+        if (grid[neighbor_pos[1], neighbor_pos[2]] == 1) {
+          has_black_neighbor <- TRUE
+          break
+        }
+      }
+    }
+
+    if (!has_black_neighbor) {
+      isolated <- c(isolated, list(pos))
+      logger::log_debug(
+        "Found isolated pixel at ({pos[1]}, {pos[2]})"
+      )
+    }
+  }
+
+  if (length(isolated) > 0) {
+    logger::log_warn(
+      "Grid has {length(isolated)} isolated pixel(s)"
+    )
+  }
+
+  isolated
+}

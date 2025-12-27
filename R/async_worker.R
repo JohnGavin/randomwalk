@@ -258,7 +258,20 @@ check_termination_cached <- function(walker, black_pixels, neighborhood,
     if (neighbor_key %in% names(black_pixels)) {
       walker$active <- FALSE
       walker$termination_reason <- "black_neighbor"
-      logger::log_trace("Walker {walker$id} has black neighbor (cached)")
+
+      # DEBUG: Write to file
+      debug_dir <- "/tmp"
+      debug_file <- file.path(debug_dir, sprintf("randomwalk_worker_debug_%d.txt", walker$id))
+      cat(sprintf("Walker %d at (%d, %d) found black neighbor at (%d, %d). Cache has %d pixels: %s\n",
+                  walker$id, walker$pos[1], walker$pos[2],
+                  neighbor_pos[1], neighbor_pos[2],
+                  length(black_pixels), paste(names(black_pixels), collapse=", ")),
+          file = debug_file, append = TRUE)
+
+      # Also log via logger
+      logger::log_debug(
+        "Walker {walker$id} at ({walker$pos[1]}, {walker$pos[2]}) found black neighbor at ({neighbor_pos[1]}, {neighbor_pos[2]}) in cache with {length(black_pixels)} pixels: {paste(names(black_pixels), collapse=', ')}"
+      )
       return(walker)
     }
   }
@@ -324,6 +337,18 @@ worker_run_walker <- function(walker, grid_state, pub_address = NULL,
   black_pixels <- grid_state$black_pixels
   grid_size <- grid_state$grid_size
 
+  # DEBUG: Write to file since worker logs don't reach main process
+  debug_dir <- "/tmp"
+  debug_file <- file.path(debug_dir, sprintf("randomwalk_worker_debug_%d.txt", walker$id))
+  cat(sprintf("Walker %d starting: black_pixels cache has %d pixels: %s\n",
+              walker$id, length(black_pixels), paste(names(black_pixels), collapse=", ")),
+      file = debug_file, append = TRUE)
+
+  # Also log via logger (for local debugging)
+  logger::log_debug(
+    "Worker starting walker {walker$id}: black_pixels cache has {length(black_pixels)} pixels: {paste(names(black_pixels), collapse=', ')}"
+  )
+
   # Run walker until termination
   while (walker$active) {
     # Move walker one step
@@ -341,6 +366,20 @@ worker_run_walker <- function(walker, grid_state, pub_address = NULL,
       boundary = boundary,
       grid_size = grid_size,
       max_steps = max_steps
+    )
+  }
+
+  # DEBUG: Log final state if terminated with black_neighbor
+  if (!walker$active && walker$termination_reason == "black_neighbor") {
+    debug_dir <- "/tmp"
+    debug_file <- file.path(debug_dir, sprintf("randomwalk_worker_debug_%d.txt", walker$id))
+    cat(sprintf("Walker %d completed: terminated at (%d, %d) with %s. Cache still has %d pixels.\n",
+                walker$id, walker$pos[1], walker$pos[2],
+                walker$termination_reason, length(black_pixels)),
+        file = debug_file, append = TRUE)
+
+    logger::log_debug(
+      "Worker completed walker {walker$id}: terminated at ({walker$pos[1]}, {walker$pos[2]}) with {walker$termination_reason}. Cache still has {length(black_pixels)} pixels."
     )
   }
 

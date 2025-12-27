@@ -13,7 +13,8 @@ run_simulation_async(
   max_steps,
   start_time,
   validate_strict,
-  validate_percent
+  validate_percent,
+  log_interval
 )
 }
 \arguments{

@@ -15,7 +15,8 @@ run_simulation(
   verbose = FALSE,
   quiet = FALSE,
   validate_strict = FALSE,
-  validate_percent = 5
+  validate_percent = 5,
+  log_interval = 50
 )
 }
 \arguments{
@@ -52,6 +53,10 @@ If FALSE, they only log warnings. Default FALSE. Tests should use TRUE.}
 \item{validate_percent}{Numeric. Validate grid every X\% of walkers complete.
 Default 5 (validates every 5\% = 20 times total). Set to 0 to disable
 periodic validation (only validates at end). Minimum interval is 1 walker.}
+
+\item{log_interval}{Integer. Log progress every N completed walkers.
+Default 50. Set to 0 to disable progress logging (only shows start/end).
+Lower values (e.g., 5) increase verbosity, higher values (e.g., 100) reduce output.}
 }
 \value{
 A list with components:
