@@ -168,7 +168,7 @@ ui &lt;- fluidPage(
                   min = 1, max = 5000, value = 2000, step = 50),
 
       sliderInput("workers", "Parallel Workers (WebR: use 0 for sync only):",
-                  min = 0, max = 4, value = 2, step = 1),
+                  min = 0, max = 4, value = 0, step = 1),
 
       selectInput("neighborhood", "Neighborhood:",
                   choices = c("4-hood", "8-hood"),
