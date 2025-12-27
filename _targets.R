@@ -454,15 +454,15 @@ list(
         dir.create("docs/articles", recursive = TRUE)
       }
 
-      # Copy all pre-rendered HTML files
-      html_files <- list.files("vignettes", pattern = "\\.html$", full.names = TRUE)
+      # Copy all pre-rendered HTML files from vignettes/articles/
+      html_files <- list.files("vignettes/articles", pattern = "\\.html$", full.names = TRUE)
       if (length(html_files) > 0) {
         file.copy(html_files, "docs/articles/", overwrite = TRUE)
         message(sprintf("Copied %d pre-rendered vignette HTML files", length(html_files)))
       }
 
-      # Copy all *_files directories (Shinylive assets, etc.)
-      asset_dirs <- list.dirs("vignettes", full.names = TRUE, recursive = FALSE)
+      # Copy all *_files directories from vignettes/articles/ (Shinylive assets, etc.)
+      asset_dirs <- list.dirs("vignettes/articles", full.names = TRUE, recursive = FALSE)
       asset_dirs <- asset_dirs[grep("_files$", asset_dirs)]
 
       if (length(asset_dirs) > 0) {
