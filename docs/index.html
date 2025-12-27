@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="index.html">randomwalk</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,8 +37,11 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/dynamic_broadcasting.html">Async Parallel Random Walks (Basic)</a></li>
-    <li><a class="dropdown-item" href="articles/dashboard_comprehensive.html">Comprehensive Async Dashboard (NEW)</a></li>
+<li><a class="dropdown-item" href="articles/dynamic_broadcasting.html">Sync Sequential Random Walks</a></li>
+    <li><a class="dropdown-item" href="articles/dashboard_comprehensive.html">Comprehensive Dashboard (All Features)</a></li>
+    <li><a class="dropdown-item" href="articles/step_distribution_analysis.html">Step Distribution Analysis</a></li>
+    <li><a class="dropdown-item" href="articles/defensive_programming.html">Defensive Programming Patterns</a></li>
+    <li><a class="dropdown-item" href="articles/telemetry.html">Telemetry and Pipeline Performance</a></li>
   </ul>
 </li>
       </ul>
@@ -56,6 +59,8 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="randomwalk">randomwalk<a class="anchor" aria-label="anchor" href="#randomwalk"></a>
 </h1></div>
+<!-- badges: start -->
+
 <p>Asynchronous Pixel Walking Simulation with Parallel Processing.</p>
 <div class="section level2">
 <h2 id="rocket-quick-links">🚀 Quick Links<a class="anchor" aria-label="anchor" href="#rocket-quick-links"></a>
@@ -180,16 +185,28 @@
 <span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$IN_NIX_SHELL</span>  <span class="co"># Should output: 1 or impure</span></span>
 <span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="fu">which</span> R             <span class="co"># Should output: /nix/store/.../bin/R</span></span>
 <span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co"># Run R code with randomwalk</span></span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="bu">cd</span> /path/to/randomwalk</span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'devtools::load_all("."); result &lt;- run_simulation(grid_size = 20, n_walkers = 5); print(result$statistics)'</span></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co"># Or interactively</span></span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="ex">R</span> <span class="at">--quiet</span> <span class="at">--no-save</span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co"># Then inside R:</span></span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="ex">devtools::load_all</span><span class="er">(</span><span class="st">"."</span><span class="kw">)</span></span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="ex">result</span> <span class="op">&lt;</span>- run_simulation<span class="er">(</span><span class="ex">grid_size</span> = 20, n_walkers = 5<span class="kw">)</span></span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="ex">plot_grid</span><span class="er">(</span><span class="ex">result</span><span class="kw">)</span></span></code></pre></div>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co"># Install randomwalk from binary cache (recommended)</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="ex">R</span> <span class="at">--quiet</span> <span class="at">--no-save</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Inside R: Install from R-Universe (precompiled binaries)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"randomwalk"</span>,</span>
+<span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="st">"https://johngavin.r-universe.dev"</span>,  <span class="co"># R-Universe binary cache</span></span>
+<span>    <span class="st">"https://cloud.r-project.org"</span>        <span class="co"># CRAN fallback</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Or install from GitHub source</span></span>
+<span><span class="co"># remotes::install_github("johngavin/randomwalk")</span></span>
+<span></span>
+<span><span class="co"># Or for development, load from local source</span></span>
+<span><span class="co"># devtools::load_all(".")</span></span>
+<span></span>
+<span><span class="co"># Use the package</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">randomwalk</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/run_simulation.html">run_simulation</a></span><span class="op">(</span>grid_size <span class="op">=</span> <span class="fl">20</span>, n_walkers <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/plot_grid.html">plot_grid</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Installation Options:</strong> 1. <strong>Binary cache (fastest)</strong>: Install from <code>johngavin.r-universe.dev</code> - precompiled WASM binaries 2. <strong>GitHub source</strong>: Install with <code>remotes::install_github("johngavin/randomwalk")</code> 3. <strong>Local development</strong>: Use <code>devtools::load_all(".")</code> from the repository directory</p>
 <p><strong>Note</strong>: The nix shell provides a reproducible R environment. See <a href=".claude/NIX_QUICKREF.html"><code>.claude/NIX_QUICKREF.md</code></a> for troubleshooting.</p>
 </div>
 </div>
@@ -206,10 +223,54 @@
 <li>
 <strong>Boundary</strong>: Wrap-around (torus) or terminate at edges (default)</li>
 <li>
-<strong>Workers</strong>: Number of parallel R processes (0-16, default 1)</li>
-<li>
-<strong>Refresh Rate</strong>: UI update interval in seconds (1-60, default 4)</li>
+<strong>Workers</strong>: Number of parallel R processes (0-16, default 0)
+<ul>
+<li>0 = Synchronous mode (single process)</li>
+<li>2+ = Async parallel mode (requires crew package)</li>
 </ul>
+</li>
+<li>
+<strong>Sync Mode</strong>: Grid synchronization for async simulations (default “static”)
+<ul>
+<li>“static” = Workers get frozen grid snapshots (fast, some rejections expected)</li>
+<li>“dynamic” = Workers get real-time updates (slower, enables collision detection)</li>
+</ul>
+</li>
+<li>
+<strong>Log Interval</strong>: Progress logging frequency (default 50 walkers)
+<ul>
+<li>Set to 100+ for less verbose output</li>
+<li>Set to 5-10 for detailed progress tracking</li>
+</ul>
+</li>
+</ul>
+<div class="section level3">
+<h3 id="async-parallel-processing-notes">Async Parallel Processing Notes<a class="anchor" aria-label="anchor" href="#async-parallel-processing-notes"></a>
+</h3>
+<p>When using <code>workers &gt; 0</code> with <code>sync_mode = "static"</code> (default), workers operate on frozen grid snapshots. This means:</p>
+<ul>
+<li>
+<strong>Position rejections are normal</strong>: Workers may propose positions that would create isolated pixels (violating 4-hood connectivity). These are rejected by the main process during validation.</li>
+<li>
+<strong>High rejection rates with many workers</strong>: With <code>boundary="terminate"</code> and many workers, rejection rates can be 90%+ for “black_neighbor” terminations. This is expected behavior - workers see phantom black pixels on stale snapshots that are no longer valid by the time results return.
+<ul>
+<li>Example: 8000 walkers, 8 workers → 631 “black_neighbor” terminations, but only 4-5 black pixels created (99% rejected)</li>
+<li>Most walkers still hit boundaries successfully (typically 75-80%)</li>
+</ul>
+</li>
+<li>
+<strong>When to use static vs dynamic mode</strong>:
+<ul>
+<li>
+<strong>Static (default)</strong>: Best for large grids with <code>boundary="terminate"</code>. Fast, but expect high rejection rates.</li>
+<li>
+<strong>Dynamic</strong>: Use when you need accurate collision detection or when rejection rates are unacceptable. ~10-15% slower but eliminates rejections.</li>
+</ul>
+</li>
+<li>
+<strong>Logging</strong>: Rejection messages are logged at DEBUG level (use <code>verbose=TRUE</code> to see them). Use <code>log_interval=100</code> or higher to reduce progress log verbosity.</li>
+</ul>
+</div>
 </div>
 <div class="section level2">
 <h2 id="books-vignettes--documentation">📚 Vignettes &amp; Documentation<a class="anchor" aria-label="anchor" href="#books-vignettes--documentation"></a>
@@ -225,6 +286,24 @@
 <p>Interactive Shiny dashboard demonstrating <strong>true async parallel processing</strong> in WebAssembly. Uses mirai backend for parallel workers running entirely in-browser via WebR. Features real-time parameter adjustment, multiple visualization tabs, and complete simulation statistics - no R installation required.</p>
 </div>
 <div class="section level3">
+<h3 id="comprehensive-dashboard-sparkles">
+<strong><a href="https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html">Comprehensive Dashboard</a></strong> ✨<a class="anchor" aria-label="anchor" href="#comprehensive-dashboard-sparkles"></a>
+</h3>
+<p>Full-featured showcase with all randomwalk capabilities including multiple visualizations, comprehensive statistics, debug information, and documentation integration.</p>
+</div>
+<div class="section level3">
+<h3 id="step-distribution-analysis-bar_chart">
+<strong><a href="https://johngavin.github.io/randomwalk/articles/step_distribution_analysis.html">Step Distribution Analysis</a></strong> 📊<a class="anchor" aria-label="anchor" href="#step-distribution-analysis-bar_chart"></a>
+</h3>
+<p>Comprehensive analysis of random walk step distributions, parallel execution performance benchmarks, and visualization of density plots conditional on grid size and worker count.</p>
+</div>
+<div class="section level3">
+<h3 id="telemetry-and-pipeline-performance-chart_with_upwards_trend">
+<strong><a href="https://johngavin.github.io/randomwalk/articles/telemetry.html">Telemetry and Pipeline Performance</a></strong> 📈<a class="anchor" aria-label="anchor" href="#telemetry-and-pipeline-performance-chart_with_upwards_trend"></a>
+</h3>
+<p>Pipeline performance metrics including code coverage analysis, longest-running targets, memory usage statistics, and network visualization of the targets dependency graph.</p>
+</div>
+<div class="section level3">
 <h3 id="temporarily-disabled-vignettes">Temporarily Disabled Vignettes<a class="anchor" aria-label="anchor" href="#temporarily-disabled-vignettes"></a>
 </h3>
 <p>The following vignettes are temporarily disabled (see <a href="https://github.com/JohnGavin/randomwalk/issues/132" class="external-link">Issue #132</a>):</p>
@@ -233,8 +312,6 @@
 <strong>Interactive Dashboard</strong> (dashboard.html) - Service Worker errors, requires Shinylive/webR update</li>
 <li>
 <strong>Async/Parallel Dashboard</strong> (dashboard_async.html) - ⚠️ <strong>Use <a href="https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html">Comprehensive Dashboard</a> instead</strong> - Same Service Worker issues as dashboard</li>
-<li>
-<strong>Telemetry and Pipeline Statistics</strong> (telemetry.html) - Missing target definitions in pipeline</li>
 </ul>
 <blockquote>
 <p><strong>Note</strong>: For async parallel dashboard functionality, use the <a href="https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html">Comprehensive Dashboard</a> which includes all features from dashboard_async plus additional visualizations and statistics.</p>
@@ -357,7 +434,12 @@
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li><a href="articles/dynamic_broadcasting.html">Try Async Parallel Demo</a></li>
+<li><a href="articles/dynamic_broadcasting.html">Async Parallel Demo</a></li>
+<li><a href="articles/dashboard_comprehensive.html">Comprehensive Dashboard</a></li>
+<li><a href="articles/step_distribution_analysis.html">Step Distribution Analysis</a></li>
+<li><a href="articles/telemetry.html">Telemetry &amp; Performance</a></li>
+<li><a href="https://github.com/JohnGavin/randomwalk" class="external-link">GitHub Repository</a></li>
+<li><a href="https://github.com/JohnGavin/randomwalk/wiki" class="external-link">Project Wiki</a></li>
 </ul>
 </div>
 
@@ -385,7 +467,14 @@
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/JohnGavin/randomwalk/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/JohnGavin/randomwalk/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a></li>
+<li><a href="https://www.repostatus.org/#active" class="external-link"><img src="https://www.repostatus.org/badges/latest/active.svg" alt="Project Status: Active"></a></li>
+</ul>
+</div>
 
   </aside>
 </div>

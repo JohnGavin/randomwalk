@@ -32,10 +32,11 @@ knitr::opts_chunk$set(
 ## Load Packages
 
 ```{r packages}
-#| eval: false
+# Load development version of randomwalk
+if (!requireNamespace("randomwalk", quietly = TRUE)) {
+  devtools::load_all(here::here())
+}
 
-library(targets)
-library(tarchetypes)
 library(randomwalk)
 library(ggplot2)
 library(dplyr)
@@ -270,10 +271,8 @@ list(
 
 ## Run Analysis
 
-Since this is a vignette, we'll run a simplified version directly rather than using the full targets pipeline:
-
 ```{r run-simulations}
-#| eval: false
+#| cache: true
 
 # Define grid sizes
 grid_sizes <- c(20, 40, 60)
@@ -294,7 +293,7 @@ simulation_results <- map(grid_sizes, function(gs) {
 ```
 
 ```{r extract-data}
-#| eval: false
+#| cache: true
 
 # Extract step data
 step_data_list <- map(simulation_results, extract_step_data)
@@ -309,8 +308,6 @@ head(step_data_combined, 10)
 ### Summary Statistics by Termination Reason
 
 ```{r termination-summary}
-#| eval: false
-
 termination_summary <- analyze_by_termination(step_data_combined)
 
 termination_summary %>%
@@ -324,8 +321,6 @@ termination_summary %>%
 ### Summary Statistics by Walker Order
 
 ```{r walker-order-summary}
-#| eval: false
-
 walker_order_summary <- analyze_by_walker_order(step_data_combined)
 
 walker_order_summary %>%
@@ -339,8 +334,6 @@ walker_order_summary %>%
 ### Step Distribution Histograms
 
 ```{r plot-distributions, fig.height=8}
-#| eval: false
-
 plot_step_distributions(step_data_combined)
 ```
 
@@ -353,8 +346,6 @@ plot_step_distributions(step_data_combined)
 ### Steps vs Walker Order
 
 ```{r plot-by-order, fig.height=8}
-#| eval: false
-
 plot_steps_by_order(step_data_combined)
 ```
 
@@ -367,8 +358,6 @@ plot_steps_by_order(step_data_combined)
 ### Average Steps by Walker Cohort
 
 ```{r plot-by-percentile, fig.height=8}
-#| eval: false
-
 plot_steps_by_percentile(walker_order_summary)
 ```
 
@@ -384,8 +373,6 @@ plot_steps_by_percentile(walker_order_summary)
 ### Grid Size Effects
 
 ```{r grid-size-effect}
-#| eval: false
-
 termination_summary %>%
   group_by(grid_size) %>%
   summarise(
@@ -405,8 +392,6 @@ termination_summary %>%
 ### Walker Order Effects
 
 ```{r order-effect}
-#| eval: false
-
 walker_order_summary %>%
   group_by(walker_group) %>%
   summarise(
@@ -427,8 +412,6 @@ walker_order_summary %>%
 ### Termination Reason Effects
 
 ```{r termination-effect}
-#| eval: false
-
 # Compare termination reasons across all conditions
 termination_summary %>%
   group_by(termination_reason) %>%
@@ -451,442 +434,20 @@ termination_summary %>%
 - **Black neighbor**: Less common, shorter paths
 - **Implication**: Most walkers find boundaries before encountering black pixels
 
-## Using Targets in Practice
-
-To use this analysis with the full `targets` pipeline:
-
-1. **Create `_targets.R`** in your project root with the pipeline definition above
-2. **Run the pipeline**: `targets::tar_make()`
-3. **View the network**: `targets::tar_visnetwork()`
-4. **Load results**: `targets::tar_read(termination_summary)`
-
-### Benefits of Targets
-
-- **Caching**: Re-runs only changed computations
-- **Parallel**: Runs independent simulations concurrently
-- **Reproducible**: Tracks dependencies automatically
-- **Scalable**: Easy to add more grid sizes or parameter combinations
-
-### Example: Adding Parameter Variations
-
-```{r targets-expanded}
-#| eval: false
-
-# Expand to test multiple parameters
-grid_sizes <- c(20, 40, 60, 80, 100)
-neighborhoods <- c("4-hood", "8-hood")
-boundaries <- c("terminate", "wrap")
-
-# Use tar_map() for factorial design
-tar_map(
-  values = tidyr::expand_grid(
-    grid_size = grid_sizes,
-    neighborhood = neighborhoods,
-    boundary = boundaries
-  ),
-  names = c(grid_size, neighborhood, boundary),
-  tar_target(
-    simulation,
-    run_simulation(
-      grid_size = grid_size,
-      n_walkers = 200,
-      neighborhood = neighborhood,
-      boundary = boundary,
-      max_steps = 5000,
-      workers = 0
-    )
-  )
-)
-```
-
-## Parallel Execution Performance
-
-One of the key benefits of the `randomwalk` package is support for parallel execution using the `crew` backend (in native R) or `mirai` backend (in WebR). This section analyzes the performance benefits of parallelization.
-
-### Benchmark Setup
-
-We'll benchmark simulations across different worker counts (0, 1, 2, 4) and grid sizes to measure:
-
-- **Execution time**: Total time to complete simulation
-- **Speedup**: Improvement over synchronous execution (workers=0)
-- **Efficiency**: How well we utilize additional workers
-
-```{r parallel-benchmark-functions}
-#' Benchmark simulation with different worker counts
-#'
-#' @param grid_size Grid size for simulation
-#' @param n_walkers Number of walkers
-#' @param workers_values Vector of worker counts to test
-#' @param n_reps Number of replications per configuration
-#' @return Data frame with timing results
-benchmark_parallel <- function(grid_size, n_walkers,
-                               workers_values = c(0, 1, 2, 4),
-                               n_reps = 3) {
-
-  results <- map_dfr(workers_values, function(w) {
-
-    # Run multiple replications
-    times <- map_dbl(seq_len(n_reps), function(rep) {
-      start <- Sys.time()
-
-      result <- run_simulation(
-        grid_size = grid_size,
-        n_walkers = n_walkers,
-        neighborhood = "4-hood",
-        boundary = "terminate",
-        max_steps = 5000,
-        workers = w,
-        verbose = FALSE
-      )
-
-      end <- Sys.time()
-      as.numeric(difftime(end, start, units = "secs"))
-    })
-
-    tibble(
-      grid_size = grid_size,
-      n_walkers = n_walkers,
-      workers = w,
-      rep = seq_len(n_reps),
-      elapsed_secs = times
-    )
-  })
-
-  results
-}
-
-#' Calculate speedup and efficiency metrics
-#'
-#' @param benchmark_data Data frame from benchmark_parallel()
-#' @return Data frame with performance metrics
-calculate_speedup <- function(benchmark_data) {
-  # Get baseline (workers=0) timing
-  baseline <- benchmark_data %>%
-    filter(workers == 0) %>%
-    group_by(grid_size, n_walkers) %>%
-    summarise(baseline_time = mean(elapsed_secs), .groups = "drop")
-
-  # Calculate speedup and efficiency
-  benchmark_data %>%
-    group_by(grid_size, n_walkers, workers) %>%
-    summarise(
-      mean_time = mean(elapsed_secs),
-      sd_time = sd(elapsed_secs),
-      min_time = min(elapsed_secs),
-      max_time = max(elapsed_secs),
-      .groups = "drop"
-    ) %>%
-    left_join(baseline, by = c("grid_size", "n_walkers")) %>%
-    mutate(
-      speedup = baseline_time / mean_time,
-      efficiency = speedup / pmax(workers, 1),  # Avoid division by 0
-      efficiency_pct = efficiency * 100
-    )
-}
-
-#' Plot execution time vs workers
-#'
-#' @param speedup_data Data frame from calculate_speedup()
-#' @return ggplot object
-plot_execution_time <- function(speedup_data) {
-  ggplot(speedup_data, aes(x = factor(workers), y = mean_time,
-                           color = factor(grid_size), group = grid_size)) +
-    geom_line(linewidth = 1) +
-    geom_point(size = 3) +
-    geom_errorbar(
-      aes(ymin = mean_time - sd_time, ymax = mean_time + sd_time),
-      width = 0.2,
-      alpha = 0.5
-    ) +
-    scale_color_brewer(palette = "Set1", name = "Grid Size") +
-    labs(
-      title = "Execution Time vs Number of Workers",
-      subtitle = "Lower is better - shows impact of parallelization",
-      x = "Number of Workers (0 = synchronous)",
-      y = "Execution Time (seconds)"
-    ) +
-    theme_minimal() +
-    theme(legend.position = "bottom")
-}
-
-#' Plot speedup vs workers
-#'
-#' @param speedup_data Data frame from calculate_speedup()
-#' @return ggplot object
-plot_speedup <- function(speedup_data) {
-  # Add ideal linear speedup reference line
-  max_workers <- max(speedup_data$workers)
-  ideal_speedup <- tibble(
-    workers = 0:max_workers,
-    speedup = pmax(workers, 1)  # Linear speedup
-  )
-
-  ggplot(speedup_data, aes(x = workers, y = speedup,
-                           color = factor(grid_size))) +
-    geom_line(data = ideal_speedup, aes(x = workers, y = speedup),
-              color = "gray50", linetype = "dashed", linewidth = 0.8,
-              inherit.aes = FALSE) +
-    geom_line(linewidth = 1) +
-    geom_point(size = 3) +
-    scale_color_brewer(palette = "Set1", name = "Grid Size") +
-    labs(
-      title = "Speedup vs Number of Workers",
-      subtitle = "Dashed line shows ideal linear speedup",
-      x = "Number of Workers",
-      y = "Speedup (relative to workers=0)"
-    ) +
-    theme_minimal() +
-    theme(legend.position = "bottom") +
-    annotate("text", x = max_workers * 0.7, y = max_workers * 0.9,
-             label = "Ideal\nlinear\nspeedup", color = "gray50", size = 3)
-}
-
-#' Plot efficiency vs workers
-#'
-#' @param speedup_data Data frame from calculate_speedup()
-#' @return ggplot object
-plot_efficiency <- function(speedup_data) {
-  # Filter out workers=0 since efficiency concept doesn't apply
-  speedup_data_filtered <- speedup_data %>%
-    filter(workers > 0)
-
-  ggplot(speedup_data_filtered,
-         aes(x = factor(workers), y = efficiency_pct,
-             fill = factor(grid_size))) +
-    geom_col(position = "dodge", alpha = 0.8) +
-    geom_hline(yintercept = 100, linetype = "dashed", color = "gray50") +
-    scale_fill_brewer(palette = "Set1", name = "Grid Size") +
-    labs(
-      title = "Parallel Efficiency vs Number of Workers",
-      subtitle = "100% = perfect scaling (dashed line)",
-      x = "Number of Workers",
-      y = "Efficiency (%)"
-    ) +
-    theme_minimal() +
-    theme(legend.position = "bottom") +
-    ylim(0, 120)
-}
-
-#' Create density plot of execution times
-#'
-#' @param benchmark_data Data frame from benchmark_parallel()
-#' @return ggplot object
-plot_time_density <- function(benchmark_data) {
-  ggplot(benchmark_data,
-         aes(x = elapsed_secs, fill = factor(workers))) +
-    geom_density(alpha = 0.6) +
-    facet_wrap(~grid_size, scales = "free", ncol = 2,
-               labeller = labeller(grid_size = function(x) paste("Grid:", x))) +
-    scale_fill_brewer(palette = "Set2", name = "Workers") +
-    labs(
-      title = "Density of Execution Times by Worker Count",
-      subtitle = "Conditional on grid size - shows distribution of performance",
-      x = "Execution Time (seconds)",
-      y = "Density"
-    ) +
-    theme_minimal() +
-    theme(legend.position = "bottom")
-}
-```
-
-### Run Benchmark
-
-Note: This benchmark requires native R with the `crew` package. WebR currently runs in synchronous mode only.
-
-```{r run-benchmark}
-#| eval: false
-
-# Benchmark across different grid sizes and worker counts
-set.seed(456)
-
-# Test configurations
-grid_sizes <- c(40, 60, 80)
-n_walkers <- 200
-workers_values <- c(0, 1, 2, 4)  # 0 = sync, 1-4 = parallel workers
-
-# Run benchmarks (this may take a few minutes)
-benchmark_results <- map_dfr(grid_sizes, function(gs) {
-  cat("Benchmarking grid size:", gs, "\n")
-  benchmark_parallel(
-    grid_size = gs,
-    n_walkers = n_walkers,
-    workers_values = workers_values,
-    n_reps = 3
-  )
-})
-
-# Calculate speedup metrics
-speedup_results <- calculate_speedup(benchmark_results)
-```
-
-### Performance Results
-
-#### Execution Time by Worker Count
-
-```{r plot-exec-time, fig.height=6}
-#| eval: false
-
-plot_execution_time(speedup_results)
-```
-
-**Key Observations:**
-
-- **Synchronous baseline (workers=0)**: Slowest execution
-- **1 worker**: Modest improvement over sync
-- **2-4 workers**: Significant speedup, especially for larger grids
-- **Grid size impact**: Larger grids benefit more from parallelization
-
-#### Speedup Analysis
-
-```{r plot-speedup-chart, fig.height=6}
-#| eval: false
-
-plot_speedup(speedup_results)
-```
-
-**Key Observations:**
-
-- **Near-linear speedup** for 2 workers (1.8-1.9x)
-- **Sub-linear scaling** at 4 workers due to overhead
-- **Larger grids scale better**: More work per walker reduces coordination overhead
-- **Diminishing returns**: Going from 2→4 workers provides less benefit than 0→2
-
-#### Parallel Efficiency
-
-```{r plot-efficiency-chart, fig.height=6}
-#| eval: false
-
-plot_efficiency(speedup_results)
-```
-
-**Efficiency Metrics:**
-
-- **1 worker**: ~90-95% efficiency (slight overhead from async framework)
-- **2 workers**: ~85-90% efficiency (good parallelization)
-- **4 workers**: ~60-70% efficiency (coordination overhead increases)
-- **Grid size helps**: Larger grids maintain higher efficiency
-
-#### Execution Time Distribution
-
-```{r plot-density-chart, fig.height=7}
-#| eval: false
-
-plot_time_density(benchmark_results)
-```
-
-**Distribution Insights:**
-
-- **Tighter distributions** with more workers (more predictable performance)
-- **Clear separation** between worker counts shows consistent speedup
-- **Variance decreases** with parallelization (averaging across workers)
-
-### Performance Summary Table
-
-```{r speedup-table}
-#| eval: false
-
-speedup_results %>%
-  select(grid_size, workers, mean_time, speedup, efficiency_pct) %>%
-  arrange(grid_size, workers) %>%
-  knitr::kable(
-    digits = 2,
-    col.names = c("Grid Size", "Workers", "Time (s)", "Speedup", "Efficiency (%)"),
-    caption = "Parallel execution performance summary"
-  )
-```
-
-### Recommendations
-
-Based on these benchmark results:
-
-1. **For production**: Use **2 workers** for best balance of speedup vs efficiency
-2. **For large grids (80+)**: Consider **4 workers** if you have cores available
-3. **For small grids (<40)**: Stick with **1-2 workers** to minimize overhead
-4. **WebR users**: Currently limited to synchronous mode (workers=0)
-
-### Using Parallel Execution
-
-```{r parallel-usage-example}
-#| eval: false
-
-# Synchronous (default, works everywhere including WebR)
-result_sync <- run_simulation(
-  grid_size = 60,
-  n_walkers = 200,
-  workers = 0
-)
-
-# Parallel with 2 workers (native R only, requires crew package)
-result_parallel <- run_simulation(
-  grid_size = 60,
-  n_walkers = 200,
-  workers = 2  # Automatically uses crew backend
-)
-
-# Check timing difference
-cat("Sync time:", result_sync$statistics$elapsed_time_secs, "seconds\n")
-cat("Parallel time:", result_parallel$statistics$elapsed_time_secs, "seconds\n")
-cat("Speedup:",
-    result_sync$statistics$elapsed_time_secs /
-    result_parallel$statistics$elapsed_time_secs,
-    "x\n")
-```
-
-### Integration with Targets
-
-The `targets` package can orchestrate parallel execution at two levels:
-
-1. **Simulation-level parallelism**: Each `run_simulation()` uses workers
-2. **Pipeline-level parallelism**: Multiple simulations run concurrently
-
-```{r targets-parallel-example}
-#| eval: false
-
-# In _targets.R:
-tar_option_set(
-  packages = c("randomwalk", "dplyr", "ggplot2"),
-  controller = crew_controller_local(workers = 4)  # Pipeline-level
-)
-
-# Each simulation can also use internal parallelism
-tar_target(
-  simulation_results,
-  run_simulation(
-    grid_size = grid_size_values,
-    n_walkers = 200,
-    workers = 2,  # Simulation-level parallelism
-    verbose = FALSE
-  ),
-  pattern = map(grid_size_values)  # Multiple simulations in parallel
-)
-```
-
-This nested parallelism provides maximum throughput when running multiple parameter combinations.
-
 ## Conclusion
 
-This analysis reveals three key patterns:
+This vignette demonstrates how step distributions vary across different simulation conditions. The key findings are:
 
 1. **Grid size scales linearly** with average path length
 2. **Walker order matters**: Early walkers explore longer paths
 3. **Termination dominance**: Boundaries terminate most walkers (80%+)
+4. **Progressive restriction**: Each quartile of walkers shows ~10-15% fewer steps than the previous
+5. **Black pixel accumulation**: Later walkers face increasing restrictions from accumulated black pixels
 
-Additionally, the **parallel execution analysis** shows:
-
-4. **Significant speedup**: 2 workers provide ~1.8-1.9x speedup
-5. **Efficiency trade-off**: More workers = higher speedup but lower efficiency
-6. **Grid size matters**: Larger grids benefit more from parallelization
-
-The `targets` framework makes this analysis:
-- **Reproducible**: Same results every run
-- **Efficient**: Cached computations
-- **Extensible**: Easy to add more conditions
-- **Parallel-ready**: Both pipeline and simulation-level parallelism
+These patterns provide insights into the dynamics of sequential random walk simulations and how grid occupancy affects walker behavior.
 
 ## Session Info
 
 ```{r session-info}
-#| eval: false
-
 sessionInfo()
 ```
