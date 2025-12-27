@@ -237,6 +237,14 @@ server <- function(input, output, session) {
       message(sprintf("Walkers: %d", input$n_walkers))
       message(sprintf("Black pixels: %d", sum(result$grid == 1)))
       message(sprintf("Elapsed time: %.2f seconds", elapsed))
+
+      # Run isolated pixels check ONCE after simulation (not on every render)
+      isolated_check <- find_isolated_pixels(result$grid, input$neighborhood)
+      if (length(isolated_check) > 0) {
+        message(sprintf("⚠️  Found %d isolated pixel(s)", length(isolated_check)))
+      } else {
+        message(sprintf("✅ Grid validation: No isolated pixels"))
+      }
       message(sprintf("==========================\n"))
 
       output$status <- renderText({
