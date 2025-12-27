@@ -1,5 +1,11 @@
 # randomwalk
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/JohnGavin/randomwalk/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JohnGavin/randomwalk/actions/workflows/R-CMD-check.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Project Status: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+<!-- badges: end -->
+
 Asynchronous Pixel Walking Simulation with Parallel Processing.
 
 ## 🚀 Quick Links
@@ -171,13 +177,21 @@ When using `workers > 0` with `sync_mode = "static"` (default), workers operate 
 ### **[Async Parallel Random Walks](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)** ⚡
 Interactive Shiny dashboard demonstrating **true async parallel processing** in WebAssembly. Uses mirai backend for parallel workers running entirely in-browser via WebR. Features real-time parameter adjustment, multiple visualization tabs, and complete simulation statistics - no R installation required.
 
+### **[Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)** ✨
+Full-featured showcase with all randomwalk capabilities including multiple visualizations, comprehensive statistics, debug information, and documentation integration.
+
+### **[Step Distribution Analysis](https://johngavin.github.io/randomwalk/articles/step_distribution_analysis.html)** 📊
+Comprehensive analysis of random walk step distributions, parallel execution performance benchmarks, and visualization of density plots conditional on grid size and worker count.
+
+### **[Telemetry and Pipeline Performance](https://johngavin.github.io/randomwalk/articles/telemetry.html)** 📈
+Pipeline performance metrics including code coverage analysis, longest-running targets, memory usage statistics, and network visualization of the targets dependency graph.
+
 ### Temporarily Disabled Vignettes
 
 The following vignettes are temporarily disabled (see [Issue #132](https://github.com/JohnGavin/randomwalk/issues/132)):
 
 - **Interactive Dashboard** (dashboard.html) - Service Worker errors, requires Shinylive/webR update
 - **Async/Parallel Dashboard** (dashboard_async.html) - ⚠️ **Use [Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html) instead** - Same Service Worker issues as dashboard
-- **Telemetry and Pipeline Statistics** (telemetry.html) - Missing target definitions in pipeline
 
 > **Note**: For async parallel dashboard functionality, use the [Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html) which includes all features from dashboard_async plus additional visualizations and statistics.
 
