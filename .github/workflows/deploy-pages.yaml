@@ -40,13 +40,15 @@ jobs:
 
       - name: Render vignettes (excluding telemetry)
         run: |
-          # Render vignettes that don't depend on external targets pipeline
+          # Force fresh render with cache refresh
           nix-shell --quiet default-ci.nix --run "
-            quarto render vignettes/articles/defensive_programming.qmd
-            quarto render vignettes/articles/step_distribution_analysis.qmd
-            quarto render vignettes/articles/dynamic_broadcasting.qmd
-            quarto render vignettes/articles/dashboard_comprehensive.qmd
+            quarto render vignettes/articles/defensive_programming.qmd --cache-refresh
+            quarto render vignettes/articles/step_distribution_analysis.qmd --cache-refresh
+            quarto render vignettes/articles/dynamic_broadcasting.qmd --cache-refresh
+            quarto render vignettes/articles/dashboard_comprehensive.qmd --cache-refresh
           "
+          # List rendered files to verify
+          ls -lh vignettes/articles/*.html
 
       - name: Build pkgdown site (reference + home)
         run: |
