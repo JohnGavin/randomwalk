@@ -285,29 +285,15 @@ list(
 ## Run Analysis
 
 ```{r run-simulations}
-#| cache: true
+# Load pre-computed simulations from targets
+# These are computed in _targets.R with set.seed(123) for reproducibility
+library(targets)
 
-# Define grid sizes
-grid_sizes <- c(20, 40, 60)
-
-# Run simulations
-set.seed(123)
-simulation_results <- map(grid_sizes, function(gs) {
-  run_simulation(
-    grid_size = gs,
-    n_walkers = 100,  # Reduced for vignette
-    neighborhood = "4-hood",
-    boundary = "terminate",
-    max_steps = 5000,
-    workers = 0,
-    verbose = FALSE
-  )
-})
+simulation_results <- tar_read(step_dist_sims)
+grid_sizes <- tar_read(step_dist_grid_sizes)
 ```
 
 ```{r extract-data}
-#| cache: true
-
 # Extract step data
 step_data_list <- map(simulation_results, extract_step_data)
 step_data_combined <- bind_rows(step_data_list)

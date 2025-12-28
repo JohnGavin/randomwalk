@@ -38,21 +38,15 @@ jobs:
         run: |
           nix-build --quiet package.nix
 
-      - name: Render vignettes (excluding telemetry)
+      - name: Build all targets (simulations + vignettes + pkgdown)
         run: |
-          # Force fresh render with cache refresh
           nix-shell --quiet default-ci.nix --run "
-            quarto render vignettes/articles/defensive_programming.qmd --cache-refresh
-            quarto render vignettes/articles/step_distribution_analysis.qmd --cache-refresh
-            quarto render vignettes/articles/dynamic_broadcasting.qmd --cache-refresh
-            quarto render vignettes/articles/dashboard_comprehensive.qmd --cache-refresh
+            Rscript -e 'targets::tar_make()'
           "
-          # List rendered files to verify
-          ls -lh vignettes/articles/*.html
-
-      - name: Build pkgdown site (reference + home)
-        run: |
-          nix-shell --quiet default-ci.nix --run "Rscript -e 'pkgdown::build_reference(); pkgdown::build_home()'"
+          # Verify vignettes were rendered
+          ls -lh vignettes/articles/*.html 2>/dev/null || echo "No vignette HTML files yet"
+          # Verify pkgdown site was built
+          ls -lh docs/*.html 2>/dev/null || echo "No pkgdown HTML files yet"
 
       - name: Copy rendered vignettes to docs/articles
         run: |

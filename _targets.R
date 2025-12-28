@@ -10,6 +10,7 @@ tar_option_set(
   packages = c(
     "devtools",  # For load_all() in Nix environment
     "dplyr",
+    "DT",        # For interactive sortable tables in vignettes
     "ggplot2",
     "logger",
     # fs loaded explicitly inside targets that need it (not in default-ci.nix)
@@ -405,9 +406,44 @@ list(
   # ============================================================================
 
   # ============================================================================
+  # Step Distribution Analysis Targets (Issue #169)
+  # ============================================================================
+
+  # Grid sizes for step distribution analysis
+  tar_target(
+    name = step_dist_grid_sizes,
+    command = c(20, 40, 60)
+  ),
+
+  # Run simulations for each grid size (dynamic branching)
+  tar_target(
+    name = step_dist_sims,
+    command = {
+      devtools::load_all()
+      logger::log_info(sprintf("Running step_dist simulation for grid_size=%d", step_dist_grid_sizes))
+      set.seed(123)  # For reproducibility
+      run_simulation(
+        grid_size = step_dist_grid_sizes,
+        n_walkers = 100,
+        neighborhood = "4-hood",
+        boundary = "terminate",
+        max_steps = 5000,
+        workers = 0,
+        verbose = FALSE
+      )
+    },
+    pattern = map(step_dist_grid_sizes),
+    iteration = "list"
+  ),
+
+  # ============================================================================
+  # End Step Distribution Analysis Targets
+  # ============================================================================
+
+  # ============================================================================
   # Vignette Rendering
   # ============================================================================
-  
+
   # Render dashboard vignettes using tar_quarto for reproducibility
   # This ensures dependencies are tracked and rebuilds happen only when needed
   
@@ -432,7 +468,12 @@ list(
 
   tarchetypes::tar_quarto(
     name = dynamic_broadcasting,
-    path = "vignettes/dynamic_broadcasting.qmd"
+    path = "vignettes/articles/dynamic_broadcasting.qmd"
+  ),
+
+  tarchetypes::tar_quarto(
+    name = step_distribution_analysis,
+    path = "vignettes/articles/step_distribution_analysis.qmd"
   ),
 
   # ============================================================================
@@ -480,8 +521,10 @@ list(
         }
       }
 
-      # Build articles index page manually
-      pkgdown::build_articles_index()
+      # NOTE: build_articles_index() fails with manually copied vignettes
+      # because pkgdown doesn't recognize tar_quarto-rendered articles.
+      # Articles are accessible via navbar menu instead (see _pkgdown.yml).
+      # pkgdown::build_articles_index()
 
       # Return docs/ as tracked output
       "docs/"

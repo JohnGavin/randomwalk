@@ -508,7 +508,7 @@ All statistics are generated automatically from the targets pipeline, ensuring c
 
 ## Session Info
 
-```{r session-info}
+```{r session-info-final}
 sessionInfo()
 ```
 
