@@ -19,9 +19,8 @@ home:
     href: articles/dashboard_comprehensive.html
   - text: Step Distribution Analysis
     href: articles/step_distribution_analysis.html
-  # Telemetry disabled - uses tar_meta() during pipeline execution (not supported)
-  # - text: Telemetry & Performance
-  #   href: articles/telemetry.html
+  - text: Telemetry & Performance
+    href: articles/telemetry.html
   - text: GitHub Repository
     href: https://github.com/JohnGavin/randomwalk
   - text: Project Wiki
@@ -48,9 +47,8 @@ navbar:
         href: articles/step_distribution_analysis.html
       - text: Defensive Programming Patterns
         href: articles/defensive_programming.html
-      # Telemetry disabled - uses tar_meta() during pipeline execution (not supported)
-      # - text: Telemetry and Pipeline Performance
-      #   href: articles/telemetry.html
+      - text: Telemetry and Pipeline Performance
+        href: articles/telemetry.html
 
 articles:
 - title: Interactive Shinylive Demonstrations
@@ -64,7 +62,7 @@ articles:
   contents:
   - step_distribution_analysis
   - defensive_programming
-  # telemetry disabled - uses tar_meta() during pipeline execution (not supported)
+  - telemetry
 
 footer:
   structure:

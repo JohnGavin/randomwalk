@@ -465,11 +465,12 @@ list(
   #   path = "vignettes/dashboard_async.qmd"
   # ),
 
-  # DISABLED: Telemetry vignette depends on telemetry_summary target (which uses tar_meta())
-  # tarchetypes::tar_quarto(
-  #   name = telemetry,
-  #   path = "vignettes/articles/telemetry.qmd"
-  # ),
+  # Telemetry vignette now calls tar_meta() directly (safe after pipeline completes)
+  tarchetypes::tar_quarto(
+    name = telemetry,
+    path = "vignettes/articles/telemetry.qmd",
+    quiet = FALSE
+  ),
 
   tarchetypes::tar_quarto(
     name = dynamic_broadcasting,
