@@ -187,12 +187,19 @@ run_simulation <- function(grid_size = 10,
       # Check termination conditions
       walker <- check_termination(walker, grid, neighborhood, boundary, max_steps)
 
-      # If terminated, make pixel black
-      if (!walker$active && walker$termination_reason != "hit_boundary") {
+      # If terminated with black neighbor, make pixel black to extend connected graph
+      # FIX FOR ISSUE #168: Only paint for "black_neighbor" terminations
+      # - "touched_black": Already black, don't repaint
+      # - "black_neighbor": Paint to extend connected graph ✅
+      # - "max_steps": Would create isolated pixel, skip ❌
+      # - "hit_boundary": Out of bounds, skip ❌
+      if (!walker$active && walker$termination_reason == "black_neighbor") {
         grid <- set_pixel_black(grid, walker$pos, boundary)
         logger::log_debug("Walker {walker$id} terminated: {walker$termination_reason} at ({walker$pos[1]}, {walker$pos[2]}) after {walker$steps} steps")
+      }
 
-        # Increment completed count
+      # Increment completed count for any termination
+      if (!walker$active) {
         completed_count <- completed_count + 1
 
         # Periodic validation based on completed walker count
