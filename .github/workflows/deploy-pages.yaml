@@ -34,22 +34,22 @@ jobs:
         run: |
           nix-build --quiet default-ci.nix
 
-      - name: Install randomwalk package
+      - name: Build randomwalk package
         run: |
-          nix-shell --quiet default-ci.nix --run "Rscript -e 'devtools::install()'"
+          nix-build --quiet package.nix
 
       - name: Build targets pipeline
         run: |
-          nix-shell --quiet default-ci.nix --run "Rscript -e 'targets::tar_make()'"
+          nix-shell --quiet package.nix --run "Rscript -e 'targets::tar_make()'"
 
       - name: Render vignettes with Quarto
         run: |
           # Only render vignettes that depend on targets (telemetry)
-          nix-shell --quiet default-ci.nix --run "quarto render vignettes/articles/telemetry.qmd"
+          nix-shell --quiet package.nix --run "quarto render vignettes/articles/telemetry.qmd"
 
       - name: Build pkgdown site
         run: |
-          nix-shell --quiet default-ci.nix --run "Rscript -e 'pkgdown::build_site()'"
+          nix-shell --quiet package.nix --run "Rscript -e 'pkgdown::build_site()'"
 
       - name: Upload pkgdown site as artifact
         uses: actions/upload-artifact@v4
