@@ -28,6 +28,7 @@ let
       munsell
       nanonext
       pkgdown
+      purrr
       quarto
       rcmdcheck
       rmarkdown
@@ -37,6 +38,7 @@ let
       tarchetypes
       targets
       testthat
+      tidyr
       visNetwork;
   };
       

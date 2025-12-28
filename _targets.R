@@ -13,9 +13,11 @@ tar_option_set(
     "DT",        # For interactive sortable tables in vignettes
     "ggplot2",
     "logger",
+    "purrr",     # For functional programming in vignettes
     # fs loaded explicitly inside targets that need it (not in default-ci.nix)
-    "pkgdown",  # For building website
-    "quarto"    # For rendering vignettes
+    "pkgdown",   # For building website
+    "quarto",    # For rendering vignettes
+    "tidyr"      # For data reshaping in vignettes
   ),
   format = "rds",
   workspace_on_error = TRUE
