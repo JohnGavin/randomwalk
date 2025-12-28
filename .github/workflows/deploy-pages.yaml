@@ -38,11 +38,11 @@ jobs:
         run: |
           nix-build --quiet package.nix
 
-      - name: Build pkgdown site (without targets for now)
+      - name: Build pkgdown reference docs only
         run: |
-          # TODO: Fix targets validation issue (fs package and others)
-          # For now, build site with existing vignettes only
-          nix-shell --quiet default-ci.nix --run "Rscript -e 'pkgdown::build_site()'"
+          # Build only reference docs (function documentation)
+          # Skip articles/vignettes to avoid rendering issues
+          nix-shell --quiet default-ci.nix --run "Rscript -e 'pkgdown::build_reference(); pkgdown::build_home()'"
 
       - name: Upload pkgdown site as artifact
         uses: actions/upload-artifact@v4
