@@ -48,9 +48,9 @@ jobs:
             quarto render vignettes/articles/dashboard_comprehensive.qmd
           "
 
-      - name: Build pkgdown site (reference + home + articles index)
+      - name: Build pkgdown site (reference + home)
         run: |
-          nix-shell --quiet default-ci.nix --run "Rscript -e 'pkgdown::build_reference(); pkgdown::build_home(); pkgdown::build_articles_index()'"
+          nix-shell --quiet default-ci.nix --run "Rscript -e 'pkgdown::build_reference(); pkgdown::build_home()'"
 
       - name: Copy rendered vignettes to docs/articles
         run: |
