@@ -38,11 +38,19 @@ jobs:
         run: |
           nix-build --quiet package.nix
 
-      - name: Build pkgdown reference docs only
+      - name: Render vignettes (excluding telemetry)
         run: |
-          # Build only reference docs (function documentation)
-          # Skip articles/vignettes to avoid rendering issues
-          nix-shell --quiet default-ci.nix --run "Rscript -e 'pkgdown::build_reference(); pkgdown::build_home()'"
+          # Render vignettes that don't depend on external targets pipeline
+          nix-shell --quiet default-ci.nix --run "
+            quarto render vignettes/articles/defensive_programming.qmd
+            quarto render vignettes/articles/step_distribution_analysis.qmd
+            quarto render vignettes/articles/dynamic_broadcasting.qmd
+            quarto render vignettes/articles/dashboard_comprehensive.qmd
+          "
+
+      - name: Build pkgdown site with rendered vignettes
+        run: |
+          nix-shell --quiet default-ci.nix --run "Rscript -e 'pkgdown::build_site()'"
 
       - name: Upload pkgdown site as artifact
         uses: actions/upload-artifact@v4
