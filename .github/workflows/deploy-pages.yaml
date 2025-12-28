@@ -11,7 +11,50 @@ permissions:
   repository-projects: read   # Needed for webR build
 
 jobs:
-  # First job: Build webR binaries
+  # First job: Build targets and pkgdown site
+  build-targets-and-site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: rstats-on-nix
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: johngavin
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Build Nix environment
+        run: |
+          nix-build --quiet default.nix
+
+      - name: Build targets pipeline
+        run: |
+          nix-shell --quiet --run "Rscript -e 'targets::tar_make()'"
+
+      - name: Render vignettes with Quarto
+        run: |
+          # Only render vignettes that depend on targets (telemetry)
+          nix-shell --quiet --run "quarto render vignettes/articles/telemetry.qmd"
+
+      - name: Build pkgdown site
+        run: |
+          nix-shell --quiet --run "Rscript -e 'pkgdown::build_site()'"
+
+      - name: Upload pkgdown site as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkgdown-site
+          path: docs/
+          retention-days: 1
+
+  # Second job: Build webR binaries
   build-webr:
     runs-on: ubuntu-latest
     steps:
@@ -46,21 +89,19 @@ jobs:
           path: _site/
           retention-days: 1
 
-  # Second job: Deploy pkgdown site + webR binaries together
+  # Third job: Deploy pkgdown site + webR binaries together
   deploy:
     runs-on: ubuntu-latest
-    needs: build-webr  # Wait for webR binaries to be built
+    needs: [build-targets-and-site, build-webr]  # Wait for both builds
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # NO BUILD - Pre-built locally!
-      # NO NIX - Not needed!
-      # NO QUARTO - Already rendered!
-      # NO BSLIB - No runtime file copying!
+      - name: Download pkgdown site
+        uses: actions/download-artifact@v4
+        with:
+          name: pkgdown-site
+          path: docs/
 
       - name: Download webR binaries
         uses: actions/download-artifact@v4
