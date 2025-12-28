@@ -34,16 +34,13 @@ jobs:
         run: |
           nix-build --quiet default-ci.nix
 
-      - name: Build randomwalk package
+      - name: Build randomwalk package (for verification and cachix)
         run: |
           nix-build --quiet package.nix
 
-      - name: Install randomwalk from source
-        run: |
-          nix-shell --quiet default-ci.nix --run "Rscript -e 'devtools::install(upgrade = \"never\", build_vignettes = FALSE, dependencies = FALSE)'"
-
       - name: Build targets pipeline
         run: |
+          # Targets uses devtools::load_all() which loads from source
           nix-shell --quiet default-ci.nix --run "Rscript -e 'targets::tar_make()'"
 
       - name: Render vignettes with Quarto
