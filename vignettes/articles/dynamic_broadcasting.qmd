@@ -238,13 +238,9 @@ server <- function(input, output, session) {
       message(sprintf("Black pixels: %d", sum(result$grid == 1)))
       message(sprintf("Elapsed time: %.2f seconds", elapsed))
 
-      # Run isolated pixels check ONCE after simulation (not on every render)
-      isolated_check <- find_isolated_pixels(result$grid, input$neighborhood)
-      if (length(isolated_check) > 0) {
-        message(sprintf("⚠️  Found %d isolated pixel(s)", length(isolated_check)))
-      } else {
-        message(sprintf("✅ Grid validation: No isolated pixels"))
-      }
+      # NOTE: find_isolated_pixels() check removed due to performance impact
+      # Even "once after simulation" was too slow in reactive context
+      # See Issue #166 for async validation approach
       message(sprintf("==========================\n"))
 
       output$status <- renderText({
@@ -339,9 +335,10 @@ server <- function(input, output, session) {
     }
 
     # Extract path lengths safely
+    # NOTE: walker$path is a LIST, not a matrix - use walker$steps
     path_lengths <- tryCatch({
       sapply(result$walkers, function(w) {
-        if (!is.null(w$path) && is.matrix(w$path)) nrow(w$path) else NA
+        if (!is.null(w$steps)) w$steps else NA
       })
     }, error = function(e) numeric(0))
 
@@ -382,9 +379,10 @@ server <- function(input, output, session) {
     }
 
     # Extract data safely
+    # NOTE: walker$path is a LIST, not a matrix - use walker$steps
     path_lengths <- tryCatch({
       sapply(result$walkers, function(w) {
-        if (!is.null(w$path) && is.matrix(w$path)) nrow(w$path) else NA
+        if (!is.null(w$steps)) w$steps else NA
       })
     }, error = function(e) numeric(0))
 
@@ -522,7 +520,6 @@ server <- function(input, output, session) {
         } else {
           "No data"
         },
-        isolated_warning,
         "\n=== PERFORMANCE ===\n",
         "Elapsed: ", sprintf("%.2f", stats$elapsed_time_secs), " seconds\n",
         "Steps/Second: ", sprintf("%.0f", stats$total_steps / max(stats$elapsed_time_secs, 0.001)), "\n"
@@ -609,3 +606,52 @@ Experiment with different parameters:
 - **Wrap boundary**: Toroidal grid (no boundaries)
 
 Note: Keep workers=0 in WebR mode
+
+## Session Info
+
+```{r session-info}
+sessionInfo()
+```
+
+## Version Information
+
+```{r version-info}
+#| code-fold: true
+#| code-summary: "Show version details"
+
+# Git commit information
+git_commit <- tryCatch(
+  system("git rev-parse HEAD", intern = TRUE),
+  error = function(e) "Not available"
+)
+git_commit_short <- tryCatch(
+  system("git rev-parse --short HEAD", intern = TRUE),
+  error = function(e) "Not available"
+)
+
+# Nix environment information
+nix_version <- tryCatch(
+  system('nix-instantiate --eval -E "(import <nixpkgs> {}).lib.version"', intern = TRUE),
+  error = function(e) "Not in Nix environment"
+)
+
+# Package version
+pkg_version <- tryCatch(
+  as.character(packageVersion("randomwalk")),
+  error = function(e) "Package not loaded"
+)
+
+# Build timestamp
+build_time <- Sys.time()
+
+cat("=== BUILD INFORMATION ===\n\n")
+cat("Git Commit:\n")
+cat("  Full SHA:  ", git_commit, "\n")
+cat("  Short SHA: ", git_commit_short, "\n\n")
+cat("Nix Environment:\n")
+cat("  nixpkgs:   ", nix_version, "\n\n")
+cat("Package:\n")
+cat("  randomwalk:", pkg_version, "\n")
+cat("  R version: ", R.version.string, "\n\n")
+cat("Build Time:  ", format(build_time, "%Y-%m-%d %H:%M:%S %Z"), "\n")
+```

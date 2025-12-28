@@ -175,6 +175,79 @@ After pushing, the following workflows run automatically:
 - Include session logs IN the PR, not after merge
 - Update documentation when adding/modifying features
 
+### Version Information in Vignettes
+
+**MANDATORY**: Every vignette (`.qmd` file) MUST include version tracking information at the end.
+
+Add these two sections after the main content, in this order:
+
+1. **Session Info Section**:
+   ```markdown
+   ## Session Info
+
+   ```{r session-info}
+   sessionInfo()
+   ```
+   ```
+
+2. **Version Information Section**:
+   ```markdown
+   ## Version Information
+
+   ```{r version-info}
+   #| code-fold: true
+   #| code-summary: "Show version details"
+
+   # Git commit information
+   git_commit <- tryCatch(
+     system("git rev-parse HEAD", intern = TRUE),
+     error = function(e) "Not available"
+   )
+   git_commit_short <- tryCatch(
+     system("git rev-parse --short HEAD", intern = TRUE),
+     error = function(e) "Not available"
+   )
+
+   # Nix environment information
+   nix_version <- tryCatch(
+     system('nix-instantiate --eval -E "(import <nixpkgs> {}).lib.version"', intern = TRUE),
+     error = function(e) "Not in Nix environment"
+   )
+
+   # Package version
+   pkg_version <- tryCatch(
+     as.character(packageVersion("randomwalk")),
+     error = function(e) "Package not loaded"
+   )
+
+   # Build timestamp
+   build_time <- Sys.time()
+
+   cat("=== BUILD INFORMATION ===\n\n")
+   cat("Git Commit:\n")
+   cat("  Full SHA:  ", git_commit, "\n")
+   cat("  Short SHA: ", git_commit_short, "\n\n")
+   cat("Nix Environment:\n")
+   cat("  nixpkgs:   ", nix_version, "\n\n")
+   cat("Package:\n")
+   cat("  randomwalk:", pkg_version, "\n")
+   cat("  R version: ", R.version.string, "\n\n")
+   cat("Build Time:  ", format(build_time, "%Y-%m-%d %H:%M:%S %Z"), "\n")
+   ```
+   ```
+
+**Purpose**: This enables users to:
+- Identify exact build version when reporting issues
+- Reproduce builds with specific git commits
+- Track Nix environment consistency
+- Debug environment-specific problems
+
+**When to add**:
+- When creating new vignettes
+- When modifying existing vignettes (add if missing)
+
+**Applies to**: ALL projects using Nix + R package development workflow.
+
 ### Git Configuration Best Practices
 
 **One-time global setup**: Run `usethis::git_vaccinate()` to add common temporary files to your global `.gitignore`:
