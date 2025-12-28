@@ -52,67 +52,33 @@ This vignette provides a **simplified, focused demonstration** of synchronous ra
 #| viewerHeight: 900
 
 # ============================================================================
-# Package Installation (WebR - Synchronous Mode)
+# FAST Package Loading (Pre-built webR binaries from GitHub Pages)
 # ============================================================================
-# Note: Async parallel processing disabled in WebR due to mirai/nanonext
-# compatibility issues. The app runs in synchronous mode (workers=0).
+# Packages are pre-built by GitHub Actions and served from GitHub Pages
+# No compilation needed - just load directly
 
-cat("\n=== SYNC SEQUENTIAL SETUP (dynamic_broadcasting.qmd) ===\n")
-cat("Timestamp:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
+cat("\n=== DASHBOARD SETUP (OPTIMIZED) ===\n")
+cat("Loading pre-built packages from GitHub Pages...\n\n")
 
-cat("Installing randomwalk...\n")
-cat("Note: WebR runs in sync sequential mode (workers=0)\n\n")
-tryCatch({
-  webr::install(
-    "randomwalk",
-    repos = c(
-      "https://johngavin.github.io/randomwalk",  # Fast: GitHub Pages WASM repo (5-10 min)
-      "https://johngavin.r-universe.dev",        # Fallback: R-Universe (1-5 hours)
-      "https://repo.r-wasm.org"                  # Standard webR packages
-    )
-  )
-  cat("✅ randomwalk installed\n")
-}, error = function(e) {
-  cat("❌ ERROR installing randomwalk:", e$message, "\n")
-})
+# Configure repository ONCE at startup
+options(repos = c(
+  "https://johngavin.github.io/randomwalk",  # Our custom webR repo
+  "https://repo.r-wasm.org"                   # Standard webR packages
+))
 
-cat("\nInstalling/loading required packages...\n")
-# shiny is usually pre-installed in webR, but load it explicitly
+# Load packages directly - NO webr::install() needed!
 library(shiny)
-cat("✅ shiny loaded\n")
+cat("✅ shiny\n")
 
-# Install ggplot2 dependencies and ggplot2
-tryCatch({
-  library(ggplot2)
-  cat("✅ ggplot2 loaded\n")
-}, error = function(e) {
-  cat("⚠️  ggplot2 not found, installing dependencies...\n")
-  # Install munsell first (required ggplot2 dependency)
-  webr::install("munsell", repos = "https://repo.r-wasm.org")
-  cat("✅ munsell installed\n")
-  # Now install ggplot2
-  webr::install("ggplot2", repos = "https://repo.r-wasm.org")
-  library(ggplot2)
-  cat("✅ ggplot2 installed and loaded\n")
-})
+library(ggplot2)
+cat("✅ ggplot2\n")
 
-# Note: Async parallel processing currently not supported in WebR
-# Issue: mirai/nanonext have unresolved compatibility issues in WebAssembly
-# The app will run in synchronous mode (workers=0) in WebR
-cat("⚠️  Running in WebR - async parallel processing disabled\n")
-cat("   Reason: mirai/nanonext compatibility issues in WebAssembly\n")
-cat("   Using synchronous mode (workers=0) for browser compatibility\n")
+library(randomwalk)
+cat("✅ randomwalk (v", as.character(packageVersion("randomwalk")), ")\n", sep = "")
+
+cat("\n⚠️  WebR Mode: Synchronous only (workers=0)\n")
+cat("   Reason: mirai/nanonext not available in WebAssembly\n")
 cat("   Note: Async works in native R with crew backend\n")
-
-tryCatch({
-  library(randomwalk)
-  cat("✅ randomwalk loaded\n")
-  cat("Available functions:", paste(head(ls("package:randomwalk"), 10), collapse=", "), "\n")
-}, error = function(e) {
-  cat("❌ ERROR loading randomwalk:", e$message, "\n")
-  cat("Packages available:\n")
-  print(installed.packages()[, c("Package", "Version")])
-})
 
 cat("\n=== SETUP COMPLETE ===\n\n")
 

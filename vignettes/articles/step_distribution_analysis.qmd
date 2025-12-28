@@ -326,9 +326,18 @@ termination_summary_display <- termination_summary %>%
 # Create interactive sortable table with DT::datatable
 DT::datatable(
   termination_summary_display,
-  caption = "Step statistics by grid size and termination reason (sortable)",
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: left; font-size: 14px;",
+    htmltools::HTML(
+      "Step statistics by grid size and termination reason<br>",
+      "<em style='font-size: 12px; color: #666;'>",
+      "Multi-column sort: Hold Shift and click column headers to add secondary/tertiary sort levels",
+      "</em>"
+    )
+  ),
   options = list(
     pageLength = 20,
+    orderMulti = TRUE,  # Enable multi-column sorting (Shift+click)
     order = list(
       list(1, 'asc'),  # Sort by termination_reason (column index 1) first
       list(0, 'asc')   # Then by grid_size (column index 0)
@@ -364,9 +373,18 @@ walker_order_summary_display <- walker_order_summary %>%
 # Create interactive sortable table
 DT::datatable(
   walker_order_summary_display,
-  caption = "Step statistics by walker cohort and termination reason (sortable, deciles)",
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: left; font-size: 14px;",
+    htmltools::HTML(
+      "Step statistics by walker cohort and termination reason (deciles)<br>",
+      "<em style='font-size: 12px; color: #666;'>",
+      "Multi-column sort: Hold Shift and click column headers to add secondary/tertiary sort levels",
+      "</em>"
+    )
+  ),
   options = list(
     pageLength = 30,
+    orderMulti = TRUE,  # Enable multi-column sorting (Shift+click)
     order = list(
       list(1, 'asc'),  # Sort by termination_reason first
       list(0, 'asc'),  # Then by grid_size
@@ -529,39 +547,22 @@ sessionInfo()
 #| code-fold: true
 #| code-summary: "Show version details"
 
-# Git commit information
-git_commit <- tryCatch(
-  system("git rev-parse HEAD", intern = TRUE),
-  error = function(e) "Not available"
-)
-git_commit_short <- tryCatch(
-  system("git rev-parse --short HEAD", intern = TRUE),
-  error = function(e) "Not available"
-)
+library(gert)
+library(dplyr)
 
-# Nix environment information
-nix_version <- tryCatch(
-  system('nix-instantiate --eval -E "(import <nixpkgs> {}).lib.version"', intern = TRUE),
-  error = function(e) "Not in Nix environment"
-)
+get_build_info <- function() {
+  tibble::tibble(
+    Component = c("Git Commit", "Branch", "Package Version", "R Version", "Build Time"),
+    Value = c(
+      tryCatch(substr(git_log(max = 1)$commit, 1, 7), error = function(e) "N/A"),
+      tryCatch(git_branch(), error = function(e) "N/A"),
+      tryCatch(as.character(packageVersion("randomwalk")), error = function(e) "N/A"),
+      R.version.string,
+      format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")
+    )
+  )
+}
 
-# Package version
-pkg_version <- tryCatch(
-  as.character(packageVersion("randomwalk")),
-  error = function(e) "Package not loaded"
-)
-
-# Build timestamp
-build_time <- Sys.time()
-
-cat("=== BUILD INFORMATION ===\n\n")
-cat("Git Commit:\n")
-cat("  Full SHA:  ", git_commit, "\n")
-cat("  Short SHA: ", git_commit_short, "\n\n")
-cat("Nix Environment:\n")
-cat("  nixpkgs:   ", nix_version, "\n\n")
-cat("Package:\n")
-cat("  randomwalk:", pkg_version, "\n")
-cat("  R version: ", R.version.string, "\n\n")
-cat("Build Time:  ", format(build_time, "%Y-%m-%d %H:%M:%S %Z"), "\n")
+get_build_info() %>%
+  knitr::kable(caption = "Build Information", align = c("l", "l"))
 ```
