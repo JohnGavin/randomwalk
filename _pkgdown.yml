@@ -52,29 +52,17 @@ navbar:
 
 articles:
 - title: Interactive Shinylive Demonstrations
-  desc: >
-    Browser-based interactive random walk simulations powered by WebR and Shinylive.
+  desc: Browser-based interactive random walk simulations powered by WebR and Shinylive
   contents:
   - dynamic_broadcasting
-    desc: >
-      Real-time visualization of synchronous sequential random walks with live parameter controls.
   - dashboard_comprehensive
-    desc: >
-      Full-featured dashboard combining sync/async modes, multiple visualizations, and advanced telemetry.
 
 - title: Analysis and Documentation
-  desc: >
-    In-depth analysis, performance metrics, and development best practices.
+  desc: In-depth analysis, performance metrics, and development best practices
   contents:
   - step_distribution_analysis
-    desc: >
-      Statistical analysis of walker step distributions using targets pipeline with sortable tables and decile breakdowns.
   - defensive_programming
-    desc: >
-      Defensive programming patterns, validation strategies, and error handling examples from package development.
   - telemetry
-    desc: >
-      Targets pipeline telemetry, performance metrics, code coverage analysis, and build timing visualizations.
 
 footer:
   structure:
