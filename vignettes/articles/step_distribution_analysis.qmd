@@ -34,7 +34,7 @@ knitr::opts_chunk$set(
 ```{r packages}
 # Load development version of randomwalk
 if (!requireNamespace("randomwalk", quietly = TRUE)) {
-  devtools::load_all(here::here())
+  devtools::load_all(".")  # Use current directory, don't need 'here' package
 }
 
 library(randomwalk)
