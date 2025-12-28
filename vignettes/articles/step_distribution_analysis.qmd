@@ -42,6 +42,7 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(purrr)
+library(DT)  # For interactive sortable tables
 ```
 
 ## Targets Pipeline
@@ -97,14 +98,23 @@ analyze_by_termination <- function(step_data) {
 #' Analyze step distributions by walker order
 #'
 #' @param step_data Data frame from extract_step_data()
+#' @param n_groups Number of percentile groups (default 10 for deciles)
 #' @return Summary statistics by walker percentile bins
-analyze_by_walker_order <- function(step_data) {
+analyze_by_walker_order <- function(step_data, n_groups = 10) {
+  # Create percentile breaks (e.g., 10 groups = deciles: 0-10%, 10-20%, ..., 90-100%)
+  breaks <- seq(0, 100, length.out = n_groups + 1)
+
+  # Create labels for groups
+  labels <- sapply(seq_len(n_groups), function(i) {
+    sprintf("%d-%d%%", breaks[i], breaks[i + 1])
+  })
+
   step_data %>%
     mutate(
       walker_group = cut(
         walker_percentile,
-        breaks = c(0, 25, 50, 75, 100),
-        labels = c("First 25%", "25-50%", "50-75%", "Last 25%"),
+        breaks = breaks,
+        labels = labels,
         include.lowest = TRUE
       )
     ) %>%
@@ -130,7 +140,8 @@ plot_step_distributions <- function(step_data) {
       title = "Distribution of Steps per Walker",
       subtitle = "By grid size and termination reason",
       x = "Number of Steps",
-      y = "Count"
+      y = "Count",
+      caption = "Histogram shows frequency distribution of walker path lengths. Larger grids show higher step counts."
     ) +
     theme_minimal() +
     theme(legend.position = "bottom")
@@ -147,10 +158,11 @@ plot_steps_by_order <- function(step_data) {
     facet_wrap(~grid_size, scales = "free", ncol = 2) +
     scale_color_brewer(palette = "Set2", name = "Termination") +
     labs(
-      title = "Steps vs Walker Order",
+      title = "Steps vs Walker Order Percentile",
       subtitle = "Do early vs late walkers behave differently?",
-      x = "Walker Order (creation sequence)",
-      y = "Number of Steps"
+      x = "Walker Order Percentile (e.g., 50% = 50th walker out of 100)",
+      y = "Number of Steps",
+      caption = "Each point represents one walker. For 100 walkers, 50% corresponds to the 50th walker created."
     ) +
     theme_minimal() +
     theme(legend.position = "bottom")
@@ -172,10 +184,11 @@ plot_steps_by_percentile <- function(summary_data) {
     facet_wrap(~grid_size, scales = "free_y", ncol = 2) +
     scale_fill_brewer(palette = "Set2", name = "Termination") +
     labs(
-      title = "Average Steps by Walker Cohort",
-      subtitle = "Comparing early vs late walkers in simulation",
+      title = "Average Steps by Walker Cohort (Deciles)",
+      subtitle = "Comparing walker performance across creation order percentiles",
       x = "Walker Percentile Group",
-      y = "Mean Steps"
+      y = "Mean Steps",
+      caption = "Default shows 10 groups (deciles). Each bar represents walkers in that percentile range."
     ) +
     theme_minimal() +
     theme(
@@ -310,25 +323,77 @@ head(step_data_combined, 10)
 ```{r termination-summary}
 termination_summary <- analyze_by_termination(step_data_combined)
 
-termination_summary %>%
-  arrange(grid_size, termination_reason) %>%
-  knitr::kable(
-    digits = 1,
-    caption = "Step statistics by grid size and termination reason"
+# Add normalized columns (steps per grid unit)
+termination_summary_display <- termination_summary %>%
+  mutate(
+    mean_steps_per_grid = mean_steps / grid_size,
+    median_steps_per_grid = median_steps / grid_size
+  ) %>%
+  # Reorder columns to put normalized after raw
+  select(
+    grid_size, termination_reason, n_walkers,
+    mean_steps, mean_steps_per_grid,
+    median_steps, median_steps_per_grid,
+    everything()
   )
+
+# Create interactive sortable table with DT::datatable
+DT::datatable(
+  termination_summary_display,
+  caption = "Step statistics by grid size and termination reason (sortable)",
+  options = list(
+    pageLength = 20,
+    order = list(
+      list(1, 'asc'),  # Sort by termination_reason (column index 1) first
+      list(0, 'asc')   # Then by grid_size (column index 0)
+    ),
+    columnDefs = list(
+      list(className = 'dt-right', targets = 2:ncol(termination_summary_display)-1)
+    )
+  ),
+  rownames = FALSE
+) %>%
+  DT::formatRound(columns = c('mean_steps', 'median_steps', 'sd_steps', 'mean_steps_per_grid', 'median_steps_per_grid'), digits = 1) %>%
+  DT::formatRound(columns = c('min_steps', 'max_steps', 'q25_steps', 'q75_steps'), digits = 0)
 ```
 
 ### Summary Statistics by Walker Order
 
 ```{r walker-order-summary}
-walker_order_summary <- analyze_by_walker_order(step_data_combined)
+# Use deciles (10 groups) by default
+walker_order_summary <- analyze_by_walker_order(step_data_combined, n_groups = 10)
 
-walker_order_summary %>%
-  arrange(grid_size, walker_group, termination_reason) %>%
-  knitr::kable(
-    digits = 1,
-    caption = "Step statistics by walker cohort and termination reason"
+# Add normalized columns
+walker_order_summary_display <- walker_order_summary %>%
+  mutate(
+    mean_steps_per_grid = mean_steps / grid_size,
+    median_steps_per_grid = median_steps / grid_size
+  ) %>%
+  select(
+    grid_size, termination_reason, walker_group, n_walkers,
+    mean_steps, mean_steps_per_grid,
+    median_steps, median_steps_per_grid
   )
+
+# Create interactive sortable table
+DT::datatable(
+  walker_order_summary_display,
+  caption = "Step statistics by walker cohort and termination reason (sortable, deciles)",
+  options = list(
+    pageLength = 30,
+    order = list(
+      list(1, 'asc'),  # Sort by termination_reason first
+      list(0, 'asc'),  # Then by grid_size
+      list(2, 'asc')   # Then by walker_group
+    ),
+    columnDefs = list(
+      list(className = 'dt-right', targets = 3:ncol(walker_order_summary_display)-1)
+    )
+  ),
+  rownames = FALSE
+) %>%
+  DT::formatRound(columns = c('mean_steps', 'median_steps', 'mean_steps_per_grid', 'median_steps_per_grid'), digits = 1) %>%
+  DT::formatRound(columns = 'n_walkers', digits = 0)
 ```
 
 ### Step Distribution Histograms
@@ -373,16 +438,22 @@ plot_steps_by_percentile(walker_order_summary)
 ### Grid Size Effects
 
 ```{r grid-size-effect}
-termination_summary %>%
+grid_size_summary <- termination_summary %>%
   group_by(grid_size) %>%
   summarise(
     overall_mean = weighted.mean(mean_steps, n_walkers),
     overall_median = weighted.mean(median_steps, n_walkers),
     .groups = "drop"
   ) %>%
+  mutate(
+    overall_mean_per_grid = overall_mean / grid_size,
+    overall_median_per_grid = overall_median / grid_size
+  )
+
+grid_size_summary %>%
   knitr::kable(
-    digits = 1,
-    caption = "Overall step statistics by grid size"
+    digits = 2,
+    caption = "Overall step statistics by grid size (with normalized columns)"
   )
 ```
 
@@ -392,28 +463,37 @@ termination_summary %>%
 ### Walker Order Effects
 
 ```{r order-effect}
-walker_order_summary %>%
+order_effect_summary <- walker_order_summary %>%
   group_by(walker_group) %>%
   summarise(
     avg_mean_steps = mean(mean_steps),
     avg_median_steps = mean(median_steps),
     .groups = "drop"
-  ) %>%
+  )
+
+order_effect_summary %>%
   knitr::kable(
     digits = 1,
-    caption = "Step statistics by walker cohort (averaged across grid sizes)"
+    caption = "Step statistics by walker cohort (averaged across grid sizes and termination reasons)"
   )
+
+# Calculate actual percentage difference between first and last deciles
+first_decile_mean <- order_effect_summary$avg_mean_steps[1]
+last_decile_mean <- order_effect_summary$avg_mean_steps[nrow(order_effect_summary)]
+pct_diff <- round((first_decile_mean - last_decile_mean) / last_decile_mean * 100, 0)
 ```
 
-- **First walkers**: ~50% more steps than last walkers
-- **Progressive decline**: Each quartile shows decreasing path lengths
-- **Mechanism**: Black pixel accumulation restricts later walkers
+- **Walker order effect**: First decile (0-10%) averages `r round(first_decile_mean, 1)` steps vs last decile (90-100%) with `r round(last_decile_mean, 1)` steps (~`r pct_diff`% difference)
+- **Trend**: Generally shows declining path lengths from early to late walkers, though not perfectly monotonic across all deciles
+- **Mechanism**: Black pixel accumulation restricts movement options for later walkers
 
 ### Termination Reason Effects
 
+**Note**: Statistics aggregated across ALL grid sizes (20×20, 40×40, 60×60).
+
 ```{r termination-effect}
-# Compare termination reasons across all conditions
-termination_summary %>%
+# Compare termination reasons across all grid sizes and walkers
+termination_effect_summary <- termination_summary %>%
   group_by(termination_reason) %>%
   summarise(
     total_walkers = sum(n_walkers),
@@ -423,26 +503,31 @@ termination_summary %>%
   ) %>%
   mutate(
     proportion = total_walkers / sum(total_walkers)
-  ) %>%
+  )
+
+termination_effect_summary %>%
   knitr::kable(
     digits = 3,
-    caption = "Overall statistics by termination reason"
+    caption = "Overall statistics by termination reason (across all grid sizes)"
   )
 ```
 
-- **Boundary**: Most common, longest paths
-- **Black neighbor**: Less common, shorter paths
-- **Implication**: Most walkers find boundaries before encountering black pixels
+- **Boundary terminations**: Most common (`r round(termination_effect_summary$proportion[termination_effect_summary$termination_reason == "hit_boundary"]*100, 0)`% of walkers), moderate path lengths
+- **Black neighbor terminations**: Less common (`r round(termination_effect_summary$proportion[termination_effect_summary$termination_reason == "black_neighbor"]*100, 0)`% of walkers), varying path lengths
+- **Max steps terminations**: Walkers that exceeded safety limit without finding termination condition
+- **Implication**: Most walkers encounter grid boundaries before accumulating enough black pixels to create connected patterns
 
 ## Conclusion
 
-This vignette demonstrates how step distributions vary across different simulation conditions. The key findings are:
+This vignette demonstrates how step distributions vary across different simulation conditions using decile-based analysis (10 percentile groups) for fine-grained insights. The key findings are:
 
-1. **Grid size scales linearly** with average path length
-2. **Walker order matters**: Early walkers explore longer paths
-3. **Termination dominance**: Boundaries terminate most walkers (80%+)
-4. **Progressive restriction**: Each quartile of walkers shows ~10-15% fewer steps than the previous
-5. **Black pixel accumulation**: Later walkers face increasing restrictions from accumulated black pixels
+1. **Grid size scaling**: Mean steps scales roughly linearly with grid size (normalized columns show steps/grid_size ratios)
+2. **Walker order matters**: Early walkers (first decile) explore significantly longer paths than late walkers (last decile)
+3. **Termination dominance**: Boundaries terminate most walkers, reflecting sparse grid occupancy
+4. **Decile-level trends**: Analysis reveals nuanced patterns across 10 percentile groups, showing gradual progression rather than sharp quartile boundaries
+5. **Black pixel accumulation**: Later walkers face increasing restrictions from accumulated black pixels, though effect varies by grid size and termination type
+
+**Interactive features**: Sortable DataTables allow exploration of results by clicking column headers. Normalized columns (steps/grid_size) facilitate cross-grid comparisons.
 
 These patterns provide insights into the dynamics of sequential random walk simulations and how grid occupancy affects walker behavior.
 
