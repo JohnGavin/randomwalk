@@ -476,7 +476,8 @@ list(
 
   tarchetypes::tar_quarto(
     name = step_distribution_analysis,
-    path = "vignettes/articles/step_distribution_analysis.qmd"
+    path = "vignettes/articles/step_distribution_analysis.qmd",
+    quiet = FALSE  # Show quarto errors for debugging
   ),
 
   # ============================================================================
