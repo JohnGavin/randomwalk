@@ -208,7 +208,8 @@ server <- function(input, output, session) {
         max_steps = input$max_steps,
         workers = input$workers,  # Auto-detects backend (mirai in WebR)
         sync_mode = "static",     # Grid snapshots (dynamic is Issue #130)
-        verbose = FALSE
+        verbose = FALSE,
+        validate_percent = 0  # CRITICAL: Disable periodic validation (causes 100-1000x slowdown in WebR)
       )
 
       end_time <- Sys.time()
