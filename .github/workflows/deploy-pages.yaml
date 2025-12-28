@@ -34,6 +34,10 @@ jobs:
         run: |
           nix-build --quiet default-ci.nix
 
+      - name: Install randomwalk package
+        run: |
+          nix-shell --quiet default-ci.nix --run "Rscript -e 'devtools::install()'"
+
       - name: Build targets pipeline
         run: |
           nix-shell --quiet default-ci.nix --run "Rscript -e 'targets::tar_make()'"
