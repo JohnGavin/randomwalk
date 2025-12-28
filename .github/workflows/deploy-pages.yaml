@@ -44,8 +44,15 @@ jobs:
 
       - name: Build targets pipeline
         run: |
-          # Targets uses devtools::load_all() which loads from source
-          nix-shell --quiet default-ci.nix --run "Rscript -e 'targets::tar_make(reporter = \"verbose\")'"
+          # Run only quick metadata targets first to verify targets works
+          # Skip expensive simulation and coverage targets
+          nix-shell --quiet default-ci.nix --run "Rscript -e '
+            targets::tar_make(
+              names = c(\"package_info\", \"git_summary\", \"session_info\"),
+              reporter = \"verbose\",
+              callr_function = NULL
+            )
+          '"
 
       - name: Render vignettes with Quarto
         run: |
