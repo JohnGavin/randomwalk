@@ -538,13 +538,69 @@ list(
   tar_target(
     name = telemetry_summary,
     command = {
-      # Dummy summary to avoid tar_meta() error during pipeline run
-      data.frame(
-        name = "telemetry_disabled",
-        time_formatted = "0.00",
-        memory_mb = 0,
-        status = "skipped"
-      )
+      library(targets)
+      library(dplyr)
+
+      # Get metadata from targets
+      meta <- tar_meta() %>%
+        filter(!is.na(seconds)) %>%
+        mutate(
+          time_seconds = as.numeric(seconds),
+          time_formatted = sprintf("%.2f", time_seconds),
+          memory_mb = as.numeric(bytes) / (1024^2),
+          status = "completed"
+        ) %>%
+        select(name, time_formatted, time_seconds, memory_mb, status)
+
+      meta
+    }
+  ),
+
+  # 11. Pipeline timing visualization
+  tar_target(
+    name = plot_pipeline_timing,
+    command = {
+      library(ggplot2)
+      library(dplyr)
+
+      telemetry_summary %>%
+        arrange(desc(time_seconds)) %>%
+        head(20) %>%
+        mutate(name = reorder(name, time_seconds)) %>%
+        ggplot(aes(x = name, y = time_seconds)) +
+        geom_col(fill = "steelblue", alpha = 0.8) +
+        coord_flip() +
+        labs(
+          title = "Top 20 Longest Running Targets",
+          subtitle = "Computation time distribution",
+          x = "Target Name",
+          y = "Computation Time (seconds)"
+        ) +
+        theme_minimal()
+    }
+  ),
+
+  # 12. Pipeline memory visualization
+  tar_target(
+    name = plot_pipeline_memory,
+    command = {
+      library(ggplot2)
+      library(dplyr)
+
+      telemetry_summary %>%
+        arrange(desc(memory_mb)) %>%
+        head(20) %>%
+        mutate(name = reorder(name, memory_mb)) %>%
+        ggplot(aes(x = name, y = memory_mb)) +
+        geom_col(fill = "coral", alpha = 0.8) +
+        coord_flip() +
+        labs(
+          title = "Top 20 Memory-Intensive Targets",
+          subtitle = "Memory usage distribution",
+          x = "Target Name",
+          y = "Memory (MB)"
+        ) +
+        theme_minimal()
     }
   )
 )
