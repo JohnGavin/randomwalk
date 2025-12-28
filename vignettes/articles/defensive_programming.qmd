@@ -39,7 +39,7 @@ This vignette demonstrates defensive programming patterns used in the `randomwal
 ## Example: Grid Size Validation
 
 ```{r grid-validation}
-#' Validate grid size parameter
+#' Validate grid size parameter (using stopifnot for conciseness)
 #'
 #' @param grid_size Integer grid dimension
 #' @return Validated grid_size or error
@@ -48,46 +48,46 @@ This vignette demonstrates defensive programming patterns used in the `randomwal
 #' validate_grid_size(-5)   # Error: must be positive
 #' validate_grid_size(2.5)  # Error: must be integer
 validate_grid_size <- function(grid_size) {
-  # Check type
-  if (!is.numeric(grid_size)) {
-    stop(
-      "grid_size must be numeric, got: ", class(grid_size)[1],
-      call. = FALSE
-    )
-  }
+  stopifnot(
+    "grid_size must be numeric" = is.numeric(grid_size),
+    "grid_size must be an integer" = grid_size == as.integer(grid_size),
+    "grid_size must be positive" = grid_size >= 1
+  )
 
-  # Check integer
-  if (grid_size != as.integer(grid_size)) {
-    stop(
-      "grid_size must be an integer, got: ", grid_size,
-      call. = FALSE
-    )
-  }
-
-  # Check positive
-  if (grid_size < 1) {
-    stop(
-      "grid_size must be positive, got: ", grid_size,
-      call. = FALSE
-    )
-  }
-
-  # Check reasonable size
   if (grid_size > 1000) {
-    warning(
-      "Large grid_size (", grid_size, ") may cause performance issues. ",
-      "Consider using grid_size <= 500 for interactive use.",
-      call. = FALSE
-    )
+    cli::cli_warn(c(
+      "!" = "Large grid_size ({grid_size}) may cause performance issues.",
+      "i" = "Consider using grid_size <= 500 for interactive use."
+    ))
+  }
+
+  as.integer(grid_size)
+}
+
+# Alternative using cli package (tidyverse style)
+validate_grid_size_cli <- function(grid_size) {
+  if (!is.numeric(grid_size) || grid_size != as.integer(grid_size) || grid_size < 1) {
+    cli::cli_abort(c(
+      "x" = "Invalid {.arg grid_size}: {.val {grid_size}}",
+      "i" = "Must be a positive integer"
+    ))
+  }
+
+  if (grid_size > 1000) {
+    cli::cli_warn(c(
+      "!" = "Large grid_size ({grid_size}) may affect performance",
+      "i" = "Consider grid_size <= 500 for interactive use"
+    ))
   }
 
   as.integer(grid_size)
 }
 ```
 
-**Why This Works:**
-- Type check prevents crashes from wrong input types
-- Range checks catch invalid values early
+**Why This Approach is Better:**
+- **`stopifnot()`**: Concise, avoids repetitive if statements, named messages show which condition failed
+- **`cli` package**: Tidyverse-style formatting with styled text (`{.arg}`, `{.val}`), bullet points for clarity
+- **Both approaches**: Reduce code duplication, improve readability, consistent error formatting
 - Performance warnings help users avoid slow operations
 - `call. = FALSE` removes confusing stack traces from errors
 
