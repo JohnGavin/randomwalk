@@ -12,7 +12,7 @@ tar_option_set(
     "dplyr",
     "ggplot2",
     "logger",
-    "fs",       # Added for directory and file operations
+    # fs loaded explicitly inside targets that need it (not in default-ci.nix)
     "pkgdown",  # For building website
     "quarto"    # For rendering vignettes
   ),
