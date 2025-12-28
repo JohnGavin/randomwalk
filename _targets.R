@@ -211,40 +211,42 @@ list(
   ),
 
   # 9. Code coverage analysis (Issue #160)
-  tar_target(
-    name = code_coverage,
-    command = {
-      library(covr)
-      devtools::load_all()  # Load package in Nix environment
-      logger::log_info("Generating code coverage report")
-
-      # Generate coverage
-      coverage <- package_coverage()
-
-      # Calculate overall percentage
-      overall_pct <- percent_coverage(coverage)
-
-      # Create file summary
-      file_coverage <- tidy(coverage)
-
-      file_summary <- file_coverage %>%
-        group_by(filename) %>%
-        summarise(
-          lines_total = n(),
-          lines_covered = sum(value > 0),
-          coverage_pct = (lines_covered / lines_total) * 100,
-          .groups = "drop"
-        ) %>%
-        arrange(desc(coverage_pct))
-
-      # Return structured coverage data
-      list(
-        overall_pct = overall_pct,
-        file_summary = file_summary,
-        coverage_obj = coverage
-      )
-    }
-  ),
+  # DISABLED: Causes "error reading from connection" in both local and CI environments
+  # TODO: Debug covr package_coverage() connection error
+  # tar_target(
+  #   name = code_coverage,
+  #   command = {
+  #     library(covr)
+  #     devtools::load_all()  # Load package in Nix environment
+  #     logger::log_info("Generating code coverage report")
+  #
+  #     # Generate coverage
+  #     coverage <- package_coverage()
+  #
+  #     # Calculate overall percentage
+  #     overall_pct <- percent_coverage(coverage)
+  #
+  #     # Create file summary
+  #     file_coverage <- tidy(coverage)
+  #
+  #     file_summary <- file_coverage %>%
+  #       group_by(filename) %>%
+  #       summarise(
+  #         lines_total = n(),
+  #         lines_covered = sum(value > 0),
+  #         coverage_pct = (lines_covered / lines_total) * 100,
+  #         .groups = "drop"
+  #       ) %>%
+  #       arrange(desc(coverage_pct))
+  #
+  #     # Return structured coverage data
+  #     list(
+  #       overall_pct = overall_pct,
+  #       file_summary = file_summary,
+  #       coverage_obj = coverage
+  #     )
+  #   }
+  # ),
 
   # ============================================================================
   # Dynamic Broadcasting Simulations (Issue #51)
@@ -461,10 +463,11 @@ list(
   #   path = "vignettes/dashboard_async.qmd"
   # ),
 
-  tarchetypes::tar_quarto(
-    name = telemetry,
-    path = "vignettes/articles/telemetry.qmd"
-  ),
+  # DISABLED: Telemetry vignette depends on telemetry_summary target (which uses tar_meta())
+  # tarchetypes::tar_quarto(
+  #   name = telemetry,
+  #   path = "vignettes/articles/telemetry.qmd"
+  # ),
 
   tarchetypes::tar_quarto(
     name = dynamic_broadcasting,
@@ -571,79 +574,82 @@ list(
 
       # Copy only dynamic_broadcasting (Issue #132: other vignettes disabled)
       copied_files <- copy_vignette_output(dynamic_broadcasting_html_path, "dynamic_broadcasting")
-      
+
       copied_files
     }
-  ),
+  )
 
   # 10. Telemetry summary for vignette
-  # Collects metadata from targets pipeline for reporting
-  tar_target(
-    name = telemetry_summary,
-    command = {
-      library(targets)
-      library(dplyr)
-
-      # Get metadata from targets
-      meta <- tar_meta() %>%
-        filter(!is.na(seconds)) %>%
-        mutate(
-          time_seconds = as.numeric(seconds),
-          time_formatted = sprintf("%.2f", time_seconds),
-          memory_mb = as.numeric(bytes) / (1024^2),
-          status = "completed"
-        ) %>%
-        select(name, time_formatted, time_seconds, memory_mb, status)
-
-      meta
-    }
-  ),
+  # DISABLED: tar_meta() cannot be called during pipeline execution
+  # TODO: Move telemetry collection to a separate script run AFTER tar_make()
+  # tar_target(
+  #   name = telemetry_summary,
+  #   command = {
+  #     library(targets)
+  #     library(dplyr)
+  #
+  #     # Get metadata from targets
+  #     meta <- tar_meta() %>%
+  #       filter(!is.na(seconds)) %>%
+  #       mutate(
+  #         time_seconds = as.numeric(seconds),
+  #         time_formatted = sprintf("%.2f", time_seconds),
+  #         memory_mb = as.numeric(bytes) / (1024^2),
+  #         status = "completed"
+  #       ) %>%
+  #       select(name, time_formatted, time_seconds, memory_mb, status)
+  #
+  #     meta
+  #   }
+  # ),
 
   # 11. Pipeline timing visualization
-  tar_target(
-    name = plot_pipeline_timing,
-    command = {
-      library(ggplot2)
-      library(dplyr)
-
-      telemetry_summary %>%
-        arrange(desc(time_seconds)) %>%
-        head(20) %>%
-        mutate(name = reorder(name, time_seconds)) %>%
-        ggplot(aes(x = name, y = time_seconds)) +
-        geom_col(fill = "steelblue", alpha = 0.8) +
-        coord_flip() +
-        labs(
-          title = "Top 20 Longest Running Targets",
-          subtitle = "Computation time distribution",
-          x = "Target Name",
-          y = "Computation Time (seconds)"
-        ) +
-        theme_minimal()
-    }
-  ),
+  # DISABLED: Depends on telemetry_summary which uses tar_meta()
+  # tar_target(
+  #   name = plot_pipeline_timing,
+  #   command = {
+  #     library(ggplot2)
+  #     library(dplyr)
+  #
+  #     telemetry_summary %>%
+  #       arrange(desc(time_seconds)) %>%
+  #       head(20) %>%
+  #       mutate(name = reorder(name, time_seconds)) %>%
+  #       ggplot(aes(x = name, y = time_seconds)) +
+  #       geom_col(fill = "steelblue", alpha = 0.8) +
+  #       coord_flip() +
+  #       labs(
+  #         title = "Top 20 Longest Running Targets",
+  #         subtitle = "Computation time distribution",
+  #         x = "Target Name",
+  #         y = "Computation Time (seconds)"
+  #       ) +
+  #       theme_minimal()
+  #   }
+  # ),
 
   # 12. Pipeline memory visualization
-  tar_target(
-    name = plot_pipeline_memory,
-    command = {
-      library(ggplot2)
-      library(dplyr)
-
-      telemetry_summary %>%
-        arrange(desc(memory_mb)) %>%
-        head(20) %>%
-        mutate(name = reorder(name, memory_mb)) %>%
-        ggplot(aes(x = name, y = memory_mb)) +
-        geom_col(fill = "coral", alpha = 0.8) +
-        coord_flip() +
-        labs(
-          title = "Top 20 Memory-Intensive Targets",
-          subtitle = "Memory usage distribution",
-          x = "Target Name",
-          y = "Memory (MB)"
-        ) +
-        theme_minimal()
-    }
-  )
+  # DISABLED: Depends on telemetry_summary which uses tar_meta()
+  # tar_target(
+  #   name = plot_pipeline_memory,
+  #   command = {
+  #     library(ggplot2)
+  #     library(dplyr)
+  #
+  #     telemetry_summary %>%
+  #       arrange(desc(memory_mb)) %>%
+  #       head(20) %>%
+  #       mutate(name = reorder(name, memory_mb)) %>%
+  #       ggplot(aes(x = name, y = memory_mb)) +
+  #       geom_col(fill = "coral", alpha = 0.8) +
+  #       coord_flip() +
+  #       labs(
+  #         title = "Top 20 Memory-Intensive Targets",
+  #         subtitle = "Memory usage distribution",
+  #         x = "Target Name",
+  #         y = "Memory (MB)"
+  #       ) +
+  #       theme_minimal()
+  #   }
+  # )
 )
