@@ -15,11 +15,12 @@ let
  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/1482d00f8f658fd443526febba6c9fd9754cb356.tar.gz") {};
  
   rpkgs = builtins.attrValues {
-    inherit (pkgs.rPackages) 
+    inherit (pkgs.rPackages)
       covr
       crew
       devtools
       dplyr
+      DT
       duckdb
       ggplot2
       knitr
