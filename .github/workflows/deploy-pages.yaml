@@ -42,17 +42,13 @@ jobs:
         run: |
           nix-shell --quiet default-ci.nix --run "Rscript -e 'devtools::load_all(); cat(\"Package loaded successfully\\n\"); print(ls(\"package:randomwalk\")[1:5])'"
 
+      - name: Validate targets file
+        run: |
+          nix-shell --quiet default-ci.nix --run "Rscript -e 'targets::tar_validate()'"
+
       - name: Build targets pipeline
         run: |
-          # Run only quick metadata targets first to verify targets works
-          # Skip expensive simulation and coverage targets
-          nix-shell --quiet default-ci.nix --run "Rscript -e '
-            targets::tar_make(
-              names = c(\"package_info\", \"git_summary\", \"session_info\"),
-              reporter = \"verbose\",
-              callr_function = NULL
-            )
-          '"
+          nix-shell --quiet default-ci.nix --run "Rscript -e 'targets::tar_make(names = c(\"package_info\", \"git_summary\", \"session_info\"), callr_function = NULL)'"
 
       - name: Render vignettes with Quarto
         run: |
