@@ -9,6 +9,7 @@ format:
     code-fold: show
     code-summary: "Show code"
     theme: cosmo
+    embed-resources: false
 ---
 
 ```{r setup, include=FALSE}
