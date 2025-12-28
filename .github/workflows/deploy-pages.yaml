@@ -38,6 +38,10 @@ jobs:
         run: |
           nix-build --quiet package.nix
 
+      - name: Install randomwalk from source
+        run: |
+          nix-shell --quiet default-ci.nix --run "R CMD INSTALL --no-multiarch --with-keep.source ."
+
       - name: Build targets pipeline
         run: |
           nix-shell --quiet default-ci.nix --run "Rscript -e 'targets::tar_make()'"
