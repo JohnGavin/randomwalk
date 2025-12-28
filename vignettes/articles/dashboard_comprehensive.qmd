@@ -456,10 +456,12 @@ server <- function(input, output, session) {
     }
 
     # Extract path lengths safely
+    # NOTE: walker$path is a LIST of positions, not a matrix
+    # Use walker$steps for accurate step count
     path_lengths <- tryCatch({
       sapply(result$walkers, function(w) {
-        if (!is.null(w$path) && is.matrix(w$path)) {
-          nrow(w$path)
+        if (!is.null(w$steps)) {
+          w$steps
         } else {
           NA
         }
@@ -519,9 +521,10 @@ server <- function(input, output, session) {
     }
 
     # Extract termination reasons and path lengths safely
+    # NOTE: walker$path is a LIST, not a matrix - use walker$steps
     path_lengths <- tryCatch({
       sapply(result$walkers, function(w) {
-        if (!is.null(w$path) && is.matrix(w$path)) nrow(w$path) else NA
+        if (!is.null(w$steps)) w$steps else NA
       })
     }, error = function(e) numeric(0))
 

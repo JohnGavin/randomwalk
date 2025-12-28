@@ -424,11 +424,11 @@ list(
   #   name = dashboard_async,
   #   path = "vignettes/dashboard_async.qmd"
   # ),
-  #
-  # tarchetypes::tar_quarto(
-  #   name = telemetry,
-  #   path = "vignettes/telemetry.qmd"
-  # ),
+
+  tarchetypes::tar_quarto(
+    name = telemetry,
+    path = "vignettes/articles/telemetry.qmd"
+  ),
 
   tarchetypes::tar_quarto(
     name = dynamic_broadcasting,
