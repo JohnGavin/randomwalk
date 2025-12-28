@@ -48,15 +48,17 @@ jobs:
             quarto render vignettes/articles/dashboard_comprehensive.qmd
           "
 
-      - name: Build pkgdown site (reference + home only)
+      - name: Build pkgdown site (reference + home + articles index)
         run: |
-          nix-shell --quiet default-ci.nix --run "Rscript -e 'pkgdown::build_reference(); pkgdown::build_home()'"
+          nix-shell --quiet default-ci.nix --run "Rscript -e 'pkgdown::build_reference(); pkgdown::build_home(); pkgdown::build_articles_index()'"
 
       - name: Copy rendered vignettes to docs/articles
         run: |
           mkdir -p docs/articles
           cp vignettes/articles/*.html docs/articles/ || true
           cp -r vignettes/articles/*_files docs/articles/ || true
+          echo \"Vignettes copied to docs/articles/\"
+          ls -la docs/articles/*.html 2>/dev/null || echo \"No HTML files found\"
 
       - name: Upload pkgdown site as artifact
         uses: actions/upload-artifact@v4
