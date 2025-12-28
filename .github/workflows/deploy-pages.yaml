@@ -38,10 +38,14 @@ jobs:
         run: |
           nix-build --quiet package.nix
 
+      - name: Test devtools::load_all()
+        run: |
+          nix-shell --quiet default-ci.nix --run "Rscript -e 'devtools::load_all(); cat(\"Package loaded successfully\\n\"); print(ls(\"package:randomwalk\")[1:5])'"
+
       - name: Build targets pipeline
         run: |
           # Targets uses devtools::load_all() which loads from source
-          nix-shell --quiet default-ci.nix --run "Rscript -e 'targets::tar_make()'"
+          nix-shell --quiet default-ci.nix --run "Rscript -e 'targets::tar_make(reporter = \"verbose\")'"
 
       - name: Render vignettes with Quarto
         run: |
