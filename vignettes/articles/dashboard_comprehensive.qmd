@@ -25,6 +25,33 @@ filters:
   - shinylive
 ---
 
+## Dashboard Comparison
+
+This vignette provides a **comprehensive, production-ready dashboard** with all package features. For a comparison with the simplified demo:
+
+**This Dashboard (Comprehensive):**
+- **Mode**: Both sync AND async parallel processing
+- **Scope**: Full-featured with all package capabilities
+- **Target**: Production-ready exploration and analysis tool
+- **Controls**: Complete parameter set (workers, sync_mode, max_steps, all simulation params)
+- **Visualization**: Multi-tab interface
+  - Grid display with real-time updates
+  - Histograms (steps, pixels, paths)
+  - Individual walker paths overlay
+  - Summary statistics table
+  - Telemetry and performance metrics
+- **Best for**: In-depth exploration, performance testing, research
+
+**Simplified Dashboard ([dynamic_broadcasting.html](dynamic_broadcasting.html){target="_blank"}):**
+- **Mode**: Synchronous only (workers=0)
+- **Scope**: Single focused demonstration
+- **Target**: Quick introduction to random walks
+- **Controls**: Essential parameters only (grid, walkers, neighborhood, boundary)
+- **Visualization**: Single grid display
+- **Best for**: Learning core concepts, quick demos
+
+---
+
 ```{shinylive-r}
 #| standalone: true
 #| viewerHeight: 900

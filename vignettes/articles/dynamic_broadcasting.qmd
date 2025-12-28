@@ -25,6 +25,28 @@ filters:
   - shinylive
 ---
 
+## Dashboard Comparison
+
+This vignette provides a **simplified, focused demonstration** of synchronous random walks. For a comparison with the comprehensive dashboard:
+
+**This Dashboard (Sync Sequential):**
+- **Mode**: Synchronous only (workers=0)
+- **Scope**: Single focused demo with essential controls
+- **Target**: Quick demonstration of basic functionality
+- **Controls**: Grid size, walkers, neighborhood, boundary
+- **Visualization**: Single real-time grid display
+- **Best for**: Understanding core random walk concepts
+
+**Comprehensive Dashboard ([dashboard_comprehensive.html](dashboard_comprehensive.html){target="_blank"}):**
+- **Mode**: Both sync AND async parallel modes
+- **Scope**: Full-featured with all package capabilities
+- **Target**: Production-ready exploration tool
+- **Controls**: All parameters including worker processes, sync modes, max steps
+- **Visualization**: Multiple tabs (Grid, Histograms, Paths, Statistics, Telemetry)
+- **Best for**: In-depth analysis and performance comparison
+
+---
+
 ```{shinylive-r}
 #| standalone: true
 #| viewerHeight: 900
