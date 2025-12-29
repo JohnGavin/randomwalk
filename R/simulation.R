@@ -170,6 +170,7 @@ run_simulation <- function(grid_size = 10,
     total_steps <- 0
     step_count <- 0
     completed_count <- 0
+    last_black_positions <- NULL  # Track validated black pixels for optimization
 
     while (any(sapply(walkers, function(w) w$active))) {
     step_count <- step_count + 1
@@ -203,13 +204,19 @@ run_simulation <- function(grid_size = 10,
         completed_count <- completed_count + 1
 
         # Periodic validation based on completed walker count
+        # OPTIMIZED: Only checks NEW black pixels, returns immediately on first isolated pixel
         if (validate_percent > 0 && completed_count %% validate_interval == 0) {
-          logger::log_trace("Running grid validation at {completed_count}/{n_walkers} walkers ({round(completed_count/n_walkers*100, 1)}%)")
+          logger::log_trace("Running optimized grid validation at {completed_count}/{n_walkers} walkers ({round(completed_count/n_walkers*100, 1)}%)")
           validate_no_isolated_pixels(
-            grid,
+            grid = grid,
             neighborhood = neighborhood,
-            strict = validate_strict
+            strict = validate_strict,
+            last_black_positions = last_black_positions,
+            walkers = walkers,
+            step_count = step_count
           )
+          # Update tracked positions for next validation
+          last_black_positions <- which(grid == 1, arr.ind = TRUE)
         }
       }
 
@@ -233,12 +240,15 @@ run_simulation <- function(grid_size = 10,
     logger::log_info("Total steps: {total_steps}")
     logger::log_info("Elapsed time: {round(elapsed_time, 2)} seconds")
 
-    # Final validation
-    logger::log_info("Running final grid validation")
+    # Final validation with full context for debugging
+    logger::log_info("Running final optimized grid validation")
     validate_no_isolated_pixels(
-      grid,
+      grid = grid,
       neighborhood = neighborhood,
-      strict = validate_strict
+      strict = validate_strict,
+      last_black_positions = last_black_positions,
+      walkers = walkers,
+      step_count = step_count
     )
 
     # Collect statistics
@@ -361,6 +371,8 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
     completed_walkers <- list()
     n_total <- length(walkers)
     n_completed <- 0
+    last_black_positions <- NULL  # Track validated black pixels for optimization
+    step_count <- 0  # Track steps for debugging context
 
     # Timeout configuration: 30 seconds per walker
     timeout_secs <- 30 * n_total
@@ -445,12 +457,15 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
     logger::log_info("=== ASYNC SIMULATION COMPLETE ===")
     logger::log_info("Elapsed time: {round(elapsed_time, 2)} seconds")
 
-    # Final validation
-    logger::log_info("Running final grid validation")
+    # Final validation with full context for debugging
+    logger::log_info("Running final optimized grid validation")
     validate_no_isolated_pixels(
-      grid,
+      grid = grid,
       neighborhood = neighborhood,
-      strict = validate_strict
+      strict = validate_strict,
+      last_black_positions = last_black_positions,
+      walkers = walkers,
+      step_count = step_count
     )
 
     # Collect statistics
@@ -594,6 +609,8 @@ run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
     # Poll for completed tasks
     completed_walkers <- list()
     n_completed <- 0
+    last_black_positions <- NULL  # Track validated black pixels for optimization
+    step_count <- 0  # Track steps for debugging context
 
     # Timeout: 60 seconds per walker (dynamic mode is slower)
     timeout_secs <- 60 * n_total
@@ -668,12 +685,15 @@ run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
     logger::log_info("=== ASYNC SIMULATION COMPLETE ===")
     logger::log_info("Elapsed time: {round(elapsed_time, 2)} seconds")
 
-    # Final validation
-    logger::log_info("Running final grid validation")
+    # Final validation with full context for debugging
+    logger::log_info("Running final optimized grid validation")
     validate_no_isolated_pixels(
-      grid,
+      grid = grid,
       neighborhood = neighborhood,
-      strict = validate_strict
+      strict = validate_strict,
+      last_black_positions = last_black_positions,
+      walkers = walkers,
+      step_count = step_count
     )
 
     # Collect statistics

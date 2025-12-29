@@ -186,41 +186,60 @@ get_black_percentage <- function(grid) {
 #' validate_no_isolated_pixels(bad_grid)  # FALSE - isolated pixel
 #'
 #' @export
-validate_no_isolated_pixels <- function(grid, neighborhood = "4-hood", strict = FALSE) {
-  # Get all black pixel positions
+validate_no_isolated_pixels <- function(grid, neighborhood = "4-hood", strict = FALSE,
+                                        last_black_positions = NULL, walkers = NULL,
+                                        step_count = NULL) {
+  # Get all current black pixel positions
   black_positions <- which(grid == 1, arr.ind = TRUE)
 
   # Grid should always have at least 1 black pixel (center initialization)
-  # If there are no black pixels, this is a serious bug
   if (nrow(black_positions) == 0) {
     msg <- "Grid has no black pixels - this should never happen (monotonically increasing)"
     logger::log_error(msg)
-    if (strict) {
-      stop(msg)
-    }
+    if (strict) stop(msg)
     return(FALSE)
   }
 
-  # If only 1 black pixel exists (initial center pixel before any walker terminates),
-  # this is valid - skip validation until walkers complete
+  # If only 1 black pixel exists (initial center pixel), this is valid
   if (nrow(black_positions) == 1) {
     logger::log_trace("Only 1 black pixel (initial state), skipping isolation check")
     return(TRUE)
   }
 
+  # OPTIMIZATION: Only check NEW black pixels since last validation
+  # Black pixels are monotonically increasing (never removed), so previously
+  # validated pixels remain connected
+  if (!is.null(last_black_positions) && nrow(last_black_positions) > 0) {
+    # Find NEW pixels: current - last
+    pos_strings_current <- apply(black_positions, 1, function(p) paste(p, collapse = ","))
+    pos_strings_last <- apply(last_black_positions, 1, function(p) paste(p, collapse = ","))
+    new_indices <- which(!pos_strings_current %in% pos_strings_last)
+
+    if (length(new_indices) == 0) {
+      logger::log_trace("No new black pixels since last validation, skipping check")
+      return(TRUE)
+    }
+
+    positions_to_check <- black_positions[new_indices, , drop = FALSE]
+    logger::log_trace(
+      "Optimized validation: Checking {nrow(positions_to_check)} new pixels (skipping {nrow(last_black_positions)} already validated)"
+    )
+  } else {
+    # First validation - check all pixels
+    positions_to_check <- black_positions
+    logger::log_trace("First validation: Checking all {nrow(positions_to_check)} black pixels")
+  }
+
   n <- nrow(grid)
-  isolated_pixels <- list()
 
-  for (i in seq_len(nrow(black_positions))) {
-    pos <- black_positions[i, ]
-
-    # Get neighbors for this position
+  # Check each NEW pixel for isolation
+  # OPTIMIZATION: Return IMMEDIATELY on first isolated pixel (one is a disaster)
+  for (i in seq_len(nrow(positions_to_check))) {
+    pos <- positions_to_check[i, ]
     neighbors <- get_neighbors(pos, neighborhood)
 
-    # Check if any neighbor is black
     has_black_neighbor <- FALSE
     for (neighbor_pos in neighbors) {
-      # Check bounds
       if (is_within_bounds(neighbor_pos, n)) {
         if (grid[neighbor_pos[1], neighbor_pos[2]] == 1) {
           has_black_neighbor <- TRUE
@@ -229,35 +248,148 @@ validate_no_isolated_pixels <- function(grid, neighborhood = "4-hood", strict = 
       }
     }
 
-    # If no black neighbors, this pixel is isolated
+    # OPTIMIZATION: Return immediately on first isolated pixel
     if (!has_black_neighbor) {
-      isolated_pixels <- c(isolated_pixels, list(pos))
-    }
-  }
+      # Log detailed debugging information to help identify the bug
+      log_isolated_pixel_details(
+        pos = pos,
+        grid = grid,
+        neighborhood = neighborhood,
+        walkers = walkers,
+        step_count = step_count,
+        black_positions = black_positions
+      )
 
-  # Handle isolated pixels
-  if (length(isolated_pixels) > 0) {
-    positions_str <- paste(
-      sapply(isolated_pixels, function(p) sprintf("(%d,%d)", p[1], p[2])),
-      collapse = ", "
-    )
+      msg <- sprintf(
+        "VALIDATION FAILED: Isolated black pixel at (%d,%d) with no black neighbors",
+        pos[1], pos[2]
+      )
 
-    msg <- sprintf(
-      "Found %d isolated black pixel(s) with no black neighbors: %s",
-      length(isolated_pixels),
-      positions_str
-    )
-
-    if (strict) {
-      logger::log_error(msg)
-      stop(msg)
-    } else {
-      logger::log_warn(msg)
-      return(FALSE)
+      if (strict) {
+        logger::log_error(msg)
+        stop(msg)
+      } else {
+        logger::log_warn(msg)
+        return(FALSE)
+      }
     }
   }
 
   return(TRUE)
+}
+
+
+#' Log Detailed Isolated Pixel Debugging Information
+#'
+#' When an isolated pixel is detected, logs comprehensive context to help
+#' identify the root cause of the bug. This is critical for debugging
+#' since isolated pixels indicate a logic error in the simulation.
+#'
+#' @param pos Integer vector of length 2. Position of isolated pixel [row, col].
+#' @param grid Matrix. Current grid state.
+#' @param neighborhood Character. Neighborhood type ("4-hood" or "8-hood").
+#' @param walkers List. Current walker states (optional, for context).
+#' @param step_count Integer. Current simulation step (optional, for context).
+#' @param black_positions Matrix. All black pixel positions (optional, for context).
+#'
+#' @keywords internal
+log_isolated_pixel_details <- function(pos, grid, neighborhood, walkers = NULL,
+                                       step_count = NULL, black_positions = NULL) {
+  logger::log_error("=== ISOLATED PIXEL DETECTED - DEBUGGING INFO ===")
+  logger::log_error("Position: ({pos[1]}, {pos[2]})")
+
+  if (!is.null(step_count)) {
+    logger::log_error("Simulation step: {step_count}")
+  }
+
+  # Show neighborhood grid view (5x5 window around isolated pixel)
+  n <- nrow(grid)
+  window_size <- 2  # Show 2 cells in each direction
+
+  r_min <- max(1, pos[1] - window_size)
+  r_max <- min(n, pos[1] + window_size)
+  c_min <- max(1, pos[2] - window_size)
+  c_max <- min(n, pos[2] + window_size)
+
+  neighborhood_view <- grid[r_min:r_max, c_min:c_max]
+
+  logger::log_error("5x5 Grid neighborhood (1=black, 0=white, X=isolated pixel):")
+  for (r in seq_len(nrow(neighborhood_view))) {
+    row_str <- ""
+    for (c in seq_len(ncol(neighborhood_view))) {
+      abs_r <- r_min + r - 1
+      abs_c <- c_min + c - 1
+
+      if (abs_r == pos[1] && abs_c == pos[2]) {
+        row_str <- paste0(row_str, "X ")  # Mark isolated pixel
+      } else {
+        row_str <- paste0(row_str, neighborhood_view[r, c], " ")
+      }
+    }
+    logger::log_error("  {row_str}")
+  }
+
+  # Show all black pixels and their distances
+  if (!is.null(black_positions) && nrow(black_positions) > 1) {
+    logger::log_error("Black pixels in grid: {nrow(black_positions)} total")
+
+    # Find nearest black pixels
+    distances <- apply(black_positions, 1, function(p) {
+      if (identical(p, pos)) return(Inf)  # Skip self
+      sqrt((p[1] - pos[1])^2 + (p[2] - pos[2])^2)
+    })
+
+    nearest_indices <- order(distances)[1:min(5, sum(distances < Inf))]
+    logger::log_error("Nearest black pixels:")
+    for (idx in nearest_indices) {
+      p <- black_positions[idx, ]
+      dist <- distances[idx]
+      logger::log_error("  ({p[1]}, {p[2]}) - distance: {round(dist, 2)}")
+    }
+  }
+
+  # Show walker information if available
+  if (!is.null(walkers)) {
+    # Find walkers at or near the isolated pixel
+    nearby_walkers <- list()
+    for (w in walkers) {
+      if (!is.null(w$pos)) {
+        dist <- sqrt((w$pos[1] - pos[1])^2 + (w$pos[2] - pos[2])^2)
+        if (dist <= 3) {  # Within 3 cells
+          nearby_walkers <- c(nearby_walkers, list(list(
+            walker = w,
+            distance = dist
+          )))
+        }
+      }
+    }
+
+    if (length(nearby_walkers) > 0) {
+      logger::log_error("Walkers near isolated pixel (within 3 cells):")
+      for (nw in nearby_walkers) {
+        w <- nw$walker
+        logger::log_error(
+          "  Walker {w$id}: pos=({w$pos[1]},{w$pos[2]}), ",
+          "steps={w$steps}, active={w$active}, ",
+          "reason={w$termination_reason %||% 'none'}, ",
+          "distance={round(nw$distance, 2)}"
+        )
+      }
+    } else {
+      logger::log_error("No walkers within 3 cells of isolated pixel")
+    }
+
+    # Show termination reason summary
+    termination_reasons <- table(sapply(walkers, function(w) {
+      if (!w$active) w$termination_reason %||% "unknown" else "active"
+    }))
+    logger::log_error("Termination reasons across all walkers:")
+    for (reason in names(termination_reasons)) {
+      logger::log_error("  {reason}: {termination_reasons[reason]}")
+    }
+  }
+
+  logger::log_error("=== END DEBUGGING INFO ===")
 }
 
 
