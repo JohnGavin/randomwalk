@@ -4,7 +4,14 @@
 \alias{validate_no_isolated_pixels}
 \title{Validate Grid State for Isolated Pixels}
 \usage{
-validate_no_isolated_pixels(grid, neighborhood = "4-hood", strict = FALSE)
+validate_no_isolated_pixels(
+  grid,
+  neighborhood = "4-hood",
+  strict = FALSE,
+  last_black_positions = NULL,
+  walkers = NULL,
+  step_count = NULL
+)
 }
 \arguments{
 \item{grid}{Numeric matrix representing the grid.}
@@ -14,6 +21,16 @@ Default is "4-hood".}
 
 \item{strict}{Logical, if TRUE throws error on isolation, if FALSE logs
 warning. Default FALSE.}
+
+\item{last_black_positions}{Matrix of previously validated black pixel
+positions (optional). Used for optimization - only checks NEW pixels since
+last validation. Default NULL (checks all pixels).}
+
+\item{walkers}{List of walker objects (optional). Used for detailed debugging
+output when isolation detected. Default NULL.}
+
+\item{step_count}{Integer simulation step count (optional). Used for detailed
+debugging output when isolation detected. Default NULL.}
 }
 \value{
 Logical, TRUE if valid (no isolated pixels), FALSE otherwise.
