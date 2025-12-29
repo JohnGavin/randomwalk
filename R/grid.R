@@ -261,7 +261,7 @@ validate_no_isolated_pixels <- function(grid, neighborhood = "4-hood", strict = 
       )
 
       msg <- sprintf(
-        "VALIDATION FAILED: Isolated black pixel at (%d,%d) with no black neighbors",
+        "VALIDATION FAILED: isolated black pixel at (%d,%d) with no black neighbors",
         pos[1], pos[2]
       )
 

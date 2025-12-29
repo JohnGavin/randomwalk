@@ -171,9 +171,10 @@ test_that("validate_no_isolated_pixels detects multiple isolated pixels", {
 
   expect_false(validate_no_isolated_pixels(grid, strict = FALSE))
 
-  # Error message should mention all 3
+  # OPTIMIZATION: Now returns on FIRST isolated pixel (not all 3)
+  # "One is a disaster" - no need to count more
   expect_error(
     validate_no_isolated_pixels(grid, strict = TRUE),
-    "3 isolated"
+    "isolated black pixel"
   )
 })
