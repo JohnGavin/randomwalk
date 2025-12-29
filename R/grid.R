@@ -173,6 +173,13 @@ get_black_percentage <- function(grid) {
 #'   Default is "4-hood".
 #' @param strict Logical, if TRUE throws error on isolation, if FALSE logs
 #'   warning. Default FALSE.
+#' @param last_black_positions Matrix of previously validated black pixel
+#'   positions (optional). Used for optimization - only checks NEW pixels since
+#'   last validation. Default NULL (checks all pixels).
+#' @param walkers List of walker objects (optional). Used for detailed debugging
+#'   output when isolation detected. Default NULL.
+#' @param step_count Integer simulation step count (optional). Used for detailed
+#'   debugging output when isolation detected. Default NULL.
 #'
 #' @return Logical, TRUE if valid (no isolated pixels), FALSE otherwise.
 #'
