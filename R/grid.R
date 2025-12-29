@@ -285,7 +285,7 @@ validate_no_isolated_pixels <- function(grid, neighborhood = "4-hood", strict = 
 #' identify the root cause of the bug. This is critical for debugging
 #' since isolated pixels indicate a logic error in the simulation.
 #'
-#' @param pos Integer vector of length 2. Position of isolated pixel [row, col].
+#' @param pos Integer vector of length 2. Position of isolated pixel (row, col).
 #' @param grid Matrix. Current grid state.
 #' @param neighborhood Character. Neighborhood type ("4-hood" or "8-hood").
 #' @param walkers List. Current walker states (optional, for context).
