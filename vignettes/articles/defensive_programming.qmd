@@ -1,5 +1,6 @@
 ---
 title: "Defensive Programming in randomwalk"
+description: "Best practices for validation, error handling, and robust code patterns in the randomwalk package"
 author: "randomwalk package"
 date: "`r Sys.Date()`"
 format:

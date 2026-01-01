@@ -1,5 +1,6 @@
 ---
 title: "Comprehensive Sync Sequential Random Walks Dashboard"
+description: "Full-featured dashboard with multiple visualizations, statistics, debug panel, and documentation links - runs in browser via WebR"
 format:
   html:
     code-fold: true

@@ -1,5 +1,6 @@
 ---
 title: "Step Distribution Analysis with Targets"
+description: "Statistical analysis of random walk step distributions across grid sizes and walker counts using targets pipeline"
 format:
   html:
     code-fold: true

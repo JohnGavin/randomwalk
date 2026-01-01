@@ -1,5 +1,6 @@
 ---
 title: "Telemetry, Coverage, and Pipeline Performance"
+description: "Pipeline metrics, code coverage, memory usage, and targets dependency visualization"
 author: "randomwalk package"
 date: "`r Sys.Date()`"
 format:

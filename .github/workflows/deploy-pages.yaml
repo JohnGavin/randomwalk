@@ -55,10 +55,10 @@ jobs:
             echo "use_prebuilt=false" >> $GITHUB_OUTPUT
           fi
 
-  # Fast path: Deploy pre-built docs directly
+  # Fast path: Deploy pre-built docs with webR binaries
   deploy-prebuilt:
     runs-on: ubuntu-latest
-    needs: check-prebuilt
+    needs: [check-prebuilt, build-webr]
     if: needs.check-prebuilt.outputs.use_prebuilt == 'true'
     environment:
       name: github-pages
@@ -66,7 +66,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Upload pre-built docs
+      - name: Download webR binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: webr-repo
+          path: webr-temp/
+
+      - name: Merge webR binaries into docs
+        run: |
+          echo "Merging webR binaries into pre-built docs/"
+          cp -r webr-temp/* docs/
+
+          # Create R 4.4 compatibility directory
+          if [ -d "docs/bin/emscripten/contrib/4.5" ]; then
+            cp -r docs/bin/emscripten/contrib/4.5 docs/bin/emscripten/contrib/4.4
+            echo "Created 4.4 compatibility directory"
+          fi
+
+          echo "webR binaries merged successfully"
+          ls -la docs/bin/emscripten/contrib/ || echo "Warning: No contrib directory"
+
+      - name: Upload merged docs
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'docs'
@@ -141,11 +161,9 @@ jobs:
           path: docs/
           retention-days: 1
 
-  # Second job: Build webR binaries (only when rebuilding from scratch)
+  # Second job: Build webR binaries (always runs - needed for both fast and slow paths)
   build-webr:
     runs-on: ubuntu-latest
-    needs: check-prebuilt
-    if: needs.check-prebuilt.outputs.use_prebuilt == 'false'
     steps:
       - name: Checkout
         uses: actions/checkout@v4

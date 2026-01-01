@@ -1,5 +1,6 @@
 ---
 title: "Sync Sequential Random Walks Dashboard"
+description: "Interactive Shiny dashboard for sequential random walk simulations with real-time visualization - runs in browser via WebR"
 format:
   html:
     code-fold: true

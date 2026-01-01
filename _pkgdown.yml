@@ -6,6 +6,8 @@ template:
   includes:
     in_header: |
       <meta name="shinylive:serviceworker_dir" content="..">
+    after_body: |
+      <script src="https://johngavin.github.io/randomwalk/open-vignettes-in-new-tab.js"></script>
 
 home:
   title: randomwalk - Asynchronous Pixel Walking Simulation
@@ -50,19 +52,8 @@ navbar:
       - text: Telemetry and Pipeline Performance
         href: articles/telemetry.html
 
-articles:
-- title: Interactive Shinylive Demonstrations
-  desc: Browser-based interactive random walk simulations powered by WebR and Shinylive
-  contents:
-  - dynamic_broadcasting
-  - dashboard_comprehensive
-
-- title: Analysis and Documentation
-  desc: In-depth analysis, performance metrics, and development best practices
-  contents:
-  - step_distribution_analysis
-  - defensive_programming
-  - telemetry
+# Let pkgdown auto-discover articles from vignettes/articles/
+# Articles will be listed alphabetically by default
 
 footer:
   structure:
