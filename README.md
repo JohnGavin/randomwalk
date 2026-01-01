@@ -146,7 +146,34 @@ run_dashboard(launch.browser = function(url) {
 
 **Note**: If you see `Error in utils::browseURL(appUrl): 'browser' must be a non-empty character string`, use `launch.browser = FALSE` and manually open the URL printed to the console.
 
-### Using Nix Shell
+### Using Nix Shell (Users)
+
+For **users** who just want to run randomwalk (not develop it), use `shell.nix`:
+
+```bash
+# Clone the repository
+git clone https://github.com/JohnGavin/randomwalk.git
+cd randomwalk
+
+# Enter the user environment (includes all runtime dependencies)
+nix-shell shell.nix
+
+# Start R and use the package
+R
+```
+
+```r
+library(randomwalk)
+result <- run_simulation(grid_size = 20, n_walkers = 10)
+plot_grid(result)
+
+# With parallel workers (native R only)
+result <- run_simulation(grid_size = 30, n_walkers = 20, workers = 2)
+```
+
+### Using Nix Shell (Developers)
+
+For **developers** who need devtools, pkgdown, etc., use `default.nix`:
 
 ```bash
 # Start the nix shell (one-time per session)

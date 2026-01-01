@@ -22,6 +22,7 @@
 ^default-dev\.nix$
 ^default\.R$
 ^package\.nix$
+^shell\.nix$
 ^random_walk\.code-workspace$
 ^ISSUES_GROUPED_BY_DIFFICULTY\.md$
 ^ISSUES_GROUPED\.md$
