@@ -78,8 +78,8 @@ run_simulation <- function(grid_size = 10,
     stop("boundary must be 'terminate' or 'wrap'")
   }
 
-  if (!sync_mode %in% c("static", "dynamic")) {
-    stop("sync_mode must be 'static' or 'dynamic'")
+  if (!sync_mode %in% c("static", "dynamic", "mirai_dynamic")) {
+    stop("sync_mode must be 'static', 'dynamic', or 'mirai_dynamic'")
   }
 
   # Validate dynamic mode requirements
