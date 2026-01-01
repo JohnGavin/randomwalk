@@ -177,51 +177,12 @@ let
     
     #<- buildInputs = [ randomwalk btw rpkgs system_packages ];
     buildInputs = [ randomwalk btw ] ++ rpkgs ++ system_packages;
-    shellHook = "
-# --- CRITICAL: Wrapper for Positron Terminal ---
-
-# 1. Create the temporary wrapper script using a HERE-Document
-cat > \$TMPDIR/positron-nix-terminal.sh <<EOF
-#!/bin/bash
-    
-# CRITICAL: This sources the essential Nix profile scripts using the placeholder directly.
-source "\${placeholder:out}/etc/profile.d/nix-shell.sh"
-
-# This runs the necessary environment cleanup and activation hooks.
-if declare -f __start_nix_shell_environment > /dev/null; then
-    __start_nix_shell_environment
-fi
-    
-echo "Nix Environment Sourced successfully (Positron Terminal)."
-
-# 2. Fix R Console Libraries: Ensure R finds the Nix-built packages.
-R_LIB_LINE=\$(grep "R_LIBS_USER" "\${placeholder:out}/etc/R/Rprofile.site")
-R_LIB_PATH=\$(echo "\$R_LIB_LINE" | awk -F'=' '{print \$2}' | tr -d '[:space:]' | tr -d '"')
-export R_LIBS_USER="\$R_LIB_PATH"
-
-# 3. FINAL FIX FOR GIT PATH CONFLICT:
-# Prepend the Nix path to the existing PATH
-NIX_BIN_DIR="\${placeholder:out}/bin"
-PATH="\$NIX_BIN_DIR:\$PATH"
-export PATH
-    
-# 4. FINAL SHELL LAUNCH: Use the simplest possible exec with universal flags (-i -f)
-exec /usr/bin/env "\$SHELL" -i -f
-
-EOF
-
-# 2. Make the script executable and export the variable
-chmod +x \$TMPDIR/positron-nix-terminal.sh
-export RSTUDIO_TERM_EXEC="\$TMPDIR/positron-nix-terminal.sh"
-echo "Nix environment setup complete for Positron terminal."
-
-# ------------------------------------------------------------------
-
-# === Other standard Nix shell setup ===
-unset CI ; 
-echo "ANTHROPIC_API_KEY set: \${ANTHROPIC_API_KEY:0:15}..."
-echo "\$(date): Nix shell started" >> ~/.nix-session.log
-";
+    shellHook = ''
+      # Randomwalk development environment
+      unset CI
+      echo "Randomwalk Nix environment ready."
+      echo "R version: $(R --version | head -1)"
+    '';
   }; 
 in
   {
