@@ -6,7 +6,8 @@
 #'
 #' @param walker_id Integer. Unique walker identifier.
 #' @param initial_grid Matrix. Initial grid state.
-#' @param pub_socket Publisher socket for broadcasting updates.
+#' @param pub_socket Publisher socket for broadcasting updates (optional).
+#'   If NULL, worker returns results without broadcasting (main process broadcasts).
 #' @param sub_socket Subscriber socket for receiving updates.
 #' @param grid_size Integer. Grid dimensions (n x n).
 #' @param neighborhood Character. "4-hood" or "8-hood".
@@ -26,7 +27,7 @@
 #' @export
 simulate_walker_dynamic <- function(walker_id,
                                    initial_grid,
-                                   pub_socket,
+                                   pub_socket = NULL,
                                    sub_socket,
                                    grid_size,
                                    neighborhood = "4-hood",
@@ -82,7 +83,10 @@ simulate_walker_dynamic <- function(walker_id,
       local_grid[position[1], position[2]] <- "black"
 
       # BROADCAST: New black pixel created at walker's current position
-      broadcast_black_pixel(pub_socket, position, walker_id)
+      # Only if pub_socket provided (main process may broadcast instead)
+      if (!is.null(pub_socket)) {
+        broadcast_black_pixel(pub_socket, position, walker_id)
+      }
 
       return(list(
         walker_id = walker_id,
@@ -138,15 +142,16 @@ simulate_walker_dynamic <- function(walker_id,
 }
 
 
-#' Get Neighbor Positions
+#' Get Neighbor Positions (Bounded)
 #'
-#' Returns list of neighbor positions based on neighborhood type
+#' Returns list of neighbor positions based on neighborhood type,
+#' filtering out positions that are out of bounds.
 #'
 #' @param position Vector c(x, y) current position
 #' @param grid_size Integer grid dimensions
 #' @param neighborhood Character "4-hood" or "8-hood"
-#' @return List of neighbor positions
-#' @keywords internal
+#' @return List of neighbor positions (within bounds only)
+#' @export
 get_neighbors_bounded <- function(position, grid_size, neighborhood) {
   x <- position[1]
   y <- position[2]

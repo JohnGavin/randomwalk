@@ -555,17 +555,19 @@ run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
       controller$push(
         name = paste0("walker_", walker$id),
         command = {
-          # Initialize subscriber socket in worker
+          # Initialize subscriber socket in worker (receives broadcasts from main)
           sub_socket <- init_subscriber_socket(
             host = "localhost",
             port = port
           )
 
-          # Run walker with dynamic broadcasting
+          # Run walker with dynamic grid updates
+          # NOTE: pub_socket=NULL - workers don't broadcast directly
+          # Main process broadcasts when it receives completed walker results
           result <- simulate_walker_dynamic(
             walker_id = walker$id,
             initial_grid = initial_grid,
-            pub_socket = pub_socket,
+            pub_socket = NULL,  # Workers receive only, main broadcasts
             sub_socket = sub_socket,
             grid_size = grid_size,
             neighborhood = neighborhood,
@@ -592,9 +594,9 @@ run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
           init_subscriber_socket = init_subscriber_socket,
           simulate_walker_dynamic = simulate_walker_dynamic,
           update_grid_from_broadcasts = update_grid_from_broadcasts,
-          broadcast_black_pixel = broadcast_black_pixel,
           close_sockets = close_sockets,
           get_neighbors = get_neighbors,
+          get_neighbors_bounded = get_neighbors_bounded,
           choose_next_position = choose_next_position,
           is_boundary = is_boundary,
           handle_boundary = handle_boundary,
@@ -648,8 +650,12 @@ run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
           if (!is.null(pos) && length(pos) == 2) {
             grid <- set_pixel_black(grid, pos, boundary)
 
+            # BROADCAST: Notify all workers of new black pixel
+            # This is the key to dynamic mode - workers receive real-time updates
+            broadcast_black_pixel(pub_socket, pos, walker_result$walker_id)
+
             logger::log_debug(
-              "Walker {walker_result$walker_id} terminated: {walker_result$status} at ({pos[1]}, {pos[2]}) after {walker_result$steps} steps"
+              "Walker {walker_result$walker_id} terminated: {walker_result$status} at ({pos[1]}, {pos[2]}) after {walker_result$steps} steps [broadcast sent]"
             )
           }
         }
