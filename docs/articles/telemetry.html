@@ -1,0 +1,2003 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.34">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="randomwalk package">
+<meta name="dcterms.date" content="2025-12-28">
+
+<title>Telemetry, Coverage, and Pipeline Performance</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="telemetry_files/libs/clipboard/clipboard.min.js"></script>
+<script src="telemetry_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="telemetry_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="telemetry_files/libs/quarto-html/popper.min.js"></script>
+<script src="telemetry_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="telemetry_files/libs/quarto-html/anchor.min.js"></script>
+<link href="telemetry_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="telemetry_files/libs/quarto-html/quarto-syntax-highlighting-c8ad9e5dbd60b7b70b38521ab19b7da4.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="telemetry_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="telemetry_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="telemetry_files/libs/bootstrap/bootstrap-b232414f0569882df4359abfb7cfba3f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#package-information" id="toc-package-information" class="nav-link" data-scroll-target="#package-information">Package Information</a></li>
+  <li><a href="#code-coverage-analysis" id="toc-code-coverage-analysis" class="nav-link" data-scroll-target="#code-coverage-analysis">Code Coverage Analysis</a>
+  <ul class="collapse">
+  <li><a href="#overall-coverage" id="toc-overall-coverage" class="nav-link" data-scroll-target="#overall-coverage">Overall Coverage</a></li>
+  <li><a href="#coverage-by-file" id="toc-coverage-by-file" class="nav-link" data-scroll-target="#coverage-by-file">Coverage by File</a></li>
+  <li><a href="#coverage-visualization" id="toc-coverage-visualization" class="nav-link" data-scroll-target="#coverage-visualization">Coverage Visualization</a></li>
+  <li><a href="#untested-code-hotspots" id="toc-untested-code-hotspots" class="nav-link" data-scroll-target="#untested-code-hotspots">Untested Code Hotspots</a></li>
+  </ul></li>
+  <li><a href="#pipeline-performance-telemetry" id="toc-pipeline-performance-telemetry" class="nav-link" data-scroll-target="#pipeline-performance-telemetry">Pipeline Performance Telemetry</a>
+  <ul class="collapse">
+  <li><a href="#pipeline-network-visualization" id="toc-pipeline-network-visualization" class="nav-link" data-scroll-target="#pipeline-network-visualization">Pipeline Network Visualization</a></li>
+  <li><a href="#target-execution-statistics" id="toc-target-execution-statistics" class="nav-link" data-scroll-target="#target-execution-statistics">Target Execution Statistics</a>
+  <ul class="collapse">
+  <li><a href="#summary-table" id="toc-summary-table" class="nav-link" data-scroll-target="#summary-table">Summary Table</a></li>
+  <li><a href="#performance-metrics" id="toc-performance-metrics" class="nav-link" data-scroll-target="#performance-metrics">Performance Metrics</a></li>
+  </ul></li>
+  <li><a href="#longest-running-targets" id="toc-longest-running-targets" class="nav-link" data-scroll-target="#longest-running-targets">Longest Running Targets</a>
+  <ul class="collapse">
+  <li><a href="#longest-running-targets-visualization" id="toc-longest-running-targets-visualization" class="nav-link" data-scroll-target="#longest-running-targets-visualization">Longest Running Targets Visualization</a></li>
+  </ul></li>
+  <li><a href="#highest-memory-targets" id="toc-highest-memory-targets" class="nav-link" data-scroll-target="#highest-memory-targets">Highest Memory Targets</a>
+  <ul class="collapse">
+  <li><a href="#memory-usage-visualization" id="toc-memory-usage-visualization" class="nav-link" data-scroll-target="#memory-usage-visualization">Memory Usage Visualization</a></li>
+  </ul></li>
+  <li><a href="#computation-time-distribution" id="toc-computation-time-distribution" class="nav-link" data-scroll-target="#computation-time-distribution">Computation Time Distribution</a></li>
+  <li><a href="#memory-usage-distribution" id="toc-memory-usage-distribution" class="nav-link" data-scroll-target="#memory-usage-distribution">Memory Usage Distribution</a></li>
+  </ul></li>
+  <li><a href="#performance-trends" id="toc-performance-trends" class="nav-link" data-scroll-target="#performance-trends">Performance Trends</a>
+  <ul class="collapse">
+  <li><a href="#time-vs-memory-scatter" id="toc-time-vs-memory-scatter" class="nav-link" data-scroll-target="#time-vs-memory-scatter">Time vs Memory Scatter</a></li>
+  </ul></li>
+  <li><a href="#example-simulations" id="toc-example-simulations" class="nav-link" data-scroll-target="#example-simulations">Example Simulations</a>
+  <ul class="collapse">
+  <li><a href="#small-simulation" id="toc-small-simulation" class="nav-link" data-scroll-target="#small-simulation">Small Simulation</a></li>
+  <li><a href="#medium-simulation" id="toc-medium-simulation" class="nav-link" data-scroll-target="#medium-simulation">Medium Simulation</a></li>
+  </ul></li>
+  <li><a href="#system-information" id="toc-system-information" class="nav-link" data-scroll-target="#system-information">System Information</a>
+  <ul class="collapse">
+  <li><a href="#r-session-information" id="toc-r-session-information" class="nav-link" data-scroll-target="#r-session-information">R Session Information</a></li>
+  <li><a href="#gitgithub-summary" id="toc-gitgithub-summary" class="nav-link" data-scroll-target="#gitgithub-summary">Git/GitHub Summary</a></li>
+  </ul></li>
+  <li><a href="#pipeline-reproducibility" id="toc-pipeline-reproducibility" class="nav-link" data-scroll-target="#pipeline-reproducibility">Pipeline Reproducibility</a></li>
+  <li><a href="#performance-recommendations" id="toc-performance-recommendations" class="nav-link" data-scroll-target="#performance-recommendations">Performance Recommendations</a>
+  <ul class="collapse">
+  <li><a href="#high-priority-optimizations" id="toc-high-priority-optimizations" class="nav-link" data-scroll-target="#high-priority-optimizations">High-Priority Optimizations</a></li>
+  <li><a href="#recommended-actions" id="toc-recommended-actions" class="nav-link" data-scroll-target="#recommended-actions">Recommended Actions</a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a>
+  <ul class="collapse">
+  <li><a href="#session-info" id="toc-session-info" class="nav-link" data-scroll-target="#session-info">Session Info</a></li>
+  <li><a href="#version-information" id="toc-version-information" class="nav-link" data-scroll-target="#version-information">Version Information</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Telemetry, Coverage, and Pipeline Performance</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>randomwalk package </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">December 28, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- AUTO-GENERATED FILE: This file is automatically generated from telemetry.qmd -->
+<!-- DO NOT EDIT the HTML/MD output directly. Edit the source .qmd file instead. -->
+<section id="overview" class="level1">
+<h1>Overview</h1>
+<p>This vignette presents comprehensive telemetry for the <code>randomwalk</code> package:</p>
+<ul>
+<li><strong>Code Coverage</strong>: Test coverage analysis using <code>covr</code></li>
+<li><strong>Pipeline Performance</strong>: Execution time and memory usage via <code>targets</code></li>
+<li><strong>Network Visualization</strong>: Pipeline dependency graph</li>
+<li><strong>Performance Hotspots</strong>: Longest-running targets and memory hogs</li>
+<li><strong>System Information</strong>: Environment and reproducibility details</li>
+</ul>
+<p>All metrics are pre-computed using the <code>targets</code> pipeline and loaded via <code>tar_read()</code>.</p>
+</section>
+<section id="package-information" class="level1">
+<h1>Package Information</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load package metadata from targets pipeline</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>pkg_info <span class="ot">&lt;-</span> <span class="fu">tar_read</span>(package_info)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Display as formatted table</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Field =</span> <span class="fu">c</span>(<span class="st">"Package"</span>, <span class="st">"Version"</span>, <span class="st">"Title"</span>, <span class="st">"Generated"</span>),</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    pkg_info<span class="sc">$</span>package,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    pkg_info<span class="sc">$</span>version,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    pkg_info<span class="sc">$</span>title,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">format</span>(pkg_info<span class="sc">$</span>date, <span class="st">"%Y-%m-%d"</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">"Package Metadata"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Package Metadata</caption>
+<colgroup>
+<col style="width: 9%">
+<col style="width: 12%">
+<col style="width: 77%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Field</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Package</td>
+<td style="text-align: left;">Package</td>
+<td style="text-align: left;">randomwalk</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Version</td>
+<td style="text-align: left;">Version</td>
+<td style="text-align: left;">2.1.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Asynchronous Pixel Walking Simulation with Parallel Processing</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Generated</td>
+<td style="text-align: left;">2025-12-28</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="code-coverage-analysis" class="level1">
+<h1>Code Coverage Analysis</h1>
+<p>Test coverage provides insight into which code paths are exercised by the test suite.</p>
+<section id="overall-coverage" class="level2">
+<h2 class="anchored" data-anchor-id="overall-coverage">Overall Coverage</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pre-computed coverage from targets pipeline (if available)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>cov_data <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>({</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_read</span>(code_coverage)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}, <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NULL</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>cov_available <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">is.null</span>(cov_data)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (cov_available) {</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Overall Test Coverage: %.1f%%</span><span class="sc">\n</span><span class="st">"</span>, cov_data<span class="sc">$</span>overall_pct))</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Code coverage data not available (target disabled)</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Run covr::package_coverage() locally to generate coverage reports.</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Code coverage data not available (target disabled)
+Run covr::package_coverage() locally to generate coverage reports.</code></pre>
+</div>
+</div>
+<p><strong>Note</strong>: Run <code>covr::package_coverage()</code> locally to generate coverage reports.</p>
+</section>
+<section id="coverage-by-file" class="level2">
+<h2 class="anchored" data-anchor-id="coverage-by-file">Coverage by File</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use pre-computed file summary from targets (if available)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (cov_available) {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  file_summary <span class="ot">&lt;-</span> cov_data<span class="sc">$</span>file_summary</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  file_summary <span class="sc">%&gt;%</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">kable</span>(</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">digits =</span> <span class="dv">1</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"File"</span>, <span class="st">"Total Lines"</span>, <span class="st">"Covered Lines"</span>, <span class="st">"Coverage (%)"</span>),</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Test Coverage by File"</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Coverage data not available - code_coverage target is disabled</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Coverage data not available - code_coverage target is disabled</code></pre>
+</div>
+</div>
+</section>
+<section id="coverage-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="coverage-visualization">Coverage Visualization</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (cov_available) {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  file_summary <span class="sc">%&gt;%</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">filename =</span> <span class="fu">reorder</span>(filename, coverage_pct)) <span class="sc">%&gt;%</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> filename, <span class="at">y =</span> coverage_pct)) <span class="sc">+</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="fu">aes</span>(<span class="at">fill =</span> coverage_pct), <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">80</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_gradient2</span>(</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">low =</span> <span class="st">"red"</span>, <span class="at">mid =</span> <span class="st">"yellow"</span>, <span class="at">high =</span> <span class="st">"green"</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">midpoint =</span> <span class="dv">50</span>, <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">100</span>),</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">name =</span> <span class="st">"Coverage %"</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">title =</span> <span class="st">"Test Coverage by File"</span>,</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">subtitle =</span> <span class="st">"Dashed line shows 80% coverage target"</span>,</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> <span class="st">"File"</span>,</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> <span class="st">"Coverage (%)"</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Coverage visualization not available - code_coverage target is disabled</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Coverage visualization not available - code_coverage target is disabled</code></pre>
+</div>
+</div>
+</section>
+<section id="untested-code-hotspots" class="level2">
+<h2 class="anchored" data-anchor-id="untested-code-hotspots">Untested Code Hotspots</h2>
+<p>Files with low coverage that need additional tests:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (cov_available) {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  low_coverage <span class="ot">&lt;-</span> file_summary <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(coverage_pct <span class="sc">&lt;</span> <span class="dv">80</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(coverage_pct)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">nrow</span>(low_coverage) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    low_coverage <span class="sc">%&gt;%</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">kable</span>(</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">digits =</span> <span class="dv">1</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"File"</span>, <span class="st">"Total Lines"</span>, <span class="st">"Covered Lines"</span>, <span class="st">"Coverage (%)"</span>),</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">caption =</span> <span class="st">"Files Below 80% Coverage (Need More Tests)"</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">"✅ All files have &gt;80% coverage!</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Coverage data not available - code_coverage target is disabled</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Coverage data not available - code_coverage target is disabled</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="pipeline-performance-telemetry" class="level1">
+<h1>Pipeline Performance Telemetry</h1>
+<section id="pipeline-network-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="pipeline-network-visualization">Pipeline Network Visualization</h2>
+<p>The targets pipeline dependency graph shows how targets depend on each other:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize the pipeline network</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tar_visnetwork</span>(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">targets_only =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="fu">c</span>(<span class="st">"time"</span>, <span class="st">"size"</span>, <span class="st">"branches"</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p><strong>Interactive</strong>: Click and drag nodes to explore dependencies. Hover for details.</p>
+</section>
+<section id="target-execution-statistics" class="level2">
+<h2 class="anchored" data-anchor-id="target-execution-statistics">Target Execution Statistics</h2>
+<section id="summary-table" class="level3">
+<h3 class="anchored" data-anchor-id="summary-table">Summary Table</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate telemetry from tar_meta() - safe to call AFTER pipeline completes</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>telemetry <span class="ot">&lt;-</span> <span class="fu">tar_meta</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">time_seconds =</span> <span class="fu">as.numeric</span>(seconds, <span class="at">units =</span> <span class="st">"secs"</span>),</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">time_formatted =</span> <span class="fu">sprintf</span>(<span class="st">"%.2fs"</span>, time_seconds),</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">memory_mb =</span> <span class="fu">round</span>(bytes <span class="sc">/</span> <span class="dv">1024</span><span class="sc">^</span><span class="dv">2</span>, <span class="dv">2</span>),</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">status =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(error), <span class="st">"success"</span>, <span class="st">"error"</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(time_seconds))</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Display formatted table</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>telemetry <span class="sc">%&gt;%</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, time_formatted, memory_mb, status) <span class="sc">%&gt;%</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Target Name"</span> <span class="ot">=</span> name,</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Computation Time"</span> <span class="ot">=</span> time_formatted,</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Memory (MB)"</span> <span class="ot">=</span> memory_mb,</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Status"</span> <span class="ot">=</span> status</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Target Pipeline Execution Summary"</span>,</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">align =</span> <span class="fu">c</span>(<span class="st">"l"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"c"</span>)</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Target Pipeline Execution Summary</caption>
+<colgroup>
+<col style="width: 45%">
+<col style="width: 24%">
+<col style="width: 17%">
+<col style="width: 12%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Target Name</th>
+<th style="text-align: right;">Computation Time</th>
+<th style="text-align: right;">Memory (MB)</th>
+<th style="text-align: center;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">sim_medium</td>
+<td style="text-align: right;">0.81s</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">perf_async</td>
+<td style="text-align: right;">1.98s</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">step_dist_grid_sizes</td>
+<td style="text-align: right;">0.00s</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sim_dynamic_small</td>
+<td style="text-align: right;">1.64s</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sim_dynamic_large</td>
+<td style="text-align: right;">3.11s</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sim_large</td>
+<td style="text-align: right;">0.38s</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">session_info</td>
+<td style="text-align: right;">0.01s</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sim_small</td>
+<td style="text-align: right;">0.09s</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">pkgdown_site</td>
+<td style="text-align: right;">9.96s</td>
+<td style="text-align: right;">383.41</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">code_coverage</td>
+<td style="text-align: right;">36.70s</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: center;">error</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sim_static_large</td>
+<td style="text-align: right;">3.42s</td>
+<td style="text-align: right;">0.12</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sim_dynamic_medium</td>
+<td style="text-align: right;">2.01s</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sim_static_medium</td>
+<td style="text-align: right;">2.00s</td>
+<td style="text-align: right;">0.02</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">package_info</td>
+<td style="text-align: right;">0.00s</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">telemetry_summary</td>
+<td style="text-align: right;">0.02s</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: center;">error</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sim_static_small</td>
+<td style="text-align: right;">2.13s</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">git_summary</td>
+<td style="text-align: right;">0.07s</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">perf_sync</td>
+<td style="text-align: right;">0.33s</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">plot_static_small</td>
+<td style="text-align: right;">0.11s</td>
+<td style="text-align: right;">0.39</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">plot_dynamic_small</td>
+<td style="text-align: right;">0.09s</td>
+<td style="text-align: right;">0.39</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">plot_large_grid</td>
+<td style="text-align: right;">0.09s</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">stats_large</td>
+<td style="text-align: right;">0.00s</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">stats_medium</td>
+<td style="text-align: right;">0.00s</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">plot_medium_grid</td>
+<td style="text-align: right;">0.09s</td>
+<td style="text-align: right;">0.38</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">plot_static_medium</td>
+<td style="text-align: right;">0.09s</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">plot_small_grid</td>
+<td style="text-align: right;">0.09s</td>
+<td style="text-align: right;">0.38</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">stats_small</td>
+<td style="text-align: right;">0.00s</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">step_dist_sims_6d4184db862c95ff</td>
+<td style="text-align: right;">0.19s</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">step_dist_sims_8e4e2652c6d456b7</td>
+<td style="text-align: right;">0.87s</td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">step_dist_sims_38c3ae60225a972d</td>
+<td style="text-align: right;">1.99s</td>
+<td style="text-align: right;">0.06</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">step_dist_sims</td>
+<td style="text-align: right;">3.04s</td>
+<td style="text-align: right;">0.10</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">plot_dynamic_medium</td>
+<td style="text-align: right;">0.09s</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">dynamic_broadcasting</td>
+<td style="text-align: right;">8.77s</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">copy_vignettes_to_inst_doc</td>
+<td style="text-align: right;">0.41s</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">step_distribution_analysis</td>
+<td style="text-align: right;">4.72s</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">telemetry</td>
+<td style="text-align: right;">2.43s</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: center;">error</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="performance-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="performance-metrics">Performance Metrics</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate summary statistics</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>total_time <span class="ot">&lt;-</span> <span class="fu">sum</span>(telemetry<span class="sc">$</span>time_seconds, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>total_memory <span class="ot">&lt;-</span> <span class="fu">sum</span>(telemetry<span class="sc">$</span>memory_mb, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>target_count <span class="ot">&lt;-</span> <span class="fu">nrow</span>(telemetry)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">Metric =</span> <span class="fu">c</span>(<span class="st">"Total Targets"</span>, <span class="st">"Total Computation Time"</span>, <span class="st">"Total Memory Usage"</span>, <span class="st">"Average Time/Target"</span>, <span class="st">"Average Memory/Target"</span>),</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    target_count,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.1f seconds"</span>, total_time),</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.1f MB"</span>, total_memory),</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.2f seconds"</span>, total_time <span class="sc">/</span> target_count),</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.2f MB"</span>, total_memory <span class="sc">/</span> target_count)</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">"Pipeline Performance Summary"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Pipeline Performance Summary</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Total Targets</td>
+<td style="text-align: left;">36</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Total Computation Time</td>
+<td style="text-align: left;">87.7 seconds</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Total Memory Usage</td>
+<td style="text-align: left;">387.0 MB</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Average Time/Target</td>
+<td style="text-align: left;">2.44 seconds</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Average Memory/Target</td>
+<td style="text-align: left;">10.75 MB</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</section>
+<section id="longest-running-targets" class="level2">
+<h2 class="anchored" data-anchor-id="longest-running-targets">Longest Running Targets</h2>
+<p>Targets that take the most time to compute:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Top 10 longest running targets</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>longest <span class="ot">&lt;-</span> telemetry <span class="sc">%&gt;%</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(time_seconds)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, time_formatted, memory_mb)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>longest <span class="sc">%&gt;%</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Target"</span>, <span class="st">"Computation Time"</span>, <span class="st">"Memory (MB)"</span>),</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Top 10 Longest Running Targets"</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Top 10 Longest Running Targets</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Target</th>
+<th style="text-align: left;">Computation Time</th>
+<th style="text-align: right;">Memory (MB)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">code_coverage</td>
+<td style="text-align: left;">36.70s</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">pkgdown_site</td>
+<td style="text-align: left;">9.96s</td>
+<td style="text-align: right;">383.41</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">dynamic_broadcasting</td>
+<td style="text-align: left;">8.77s</td>
+<td style="text-align: right;">0.15</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">step_distribution_analysis</td>
+<td style="text-align: left;">4.72s</td>
+<td style="text-align: right;">0.13</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sim_static_large</td>
+<td style="text-align: left;">3.42s</td>
+<td style="text-align: right;">0.12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sim_dynamic_large</td>
+<td style="text-align: left;">3.11s</td>
+<td style="text-align: right;">0.13</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">step_dist_sims</td>
+<td style="text-align: left;">3.04s</td>
+<td style="text-align: right;">0.10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">telemetry</td>
+<td style="text-align: left;">2.43s</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sim_static_small</td>
+<td style="text-align: left;">2.13s</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sim_dynamic_medium</td>
+<td style="text-align: left;">2.01s</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<section id="longest-running-targets-visualization" class="level3">
+<h3 class="anchored" data-anchor-id="longest-running-targets-visualization">Longest Running Targets Visualization</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>longest <span class="sc">%&gt;%</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="fu">reorder</span>(name, telemetry<span class="sc">$</span>time_seconds[<span class="fu">match</span>(name, telemetry<span class="sc">$</span>name)]),</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">time_secs =</span> telemetry<span class="sc">$</span>time_seconds[<span class="fu">match</span>(name, telemetry<span class="sc">$</span>name)]</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> name, <span class="at">y =</span> time_secs)) <span class="sc">+</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"steelblue"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Longest Running Targets"</span>,</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Top 10 targets by computation time"</span>,</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Target"</span>,</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Computation Time (seconds)"</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="telemetry_files/figure-html/plot-longest-running-1.png" class="img-fluid figure-img" width="960"></p>
+<figcaption>Top 10 longest running targets</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Optimization Opportunities</strong>: Consider caching or optimizing these targets to improve pipeline performance.</p>
+</section>
+</section>
+<section id="highest-memory-targets" class="level2">
+<h2 class="anchored" data-anchor-id="highest-memory-targets">Highest Memory Targets</h2>
+<p>Targets that consume the most memory:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Top 10 highest memory targets</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>memory_hogs <span class="ot">&lt;-</span> telemetry <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(memory_mb)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, memory_mb, time_formatted)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>memory_hogs <span class="sc">%&gt;%</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Target"</span>, <span class="st">"Memory (MB)"</span>, <span class="st">"Computation Time"</span>),</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Top 10 Memory-Intensive Targets"</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Top 10 Memory-Intensive Targets</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Target</th>
+<th style="text-align: right;">Memory (MB)</th>
+<th style="text-align: left;">Computation Time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">pkgdown_site</td>
+<td style="text-align: right;">383.41</td>
+<td style="text-align: left;">9.96s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">plot_large_grid</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: left;">0.09s</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">plot_static_medium</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: left;">0.09s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">plot_dynamic_medium</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: left;">0.09s</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">plot_static_small</td>
+<td style="text-align: right;">0.39</td>
+<td style="text-align: left;">0.11s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">plot_dynamic_small</td>
+<td style="text-align: right;">0.39</td>
+<td style="text-align: left;">0.09s</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">plot_medium_grid</td>
+<td style="text-align: right;">0.38</td>
+<td style="text-align: left;">0.09s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">plot_small_grid</td>
+<td style="text-align: right;">0.38</td>
+<td style="text-align: left;">0.09s</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">dynamic_broadcasting</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: left;">8.77s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sim_dynamic_large</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: left;">3.11s</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<section id="memory-usage-visualization" class="level3">
+<h3 class="anchored" data-anchor-id="memory-usage-visualization">Memory Usage Visualization</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>memory_hogs <span class="sc">%&gt;%</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name =</span> <span class="fu">reorder</span>(name, telemetry<span class="sc">$</span>memory_mb[<span class="fu">match</span>(name, telemetry<span class="sc">$</span>name)])) <span class="sc">%&gt;%</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> name, <span class="at">y =</span> telemetry<span class="sc">$</span>memory_mb[<span class="fu">match</span>(name, telemetry<span class="sc">$</span>name)])) <span class="sc">+</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"coral"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Memory-Intensive Targets"</span>,</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Top 10 targets by memory consumption"</span>,</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Target"</span>,</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Memory (MB)"</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="telemetry_files/figure-html/plot-memory-usage-1.png" class="img-fluid figure-img" width="960"></p>
+<figcaption>Top 10 memory-intensive targets</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Storage Optimization</strong>: High-memory targets may benefit from compression or data format optimization.</p>
+</section>
+</section>
+<section id="computation-time-distribution" class="level2">
+<h2 class="anchored" data-anchor-id="computation-time-distribution">Computation Time Distribution</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>telemetry <span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(time_seconds)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">20</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name =</span> <span class="fu">reorder</span>(name, time_seconds)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> name, <span class="at">y =</span> time_seconds)) <span class="sc">+</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"steelblue"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Top 20 Longest Running Targets"</span>,</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Computation time distribution"</span>,</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Target Name"</span>,</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Computation Time (seconds)"</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="telemetry_files/figure-html/plot-timing-1.png" class="img-fluid figure-img" width="960"></p>
+<figcaption>Computation time distribution across all targets</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="memory-usage-distribution" class="level2">
+<h2 class="anchored" data-anchor-id="memory-usage-distribution">Memory Usage Distribution</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>telemetry <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(memory_mb)) <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">20</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name =</span> <span class="fu">reorder</span>(name, memory_mb)) <span class="sc">%&gt;%</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> name, <span class="at">y =</span> memory_mb)) <span class="sc">+</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"coral"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Top 20 Memory-Intensive Targets"</span>,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Memory usage distribution"</span>,</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Target Name"</span>,</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Memory (MB)"</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="telemetry_files/figure-html/plot-memory-1.png" class="img-fluid figure-img" width="960"></p>
+<figcaption>Memory usage distribution across all targets</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="performance-trends" class="level1">
+<h1>Performance Trends</h1>
+<section id="time-vs-memory-scatter" class="level2">
+<h2 class="anchored" data-anchor-id="time-vs-memory-scatter">Time vs Memory Scatter</h2>
+<p>Relationship between computation time and memory usage:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>telemetry <span class="sc">%&gt;%</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> time_seconds, <span class="at">y =</span> memory_mb)) <span class="sc">+</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">color =</span> status), <span class="at">size =</span> <span class="dv">3</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> telemetry <span class="sc">%&gt;%</span> <span class="fu">filter</span>(time_seconds <span class="sc">&gt;</span> <span class="fu">quantile</span>(time_seconds, <span class="fl">0.9</span>) <span class="sc">|</span> memory_mb <span class="sc">&gt;</span> <span class="fu">quantile</span>(memory_mb, <span class="fl">0.9</span>)),</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> name),</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">hjust =</span> <span class="sc">-</span><span class="fl">0.1</span>,</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.1</span>,</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="dv">3</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_brewer</span>(<span class="at">palette =</span> <span class="st">"Set1"</span>, <span class="at">name =</span> <span class="st">"Status"</span>) <span class="sc">+</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Target Performance: Time vs Memory"</span>,</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Outliers labeled"</span>,</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Computation Time (seconds)"</span>,</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Memory (MB)"</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="telemetry_files/figure-html/time-vs-memory-1.png" class="img-fluid figure-img" width="960"></p>
+<figcaption>Computation time vs memory usage</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Key Observations</strong>: - Targets in upper-right quadrant (high time, high memory) are optimization candidates - Targets with disproportionate time/memory ratios may have inefficiencies</p>
+</section>
+</section>
+<section id="example-simulations" class="level1">
+<h1>Example Simulations</h1>
+<section id="small-simulation" class="level2">
+<h2 class="anchored" data-anchor-id="small-simulation">Small Simulation</h2>
+<p>A small 10×10 grid simulation with 3 walkers:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pre-computed statistics</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>stats_small <span class="ot">&lt;-</span> <span class="fu">tar_read</span>(stats_small)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Display statistics</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is.data.frame</span>(stats_small) <span class="sc">||</span> <span class="fu">is.list</span>(stats_small)) {</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(stats_small)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Statistics available but format not suitable for display</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$black_pixels
+[1] 2
+
+$black_percentage
+[1] 2
+
+$grid_size
+[1] 10
+
+$total_walkers
+[1] 3
+
+$completed_walkers
+[1] 3
+
+$total_steps
+[1] 7
+
+$min_steps
+[1] 0
+
+$max_steps
+[1] 6
+
+$mean_steps
+[1] 2.333333
+
+$median_steps
+[1] 1
+
+$percentile_25
+25% 
+0.5 
+
+$percentile_75
+75% 
+3.5 
+
+$elapsed_time_secs
+[1] 0.00956893
+
+$termination_reasons
+
+black_neighbor   hit_boundary 
+             1              2 </code></pre>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pre-computed plot</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tar_read</span>(plot_small_grid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="telemetry_files/figure-html/plot-small-grid-1.png" class="img-fluid figure-img" width="960"></p>
+<figcaption>Small simulation grid visualization</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="medium-simulation" class="level2">
+<h2 class="anchored" data-anchor-id="medium-simulation">Medium Simulation</h2>
+<p>A medium 20×20 grid simulation with 5 walkers:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pre-computed statistics</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>stats_medium <span class="ot">&lt;-</span> <span class="fu">tar_read</span>(stats_medium)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Display statistics</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is.data.frame</span>(stats_medium) <span class="sc">||</span> <span class="fu">is.list</span>(stats_medium)) {</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(stats_medium)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Statistics available but format not suitable for display</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$black_pixels
+[1] 6
+
+$black_percentage
+[1] 1.5
+
+$grid_size
+[1] 20
+
+$total_walkers
+[1] 5
+
+$completed_walkers
+[1] 5
+
+$total_steps
+[1] 3163
+
+$min_steps
+[1] 308
+
+$max_steps
+[1] 1205
+
+$mean_steps
+[1] 632.6
+
+$median_steps
+[1] 582
+
+$percentile_25
+25% 
+434 
+
+$percentile_75
+75% 
+634 
+
+$elapsed_time_secs
+[1] 0.230211
+
+$termination_reasons
+
+black_neighbor 
+             5 </code></pre>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pre-computed plot</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tar_read</span>(plot_medium_grid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="telemetry_files/figure-html/plot-medium-grid-1.png" class="img-fluid figure-img" width="960"></p>
+<figcaption>Medium simulation grid visualization</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="system-information" class="level1">
+<h1>System Information</h1>
+<section id="r-session-information" class="level2">
+<h2 class="anchored" data-anchor-id="r-session-information">R Session Information</h2>
+<p>Complete session information including R version, platform, and loaded packages:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load session info from targets pipeline</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>sess_info <span class="ot">&lt;-</span> <span class="fu">tar_read</span>(session_info)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Display formatted session info</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(sess_info)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>R version 4.5.2 (2025-10-31)
+Platform: aarch64-apple-darwin24.6.0
+Running under: macOS Sequoia 15.7.1
+
+Matrix products: default
+BLAS:   /nix/store/jammm5gz621n7dkzfzc1c43gs6xv9a10-blas-3/lib/libblas.dylib 
+LAPACK: /nix/store/30ypx3jnyq4r1z4nv742j1csfflsd66v-openblas-0.3.30/lib/libopenblasp-r0.3.30.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: UTC
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] randomwalk_2.1.0   testthat_3.2.3     quarto_1.5.1       pkgdown_2.1.3     
+ [5] logger_0.4.1       ggplot2_4.0.0      DT_0.34.0          dplyr_1.1.4       
+ [9] devtools_2.4.6     usethis_3.2.1      tarchetypes_0.13.2 targets_1.11.4    
+
+loaded via a namespace (and not attached):
+ [1] gtable_0.3.6       xfun_0.54          htmlwidgets_1.6.4  remotes_2.5.0     
+ [5] processx_3.8.6     callr_3.7.6        vctrs_0.6.5        tools_4.5.2       
+ [9] ps_1.9.1           generics_0.1.4     base64url_1.4      parallel_4.5.2    
+[13] tibble_3.3.0       pkgconfig_2.0.3    mirai_2.5.1        data.table_1.17.8 
+[17] secretbase_1.0.5   RColorBrewer_1.1-3 S7_0.2.0           desc_1.4.3        
+[21] lifecycle_1.0.4    compiler_4.5.2     farver_2.1.2       brio_1.1.5        
+[25] codetools_0.2-20   htmltools_0.5.8.1  yaml_2.3.10        later_1.4.4       
+[29] pillar_1.11.1      crew_1.3.0         ellipsis_0.3.2     autometric_0.1.2  
+[33] cachem_1.1.0       sessioninfo_1.2.3  tidyselect_1.2.1   digest_0.6.37     
+[37] purrr_1.1.0        rprojroot_2.1.1    fastmap_1.2.0      grid_4.5.2        
+[41] cli_3.6.5          magrittr_2.0.4     pkgbuild_1.4.8     withr_3.0.2       
+[45] promises_1.5.0     prettyunits_1.2.0  scales_1.4.0       backports_1.5.0   
+[49] rmarkdown_2.30     otel_0.2.0         igraph_2.2.1       memoise_2.0.1     
+[53] evaluate_1.0.5     knitr_1.50         rlang_1.1.6        Rcpp_1.1.0        
+[57] nanonext_1.7.2     glue_1.8.0         collections_0.3.9  pkgload_1.4.1     
+[61] rstudioapi_0.17.1  jsonlite_2.0.0     R6_2.6.1           fs_1.6.6          </code></pre>
+</div>
+</div>
+</section>
+<section id="gitgithub-summary" class="level2">
+<h2 class="anchored" data-anchor-id="gitgithub-summary">Git/GitHub Summary</h2>
+<p>Version control and repository information:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load git summary from targets pipeline</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>git_info <span class="ot">&lt;-</span> <span class="fu">tar_read</span>(git_summary)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Display as formatted table</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Field =</span> <span class="fu">c</span>(<span class="st">"Branch"</span>, <span class="st">"Commit"</span>, <span class="st">"Remote"</span>, <span class="st">"Status"</span>),</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    git_info<span class="sc">$</span>branch,</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    git_info<span class="sc">$</span>commit,</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">basename</span>(git_info<span class="sc">$</span>remote),</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">length</span>(git_info<span class="sc">$</span>status) <span class="sc">==</span> <span class="dv">0</span>) <span class="st">"Clean"</span> <span class="cf">else</span> <span class="st">"Modified"</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">"Git Repository Information"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Git Repository Information</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Field</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Branch</td>
+<td style="text-align: left;">main</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Commit</td>
+<td style="text-align: left;">f6e034c</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Remote</td>
+<td style="text-align: left;">randomwalk.git</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Status</td>
+<td style="text-align: left;">Modified</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</section>
+<section id="pipeline-reproducibility" class="level1">
+<h1>Pipeline Reproducibility</h1>
+<p>All objects displayed in this vignette are pre-computed and stored in the targets pipeline. To reproduce these results:</p>
+<ol type="1">
+<li>Ensure you have the required packages installed (see DESCRIPTION)</li>
+<li>Run <code>targets::tar_make()</code> to execute the pipeline</li>
+<li>Render this vignette to see the updated results</li>
+</ol>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reproduce the pipeline</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>()</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co"># View the pipeline network</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_visnetwork</span>()</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check target status</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_meta</span>()</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="co"># View longest-running targets</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="fu">tar_meta</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(seconds)) <span class="sc">%&gt;%</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, seconds, bytes) <span class="sc">%&gt;%</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">10</span>)</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate coverage report</span></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(covr)</span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>coverage <span class="ot">&lt;-</span> <span class="fu">package_coverage</span>()</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a><span class="fu">report</span>(coverage)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="performance-recommendations" class="level1">
+<h1>Performance Recommendations</h1>
+<p>Based on the telemetry analysis:</p>
+<section id="high-priority-optimizations" class="level2">
+<h2 class="anchored" data-anchor-id="high-priority-optimizations">High-Priority Optimizations</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify optimization candidates</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>candidates <span class="ot">&lt;-</span> telemetry <span class="sc">%&gt;%</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">time_percentile =</span> <span class="fu">percent_rank</span>(time_seconds),</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">memory_percentile =</span> <span class="fu">percent_rank</span>(memory_mb),</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">priority_score =</span> time_percentile <span class="sc">+</span> memory_percentile</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(priority_score <span class="sc">&gt;</span> <span class="fl">1.5</span>) <span class="sc">%&gt;%</span>  <span class="co"># Top 25% in both dimensions</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(priority_score)) <span class="sc">%&gt;%</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, time_formatted, memory_mb, priority_score)</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">nrow</span>(candidates) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>  candidates <span class="sc">%&gt;%</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">kable</span>(</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">digits =</span> <span class="dv">2</span>,</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Target"</span>, <span class="st">"Time"</span>, <span class="st">"Memory (MB)"</span>, <span class="st">"Priority Score"</span>),</span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Optimization Candidates (High Time + High Memory)"</span></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"No high-priority optimization candidates identified.</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Optimization Candidates (High Time + High Memory)</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Target</th>
+<th style="text-align: left;">Time</th>
+<th style="text-align: right;">Memory (MB)</th>
+<th style="text-align: right;">Priority Score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">pkgdown_site</td>
+<td style="text-align: left;">9.96s</td>
+<td style="text-align: right;">383.41</td>
+<td style="text-align: right;">1.97</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">dynamic_broadcasting</td>
+<td style="text-align: left;">8.77s</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: right;">1.71</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">step_distribution_analysis</td>
+<td style="text-align: left;">4.72s</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: right;">1.63</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sim_dynamic_large</td>
+<td style="text-align: left;">3.11s</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: right;">1.57</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sim_static_large</td>
+<td style="text-align: left;">3.42s</td>
+<td style="text-align: right;">0.12</td>
+<td style="text-align: right;">1.57</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="recommended-actions" class="level2">
+<h2 class="anchored" data-anchor-id="recommended-actions">Recommended Actions</h2>
+<ol type="1">
+<li><strong>Cache expensive targets</strong>: Use <code>tar_target(format = "qs")</code> for large objects</li>
+<li><strong>Parallelize independent targets</strong>: Use <code>tar_make_future()</code> or <code>tar_make_clustermq()</code></li>
+<li><strong>Optimize algorithms</strong>: Review code for longest-running targets</li>
+<li><strong>Reduce memory footprint</strong>: Use memory-efficient data structures</li>
+<li><strong>Add test coverage</strong>: Focus on files with &lt;80% coverage</li>
+</ol>
+</section>
+</section>
+<section id="summary" class="level1">
+<h1>Summary</h1>
+<p>This telemetry vignette provides comprehensive performance insights:</p>
+<ul>
+<li><strong>Code Coverage</strong>: <code>covr</code> package analysis identifies untested code</li>
+<li><strong>Pipeline Performance</strong>: Execution time and memory usage per target</li>
+<li><strong>Performance Hotspots</strong>: Longest-running and memory-intensive targets identified</li>
+<li><strong>Network Visualization</strong>: <code>tar_visnetwork()</code> shows pipeline dependencies</li>
+<li><strong>Optimization Guidance</strong>: Data-driven recommendations for improvements</li>
+<li><strong>Reproducibility</strong>: Version control and system information</li>
+</ul>
+<p>All statistics are generated automatically from the targets pipeline, ensuring consistency across builds.</p>
+<hr>
+<p><em>Generated on: 2025-12-28 23:26:41.798847</em></p>
+<p><em>Using targets pipeline from: <code>_targets.R</code></em></p>
+<section id="session-info" class="level2">
+<h2 class="anchored" data-anchor-id="session-info">Session Info</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>R version 4.5.2 (2025-10-31)
+Platform: aarch64-apple-darwin24.6.0
+Running under: macOS Sequoia 15.7.1
+
+Matrix products: default
+BLAS:   /nix/store/jammm5gz621n7dkzfzc1c43gs6xv9a10-blas-3/lib/libblas.dylib 
+LAPACK: /nix/store/30ypx3jnyq4r1z4nv742j1csfflsd66v-openblas-0.3.30/lib/libopenblasp-r0.3.30.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: UTC
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] tidyr_1.3.1    knitr_1.50     ggplot2_4.0.0  dplyr_1.1.4    targets_1.11.4
+
+loaded via a namespace (and not attached):
+ [1] base64url_1.4      gtable_0.3.6       jsonlite_2.0.0     compiler_4.5.2    
+ [5] tidyselect_1.2.1   callr_3.7.6        scales_1.4.0       yaml_2.3.10       
+ [9] fastmap_1.2.0      R6_2.6.1           labeling_0.4.3     generics_0.1.4    
+[13] igraph_2.2.1       htmlwidgets_1.6.4  backports_1.5.0    tibble_3.3.0      
+[17] pillar_1.11.1      RColorBrewer_1.1-3 rlang_1.1.6        xfun_0.54         
+[21] S7_0.2.0           cli_3.6.5          withr_3.0.2        magrittr_2.0.4    
+[25] ps_1.9.1           digest_0.6.37      grid_4.5.2         processx_3.8.6    
+[29] secretbase_1.0.5   lifecycle_1.0.4    prettyunits_1.2.0  vctrs_0.6.5       
+[33] evaluate_1.0.5     glue_1.8.0         data.table_1.17.8  farver_2.1.2      
+[37] codetools_0.2-20   purrr_1.1.0        rmarkdown_2.30     tools_4.5.2       
+[41] pkgconfig_2.0.3    htmltools_0.5.8.1 </code></pre>
+</div>
+</div>
+</section>
+<section id="version-information" class="level2">
+<h2 class="anchored" data-anchor-id="version-information">Version Information</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show version details</summary>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Git commit information</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>git_commit <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system</span>(<span class="st">"git rev-parse HEAD"</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Not available"</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>git_commit_short <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system</span>(<span class="st">"git rev-parse --short HEAD"</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Not available"</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Nix environment information</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>nix_version <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system</span>(<span class="st">'nix-instantiate --eval -E "(import &lt;nixpkgs&gt; {}).lib.version"'</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Not in Nix environment"</span></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Package version</span></span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>pkg_version <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.character</span>(<span class="fu">packageVersion</span>(<span class="st">"randomwalk"</span>)),</span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Package not loaded"</span></span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Build timestamp</span></span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>build_time <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"=== BUILD INFORMATION ===</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>=== BUILD INFORMATION ===</code></pre>
+</div>
+<details class="code-fold">
+<summary>Show version details</summary>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Git Commit:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Git Commit:</code></pre>
+</div>
+<details class="code-fold">
+<summary>Show version details</summary>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  Full SHA:  "</span>, git_commit, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Full SHA:   4d25921bf66bd978feef24f616546d8851d55376 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Show version details</summary>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  Short SHA: "</span>, git_commit_short, <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Short SHA:  4d25921 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Show version details</summary>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Nix Environment:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Nix Environment:</code></pre>
+</div>
+<details class="code-fold">
+<summary>Show version details</summary>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  nixpkgs:   "</span>, nix_version, <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  nixpkgs:    "26.05pre-git" </code></pre>
+</div>
+<details class="code-fold">
+<summary>Show version details</summary>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Package:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Package:</code></pre>
+</div>
+<details class="code-fold">
+<summary>Show version details</summary>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  randomwalk:"</span>, pkg_version, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  randomwalk: Package not loaded </code></pre>
+</div>
+<details class="code-fold">
+<summary>Show version details</summary>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  R version: "</span>, R.version.string, <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  R version:  R version 4.5.2 (2025-10-31) </code></pre>
+</div>
+<details class="code-fold">
+<summary>Show version details</summary>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Build Time:  "</span>, <span class="fu">format</span>(build_time, <span class="st">"%Y-%m-%d %H:%M:%S %Z"</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Build Time:   2025-12-28 23:26:42 UTC </code></pre>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

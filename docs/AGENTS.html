@@ -230,9 +230,70 @@
 <li>Include session logs IN the PR, not after merge</li>
 <li>Update documentation when adding/modifying features</li>
 </ul><div class="section level3">
+<h3 id="version-information-in-vignettes">Version Information in Vignettes<a class="anchor" aria-label="anchor" href="#version-information-in-vignettes"></a></h3>
+<p><strong>MANDATORY</strong>: Every vignette (<code>.qmd</code> file) MUST include version tracking information at the end.</p>
+<p>Add these two sections after the main content, in this order:</p>
+<ol style="list-style-type: decimal"><li>
+<p><strong>Session Info Section</strong>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">## Session Info</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="in">```{r session-info}</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="in">sessionInfo()</span></span></code></pre></div>
+<p>```</p>
+</li>
+<li>
+<p><strong>Version Information Section</strong>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">## Version Information</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="in">```{r version-info}</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="in">#| code-fold: true</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="in">#| code-summary: "Show version details"</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="in"># Git commit information</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="in">git_commit &lt;- tryCatch(</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="in">  system("git rev-parse HEAD", intern = TRUE),</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="in">  error = function(e) "Not available"</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="in">)</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="in">git_commit_short &lt;- tryCatch(</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="in">  system("git rev-parse --short HEAD", intern = TRUE),</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="in">  error = function(e) "Not available"</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="in">)</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="in"># Nix environment information</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="in">nix_version &lt;- tryCatch(</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="in">  system('nix-instantiate --eval -E "(import &lt;nixpkgs&gt; {}).lib.version"', intern = TRUE),</span></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="in">  error = function(e) "Not in Nix environment"</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="in">)</span></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="in"># Package version</span></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="in">pkg_version &lt;- tryCatch(</span></span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a><span class="in">  as.character(packageVersion("randomwalk")),</span></span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="in">  error = function(e) "Package not loaded"</span></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="in">)</span></span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a></span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a><span class="in"># Build timestamp</span></span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a><span class="in">build_time &lt;- Sys.time()</span></span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a></span>
+<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a><span class="in">cat("=== BUILD INFORMATION ===\n\n")</span></span>
+<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a><span class="in">cat("Git Commit:\n")</span></span>
+<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a><span class="in">cat("  Full SHA:  ", git_commit, "\n")</span></span>
+<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a><span class="in">cat("  Short SHA: ", git_commit_short, "\n\n")</span></span>
+<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a><span class="in">cat("Nix Environment:\n")</span></span>
+<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a><span class="in">cat("  nixpkgs:   ", nix_version, "\n\n")</span></span>
+<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a><span class="in">cat("Package:\n")</span></span>
+<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a><span class="in">cat("  randomwalk:", pkg_version, "\n")</span></span>
+<span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a><span class="in">cat("  R version: ", R.version.string, "\n\n")</span></span>
+<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a><span class="in">cat("Build Time:  ", format(build_time, "%Y-%m-%d %H:%M:%S %Z"), "\n")</span></span></code></pre></div>
+<p>```</p>
+</li>
+</ol><p><strong>Purpose</strong>: This enables users to: - Identify exact build version when reporting issues - Reproduce builds with specific git commits - Track Nix environment consistency - Debug environment-specific problems</p>
+<p><strong>When to add</strong>: - When creating new vignettes - When modifying existing vignettes (add if missing)</p>
+<p><strong>Applies to</strong>: ALL projects using Nix + R package development workflow.</p>
+</div>
+<div class="section level3">
 <h3 id="git-configuration-best-practices">Git Configuration Best Practices<a class="anchor" aria-label="anchor" href="#git-configuration-best-practices"></a></h3>
 <p><strong>One-time global setup</strong>: Run <code><a href="https://usethis.r-lib.org/reference/git_vaccinate.html" class="external-link">usethis::git_vaccinate()</a></code> to add common temporary files to your global <code>.gitignore</code>:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/git_vaccinate.html" class="external-link">git_vaccinate</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>This adds patterns to <code>~/.gitignore_global</code> for: - <code>.DS_Store</code> (macOS) - <code>Thumbs.db</code> (Windows) - <code>.Rproj.user/</code>, <code>.Rhistory</code>, <code>.RData</code> (R/RStudio) - Editor temp files (vim, emacs, etc.) - And many other common cruft files</p>
 <p><strong>Benefits</strong>: - Prevents accidentally committing system/editor files - Keeps repositories clean across all projects - One-time setup applies to every git repository - Complements project-specific <code>.gitignore</code> files</p>
@@ -242,17 +303,17 @@
 <div class="section level2">
 <h2 id="github-api-access">GitHub API Access<a class="anchor" aria-label="anchor" href="#github-api-access"></a></h2>
 <p><strong>Accessing GitHub via CLI</strong>: Use <code>GITHUB_PAT</code> environment variable for authentication.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Set GH_TOKEN from GITHUB_PAT</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="bu">export</span> <span class="va">GH_TOKEN</span><span class="op">=</span><span class="va">$GITHUB_PAT</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># Query open PRs</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="ex">gh</span> pr list <span class="at">--state</span> open <span class="at">--limit</span> 50 <span class="at">--json</span> number,title,headRefName</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co"># Query open issues</span></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="ex">gh</span> issue list <span class="at">--state</span> open <span class="at">--limit</span> 50 <span class="at">--json</span> number,title,labels,createdAt</span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a></span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co"># Get PR details</span></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="ex">gh</span> pr view 123 <span class="at">--json</span> number,title,state,mergeable</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Set GH_TOKEN from GITHUB_PAT</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="bu">export</span> <span class="va">GH_TOKEN</span><span class="op">=</span><span class="va">$GITHUB_PAT</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co"># Query open PRs</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="ex">gh</span> pr list <span class="at">--state</span> open <span class="at">--limit</span> 50 <span class="at">--json</span> number,title,headRefName</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co"># Query open issues</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="ex">gh</span> issue list <span class="at">--state</span> open <span class="at">--limit</span> 50 <span class="at">--json</span> number,title,labels,createdAt</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co"># Get PR details</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="ex">gh</span> pr view 123 <span class="at">--json</span> number,title,state,mergeable</span></code></pre></div>
 <p><strong>Key Learnings</strong> (Session 2025-12-23): - ✅ <code>GITHUB_PAT</code> works reliably for gh CLI authentication - ✅ Use for querying current PR/issue status (avoid stale documentation) - ✅ Always verify data freshness via API before making assumptions - ✅ Export as <code>GH_TOKEN</code> for gh CLI compatibility</p>
 <p><strong>Best Practices</strong>: - Always query GitHub API for ground truth (don’t trust old docs) - Use <code>--json</code> flag for structured output - Document API queries in session logs for reproducibility - Verify environment variable is set: <code>echo $GITHUB_PAT | head -c 20</code></p>
 </div>
@@ -325,7 +386,5 @@
 
 
 
-
-
-  </body></html>
+  <script src="open-vignettes-in-new-tab.js"></script></body></html>
 
