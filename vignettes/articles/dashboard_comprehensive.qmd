@@ -910,6 +910,79 @@ Experiment with different parameters:
 - **8-hood**: Enable diagonal movement
 - **Wrap boundary**: Toroidal grid (no boundaries)
 
+## Sync vs Async: Understanding the Processing Modes
+
+The `randomwalk` package supports different processing modes depending on your environment:
+
+### Mode Comparison
+
+| Aspect | Sync Sequential | Async Parallel |
+|--------|-----------------|----------------|
+| **Parameter** | `workers = 0` | `workers >= 1` |
+| **Processing** | One walker at a time | Multiple walkers simultaneously |
+| **Backend** | None (direct R) | `crew` with `mirai` |
+| **Grid sync** | Always consistent | Static snapshots (eventual consistency) |
+| **Speed** | Baseline | 2-4x faster (depending on cores) |
+| **Available in WebR** | ✅ Yes | ❌ No (browser limitation) |
+| **Available in Native R** | ✅ Yes | ✅ Yes |
+
+### When to Use Each Mode
+
+**Use Sync Sequential (`workers = 0`) when:**
+- Running in browser (WebR/Shinylive) - *only option*
+- Need deterministic, reproducible results
+- Debugging or understanding walker behavior
+- Grid size is small (<50×50)
+- Teaching/demonstrating concepts
+
+**Use Async Parallel (`workers >= 2`) when:**
+- Running in native R (not browser)
+- Large grids (100×100+) with many walkers
+- Performance is critical
+- You have multiple CPU cores available
+- Slight grid sync delays are acceptable
+
+### Grid Synchronization Modes
+
+When using async parallel, the `sync_mode` parameter controls how workers see the grid:
+
+| sync_mode | Description | Status |
+|-----------|-------------|--------|
+| `"static"` | Workers get initial snapshot, no updates | ✅ Current default |
+| `"dynamic"` | Real-time broadcasting via nanonext | 🚧 Future (Issue #130) |
+
+**Static mode** means workers may not see black pixels created by other workers during the same simulation. This is acceptable for most use cases and has minimal performance overhead.
+
+**Dynamic mode** (planned) will use nanonext pub/sub to broadcast black pixel events in real-time, enabling true walker interactions across workers.
+
+### Code Examples
+
+```r
+# Sync sequential (works everywhere including WebR)
+result_sync <- run_simulation(
+  grid_size = 100,
+  n_walkers = 500,
+  workers = 0  # Sequential processing
+)
+
+# Async parallel (native R only)
+result_async <- run_simulation(
+  grid_size = 100,
+  n_walkers = 500,
+  workers = 4,           # Use 4 parallel workers
+  sync_mode = "static"   # Grid snapshots (default)
+)
+```
+
+### Why WebR Can't Use Async
+
+WebR runs R in WebAssembly within the browser. This environment:
+- Has no access to system threads or processes
+- Cannot use `mirai`/`nanonext` (require native sockets)
+- Runs entirely in a single JavaScript thread
+
+The dashboards in this browser automatically use `workers = 0` and display a note about this limitation.
+
 ## Related Documentation
 
 - **Issue #129**: [Async parallel support in WebAssembly](https://github.com/JohnGavin/randomwalk/issues/129)
