@@ -63,7 +63,10 @@ simulate_walker_dynamic <- function(walker_id,
     # ───────────────────────────────────────────────────────────
     # STEP 1: Pop ALL broadcast messages, update local grid
     # ───────────────────────────────────────────────────────────
-    local_grid <- update_grid_from_broadcasts(sub_socket, local_grid)
+    # Only try to receive broadcasts if socket is available
+    if (!is.null(sub_socket)) {
+      local_grid <- update_grid_from_broadcasts(sub_socket, local_grid)
+    }
 
     # ───────────────────────────────────────────────────────────
     # STEP 2: Check neighbors for black pixels

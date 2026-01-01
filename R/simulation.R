@@ -555,28 +555,35 @@ run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
       controller$push(
         name = paste0("walker_", walker$id),
         command = {
-          # Initialize subscriber socket in worker (receives broadcasts from main)
-          sub_socket <- init_subscriber_socket(
-            host = "localhost",
-            port = port
+          # Try to initialize subscriber socket in worker
+          # Note: nanonext sockets may not work in crew subprocesses
+          sub_socket <- tryCatch(
+            {
+              init_subscriber_socket(host = "localhost", port = port)
+            },
+            error = function(e) {
+              # Socket creation failed - worker will run without receiving broadcasts
+              NULL
+            }
           )
 
-          # Run walker with dynamic grid updates
-          # NOTE: pub_socket=NULL - workers don't broadcast directly
-          # Main process broadcasts when it receives completed walker results
+          # Run walker - with or without socket
+          # If sub_socket is NULL, worker uses static grid snapshot
           result <- simulate_walker_dynamic(
             walker_id = walker$id,
             initial_grid = initial_grid,
             pub_socket = NULL,  # Workers receive only, main broadcasts
-            sub_socket = sub_socket,
+            sub_socket = sub_socket,  # May be NULL if socket failed
             grid_size = grid_size,
             neighborhood = neighborhood,
             boundary = boundary,
             max_steps = max_steps
           )
 
-          # Cleanup
-          close_sockets(sub_socket)
+          # Cleanup if socket was created
+          if (!is.null(sub_socket)) {
+            tryCatch(close_sockets(sub_socket), error = function(e) NULL)
+          }
 
           result
         },
@@ -602,7 +609,7 @@ run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
           handle_boundary = handle_boundary,
           sample_start_position = sample_start_position
         ),
-        packages = c("logger", "nanonext")
+        packages = c("nanonext")
       )
     }
 
