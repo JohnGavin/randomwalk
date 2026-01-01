@@ -483,6 +483,16 @@ list(
     quiet = FALSE  # Show quarto errors for debugging
   ),
 
+  tarchetypes::tar_quarto(
+    name = dashboard_comprehensive,
+    path = "vignettes/articles/dashboard_comprehensive.qmd"
+  ),
+
+  tarchetypes::tar_quarto(
+    name = defensive_programming,
+    path = "vignettes/articles/defensive_programming.qmd"
+  ),
+
   # ============================================================================
   # pkgdown Site Building
   # ============================================================================
