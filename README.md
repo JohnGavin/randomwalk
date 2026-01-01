@@ -246,26 +246,22 @@ The following vignettes are temporarily disabled (see [Issue #132](https://githu
 
 Key documentation for development and deployment workflows:
 
+### Deployment & Workflow
+
 - **[Deployment Guide](inst/docs/DEPLOYMENT_GUIDE.md)** - Complete deployment workflow (GitHub Actions → GitHub Pages)
-  - Step-by-step deployment process
-  - Verification methods and troubleshooting
-  - Session management and recovery
-  - Tag-based version management
-
 - **[Cachix Workflow](inst/docs/CACHIX_WORKFLOW.md)** - Binary cache management with rix
-  - Layered cache approach (cache.nixos.org → rstats-on-nix → johngavin)
-  - Automatic garbage collection
-  - Package pinning strategy
+- **[Development Workflow](inst/docs/DEVELOPMENT_WORKFLOW.md)** - Complete guide for developing the randomwalk package
+- **[WASM Async Status](inst/docs/WASM_ASYNC_STATUS.md)** - WebAssembly async compatibility status
 
-- **[Issues Grouped by Difficulty](ISSUES_GROUPED.md)** - All open GitHub issues organized by:
-  - Group 1: Documentation (⭐ Easiest)
-  - Group 2: Workflow Improvements (⭐⭐ Medium)
-  - Group 3: Testing/CI (⭐⭐⭐ Medium-Hard)
-  - Group 4: Features (⭐⭐⭐⭐⭐ Hardest)
+### Critical Workflows
 
-- **[Recent Changes Summary](inst/docs/SUMMARY.md)** - December 2025 cachix workflow updates
+- **[Pkgdown/Quarto Workflow](inst/docs/PKGDOWN_QUARTO_WORKFLOW.md)** - CRITICAL: Build locally, deploy remotely (Nix + bslib incompatibility)
+- **[Quarto-WebR Migration Plan](inst/docs/PLAN_quarto_webr_migration.md)** - Plan to migrate from Shinylive to Quarto-WebR
 
-- **[Documentation Consolidation Report](inst/docs/CONSOLIDATION_SUMMARY.md)** - 78% reduction in markdown files
+### Issue Tracking
+
+- **[Open Issues](https://github.com/JohnGavin/randomwalk/issues)** - GitHub issue tracker (primary)
+- **[Project Board](https://github.com/JohnGavin/randomwalk/projects)** - Visual progress tracking
 
 ## 📁 Package Structure
 
@@ -320,10 +316,10 @@ Visit the [project wiki](https://github.com/JohnGavin/randomwalk/wiki) for compr
 
 ### Additional Resources
 
-- **[Development Workflow Guide](inst/docs/DEVELOPMENT_WORKFLOW.md)** - Complete guide for developing the randomwalk package in the nix environment
-- [Project Info](PROJECT_INFO.md) - Quick reference with restore instructions
+- **[Agent Guidelines](AGENTS.md)** - Mandatory testing requirements and workflow for AI agents
 - [R/setup/](R/setup/) - Development workflow scripts for reproducibility
 - [.github/workflows/](.github/workflows/) - CI/CD workflow configurations
+- [archive/](archive/) - Historical session logs and documentation
 
 ## License
 
