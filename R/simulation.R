@@ -13,10 +13,11 @@
 #'   Requires crew and nanonext packages.
 #' @param sync_mode Character. Grid synchronization mode for async simulations.
 #'   Options: "static" (default, workers receive frozen grid snapshot),
-#'   "dynamic" (crew-based with fallback to static if sockets fail), or
-#'   "mirai_dynamic" (true real-time broadcasting using mirai + nanonext pub/sub).
-#'   Only applies when workers > 0. mirai_dynamic mode provides true inter-worker
-#'   communication for collision detection. Requires nanonext package.
+#'   "dynamic" (crew-based with fallback to static if sockets fail),
+#'   "mirai_dynamic" (mirai backend, currently static due to socket issues), or
+#'   "chunked" (RECOMMENDED - processes walkers in batches of 10, updating grid
+#'   between batches for near-real-time collision detection).
+#'   Only applies when workers > 0.
 #' @param max_steps Integer. Maximum steps per walker before forced termination.
 #'   Default 10000.
 #' @param verbose Logical. If TRUE, enables detailed logging. Default FALSE.
@@ -78,8 +79,8 @@ run_simulation <- function(grid_size = 10,
     stop("boundary must be 'terminate' or 'wrap'")
   }
 
-  if (!sync_mode %in% c("static", "dynamic", "mirai_dynamic")) {
-    stop("sync_mode must be 'static', 'dynamic', or 'mirai_dynamic'")
+  if (!sync_mode %in% c("static", "dynamic", "mirai_dynamic", "chunked")) {
+    stop("sync_mode must be 'static', 'dynamic', 'mirai_dynamic', or 'chunked'")
   }
 
   # Validate dynamic mode requirements
@@ -138,6 +139,21 @@ run_simulation <- function(grid_size = 10,
         validate_strict = validate_strict,
         validate_percent = validate_percent,
         log_interval = log_interval
+      )
+    } else if (sync_mode == "chunked") {
+      # Chunked execution - batches with grid sync between
+      result <- run_simulation_chunked(
+        grid = grid,
+        walkers = walkers,
+        n_workers = workers,
+        neighborhood = neighborhood,
+        boundary = boundary,
+        max_steps = max_steps,
+        start_time = start_time,
+        validate_strict = validate_strict,
+        validate_percent = validate_percent,
+        log_interval = log_interval,
+        batch_size = 10  # Process 10 walkers per batch
       )
     } else if (sync_mode == "dynamic") {
       # Dynamic broadcasting mode (crew-based, fallback to static)
@@ -1086,6 +1102,240 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
     walkers = completed_walkers,
     statistics = statistics
   )
+}
+
+
+#' Run Simulation with Chunked Execution (Near Real-time Updates)
+#'
+#' Processes walkers in batches, updating the grid between batches.
+#' Walkers in subsequent batches see black pixels created by earlier batches.
+#' Uses crew for parallel execution within each batch.
+#'
+#' @inheritParams run_simulation_async_dynamic
+#' @param batch_size Integer. Number of walkers per batch (default 10).
+#' @return List with grid, walkers, and statistics
+#' @keywords internal
+run_simulation_chunked <- function(grid, walkers, n_workers, neighborhood,
+                                    boundary, max_steps, start_time,
+                                    validate_strict, validate_percent, log_interval,
+                                    batch_size = 10) {
+
+  n_total <- length(walkers)
+  n_batches <- ceiling(n_total / batch_size)
+  grid_size <- nrow(grid)
+
+  logger::log_info("Starting CHUNKED simulation ({n_workers} workers, {batch_size} walkers/batch, {n_batches} batches)")
+
+  # Create crew controller
+  controller <- create_controller(n_workers)
+
+  completed_walkers <- list()
+  collision_count <- 0
+
+  tryCatch({
+    for (batch_num in seq_len(n_batches)) {
+      # Get walkers for this batch
+      batch_start <- (batch_num - 1) * batch_size + 1
+      batch_end <- min(batch_num * batch_size, n_total)
+      batch_walkers <- walkers[batch_start:batch_end]
+
+      logger::log_info("Batch {batch_num}/{n_batches}: walkers {batch_start}-{batch_end} (grid has {count_black_pixels(grid)} black pixels)")
+
+      # Submit batch tasks
+      for (walker in batch_walkers) {
+        controller$push(
+          name = paste0("walker_", walker$id),
+          command = {
+            local_grid <- grid_snapshot
+            position <- c(sample(grid_size, 1), sample(grid_size, 1))
+            path <- list()
+
+            # Check if started on black
+            if (local_grid[position[1], position[2]] == "black") {
+              return(list(
+                walker_id = walker_id,
+                status = "started_on_black",
+                steps = 0,
+                position = position,
+                path = list(),
+                black_pixel_created = FALSE
+              ))
+            }
+
+            # Main simulation loop
+            for (step in seq_len(max_steps_val)) {
+              # Check neighbors for black
+              neighbors <- if (neighborhood_val == "4-hood") {
+                list(
+                  c(position[1] - 1, position[2]),
+                  c(position[1] + 1, position[2]),
+                  c(position[1], position[2] - 1),
+                  c(position[1], position[2] + 1)
+                )
+              } else {
+                list(
+                  c(position[1] - 1, position[2]),
+                  c(position[1] + 1, position[2]),
+                  c(position[1], position[2] - 1),
+                  c(position[1], position[2] + 1),
+                  c(position[1] - 1, position[2] - 1),
+                  c(position[1] - 1, position[2] + 1),
+                  c(position[1] + 1, position[2] - 1),
+                  c(position[1] + 1, position[2] + 1)
+                )
+              }
+
+              has_black_neighbor <- any(sapply(neighbors, function(pos) {
+                if (pos[1] < 1 || pos[1] > grid_size || pos[2] < 1 || pos[2] > grid_size) {
+                  return(FALSE)
+                }
+                local_grid[pos[1], pos[2]] == "black"
+              }))
+
+              if (has_black_neighbor) {
+                return(list(
+                  walker_id = walker_id,
+                  status = "black_neighbor_detected",
+                  steps = step,
+                  position = position,
+                  path = path,
+                  black_pixel_created = TRUE
+                ))
+              }
+
+              # Random walk
+              valid_neighbors <- Filter(function(pos) {
+                pos[1] >= 1 && pos[1] <= grid_size && pos[2] >= 1 && pos[2] <= grid_size
+              }, neighbors)
+
+              if (length(valid_neighbors) == 0) {
+                return(list(
+                  walker_id = walker_id,
+                  status = "no_valid_moves",
+                  steps = step,
+                  position = position,
+                  path = path,
+                  black_pixel_created = FALSE
+                ))
+              }
+
+              next_pos <- valid_neighbors[[sample(length(valid_neighbors), 1)]]
+
+              # Check boundary
+              if (next_pos[1] < 1 || next_pos[1] > grid_size ||
+                  next_pos[2] < 1 || next_pos[2] > grid_size) {
+                if (boundary_val == "terminate") {
+                  return(list(
+                    walker_id = walker_id,
+                    status = "boundary",
+                    steps = step,
+                    position = position,
+                    path = path,
+                    black_pixel_created = FALSE
+                  ))
+                } else {
+                  next_pos <- c(
+                    ((next_pos[1] - 1) %% grid_size) + 1,
+                    ((next_pos[2] - 1) %% grid_size) + 1
+                  )
+                }
+              }
+
+              path[[step]] <- position
+              position <- next_pos
+            }
+
+            list(
+              walker_id = walker_id,
+              status = "max_steps",
+              steps = max_steps_val,
+              position = position,
+              path = path,
+              black_pixel_created = FALSE
+            )
+          },
+          data = list(
+            walker_id = walker$id,
+            grid_snapshot = grid,  # Current grid state for this batch
+            grid_size = grid_size,
+            neighborhood_val = neighborhood,
+            boundary_val = boundary,
+            max_steps_val = max_steps
+          )
+        )
+      }
+
+      # Wait for all tasks in this batch to complete
+      batch_results <- list()
+      batch_completed <- 0
+      batch_size_actual <- length(batch_walkers)
+
+      while (batch_completed < batch_size_actual) {
+        result <- controller$pop()
+        if (!is.null(result)) {
+          walker_result <- result$result[[1]]
+
+          if (!is.null(walker_result$walker_id)) {
+            batch_results[[as.character(walker_result$walker_id)]] <- walker_result
+            batch_completed <- batch_completed + 1
+
+            # Update grid if walker created black pixel
+            if (isTRUE(walker_result$black_pixel_created)) {
+              pos <- walker_result$position
+              grid[pos[1], pos[2]] <- "black"
+              collision_count <- collision_count + 1
+            }
+          }
+        }
+        Sys.sleep(0.01)
+      }
+
+      # Add batch results to completed walkers
+      completed_walkers <- c(completed_walkers, batch_results)
+
+      logger::log_info("Batch {batch_num} complete: {collision_count} total collisions so far")
+    }
+
+    elapsed_time <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+    logger::log_info("=== CHUNKED SIMULATION COMPLETE ===")
+    logger::log_info("Elapsed time: {round(elapsed_time, 1)} seconds")
+    logger::log_info("Total collisions: {collision_count}")
+
+    # Collect statistics
+    walker_steps <- sapply(completed_walkers, function(w) if(is.null(w$steps)) 0 else w$steps)
+    termination_statuses <- sapply(completed_walkers, function(w) if(is.null(w$status)) "unknown" else w$status)
+
+    statistics <- list(
+      black_pixels = count_black_pixels(grid),
+      black_percentage = get_black_percentage(grid),
+      grid_size = grid_size,
+      total_walkers = n_total,
+      completed_walkers = length(completed_walkers),
+      total_steps = sum(walker_steps),
+      min_steps = if(length(walker_steps) > 0) min(walker_steps) else 0,
+      max_steps = if(length(walker_steps) > 0) max(walker_steps) else 0,
+      mean_steps = if(length(walker_steps) > 0) mean(walker_steps) else 0,
+      median_steps = if(length(walker_steps) > 0) median(walker_steps) else 0,
+      percentile_25 = if(length(walker_steps) > 0) quantile(walker_steps, 0.25) else 0,
+      percentile_75 = if(length(walker_steps) > 0) quantile(walker_steps, 0.75) else 0,
+      elapsed_time_secs = elapsed_time,
+      termination_reasons = table(termination_statuses),
+      collisions_detected = collision_count,
+      sync_mode = "chunked",
+      batch_size = batch_size,
+      n_batches = n_batches
+    )
+
+    list(
+      grid = grid,
+      walkers = completed_walkers,
+      statistics = statistics
+    )
+
+  }, finally = {
+    controller$terminate()
+    logger::log_info("Crew controller terminated")
+  })
 }
 
 
