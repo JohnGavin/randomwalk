@@ -798,16 +798,28 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
   mirai::daemons(n = n_workers, dispatcher = TRUE)
   logger::log_info("Started {n_workers} mirai daemons")
 
+  # Quick test to verify daemons are working
+  test_m <- mirai::mirai({ Sys.getpid() })
+  test_result <- test_m[]
+  logger::log_info("Daemon test: PID = {test_result}")
+
   # Initialize subscriber sockets on ALL daemons using everywhere()
   # This runs ONCE on each daemon before any tasks
+  logger::log_info("Initializing subscriber sockets on daemons...")
   mirai::everywhere({
     # Create subscriber socket connected to main's publisher
-    .sub_socket <- nanonext::socket("sub")
-    nanonext::dial(.sub_socket, sprintf("tcp://127.0.0.1:%d", .port))
-    nanonext::subscribe(.sub_socket, "")  # Subscribe to all messages
-    # Store in daemon's global environment
-    assign(".daemon_sub_socket", .sub_socket, envir = .GlobalEnv)
-    assign(".daemon_local_grid", .initial_grid, envir = .GlobalEnv)
+    tryCatch({
+      .sub_socket <- nanonext::socket("sub")
+      nanonext::dial(.sub_socket, sprintf("tcp://127.0.0.1:%d", .port))
+      nanonext::subscribe(.sub_socket, "")  # Subscribe to all messages
+      # Store in daemon's global environment
+      assign(".daemon_sub_socket", .sub_socket, envir = .GlobalEnv)
+      assign(".daemon_local_grid", .initial_grid, envir = .GlobalEnv)
+      assign(".daemon_socket_ok", TRUE, envir = .GlobalEnv)
+    }, error = function(e) {
+      assign(".daemon_socket_ok", FALSE, envir = .GlobalEnv)
+      assign(".daemon_socket_error", e$message, envir = .GlobalEnv)
+    })
   }, .port = port, .initial_grid = grid)
 
   logger::log_info("Initialized subscriber sockets on all daemons")
@@ -821,8 +833,16 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
 
     m <- mirai::mirai({
       # Get socket and grid from daemon's global environment
-      sub_socket <- get(".daemon_sub_socket", envir = .GlobalEnv)
-      local_grid <- get(".daemon_local_grid", envir = .GlobalEnv)
+      socket_ok <- tryCatch(get(".daemon_socket_ok", envir = .GlobalEnv), error = function(e) FALSE)
+      sub_socket <- if (socket_ok) {
+        tryCatch(get(".daemon_sub_socket", envir = .GlobalEnv), error = function(e) NULL)
+      } else {
+        NULL
+      }
+      local_grid <- tryCatch(
+        get(".daemon_local_grid", envir = .GlobalEnv),
+        error = function(e) .initial_grid_backup
+      )
 
       position <- c(sample(.grid_size, 1), sample(.grid_size, 1))
       path <- list()
@@ -955,7 +975,8 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
     .grid_size = grid_size,
     .neighborhood = neighborhood,
     .boundary = boundary,
-    .max_steps = max_steps
+    .max_steps = max_steps,
+    .initial_grid_backup = grid
     )
 
     task_list[[paste0("walker_", walker$id)]] <- m
@@ -969,14 +990,41 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
   n_completed <- 0
   collision_count <- 0
   last_log_time <- Sys.time()
+  loop_start_time <- Sys.time()
+  check_count <- 0
+  timeout_secs <- 120  # 2 minute timeout
 
   while (n_completed < n_total) {
+    check_count <- check_count + 1
+
+    # Timeout check
+    elapsed <- as.numeric(difftime(Sys.time(), loop_start_time, units = "secs"))
+    if (elapsed > timeout_secs) {
+      logger::log_error("TIMEOUT after {round(elapsed, 1)}s - completed only {n_completed}/{n_total}")
+      logger::log_error("Remaining tasks: {length(task_list)}")
+      # Check status of first few remaining tasks
+      for (i in seq_len(min(3, length(task_list)))) {
+        tn <- names(task_list)[i]
+        m <- task_list[[tn]]
+        logger::log_error("Task {tn}: unresolved={mirai::unresolved(m)}")
+      }
+      break
+    }
+
+    # Log every 10 seconds
+    if (check_count %% 1000 == 0) {
+      logger::log_info("Check #{check_count}: completed={n_completed}/{n_total}, elapsed={round(elapsed,1)}s, remaining_tasks={length(task_list)}")
+    }
+
     # Check for completed tasks
+    tasks_to_remove <- character(0)
     for (task_name in names(task_list)) {
       m <- task_list[[task_name]]
 
       if (!mirai::unresolved(m)) {
+        logger::log_debug("Task {task_name} resolved!")
         result <- tryCatch(m[], error = function(e) {
+          logger::log_error("Error extracting result from {task_name}: {e$message}")
           list(walker_id = NA, status = "error", error = e$message)
         })
 
