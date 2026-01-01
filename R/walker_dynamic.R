@@ -64,8 +64,12 @@ simulate_walker_dynamic <- function(walker_id,
     # STEP 1: Pop ALL broadcast messages, update local grid
     # ───────────────────────────────────────────────────────────
     # Only try to receive broadcasts if socket is available
+    # Wrap in tryCatch - nanonext sockets may fail in subprocess contexts
     if (!is.null(sub_socket)) {
-      local_grid <- update_grid_from_broadcasts(sub_socket, local_grid)
+      local_grid <- tryCatch(
+        update_grid_from_broadcasts(sub_socket, local_grid),
+        error = function(e) local_grid  # On error, keep current grid
+      )
     }
 
     # ───────────────────────────────────────────────────────────
