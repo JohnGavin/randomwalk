@@ -133,21 +133,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 #| viewerHeight: 900
 
 # ============================================================================
-# FAST Package Loading (Pre-built webR binaries from GitHub Pages)
+# FAST Package Loading (Pre-built webR binaries from R-Universe)
 # ============================================================================
-# Packages are pre-built by GitHub Actions and served from GitHub Pages
-# No compilation needed - just load directly
+# Packages are pre-built by R-Universe and served with CORS headers
+# See: https://github.com/JohnGavin/randomwalk/wiki/Shinylive-Lessons-Learned
 
 cat("\n=== DASHBOARD SETUP (OPTIMIZED) ===\n")
-cat("Loading pre-built packages from GitHub Pages...\n\n")
+cat("Loading pre-built packages from R-Universe...\n\n")
 
-# Configure repository ONCE at startup
-options(repos = c(
-  "https://johngavin.github.io/randomwalk",  # Our custom webR repo
-  "https://repo.r-wasm.org"                   # Standard webR packages
-))
+# Install randomwalk from R-Universe (has WebR/WASM binaries)
+# This approach survives pkgdown deployment transformations
+# See: WIKI_SHINYLIVE_LESSONS_LEARNED.md Issue #127
+webr::install(
+  "randomwalk",
+  repos = c(
+    "https://johngavin.r-universe.dev",  # Has WebR binaries for randomwalk
+    "https://repo.r-wasm.org"            # Standard webR packages (shiny, ggplot2, etc.)
+  )
+)
 
-# Load packages directly - NO webr::install() needed!
+# Load packages
 library(shiny)
 cat("✅ shiny\n")
 
@@ -760,14 +765,14 @@ loaded via a namespace (and not attached):
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  Full SHA:  "</span>, git_commit, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>  Full SHA:   f76d66ed0027eb7a289ba018cca51ace71aab6fd </code></pre>
+<pre><code>  Full SHA:   b3575e4a874daa17c77660974c0c1d20a59b153b </code></pre>
 </div>
 <details class="code-fold">
 <summary>Show version details</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  Short SHA: "</span>, git_commit_short, <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>  Short SHA:  f76d66e </code></pre>
+<pre><code>  Short SHA:  b3575e4 </code></pre>
 </div>
 <details class="code-fold">
 <summary>Show version details</summary>
@@ -809,7 +814,7 @@ loaded via a namespace (and not attached):
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Build Time:  "</span>, <span class="fu">format</span>(build_time, <span class="st">"%Y-%m-%d %H:%M:%S %Z"</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>Build Time:   2026-01-01 15:21:33 GMT </code></pre>
+<pre><code>Build Time:   2026-01-01 15:40:25 GMT </code></pre>
 </div>
 </div>
 </section>

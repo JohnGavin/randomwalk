@@ -53,21 +53,26 @@ This vignette provides a **simplified, focused demonstration** of synchronous ra
 #| viewerHeight: 900
 
 # ============================================================================
-# FAST Package Loading (Pre-built webR binaries from GitHub Pages)
+# FAST Package Loading (Pre-built webR binaries from R-Universe)
 # ============================================================================
-# Packages are pre-built by GitHub Actions and served from GitHub Pages
-# No compilation needed - just load directly
+# Packages are pre-built by R-Universe and served with CORS headers
+# See: https://github.com/JohnGavin/randomwalk/wiki/Shinylive-Lessons-Learned
 
 cat("\n=== DASHBOARD SETUP (OPTIMIZED) ===\n")
-cat("Loading pre-built packages from GitHub Pages...\n\n")
+cat("Loading pre-built packages from R-Universe...\n\n")
 
-# Configure repository ONCE at startup
-options(repos = c(
-  "https://johngavin.github.io/randomwalk",  # Our custom webR repo
-  "https://repo.r-wasm.org"                   # Standard webR packages
-))
+# Install randomwalk from R-Universe (has WebR/WASM binaries)
+# This approach survives pkgdown deployment transformations
+# See: WIKI_SHINYLIVE_LESSONS_LEARNED.md Issue #127
+webr::install(
+  "randomwalk",
+  repos = c(
+    "https://johngavin.r-universe.dev",  # Has WebR binaries for randomwalk
+    "https://repo.r-wasm.org"            # Standard webR packages (shiny, ggplot2, etc.)
+  )
+)
 
-# Load packages directly - NO webr::install() needed!
+# Load packages
 library(shiny)
 cat("✅ shiny\n")
 
