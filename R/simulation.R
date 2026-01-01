@@ -822,22 +822,9 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
     walker <- walkers[[i]]
 
     m <- mirai::mirai({
-      # Each worker creates its own socket connection
+      # Use passed grid directly - socket creation disabled (causes hangs in mirai)
       local_grid <- .grid_data
-      sub_socket <- tryCatch({
-        sock <- nanonext::socket("sub")
-        nanonext::dial(sock, sprintf("tcp://127.0.0.1:%d", .port))
-        nanonext::subscribe(sock, "")  # Subscribe to all messages
-        Sys.sleep(0.05)  # Brief pause to ensure connection
-        sock
-      }, error = function(e) NULL)
-
-      # Ensure socket cleanup on exit
-      on.exit({
-        if (!is.null(sub_socket)) {
-          tryCatch(nanonext::close(sub_socket), error = function(e) NULL)
-        }
-      })
+      sub_socket <- NULL  # Socket disabled - nanonext hangs in mirai daemons
 
       position <- c(sample(.grid_size, 1), sample(.grid_size, 1))
       path <- list()
