@@ -811,26 +811,8 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
   test_walker_result <- test_walker[]
   logger::log_info("Walker test: {test_walker_result$status} at ({test_walker_result$position[1]}, {test_walker_result$position[2]})")
 
-  # Initialize subscriber sockets on ALL daemons using everywhere()
-  # This runs ONCE on each daemon before any tasks
-  logger::log_info("Initializing subscriber sockets on daemons...")
-  mirai::everywhere({
-    # Create subscriber socket connected to main's publisher
-    tryCatch({
-      .sub_socket <- nanonext::socket("sub")
-      nanonext::dial(.sub_socket, sprintf("tcp://127.0.0.1:%d", .port))
-      nanonext::subscribe(.sub_socket, "")  # Subscribe to all messages
-      # Store in daemon's global environment
-      assign(".daemon_sub_socket", .sub_socket, envir = .GlobalEnv)
-      assign(".daemon_local_grid", .initial_grid, envir = .GlobalEnv)
-      assign(".daemon_socket_ok", TRUE, envir = .GlobalEnv)
-    }, error = function(e) {
-      assign(".daemon_socket_ok", FALSE, envir = .GlobalEnv)
-      assign(".daemon_socket_error", e$message, envir = .GlobalEnv)
-    })
-  }, .port = port, .initial_grid = grid)
-
-  logger::log_info("Initialized subscriber sockets on all daemons")
+  # NOTE: Each task creates its own socket (not using everywhere() anymore)
+  logger::log_info("Socket setup: each task will create its own subscriber socket")
 
   # Submit all walker tasks
   logger::log_info("Submitting {n_total} walker tasks")
@@ -840,9 +822,22 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
     walker <- walkers[[i]]
 
     m <- mirai::mirai({
-      # SIMPLIFIED: Skip socket complexity, use passed grid directly
+      # Each worker creates its own socket connection
       local_grid <- .grid_data
-      sub_socket <- NULL  # Disable socket for now
+      sub_socket <- tryCatch({
+        sock <- nanonext::socket("sub")
+        nanonext::dial(sock, sprintf("tcp://127.0.0.1:%d", .port))
+        nanonext::subscribe(sock, "")  # Subscribe to all messages
+        Sys.sleep(0.05)  # Brief pause to ensure connection
+        sock
+      }, error = function(e) NULL)
+
+      # Ensure socket cleanup on exit
+      on.exit({
+        if (!is.null(sub_socket)) {
+          tryCatch(nanonext::close(sub_socket), error = function(e) NULL)
+        }
+      })
 
       position <- c(sample(.grid_size, 1), sample(.grid_size, 1))
       path <- list()
@@ -976,7 +971,8 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
     .neighborhood = neighborhood,
     .boundary = boundary,
     .max_steps = max_steps,
-    .grid_data = grid
+    .grid_data = grid,
+    .port = port
     )
 
     task_list[[paste0("walker_", walker$id)]] <- m
