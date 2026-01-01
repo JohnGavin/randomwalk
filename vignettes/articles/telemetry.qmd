@@ -28,6 +28,15 @@ library(dplyr)
 library(ggplot2)
 library(knitr)
 library(tidyr)
+library(DT)  # For sortable tables
+
+# Load randomwalk package for version info
+# Use devtools::load_all() since package may not be installed
+tryCatch({
+  devtools::load_all(quiet = TRUE)
+}, error = function(e) {
+  message("Note: randomwalk package not available, some version info will be limited")
+})
 
 # Set targets store path if running from vignettes directory
 if (!dir.exists("_targets") && dir.exists("../_targets")) {
@@ -88,12 +97,14 @@ cov_available <- !is.null(cov_data)
 if (cov_available) {
   cat(sprintf("Overall Test Coverage: %.1f%%\n", cov_data$overall_pct))
 } else {
-  cat("Code coverage data not available (target disabled)\n")
-  cat("Run covr::package_coverage() locally to generate coverage reports.\n")
+  cat("⚠️ Code coverage analysis is temporarily disabled.\n\n")
+  cat("The covr::package_coverage() function encounters 'error reading from connection'\n")
+  cat("in Nix environments. This is a known compatibility issue being tracked.\n\n")
+  cat("To generate coverage locally:\n")
+  cat("  coverage <- covr::package_coverage()\n")
+  cat("  covr::report(coverage)\n")
 }
 ```
-
-**Note**: Run `covr::package_coverage()` locally to generate coverage reports.
 
 ## Coverage by File
 
@@ -206,23 +217,32 @@ telemetry <- tar_meta() %>%
     time_seconds = as.numeric(seconds, units = "secs"),
     time_formatted = sprintf("%.2fs", time_seconds),
     memory_mb = round(bytes / 1024^2, 2),
-    status = ifelse(is.na(error), "success", "error")
+    status = ifelse(is.na(error), "✅ success", "❌ error")
   ) %>%
   filter(!is.na(time_seconds))
 
-# Display formatted table
+# Display sortable/filterable table using DT
 telemetry %>%
-  select(name, time_formatted, memory_mb, status) %>%
+  select(name, time_seconds, memory_mb, status) %>%
   rename(
     "Target Name" = name,
-    "Computation Time" = time_formatted,
+    "Time (sec)" = time_seconds,
     "Memory (MB)" = memory_mb,
     "Status" = status
   ) %>%
-  kable(
-    caption = "Target Pipeline Execution Summary",
-    align = c("l", "r", "r", "c")
-  )
+  datatable(
+    caption = "Target Pipeline Execution Summary (click columns to sort, use search to filter)",
+    filter = "top",
+    options = list(
+      pageLength = 15,
+      order = list(list(1, "desc")),  # Sort by time descending
+      columnDefs = list(
+        list(className = "dt-right", targets = c(1, 2))
+      )
+    ),
+    rownames = FALSE
+  ) %>%
+  formatRound(columns = c("Time (sec)", "Memory (MB)"), digits = 2)
 ```
 
 ### Performance Metrics
@@ -306,17 +326,21 @@ memory_hogs %>%
 
 ### Memory Usage Visualization
 
-```{r plot-memory-usage, fig.cap="Top 10 memory-intensive targets"}
+```{r plot-memory-usage, fig.cap="Top 10 memory-intensive targets (log scale)"}
 memory_hogs %>%
-  mutate(name = reorder(name, telemetry$memory_mb[match(name, telemetry$name)])) %>%
-  ggplot(aes(x = name, y = telemetry$memory_mb[match(name, telemetry$name)])) +
+  mutate(
+    name = reorder(name, telemetry$memory_mb[match(name, telemetry$name)]),
+    memory = telemetry$memory_mb[match(name, telemetry$name)]
+  ) %>%
+  ggplot(aes(x = name, y = memory)) +
   geom_col(fill = "coral", alpha = 0.8) +
   coord_flip() +
+  scale_y_log10(labels = scales::comma_format()) +
   labs(
-    title = "Memory-Intensive Targets",
+    title = "Memory-Intensive Targets (Log Scale)",
     subtitle = "Top 10 targets by memory consumption",
     x = "Target",
-    y = "Memory (MB)"
+    y = "Memory (MB, log scale)"
   ) +
   theme_minimal()
 ```
@@ -344,7 +368,7 @@ telemetry %>%
 
 ## Memory Usage Distribution
 
-```{r plot-memory, fig.cap="Memory usage distribution across all targets"}
+```{r plot-memory, fig.cap="Memory usage distribution across all targets (log scale)"}
 telemetry %>%
   arrange(desc(memory_mb)) %>%
   head(20) %>%
@@ -352,11 +376,12 @@ telemetry %>%
   ggplot(aes(x = name, y = memory_mb)) +
   geom_col(fill = "coral", alpha = 0.8) +
   coord_flip() +
+  scale_y_log10(labels = scales::comma_format()) +
   labs(
-    title = "Top 20 Memory-Intensive Targets",
+    title = "Top 20 Memory-Intensive Targets (Log Scale)",
     subtitle = "Memory usage distribution",
     x = "Target Name",
-    y = "Memory (MB)"
+    y = "Memory (MB, log scale)"
   ) +
   theme_minimal()
 ```
@@ -365,25 +390,35 @@ telemetry %>%
 
 ## Time vs Memory Scatter
 
-Relationship between computation time and memory usage:
+Relationship between computation time and memory usage (log-log scale for better visualization of range):
 
-```{r time-vs-memory, fig.cap="Computation time vs memory usage"}
-telemetry %>%
+```{r time-vs-memory, fig.cap="Computation time vs memory usage (log-log scale)"}
+# Filter out zero/NA values for log scale
+plot_data <- telemetry %>%
+  filter(time_seconds > 0, memory_mb > 0)
+
+plot_data %>%
   ggplot(aes(x = time_seconds, y = memory_mb)) +
   geom_point(aes(color = status), size = 3, alpha = 0.7) +
   geom_text(
-    data = telemetry %>% filter(time_seconds > quantile(time_seconds, 0.9) | memory_mb > quantile(memory_mb, 0.9)),
+    data = plot_data %>% filter(time_seconds > quantile(time_seconds, 0.9) | memory_mb > quantile(memory_mb, 0.9)),
     aes(label = name),
     hjust = -0.1,
     vjust = -0.1,
-    size = 3
+    size = 3,
+    check_overlap = TRUE
   ) +
-  scale_color_brewer(palette = "Set1", name = "Status") +
+  scale_x_log10(labels = scales::comma_format()) +
+  scale_y_log10(labels = scales::comma_format()) +
+  scale_color_manual(
+    values = c("✅ success" = "steelblue", "❌ error" = "red"),
+    name = "Status"
+  ) +
   labs(
-    title = "Target Performance: Time vs Memory",
-    subtitle = "Outliers labeled",
-    x = "Computation Time (seconds)",
-    y = "Memory (MB)"
+    title = "Target Performance: Time vs Memory (Log-Log Scale)",
+    subtitle = "Outliers labeled; log scale reveals patterns across orders of magnitude",
+    x = "Computation Time (seconds, log scale)",
+    y = "Memory (MB, log scale)"
   ) +
   theme_minimal() +
   theme(legend.position = "bottom")
@@ -571,39 +606,63 @@ sessionInfo()
 #| code-fold: true
 #| code-summary: "Show version details"
 
-# Git commit information
-git_commit <- tryCatch(
-  system("git rev-parse HEAD", intern = TRUE),
-  error = function(e) "Not available"
-)
-git_commit_short <- tryCatch(
-  system("git rev-parse --short HEAD", intern = TRUE),
-  error = function(e) "Not available"
+# Collect all version/build information
+version_info <- data.frame(
+  Category = character(),
+  Item = character(),
+  Value = character(),
+  stringsAsFactors = FALSE
 )
 
-# Nix environment information
+# Git information
+git_commit <- tryCatch(system("git rev-parse HEAD", intern = TRUE), error = function(e) NA)
+git_commit_short <- tryCatch(system("git rev-parse --short HEAD", intern = TRUE), error = function(e) NA)
+git_branch <- tryCatch(system("git rev-parse --abbrev-ref HEAD", intern = TRUE), error = function(e) NA)
+
+version_info <- rbind(version_info, data.frame(
+  Category = "Git",
+  Item = c("Branch", "Commit (short)", "Commit (full)"),
+  Value = c(
+    ifelse(is.na(git_branch), "Not available", git_branch),
+    ifelse(is.na(git_commit_short), "Not available", git_commit_short),
+    ifelse(is.na(git_commit), "Not available", git_commit)
+  )
+))
+
+# Package versions
+pkg_version <- tryCatch(as.character(packageVersion("randomwalk")), error = function(e) NA)
+
+version_info <- rbind(version_info, data.frame(
+  Category = "Packages",
+  Item = c("randomwalk", "R", "targets", "ggplot2"),
+  Value = c(
+    ifelse(is.na(pkg_version), "Not loaded", pkg_version),
+    R.version.string,
+    as.character(packageVersion("targets")),
+    as.character(packageVersion("ggplot2"))
+  )
+))
+
+# Environment
 nix_version <- tryCatch(
-  system('nix-instantiate --eval -E "(import <nixpkgs> {}).lib.version"', intern = TRUE),
-  error = function(e) "Not in Nix environment"
+  gsub('"', '', system('nix-instantiate --eval -E "(import <nixpkgs> {}).lib.version"', intern = TRUE)),
+  error = function(e) NA
 )
 
-# Package version
-pkg_version <- tryCatch(
-  as.character(packageVersion("randomwalk")),
-  error = function(e) "Package not loaded"
-)
+version_info <- rbind(version_info, data.frame(
+  Category = "Environment",
+  Item = c("Platform", "Nix", "Build Time"),
+  Value = c(
+    R.version$platform,
+    ifelse(is.na(nix_version), "Not in Nix environment", nix_version),
+    format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")
+  )
+))
 
-# Build timestamp
-build_time <- Sys.time()
-
-cat("=== BUILD INFORMATION ===\n\n")
-cat("Git Commit:\n")
-cat("  Full SHA:  ", git_commit, "\n")
-cat("  Short SHA: ", git_commit_short, "\n\n")
-cat("Nix Environment:\n")
-cat("  nixpkgs:   ", nix_version, "\n\n")
-cat("Package:\n")
-cat("  randomwalk:", pkg_version, "\n")
-cat("  R version: ", R.version.string, "\n\n")
-cat("Build Time:  ", format(build_time, "%Y-%m-%d %H:%M:%S %Z"), "\n")
+# Display as clean table
+version_info %>%
+  kable(
+    col.names = c("Category", "Item", "Value"),
+    caption = "Build and Version Information"
+  )
 ```

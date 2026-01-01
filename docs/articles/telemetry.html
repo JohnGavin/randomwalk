@@ -72,6 +72,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="telemetry_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="telemetry_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="telemetry_files/libs/bootstrap/bootstrap-b232414f0569882df4359abfb7cfba3f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="telemetry_files/libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet">
+<script src="telemetry_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<link href="telemetry_files/libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet">
+<script src="telemetry_files/libs/datatables-binding-0.34.0/datatables.js"></script>
+<script src="telemetry_files/libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<link href="telemetry_files/libs/dt-core-1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
+<link href="telemetry_files/libs/dt-core-1.13.6/css/jquery.dataTables.extra.css" rel="stylesheet">
+<script src="telemetry_files/libs/dt-core-1.13.6/js/jquery.dataTables.min.js"></script>
+<link href="telemetry_files/libs/nouislider-7.0.10/jquery.nouislider.min.css" rel="stylesheet">
+<script src="telemetry_files/libs/nouislider-7.0.10/jquery.nouislider.min.js"></script>
+<link href="telemetry_files/libs/selectize-0.12.0/selectize.bootstrap3.css" rel="stylesheet">
+<script src="telemetry_files/libs/selectize-0.12.0/selectize.min.js"></script>
+<link href="telemetry_files/libs/crosstalk-1.2.2/css/crosstalk.min.css" rel="stylesheet">
+<script src="telemetry_files/libs/crosstalk-1.2.2/js/crosstalk.min.js"></script>
 
 
 </head>
@@ -271,16 +285,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (cov_available) {</span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Overall Test Coverage: %.1f%%</span><span class="sc">\n</span><span class="st">"</span>, cov_data<span class="sc">$</span>overall_pct))</span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Code coverage data not available (target disabled)</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Run covr::package_coverage() locally to generate coverage reports.</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"⚠️ Code coverage analysis is temporarily disabled.</span><span class="sc">\n\n</span><span class="st">"</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"The covr::package_coverage() function encounters 'error reading from connection'</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"in Nix environments. This is a known compatibility issue being tracked.</span><span class="sc">\n\n</span><span class="st">"</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"To generate coverage locally:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"  coverage &lt;- covr::package_coverage()</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"  covr::report(coverage)</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>Code coverage data not available (target disabled)
-Run covr::package_coverage() locally to generate coverage reports.</code></pre>
+<pre><code>⚠️ Code coverage analysis is temporarily disabled.
+
+The covr::package_coverage() function encounters 'error reading from connection'
+in Nix environments. This is a known compatibility issue being tracked.
+
+To generate coverage locally:
+  coverage &lt;- covr::package_coverage()
+  covr::report(coverage)</code></pre>
 </div>
 </div>
-<p><strong>Note</strong>: Run <code>covr::package_coverage()</code> locally to generate coverage reports.</p>
 </section>
 <section id="coverage-by-file" class="level2">
 <h2 class="anchored" data-anchor-id="coverage-by-file">Coverage by File</h2>
@@ -401,272 +424,36 @@ Run covr::package_coverage() locally to generate coverage reports.</code></pre>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">time_seconds =</span> <span class="fu">as.numeric</span>(seconds, <span class="at">units =</span> <span class="st">"secs"</span>),</span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">time_formatted =</span> <span class="fu">sprintf</span>(<span class="st">"%.2fs"</span>, time_seconds),</span>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">memory_mb =</span> <span class="fu">round</span>(bytes <span class="sc">/</span> <span class="dv">1024</span><span class="sc">^</span><span class="dv">2</span>, <span class="dv">2</span>),</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">status =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(error), <span class="st">"success"</span>, <span class="st">"error"</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">status =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(error), <span class="st">"✅ success"</span>, <span class="st">"❌ error"</span>)</span>
 <span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
 <span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(time_seconds))</span>
 <span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Display formatted table</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Display sortable/filterable table using DT</span></span>
 <span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>telemetry <span class="sc">%&gt;%</span></span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, time_formatted, memory_mb, status) <span class="sc">%&gt;%</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, time_seconds, memory_mb, status) <span class="sc">%&gt;%</span></span>
 <span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
 <span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Target Name"</span> <span class="ot">=</span> name,</span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Computation Time"</span> <span class="ot">=</span> time_formatted,</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Time (sec)"</span> <span class="ot">=</span> time_seconds,</span>
 <span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Memory (MB)"</span> <span class="ot">=</span> memory_mb,</span>
 <span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Status"</span> <span class="ot">=</span> status</span>
 <span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(</span>
-<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Target Pipeline Execution Summary"</span>,</span>
-<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">align =</span> <span class="fu">c</span>(<span class="st">"l"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"c"</span>)</span>
-<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">datatable</span>(</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Target Pipeline Execution Summary (click columns to sort, use search to filter)"</span>,</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">filter =</span> <span class="st">"top"</span>,</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">options =</span> <span class="fu">list</span>(</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">pageLength =</span> <span class="dv">15</span>,</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">order =</span> <span class="fu">list</span>(<span class="fu">list</span>(<span class="dv">1</span>, <span class="st">"desc"</span>)),  <span class="co"># Sort by time descending</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">columnDefs =</span> <span class="fu">list</span>(</span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>        <span class="fu">list</span>(<span class="at">className =</span> <span class="st">"dt-right"</span>, <span class="at">targets =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">rownames =</span> <span class="cn">FALSE</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">formatRound</span>(<span class="at">columns =</span> <span class="fu">c</span>(<span class="st">"Time (sec)"</span>, <span class="st">"Memory (MB)"</span>), <span class="at">digits =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>Target Pipeline Execution Summary</caption>
-<colgroup>
-<col style="width: 45%">
-<col style="width: 24%">
-<col style="width: 17%">
-<col style="width: 12%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Target Name</th>
-<th style="text-align: right;">Computation Time</th>
-<th style="text-align: right;">Memory (MB)</th>
-<th style="text-align: center;">Status</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">sim_medium</td>
-<td style="text-align: right;">0.81s</td>
-<td style="text-align: right;">0.01</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">perf_async</td>
-<td style="text-align: right;">1.98s</td>
-<td style="text-align: right;">0.01</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">step_dist_grid_sizes</td>
-<td style="text-align: right;">0.00s</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">sim_dynamic_small</td>
-<td style="text-align: right;">1.64s</td>
-<td style="text-align: right;">0.01</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">sim_dynamic_large</td>
-<td style="text-align: right;">3.11s</td>
-<td style="text-align: right;">0.13</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">sim_large</td>
-<td style="text-align: right;">0.38s</td>
-<td style="text-align: right;">0.01</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">session_info</td>
-<td style="text-align: right;">0.01s</td>
-<td style="text-align: right;">0.05</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">sim_small</td>
-<td style="text-align: right;">0.09s</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">code_coverage</td>
-<td style="text-align: right;">36.70s</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: center;">error</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">sim_static_large</td>
-<td style="text-align: right;">3.42s</td>
-<td style="text-align: right;">0.12</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">sim_dynamic_medium</td>
-<td style="text-align: right;">2.01s</td>
-<td style="text-align: right;">0.01</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">sim_static_medium</td>
-<td style="text-align: right;">2.00s</td>
-<td style="text-align: right;">0.02</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">package_info</td>
-<td style="text-align: right;">0.00s</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">telemetry_summary</td>
-<td style="text-align: right;">0.02s</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: center;">error</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">sim_static_small</td>
-<td style="text-align: right;">2.13s</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">git_summary</td>
-<td style="text-align: right;">0.07s</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">perf_sync</td>
-<td style="text-align: right;">0.33s</td>
-<td style="text-align: right;">0.01</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">plot_static_small</td>
-<td style="text-align: right;">0.11s</td>
-<td style="text-align: right;">0.39</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">plot_dynamic_small</td>
-<td style="text-align: right;">0.09s</td>
-<td style="text-align: right;">0.39</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">plot_large_grid</td>
-<td style="text-align: right;">0.09s</td>
-<td style="text-align: right;">0.40</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">stats_large</td>
-<td style="text-align: right;">0.00s</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">stats_medium</td>
-<td style="text-align: right;">0.00s</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">plot_medium_grid</td>
-<td style="text-align: right;">0.09s</td>
-<td style="text-align: right;">0.38</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">plot_static_medium</td>
-<td style="text-align: right;">0.09s</td>
-<td style="text-align: right;">0.40</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">plot_small_grid</td>
-<td style="text-align: right;">0.09s</td>
-<td style="text-align: right;">0.38</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">stats_small</td>
-<td style="text-align: right;">0.00s</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">step_dist_sims_6d4184db862c95ff</td>
-<td style="text-align: right;">0.19s</td>
-<td style="text-align: right;">0.01</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">step_dist_sims_8e4e2652c6d456b7</td>
-<td style="text-align: right;">0.87s</td>
-<td style="text-align: right;">0.03</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">step_dist_sims_38c3ae60225a972d</td>
-<td style="text-align: right;">1.99s</td>
-<td style="text-align: right;">0.06</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">step_dist_sims</td>
-<td style="text-align: right;">3.04s</td>
-<td style="text-align: right;">0.10</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">plot_dynamic_medium</td>
-<td style="text-align: right;">0.09s</td>
-<td style="text-align: right;">0.40</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">telemetry</td>
-<td style="text-align: right;">4.96s</td>
-<td style="text-align: right;">0.13</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">dynamic_broadcasting</td>
-<td style="text-align: right;">7.61s</td>
-<td style="text-align: right;">0.15</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">pkgdown_site</td>
-<td style="text-align: right;">10.97s</td>
-<td style="text-align: right;">385.18</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">defensive_programming</td>
-<td style="text-align: right;">2.55s</td>
-<td style="text-align: right;">0.13</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">dashboard_comprehensive</td>
-<td style="text-align: right;">7.07s</td>
-<td style="text-align: right;">0.17</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">copy_vignettes_to_inst_doc</td>
-<td style="text-align: right;">0.01s</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: center;">success</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">step_distribution_analysis</td>
-<td style="text-align: right;">4.88s</td>
-<td style="text-align: right;">0.13</td>
-<td style="text-align: center;">success</td>
-</tr>
-</tbody>
-</table>
+<div class="datatables html-widget html-fill-item" id="htmlwidget-49262ed1d1a3c57ffe3b" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-49262ed1d1a3c57ffe3b">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"36.7\" data-scale=\"3\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"385.19\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","caption":"<caption>Target Pipeline Execution Summary (click columns to sort, use search to filter)<\/caption>","data":[["sim_medium","perf_async","step_dist_grid_sizes","sim_dynamic_small","sim_dynamic_large","sim_large","session_info","sim_small","code_coverage","sim_static_large","sim_dynamic_medium","sim_static_medium","package_info","telemetry_summary","sim_static_small","git_summary","perf_sync","plot_static_small","plot_dynamic_small","plot_large_grid","stats_large","stats_medium","plot_medium_grid","plot_static_medium","plot_small_grid","stats_small","step_dist_sims_6d4184db862c95ff","step_dist_sims_8e4e2652c6d456b7","step_dist_sims_38c3ae60225a972d","step_dist_sims","plot_dynamic_medium","step_distribution_analysis","dynamic_broadcasting","defensive_programming","dashboard_comprehensive","copy_vignettes_to_inst_doc","telemetry","pkgdown_site"],[0.8110000000000001,1.978,0,1.642,3.112,0.38,0.01,0.08500000000000001,36.7,3.425,2.014,2.004,0.001,0.022,2.13,0.065,0.325,0.108,0.09,0.092,0,0,0.09,0.094,0.094,0,0.188,0.866,1.989,3.043,0.09,4.884,6.82,2.515,7.147,0.011,2.465,8.81],[0.01,0.01,0,0.01,0.13,0.01,0.05,0,0,0.12,0.01,0.02,0,0,0,0,0.01,0.39,0.39,0.4,0,0,0.38,0.4,0.38,0,0.01,0.03,0.06,0.1,0.4,0.13,0.15,0.13,0.17,0,0.13,385.19],["✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","❌ error","✅ success","✅ success","✅ success","✅ success","❌ error","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","✅ success","❌ error","✅ success"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Target Name<\/th>\n      <th>Time (sec)<\/th>\n      <th>Memory (MB)<\/th>\n      <th>Status<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":15,"order":[[1,"desc"]],"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 2, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 2, 3, \",\", \".\", null);\n  }"},{"className":"dt-right","targets":[1,2]},{"name":"Target Name","targets":0},{"name":"Time (sec)","targets":1},{"name":"Memory (MB)","targets":2},{"name":"Status","targets":3}],"autoWidth":false,"orderClasses":false,"orderCellsTop":true,"lengthMenu":[10,15,25,50,100]}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
 </div>
 </div>
 </section>
@@ -708,7 +495,7 @@ Run covr::package_coverage() locally to generate coverage reports.</code></pre>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Total Computation Time</td>
-<td style="text-align: left;">99.5 seconds</td>
+<td style="text-align: left;">94.1 seconds</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Total Memory Usage</td>
@@ -716,7 +503,7 @@ Run covr::package_coverage() locally to generate coverage reports.</code></pre>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Average Time/Target</td>
-<td style="text-align: left;">2.62 seconds</td>
+<td style="text-align: left;">2.48 seconds</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Average Memory/Target</td>
@@ -764,47 +551,47 @@ Run covr::package_coverage() locally to generate coverage reports.</code></pre>
 </tr>
 <tr class="even">
 <td style="text-align: left;">pkgdown_site</td>
-<td style="text-align: left;">10.97s</td>
-<td style="text-align: right;">385.18</td>
+<td style="text-align: left;">8.81s</td>
+<td style="text-align: right;">385.19</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">dynamic_broadcasting</td>
-<td style="text-align: left;">7.61s</td>
-<td style="text-align: right;">0.15</td>
-</tr>
-<tr class="even">
 <td style="text-align: left;">dashboard_comprehensive</td>
-<td style="text-align: left;">7.07s</td>
+<td style="text-align: left;">7.15s</td>
 <td style="text-align: right;">0.17</td>
 </tr>
-<tr class="odd">
-<td style="text-align: left;">telemetry</td>
-<td style="text-align: left;">4.96s</td>
-<td style="text-align: right;">0.13</td>
-</tr>
 <tr class="even">
+<td style="text-align: left;">dynamic_broadcasting</td>
+<td style="text-align: left;">6.82s</td>
+<td style="text-align: right;">0.15</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">step_distribution_analysis</td>
 <td style="text-align: left;">4.88s</td>
 <td style="text-align: right;">0.13</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">sim_static_large</td>
 <td style="text-align: left;">3.42s</td>
 <td style="text-align: right;">0.12</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">sim_dynamic_large</td>
 <td style="text-align: left;">3.11s</td>
 <td style="text-align: right;">0.13</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">step_dist_sims</td>
 <td style="text-align: left;">3.04s</td>
 <td style="text-align: right;">0.10</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">defensive_programming</td>
-<td style="text-align: left;">2.55s</td>
+<td style="text-align: left;">2.52s</td>
+<td style="text-align: right;">0.13</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">telemetry</td>
+<td style="text-align: left;">2.46s</td>
 <td style="text-align: right;">0.13</td>
 </tr>
 </tbody>
@@ -875,8 +662,8 @@ Run covr::package_coverage() locally to generate coverage reports.</code></pre>
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">pkgdown_site</td>
-<td style="text-align: right;">385.18</td>
-<td style="text-align: left;">10.97s</td>
+<td style="text-align: right;">385.19</td>
+<td style="text-align: left;">8.81s</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">plot_large_grid</td>
@@ -916,12 +703,12 @@ Run covr::package_coverage() locally to generate coverage reports.</code></pre>
 <tr class="odd">
 <td style="text-align: left;">dashboard_comprehensive</td>
 <td style="text-align: right;">0.17</td>
-<td style="text-align: left;">7.07s</td>
+<td style="text-align: left;">7.15s</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">dynamic_broadcasting</td>
 <td style="text-align: right;">0.15</td>
-<td style="text-align: left;">7.61s</td>
+<td style="text-align: left;">6.82s</td>
 </tr>
 </tbody>
 </table>
@@ -933,23 +720,27 @@ Run covr::package_coverage() locally to generate coverage reports.</code></pre>
 <details class="code-fold">
 <summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>memory_hogs <span class="sc">%&gt;%</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name =</span> <span class="fu">reorder</span>(name, telemetry<span class="sc">$</span>memory_mb[<span class="fu">match</span>(name, telemetry<span class="sc">$</span>name)])) <span class="sc">%&gt;%</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> name, <span class="at">y =</span> telemetry<span class="sc">$</span>memory_mb[<span class="fu">match</span>(name, telemetry<span class="sc">$</span>name)])) <span class="sc">+</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"coral"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Memory-Intensive Targets"</span>,</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Top 10 targets by memory consumption"</span>,</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Target"</span>,</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Memory (MB)"</span></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="fu">reorder</span>(name, telemetry<span class="sc">$</span>memory_mb[<span class="fu">match</span>(name, telemetry<span class="sc">$</span>name)]),</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">memory =</span> telemetry<span class="sc">$</span>memory_mb[<span class="fu">match</span>(name, telemetry<span class="sc">$</span>name)]</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> name, <span class="at">y =</span> memory)) <span class="sc">+</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"coral"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_log10</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">comma_format</span>()) <span class="sc">+</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Memory-Intensive Targets (Log Scale)"</span>,</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Top 10 targets by memory consumption"</span>,</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Target"</span>,</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Memory (MB, log scale)"</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="telemetry_files/figure-html/plot-memory-usage-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption>Top 10 memory-intensive targets</figcaption>
+<figcaption>Top 10 memory-intensive targets (log scale)</figcaption>
 </figure>
 </div>
 </div>
@@ -999,19 +790,20 @@ Run covr::package_coverage() locally to generate coverage reports.</code></pre>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> name, <span class="at">y =</span> memory_mb)) <span class="sc">+</span></span>
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"coral"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Top 20 Memory-Intensive Targets"</span>,</span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Memory usage distribution"</span>,</span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Target Name"</span>,</span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Memory (MB)"</span></span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_log10</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">comma_format</span>()) <span class="sc">+</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Top 20 Memory-Intensive Targets (Log Scale)"</span>,</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Memory usage distribution"</span>,</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Target Name"</span>,</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Memory (MB, log scale)"</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="telemetry_files/figure-html/plot-memory-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption>Memory usage distribution across all targets</figcaption>
+<figcaption>Memory usage distribution across all targets (log scale)</figcaption>
 </figure>
 </div>
 </div>
@@ -1022,35 +814,45 @@ Run covr::package_coverage() locally to generate coverage reports.</code></pre>
 <h1>Performance Trends</h1>
 <section id="time-vs-memory-scatter" class="level2">
 <h2 class="anchored" data-anchor-id="time-vs-memory-scatter">Time vs Memory Scatter</h2>
-<p>Relationship between computation time and memory usage:</p>
+<p>Relationship between computation time and memory usage (log-log scale for better visualization of range):</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>telemetry <span class="sc">%&gt;%</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> time_seconds, <span class="at">y =</span> memory_mb)) <span class="sc">+</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">color =</span> status), <span class="at">size =</span> <span class="dv">3</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> telemetry <span class="sc">%&gt;%</span> <span class="fu">filter</span>(time_seconds <span class="sc">&gt;</span> <span class="fu">quantile</span>(time_seconds, <span class="fl">0.9</span>) <span class="sc">|</span> memory_mb <span class="sc">&gt;</span> <span class="fu">quantile</span>(memory_mb, <span class="fl">0.9</span>)),</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> name),</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">hjust =</span> <span class="sc">-</span><span class="fl">0.1</span>,</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.1</span>,</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="dv">3</span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_brewer</span>(<span class="at">palette =</span> <span class="st">"Set1"</span>, <span class="at">name =</span> <span class="st">"Status"</span>) <span class="sc">+</span></span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Target Performance: Time vs Memory"</span>,</span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Outliers labeled"</span>,</span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Computation Time (seconds)"</span>,</span>
-<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Memory (MB)"</span></span>
-<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter out zero/NA values for log scale</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>plot_data <span class="ot">&lt;-</span> telemetry <span class="sc">%&gt;%</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(time_seconds <span class="sc">&gt;</span> <span class="dv">0</span>, memory_mb <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>plot_data <span class="sc">%&gt;%</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> time_seconds, <span class="at">y =</span> memory_mb)) <span class="sc">+</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">color =</span> status), <span class="at">size =</span> <span class="dv">3</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> plot_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(time_seconds <span class="sc">&gt;</span> <span class="fu">quantile</span>(time_seconds, <span class="fl">0.9</span>) <span class="sc">|</span> memory_mb <span class="sc">&gt;</span> <span class="fu">quantile</span>(memory_mb, <span class="fl">0.9</span>)),</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> name),</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">hjust =</span> <span class="sc">-</span><span class="fl">0.1</span>,</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.1</span>,</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="dv">3</span>,</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">check_overlap =</span> <span class="cn">TRUE</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_log10</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">comma_format</span>()) <span class="sc">+</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_log10</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">comma_format</span>()) <span class="sc">+</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> <span class="fu">c</span>(<span class="st">"✅ success"</span> <span class="ot">=</span> <span class="st">"steelblue"</span>, <span class="st">"❌ error"</span> <span class="ot">=</span> <span class="st">"red"</span>),</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"Status"</span></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Target Performance: Time vs Memory (Log-Log Scale)"</span>,</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Outliers labeled; log scale reveals patterns across orders of magnitude"</span>,</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Computation Time (seconds, log scale)"</span>,</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Memory (MB, log scale)"</span></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="telemetry_files/figure-html/time-vs-memory-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption>Computation time vs memory usage</figcaption>
+<figcaption>Computation time vs memory usage (log-log scale)</figcaption>
 </figure>
 </div>
 </div>
@@ -1408,33 +1210,27 @@ loaded via a namespace (and not attached):
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">pkgdown_site</td>
-<td style="text-align: left;">10.97s</td>
-<td style="text-align: right;">385.18</td>
+<td style="text-align: left;">8.81s</td>
+<td style="text-align: right;">385.19</td>
 <td style="text-align: right;">1.97</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">dynamic_broadcasting</td>
-<td style="text-align: left;">7.61s</td>
-<td style="text-align: right;">0.15</td>
-<td style="text-align: right;">1.70</td>
+<td style="text-align: left;">dashboard_comprehensive</td>
+<td style="text-align: left;">7.15s</td>
+<td style="text-align: right;">0.17</td>
+<td style="text-align: right;">1.73</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">dashboard_comprehensive</td>
-<td style="text-align: left;">7.07s</td>
-<td style="text-align: right;">0.17</td>
-<td style="text-align: right;">1.70</td>
+<td style="text-align: left;">dynamic_broadcasting</td>
+<td style="text-align: left;">6.82s</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: right;">1.68</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">telemetry</td>
-<td style="text-align: left;">4.96s</td>
-<td style="text-align: right;">0.13</td>
-<td style="text-align: right;">1.54</td>
-</tr>
-<tr class="odd">
 <td style="text-align: left;">step_distribution_analysis</td>
 <td style="text-align: left;">4.88s</td>
 <td style="text-align: right;">0.13</td>
-<td style="text-align: right;">1.51</td>
+<td style="text-align: right;">1.54</td>
 </tr>
 </tbody>
 </table>
@@ -1465,7 +1261,7 @@ loaded via a namespace (and not attached):
 </ul>
 <p>All statistics are generated automatically from the targets pipeline, ensuring consistency across builds.</p>
 <hr>
-<p><em>Generated on: 2026-01-01 15:14:07.868295</em></p>
+<p><em>Generated on: 2026-01-01 15:22:42.234013</em></p>
 <p><em>Using targets pipeline from: <code>_targets.R</code></em></p>
 <section id="session-info" class="level2">
 <h2 class="anchored" data-anchor-id="session-info">Session Info</h2>
@@ -1493,20 +1289,26 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] tidyr_1.3.1    knitr_1.50     ggplot2_4.0.0  dplyr_1.1.4    targets_1.11.4
+[1] randomwalk_2.1.0 testthat_3.2.3   DT_0.34.0        tidyr_1.3.1     
+[5] knitr_1.50       ggplot2_4.0.0    dplyr_1.1.4      targets_1.11.4  
 
 loaded via a namespace (and not attached):
- [1] base64url_1.4      gtable_0.3.6       jsonlite_2.0.0     compiler_4.5.2    
- [5] tidyselect_1.2.1   callr_3.7.6        scales_1.4.0       yaml_2.3.10       
- [9] fastmap_1.2.0      R6_2.6.1           labeling_0.4.3     generics_0.1.4    
-[13] igraph_2.2.1       htmlwidgets_1.6.4  backports_1.5.0    tibble_3.3.0      
-[17] pillar_1.11.1      RColorBrewer_1.1-3 rlang_1.1.6        xfun_0.54         
-[21] S7_0.2.0           cli_3.6.5          withr_3.0.2        magrittr_2.0.4    
-[25] ps_1.9.1           digest_0.6.37      grid_4.5.2         processx_3.8.6    
-[29] secretbase_1.0.5   lifecycle_1.0.4    prettyunits_1.2.0  vctrs_0.6.5       
-[33] evaluate_1.0.5     glue_1.8.0         data.table_1.17.8  farver_2.1.2      
-[37] codetools_0.2-20   purrr_1.1.0        rmarkdown_2.30     tools_4.5.2       
-[41] pkgconfig_2.0.3    htmltools_0.5.8.1 </code></pre>
+ [1] sass_0.4.10        generics_0.1.4     digest_0.6.37      magrittr_2.0.4    
+ [5] evaluate_1.0.5     grid_4.5.2         RColorBrewer_1.1-3 pkgload_1.4.1     
+ [9] fastmap_1.2.0      rprojroot_2.1.1    jsonlite_2.0.0     processx_3.8.6    
+[13] pkgbuild_1.4.8     sessioninfo_1.2.3  brio_1.1.5         backports_1.5.0   
+[17] secretbase_1.0.5   ps_1.9.1           purrr_1.1.0        crosstalk_1.2.2   
+[21] scales_1.4.0       jquerylib_0.1.4    codetools_0.2-20   cli_3.6.5         
+[25] rlang_1.1.6        ellipsis_0.3.2     remotes_2.5.0      withr_3.0.2       
+[29] cachem_1.1.0       yaml_2.3.10        devtools_2.4.6     tools_4.5.2       
+[33] memoise_2.0.1      base64url_1.4      logger_0.4.1       vctrs_0.6.5       
+[37] R6_2.6.1           lifecycle_1.0.4    fs_1.6.6           htmlwidgets_1.6.4 
+[41] usethis_3.2.1      desc_1.4.3         pkgconfig_2.0.3    callr_3.7.6       
+[45] bslib_0.9.0        pillar_1.11.1      gtable_0.3.6       data.table_1.17.8 
+[49] glue_1.8.0         xfun_0.54          tibble_3.3.0       tidyselect_1.2.1  
+[53] rstudioapi_0.17.1  farver_2.1.2       htmltools_0.5.8.1  igraph_2.2.1      
+[57] labeling_0.4.3     rmarkdown_2.30     compiler_4.5.2     prettyunits_1.2.0 
+[61] S7_0.2.0          </code></pre>
 </div>
 </div>
 </section>
@@ -1515,98 +1317,129 @@ loaded via a namespace (and not attached):
 <div class="cell">
 <details class="code-fold">
 <summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Git commit information</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>git_commit <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system</span>(<span class="st">"git rev-parse HEAD"</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Not available"</span></span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>git_commit_short <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system</span>(<span class="st">"git rev-parse --short HEAD"</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Not available"</span></span>
-<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Nix environment information</span></span>
-<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>nix_version <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
-<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system</span>(<span class="st">'nix-instantiate --eval -E "(import &lt;nixpkgs&gt; {}).lib.version"'</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Not in Nix environment"</span></span>
-<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Package version</span></span>
-<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>pkg_version <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
-<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.character</span>(<span class="fu">packageVersion</span>(<span class="st">"randomwalk"</span>)),</span>
-<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Package not loaded"</span></span>
-<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Build timestamp</span></span>
-<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>build_time <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
-<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"=== BUILD INFORMATION ===</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Collect all version/build information</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>version_info <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Category =</span> <span class="fu">character</span>(),</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Item =</span> <span class="fu">character</span>(),</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">character</span>(),</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Git information</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>git_commit <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(<span class="fu">system</span>(<span class="st">"git rev-parse HEAD"</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>), <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NA</span>)</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>git_commit_short <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(<span class="fu">system</span>(<span class="st">"git rev-parse --short HEAD"</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>), <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NA</span>)</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>git_branch <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(<span class="fu">system</span>(<span class="st">"git rev-parse --abbrev-ref HEAD"</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>), <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NA</span>)</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>version_info <span class="ot">&lt;-</span> <span class="fu">rbind</span>(version_info, <span class="fu">data.frame</span>(</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">Category =</span> <span class="st">"Git"</span>,</span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">Item =</span> <span class="fu">c</span>(<span class="st">"Branch"</span>, <span class="st">"Commit (short)"</span>, <span class="st">"Commit (full)"</span>),</span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ifelse</span>(<span class="fu">is.na</span>(git_branch), <span class="st">"Not available"</span>, git_branch),</span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ifelse</span>(<span class="fu">is.na</span>(git_commit_short), <span class="st">"Not available"</span>, git_commit_short),</span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ifelse</span>(<span class="fu">is.na</span>(git_commit), <span class="st">"Not available"</span>, git_commit)</span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Package versions</span></span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a>pkg_version <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(<span class="fu">as.character</span>(<span class="fu">packageVersion</span>(<span class="st">"randomwalk"</span>)), <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NA</span>)</span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a>version_info <span class="ot">&lt;-</span> <span class="fu">rbind</span>(version_info, <span class="fu">data.frame</span>(</span>
+<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">Category =</span> <span class="st">"Packages"</span>,</span>
+<span id="cb33-29"><a href="#cb33-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">Item =</span> <span class="fu">c</span>(<span class="st">"randomwalk"</span>, <span class="st">"R"</span>, <span class="st">"targets"</span>, <span class="st">"ggplot2"</span>),</span>
+<span id="cb33-30"><a href="#cb33-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb33-31"><a href="#cb33-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ifelse</span>(<span class="fu">is.na</span>(pkg_version), <span class="st">"Not loaded"</span>, pkg_version),</span>
+<span id="cb33-32"><a href="#cb33-32" aria-hidden="true" tabindex="-1"></a>    R.version.string,</span>
+<span id="cb33-33"><a href="#cb33-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.character</span>(<span class="fu">packageVersion</span>(<span class="st">"targets"</span>)),</span>
+<span id="cb33-34"><a href="#cb33-34" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.character</span>(<span class="fu">packageVersion</span>(<span class="st">"ggplot2"</span>))</span>
+<span id="cb33-35"><a href="#cb33-35" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb33-36"><a href="#cb33-36" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb33-37"><a href="#cb33-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-38"><a href="#cb33-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Environment</span></span>
+<span id="cb33-39"><a href="#cb33-39" aria-hidden="true" tabindex="-1"></a>nix_version <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
+<span id="cb33-40"><a href="#cb33-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gsub</span>(<span class="st">'"'</span>, <span class="st">''</span>, <span class="fu">system</span>(<span class="st">'nix-instantiate --eval -E "(import &lt;nixpkgs&gt; {}).lib.version"'</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb33-41"><a href="#cb33-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NA</span></span>
+<span id="cb33-42"><a href="#cb33-42" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-43"><a href="#cb33-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-44"><a href="#cb33-44" aria-hidden="true" tabindex="-1"></a>version_info <span class="ot">&lt;-</span> <span class="fu">rbind</span>(version_info, <span class="fu">data.frame</span>(</span>
+<span id="cb33-45"><a href="#cb33-45" aria-hidden="true" tabindex="-1"></a>  <span class="at">Category =</span> <span class="st">"Environment"</span>,</span>
+<span id="cb33-46"><a href="#cb33-46" aria-hidden="true" tabindex="-1"></a>  <span class="at">Item =</span> <span class="fu">c</span>(<span class="st">"Platform"</span>, <span class="st">"Nix"</span>, <span class="st">"Build Time"</span>),</span>
+<span id="cb33-47"><a href="#cb33-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb33-48"><a href="#cb33-48" aria-hidden="true" tabindex="-1"></a>    R.version<span class="sc">$</span>platform,</span>
+<span id="cb33-49"><a href="#cb33-49" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ifelse</span>(<span class="fu">is.na</span>(nix_version), <span class="st">"Not in Nix environment"</span>, nix_version),</span>
+<span id="cb33-50"><a href="#cb33-50" aria-hidden="true" tabindex="-1"></a>    <span class="fu">format</span>(<span class="fu">Sys.time</span>(), <span class="st">"%Y-%m-%d %H:%M:%S %Z"</span>)</span>
+<span id="cb33-51"><a href="#cb33-51" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb33-52"><a href="#cb33-52" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb33-53"><a href="#cb33-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-54"><a href="#cb33-54" aria-hidden="true" tabindex="-1"></a><span class="co"># Display as clean table</span></span>
+<span id="cb33-55"><a href="#cb33-55" aria-hidden="true" tabindex="-1"></a>version_info <span class="sc">%&gt;%</span></span>
+<span id="cb33-56"><a href="#cb33-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(</span>
+<span id="cb33-57"><a href="#cb33-57" aria-hidden="true" tabindex="-1"></a>    <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Category"</span>, <span class="st">"Item"</span>, <span class="st">"Value"</span>),</span>
+<span id="cb33-58"><a href="#cb33-58" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Build and Version Information"</span></span>
+<span id="cb33-59"><a href="#cb33-59" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-stdout">
-<pre><code>=== BUILD INFORMATION ===</code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Git Commit:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Git Commit:</code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  Full SHA:  "</span>, git_commit, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>  Full SHA:   1669dadedde8833ac6493f535004ef6fbb9dc8d7 </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  Short SHA: "</span>, git_commit_short, <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>  Short SHA:  1669dad </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Nix Environment:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Nix Environment:</code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  nixpkgs:   "</span>, nix_version, <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>  nixpkgs:    "26.05pre-git" </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Package:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Package:</code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  randomwalk:"</span>, pkg_version, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>  randomwalk: Package not loaded </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  R version: "</span>, R.version.string, <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>  R version:  R version 4.5.2 (2025-10-31) </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Build Time:  "</span>, <span class="fu">format</span>(build_time, <span class="st">"%Y-%m-%d %H:%M:%S %Z"</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Build Time:   2026-01-01 15:14:08 GMT </code></pre>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Build and Version Information</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Category</th>
+<th style="text-align: left;">Item</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Git</td>
+<td style="text-align: left;">Branch</td>
+<td style="text-align: left;">main</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Git</td>
+<td style="text-align: left;">Commit (short)</td>
+<td style="text-align: left;">f76d66e</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Git</td>
+<td style="text-align: left;">Commit (full)</td>
+<td style="text-align: left;">f76d66ed0027eb7a289ba018cca51ace71aab6fd</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Packages</td>
+<td style="text-align: left;">randomwalk</td>
+<td style="text-align: left;">2.1.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Packages</td>
+<td style="text-align: left;">R</td>
+<td style="text-align: left;">R version 4.5.2 (2025-10-31)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Packages</td>
+<td style="text-align: left;">targets</td>
+<td style="text-align: left;">1.11.4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Packages</td>
+<td style="text-align: left;">ggplot2</td>
+<td style="text-align: left;">4.0.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Environment</td>
+<td style="text-align: left;">Platform</td>
+<td style="text-align: left;">aarch64-apple-darwin24.6.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Environment</td>
+<td style="text-align: left;">Nix</td>
+<td style="text-align: left;">26.05pre-git</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Environment</td>
+<td style="text-align: left;">Build Time</td>
+<td style="text-align: left;">2026-01-01 15:22:42 GMT</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </section>
