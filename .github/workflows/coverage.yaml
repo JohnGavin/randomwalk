@@ -1,0 +1,110 @@
+# Code Coverage Workflow
+# Generates coverage using standard R (not Nix) since covr has Nix compatibility issues
+# Saves results to inst/extdata/coverage.rds for use in telemetry vignette
+#
+# Runs on:
+# - Push to main when R/ or tests/ change
+# - Manual trigger (workflow_dispatch)
+
+name: Code Coverage
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'R/**'
+      - 'tests/**'
+      - 'DESCRIPTION'
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: write  # Needed to commit coverage.rds back
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Need to fetch with token that can push
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Setup R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::covr
+            any::devtools
+
+      - name: Generate coverage
+        run: |
+          Rscript -e '
+            library(covr)
+
+            cat("=== Generating Code Coverage ===\n")
+            cat("R version:", R.version.string, "\n\n")
+
+            # Generate coverage
+            coverage <- package_coverage()
+
+            # Calculate summary statistics
+            overall_pct <- percent_coverage(coverage)
+            cat(sprintf("Overall coverage: %.1f%%\n", overall_pct))
+
+            # Get file-level summary
+            file_coverage <- tally_coverage(coverage, by = "file")
+            file_summary <- data.frame(
+              filename = basename(file_coverage$filename),
+              total_lines = file_coverage$relevant,
+              covered_lines = file_coverage$covered,
+              coverage_pct = round(file_coverage$coverage, 1)
+            )
+
+            cat("\nCoverage by file:\n")
+            print(file_summary)
+
+            # Prepare data for saving
+            coverage_data <- list(
+              overall_pct = overall_pct,
+              file_summary = file_summary,
+              generated_at = Sys.time(),
+              r_version = R.version.string,
+              covr_version = as.character(packageVersion("covr")),
+              git_sha = Sys.getenv("GITHUB_SHA")
+            )
+
+            # Save to inst/extdata
+            dir.create("inst/extdata", recursive = TRUE, showWarnings = FALSE)
+            saveRDS(coverage_data, "inst/extdata/coverage.rds")
+
+            cat("\n=== Coverage saved to inst/extdata/coverage.rds ===\n")
+          '
+
+      - name: Commit coverage data
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Check if coverage.rds changed
+          if git diff --quiet inst/extdata/coverage.rds 2>/dev/null; then
+            echo "No changes to coverage data"
+          else
+            git add inst/extdata/coverage.rds
+            git commit -m "AUTO: Update pre-computed code coverage [skip ci]" || echo "Nothing to commit"
+            git push
+            echo "Coverage data committed and pushed"
+          fi
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: inst/extdata/coverage.rds
+          retention-days: 30
