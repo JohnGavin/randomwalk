@@ -133,34 +133,55 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 #| viewerHeight: 900
 
 # ============================================================================
-# FAST Package Loading (Pre-built webR binaries from R-Universe)
+# FAST Package Loading (Pre-built webR binaries from GitHub Pages)
 # ============================================================================
-# Packages are pre-built by R-Universe and served with CORS headers
+# Packages built by GitHub Actions and deployed to GitHub Pages
 # See: https://github.com/JohnGavin/randomwalk/wiki/Shinylive-Lessons-Learned
 
-cat("\n=== DASHBOARD SETUP (OPTIMIZED) ===\n")
-cat("Loading pre-built packages from R-Universe...\n\n")
+cat("\n=== DASHBOARD SETUP ===\n")
+cat("Installing packages from GitHub Pages...\n\n")
 
-# Install randomwalk from R-Universe (has WebR/WASM binaries)
-# This approach survives pkgdown deployment transformations
-# See: WIKI_SHINYLIVE_LESSONS_LEARNED.md Issue #127
-webr::install(
-  "randomwalk",
-  repos = c(
-    "https://johngavin.r-universe.dev",  # Has WebR binaries for randomwalk
-    "https://repo.r-wasm.org"            # Standard webR packages (shiny, ggplot2, etc.)
+# Install randomwalk from GitHub Pages (built by deploy-pages.yaml workflow)
+tryCatch({
+  webr::install(
+    "randomwalk",
+    repos = c(
+      "https://johngavin.github.io/randomwalk",  # GitHub Pages webR repo
+      "https://repo.r-wasm.org"                   # Standard webR packages
+    )
   )
-)
+  cat("✅ randomwalk installed\n")
+}, error = function(e) {
+  cat("❌ ERROR installing randomwalk:", e$message, "\n")
+})
 
-# Load packages
+# Load shiny (usually pre-installed)
 library(shiny)
 cat("✅ shiny\n")
 
-library(ggplot2)
-cat("✅ ggplot2\n")
+# Install ggplot2 dependencies and ggplot2
+tryCatch({
+  library(ggplot2)
+  cat("✅ ggplot2\n")
+}, error = function(e) {
+  cat("⚠️  ggplot2 not found, installing dependencies...\n")
+  # Install munsell first (required ggplot2 dependency often missing)
+  webr::install("munsell", repos = "https://repo.r-wasm.org")
+  cat("✅ munsell installed\n")
+  webr::install("ggplot2", repos = "https://repo.r-wasm.org")
+  library(ggplot2)
+  cat("✅ ggplot2 installed and loaded\n")
+})
 
-library(randomwalk)
-cat("✅ randomwalk (v", as.character(packageVersion("randomwalk")), ")\n", sep = "")
+# Load randomwalk
+tryCatch({
+  library(randomwalk)
+  cat("✅ randomwalk (v", as.character(packageVersion("randomwalk")), ")\n", sep = "")
+}, error = function(e) {
+  cat("❌ ERROR loading randomwalk:", e$message, "\n")
+  cat("Available packages:\n")
+  print(installed.packages()[, c("Package", "Version")])
+})
 
 cat("\n⚠️  WebR Mode: Synchronous only (workers=0)\n")
 cat("   Reason: mirai/nanonext not available in WebAssembly\n")
@@ -1057,14 +1078,14 @@ loaded via a namespace (and not attached):
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  Full SHA:  "</span>, git_commit, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>  Full SHA:   b3575e4a874daa17c77660974c0c1d20a59b153b </code></pre>
+<pre><code>  Full SHA:   c4269eb48e0faf87912558107f2cdf3b1fef6727 </code></pre>
 </div>
 <details class="code-fold">
 <summary>Show version details</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  Short SHA: "</span>, git_commit_short, <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>  Short SHA:  b3575e4 </code></pre>
+<pre><code>  Short SHA:  c4269eb </code></pre>
 </div>
 <details class="code-fold">
 <summary>Show version details</summary>
@@ -1106,7 +1127,7 @@ loaded via a namespace (and not attached):
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Build Time:  "</span>, <span class="fu">format</span>(build_time, <span class="st">"%Y-%m-%d %H:%M:%S %Z"</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>Build Time:   2026-01-01 15:40:13 GMT </code></pre>
+<pre><code>Build Time:   2026-01-01 18:51:44 GMT </code></pre>
 </div>
 </div>
 </section>

@@ -53,34 +53,55 @@ This vignette provides a **simplified, focused demonstration** of synchronous ra
 #| viewerHeight: 900
 
 # ============================================================================
-# FAST Package Loading (Pre-built webR binaries from R-Universe)
+# FAST Package Loading (Pre-built webR binaries from GitHub Pages)
 # ============================================================================
-# Packages are pre-built by R-Universe and served with CORS headers
+# Packages built by GitHub Actions and deployed to GitHub Pages
 # See: https://github.com/JohnGavin/randomwalk/wiki/Shinylive-Lessons-Learned
 
-cat("\n=== DASHBOARD SETUP (OPTIMIZED) ===\n")
-cat("Loading pre-built packages from R-Universe...\n\n")
+cat("\n=== DASHBOARD SETUP ===\n")
+cat("Installing packages from GitHub Pages...\n\n")
 
-# Install randomwalk from R-Universe (has WebR/WASM binaries)
-# This approach survives pkgdown deployment transformations
-# See: WIKI_SHINYLIVE_LESSONS_LEARNED.md Issue #127
-webr::install(
-  "randomwalk",
-  repos = c(
-    "https://johngavin.r-universe.dev",  # Has WebR binaries for randomwalk
-    "https://repo.r-wasm.org"            # Standard webR packages (shiny, ggplot2, etc.)
+# Install randomwalk from GitHub Pages (built by deploy-pages.yaml workflow)
+tryCatch({
+  webr::install(
+    "randomwalk",
+    repos = c(
+      "https://johngavin.github.io/randomwalk",  # GitHub Pages webR repo
+      "https://repo.r-wasm.org"                   # Standard webR packages
+    )
   )
-)
+  cat("✅ randomwalk installed\n")
+}, error = function(e) {
+  cat("❌ ERROR installing randomwalk:", e$message, "\n")
+})
 
-# Load packages
+# Load shiny (usually pre-installed)
 library(shiny)
 cat("✅ shiny\n")
 
-library(ggplot2)
-cat("✅ ggplot2\n")
+# Install ggplot2 dependencies and ggplot2
+tryCatch({
+  library(ggplot2)
+  cat("✅ ggplot2\n")
+}, error = function(e) {
+  cat("⚠️  ggplot2 not found, installing dependencies...\n")
+  # Install munsell first (required ggplot2 dependency often missing)
+  webr::install("munsell", repos = "https://repo.r-wasm.org")
+  cat("✅ munsell installed\n")
+  webr::install("ggplot2", repos = "https://repo.r-wasm.org")
+  library(ggplot2)
+  cat("✅ ggplot2 installed and loaded\n")
+})
 
-library(randomwalk)
-cat("✅ randomwalk (v", as.character(packageVersion("randomwalk")), ")\n", sep = "")
+# Load randomwalk
+tryCatch({
+  library(randomwalk)
+  cat("✅ randomwalk (v", as.character(packageVersion("randomwalk")), ")\n", sep = "")
+}, error = function(e) {
+  cat("❌ ERROR loading randomwalk:", e$message, "\n")
+  cat("Available packages:\n")
+  print(installed.packages()[, c("Package", "Version")])
+})
 
 cat("\n⚠️  WebR Mode: Synchronous only (workers=0)\n")
 cat("   Reason: mirai/nanonext not available in WebAssembly\n")
