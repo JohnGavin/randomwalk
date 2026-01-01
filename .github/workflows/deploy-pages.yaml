@@ -38,6 +38,18 @@ jobs:
         run: |
           nix-build --quiet package.nix
 
+      # Cache targets to skip re-running unchanged simulations
+      # This can save 10-20 minutes on incremental builds
+      - name: Cache targets
+        uses: actions/cache@v4
+        with:
+          path: |
+            _targets/meta
+            _targets/objects
+          key: targets-${{ runner.os }}-${{ hashFiles('_targets.R', 'R/**/*.R') }}
+          restore-keys: |
+            targets-${{ runner.os }}-
+
       - name: Build all targets (simulations + vignettes + pkgdown)
         run: |
           nix-shell --quiet default-ci.nix --run "
