@@ -803,6 +803,14 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
   test_result <- test_m[]
   logger::log_info("Daemon test: PID = {test_result}")
 
+  # Test a simple walker-like task (no sockets)
+  test_walker <- mirai::mirai({
+    pos <- c(sample(.gs, 1), sample(.gs, 1))
+    list(walker_id = 999, status = "test", position = pos)
+  }, .gs = grid_size)
+  test_walker_result <- test_walker[]
+  logger::log_info("Walker test: {test_walker_result$status} at ({test_walker_result$position[1]}, {test_walker_result$position[2]})")
+
   # Initialize subscriber sockets on ALL daemons using everywhere()
   # This runs ONCE on each daemon before any tasks
   logger::log_info("Initializing subscriber sockets on daemons...")
@@ -832,17 +840,9 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
     walker <- walkers[[i]]
 
     m <- mirai::mirai({
-      # Get socket and grid from daemon's global environment
-      socket_ok <- tryCatch(get(".daemon_socket_ok", envir = .GlobalEnv), error = function(e) FALSE)
-      sub_socket <- if (socket_ok) {
-        tryCatch(get(".daemon_sub_socket", envir = .GlobalEnv), error = function(e) NULL)
-      } else {
-        NULL
-      }
-      local_grid <- tryCatch(
-        get(".daemon_local_grid", envir = .GlobalEnv),
-        error = function(e) .initial_grid_backup
-      )
+      # SIMPLIFIED: Skip socket complexity, use passed grid directly
+      local_grid <- .grid_data
+      sub_socket <- NULL  # Disable socket for now
 
       position <- c(sample(.grid_size, 1), sample(.grid_size, 1))
       path <- list()
@@ -861,20 +861,20 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
 
       # Main simulation loop
       for (step in seq_len(.max_steps)) {
-        # STEP 1: Check for broadcast updates (non-blocking)
-        repeat {
-          msg <- tryCatch(
-            nanonext::recv(sub_socket, mode = "raw", block = FALSE),
-            error = function(e) NULL
-          )
-          if (is.null(msg)) break
+        # STEP 1: Check for broadcast updates (non-blocking) - SKIP if no socket
+        if (!is.null(sub_socket)) {
+          repeat {
+            msg <- tryCatch(
+              nanonext::recv(sub_socket, mode = "raw", block = FALSE),
+              error = function(e) NULL
+            )
+            if (is.null(msg)) break
 
-          update <- tryCatch(unserialize(msg), error = function(e) NULL)
-          if (!is.null(update) && update$type == "black_pixel") {
-            pos <- update$position
-            local_grid[pos[1], pos[2]] <- "black"
-            # Update daemon's cached grid
-            assign(".daemon_local_grid", local_grid, envir = .GlobalEnv)
+            update <- tryCatch(unserialize(msg), error = function(e) NULL)
+            if (!is.null(update) && update$type == "black_pixel") {
+              pos <- update$position
+              local_grid[pos[1], pos[2]] <- "black"
+            }
           }
         }
 
@@ -976,7 +976,7 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
     .neighborhood = neighborhood,
     .boundary = boundary,
     .max_steps = max_steps,
-    .initial_grid_backup = grid
+    .grid_data = grid
     )
 
     task_list[[paste0("walker_", walker$id)]] <- m
