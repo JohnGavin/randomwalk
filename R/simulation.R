@@ -12,10 +12,11 @@
 #'   For async mode, use 2-4 workers for medium grids, 4-8 for large grids.
 #'   Requires crew and nanonext packages.
 #' @param sync_mode Character. Grid synchronization mode for async simulations.
-#'   Options: "static" (default, workers receive frozen grid snapshot) or
-#'   "dynamic" (workers receive real-time grid updates via broadcasting, enables
-#'   collision detection). Only applies when workers > 0. Dynamic mode requires
-#'   nanonext package and has ~10-15% performance overhead.
+#'   Options: "static" (default, workers receive frozen grid snapshot),
+#'   "dynamic" (crew-based with fallback to static if sockets fail), or
+#'   "mirai_dynamic" (true real-time broadcasting using mirai + nanonext pub/sub).
+#'   Only applies when workers > 0. mirai_dynamic mode provides true inter-worker
+#'   communication for collision detection. Requires nanonext package.
 #' @param max_steps Integer. Maximum steps per walker before forced termination.
 #'   Default 10000.
 #' @param verbose Logical. If TRUE, enables detailed logging. Default FALSE.
@@ -124,8 +125,22 @@ run_simulation <- function(grid_size = 10,
   # Choose async or sync mode
   if (workers > 0) {
     # === ASYNC MODE ===
-    if (sync_mode == "dynamic") {
-      # Dynamic broadcasting mode - walkers can collide
+    if (sync_mode == "mirai_dynamic") {
+      # TRUE dynamic mode - mirai with nanonext pub/sub
+      result <- run_simulation_mirai_dynamic(
+        grid = grid,
+        walkers = walkers,
+        n_workers = workers,
+        neighborhood = neighborhood,
+        boundary = boundary,
+        max_steps = max_steps,
+        start_time = start_time,
+        validate_strict = validate_strict,
+        validate_percent = validate_percent,
+        log_interval = log_interval
+      )
+    } else if (sync_mode == "dynamic") {
+      # Dynamic broadcasting mode (crew-based, fallback to static)
       result <- run_simulation_async_dynamic(
         grid = grid,
         walkers = walkers,
@@ -745,6 +760,301 @@ run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
     # Clean up resources
     cleanup_async(controller, pub_socket)
   })
+}
+
+
+#' Run Simulation with Mirai Direct (True Dynamic Broadcasting)
+#'
+#' Uses mirai directly (not crew) with nanonext pub/sub for real-time
+#' grid synchronization between workers. Sockets are initialized on
+#' daemons at startup, enabling mid-task broadcasts.
+#'
+#' @inheritParams run_simulation_async_dynamic
+#' @return List with grid, walkers, and statistics
+#' @keywords internal
+run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
+                                          boundary, max_steps, start_time,
+                                          validate_strict, validate_percent, log_interval) {
+  logger::log_info("Starting MIRAI-DIRECT simulation with true dynamic broadcasting ({n_workers} workers)")
+
+  if (!requireNamespace("mirai", quietly = TRUE)) {
+    stop("mirai package required for direct mirai mode")
+  }
+  if (!requireNamespace("nanonext", quietly = TRUE)) {
+    stop("nanonext package required for dynamic broadcasting")
+  }
+
+  n_total <- length(walkers)
+  port <- 5556  # Different port from crew-based to avoid conflicts
+  grid_size <- nrow(grid)
+
+  # Initialize publisher socket on main process
+  pub_socket <- nanonext::socket("pub")
+  nanonext::listen(pub_socket, sprintf("tcp://*:%d", port))
+  Sys.sleep(0.1)  # Allow socket to bind
+  logger::log_info("Publisher socket listening on port {port}")
+
+  # Start mirai daemons
+  mirai::daemons(n = n_workers, dispatcher = TRUE)
+  logger::log_info("Started {n_workers} mirai daemons")
+
+  # Initialize subscriber sockets on ALL daemons using everywhere()
+  # This runs ONCE on each daemon before any tasks
+  mirai::everywhere({
+    # Create subscriber socket connected to main's publisher
+    .sub_socket <- nanonext::socket("sub")
+    nanonext::dial(.sub_socket, sprintf("tcp://127.0.0.1:%d", .port))
+    nanonext::subscribe(.sub_socket, "")  # Subscribe to all messages
+    # Store in daemon's global environment
+    assign(".daemon_sub_socket", .sub_socket, envir = .GlobalEnv)
+    assign(".daemon_local_grid", .initial_grid, envir = .GlobalEnv)
+  }, .port = port, .initial_grid = grid)
+
+  logger::log_info("Initialized subscriber sockets on all daemons")
+
+  # Submit all walker tasks
+  logger::log_info("Submitting {n_total} walker tasks")
+  task_list <- list()
+
+  for (i in seq_along(walkers)) {
+    walker <- walkers[[i]]
+
+    m <- mirai::mirai({
+      # Get socket and grid from daemon's global environment
+      sub_socket <- get(".daemon_sub_socket", envir = .GlobalEnv)
+      local_grid <- get(".daemon_local_grid", envir = .GlobalEnv)
+
+      position <- c(sample(.grid_size, 1), sample(.grid_size, 1))
+      path <- list()
+
+      # Check if started on black
+      if (local_grid[position[1], position[2]] == "black") {
+        return(list(
+          walker_id = .walker_id,
+          status = "started_on_black",
+          steps = 0,
+          position = position,
+          path = list(),
+          black_pixel_created = FALSE
+        ))
+      }
+
+      # Main simulation loop
+      for (step in seq_len(.max_steps)) {
+        # STEP 1: Check for broadcast updates (non-blocking)
+        repeat {
+          msg <- tryCatch(
+            nanonext::recv(sub_socket, mode = "raw", block = FALSE),
+            error = function(e) NULL
+          )
+          if (is.null(msg)) break
+
+          update <- tryCatch(unserialize(msg), error = function(e) NULL)
+          if (!is.null(update) && update$type == "black_pixel") {
+            pos <- update$position
+            local_grid[pos[1], pos[2]] <- "black"
+            # Update daemon's cached grid
+            assign(".daemon_local_grid", local_grid, envir = .GlobalEnv)
+          }
+        }
+
+        # STEP 2: Check neighbors for black
+        neighbors <- if (.neighborhood == "4-hood") {
+          list(
+            c(position[1] - 1, position[2]),
+            c(position[1] + 1, position[2]),
+            c(position[1], position[2] - 1),
+            c(position[1], position[2] + 1)
+          )
+        } else {
+          list(
+            c(position[1] - 1, position[2]),
+            c(position[1] + 1, position[2]),
+            c(position[1], position[2] - 1),
+            c(position[1], position[2] + 1),
+            c(position[1] - 1, position[2] - 1),
+            c(position[1] - 1, position[2] + 1),
+            c(position[1] + 1, position[2] - 1),
+            c(position[1] + 1, position[2] + 1)
+          )
+        }
+
+        has_black_neighbor <- any(sapply(neighbors, function(pos) {
+          if (pos[1] < 1 || pos[1] > .grid_size || pos[2] < 1 || pos[2] > .grid_size) {
+            return(FALSE)
+          }
+          local_grid[pos[1], pos[2]] == "black"
+        }))
+
+        if (has_black_neighbor) {
+          local_grid[position[1], position[2]] <- "black"
+          assign(".daemon_local_grid", local_grid, envir = .GlobalEnv)
+
+          return(list(
+            walker_id = .walker_id,
+            status = "black_neighbor_detected",
+            steps = step,
+            position = position,
+            path = path,
+            black_pixel_created = TRUE
+          ))
+        }
+
+        # STEP 3: Random walk
+        valid_neighbors <- Filter(function(pos) {
+          pos[1] >= 1 && pos[1] <= .grid_size && pos[2] >= 1 && pos[2] <= .grid_size
+        }, neighbors)
+
+        if (length(valid_neighbors) == 0) {
+          return(list(
+            walker_id = .walker_id,
+            status = "no_valid_moves",
+            steps = step,
+            position = position,
+            path = path,
+            black_pixel_created = FALSE
+          ))
+        }
+
+        next_pos <- valid_neighbors[[sample(length(valid_neighbors), 1)]]
+
+        # Check boundary
+        if (next_pos[1] < 1 || next_pos[1] > .grid_size ||
+            next_pos[2] < 1 || next_pos[2] > .grid_size) {
+          if (.boundary == "terminate") {
+            return(list(
+              walker_id = .walker_id,
+              status = "boundary",
+              steps = step,
+              position = position,
+              path = path,
+              black_pixel_created = FALSE
+            ))
+          } else {
+            next_pos <- c(
+              ((next_pos[1] - 1) %% .grid_size) + 1,
+              ((next_pos[2] - 1) %% .grid_size) + 1
+            )
+          }
+        }
+
+        path[[step]] <- position
+        position <- next_pos
+      }
+
+      list(
+        walker_id = .walker_id,
+        status = "max_steps",
+        steps = .max_steps,
+        position = position,
+        path = path,
+        black_pixel_created = FALSE
+      )
+    },
+    .walker_id = walker$id,
+    .grid_size = grid_size,
+    .neighborhood = neighborhood,
+    .boundary = boundary,
+    .max_steps = max_steps
+    )
+
+    task_list[[paste0("walker_", walker$id)]] <- m
+  }
+
+  logger::log_info("All tasks submitted, processing results...")
+
+  # Process results and broadcast updates
+
+  completed_walkers <- list()
+  n_completed <- 0
+  collision_count <- 0
+  last_log_time <- Sys.time()
+
+  while (n_completed < n_total) {
+    # Check for completed tasks
+    for (task_name in names(task_list)) {
+      m <- task_list[[task_name]]
+
+      if (!mirai::unresolved(m)) {
+        result <- tryCatch(m[], error = function(e) {
+          list(walker_id = NA, status = "error", error = e$message)
+        })
+
+        if (!is.null(result$walker_id) && !is.na(result$walker_id)) {
+          completed_walkers[[as.character(result$walker_id)]] <- result
+          n_completed <- n_completed + 1
+
+          # If walker created a black pixel, broadcast to all daemons
+          if (isTRUE(result$black_pixel_created)) {
+            pos <- result$position
+            grid[pos[1], pos[2]] <- "black"
+            collision_count <- collision_count + 1
+
+            # Broadcast to all daemons
+            msg <- serialize(list(
+              type = "black_pixel",
+              position = pos,
+              walker_id = result$walker_id
+            ), NULL)
+            nanonext::send(pub_socket, msg, mode = "raw", block = FALSE)
+
+            logger::log_debug("Broadcast black pixel at ({pos[1]}, {pos[2]}) from walker {result$walker_id}")
+          }
+        }
+
+        # Remove from task list
+        task_list[[task_name]] <- NULL
+      }
+    }
+
+    # Log progress periodically
+    if (n_completed > 0 && (n_completed %% log_interval == 0 ||
+        difftime(Sys.time(), last_log_time, units = "secs") > 2)) {
+      logger::log_info("Completed: {n_completed}/{n_total}, Collisions: {collision_count}")
+      last_log_time <- Sys.time()
+    }
+
+    Sys.sleep(0.01)  # Brief pause to prevent busy-waiting
+  }
+
+  elapsed_time <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+  logger::log_info("=== MIRAI DYNAMIC SIMULATION COMPLETE ===")
+  logger::log_info("Elapsed time: {round(elapsed_time, 1)} seconds")
+  logger::log_info("Collisions (black neighbor terminations): {collision_count}")
+
+  # Cleanup
+  mirai::daemons(0)
+  tryCatch(nanonext::close(pub_socket), error = function(e) NULL)
+  logger::log_info("Cleaned up mirai daemons and sockets")
+
+  # Collect statistics
+  walker_steps <- sapply(completed_walkers, function(w) if(is.null(w$steps)) 0 else w$steps)
+  termination_statuses <- sapply(completed_walkers, function(w) if(is.null(w$status)) "unknown" else w$status)
+
+  statistics <- list(
+    black_pixels = count_black_pixels(grid),
+    black_percentage = get_black_percentage(grid),
+    grid_size = grid_size,
+    total_walkers = n_total,
+    completed_walkers = n_completed,
+    total_steps = sum(walker_steps),
+    min_steps = if(length(walker_steps) > 0) min(walker_steps) else 0,
+    max_steps = if(length(walker_steps) > 0) max(walker_steps) else 0,
+    mean_steps = if(length(walker_steps) > 0) mean(walker_steps) else 0,
+    median_steps = if(length(walker_steps) > 0) median(walker_steps) else 0,
+    percentile_25 = if(length(walker_steps) > 0) quantile(walker_steps, 0.25) else 0,
+    percentile_75 = if(length(walker_steps) > 0) quantile(walker_steps, 0.75) else 0,
+    elapsed_time_secs = elapsed_time,
+    termination_reasons = table(termination_statuses),
+    collisions_detected = collision_count,
+    sync_mode = "mirai_dynamic"
+  )
+
+  list(
+    grid = grid,
+    walkers = completed_walkers,
+    statistics = statistics
+  )
 }
 
 
