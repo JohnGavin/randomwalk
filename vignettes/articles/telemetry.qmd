@@ -97,12 +97,20 @@ cov_available <- !is.null(cov_data)
 if (cov_available) {
   cat(sprintf("Overall Test Coverage: %.1f%%\n", cov_data$overall_pct))
 } else {
-  cat("⚠️ Code coverage analysis is temporarily disabled.\n\n")
-  cat("The covr::package_coverage() function encounters 'error reading from connection'\n")
-  cat("in Nix environments. This is a known compatibility issue being tracked.\n\n")
-  cat("To generate coverage locally:\n")
-  cat("  coverage <- covr::package_coverage()\n")
-  cat("  covr::report(coverage)\n")
+  cat("⚠️ Code coverage analysis is temporarily disabled in the CI pipeline.\n\n")
+  cat("**Why?** The `covr::package_coverage()` function encounters 'error reading from connection'\n")
+  cat("when running inside Nix environments. This is a known R/Nix compatibility issue.\n\n")
+  cat("**Options to view coverage:**\n\n")
+  cat("1. **Run locally outside Nix** (recommended):\n")
+  cat("   ```r\n")
+  cat("   coverage <- covr::package_coverage()\n")
+  cat("   covr::report(coverage)  # Opens interactive HTML report\n")
+  cat("   ```\n\n")
+  cat("2. **Use GitHub Actions with standard R** (not Nix):\n")
+  cat("   Add a separate workflow using r-lib/actions/setup-r instead of Nix\n\n")
+  cat("3. **Pre-compute and cache coverage**:\n")
+  cat("   Generate coverage outside Nix, save to inst/coverage.rds,\n")
+  cat("   then load in the vignette for display\n")
 }
 ```
 
@@ -430,30 +438,9 @@ plot_data %>%
 
 # Example Simulations
 
-## Small Simulation
-
-A small 10×10 grid simulation with 3 walkers:
-
-```{r sim-small-stats}
-# Load pre-computed statistics
-stats_small <- tar_read(stats_small)
-
-# Display statistics
-if (is.data.frame(stats_small) || is.list(stats_small)) {
-  print(stats_small)
-} else {
-  cat("Statistics available but format not suitable for display\n")
-}
-```
-
-```{r plot-small-grid, fig.cap="Small simulation grid visualization"}
-# Load pre-computed plot
-tar_read(plot_small_grid)
-```
-
 ## Medium Simulation
 
-A medium 20×20 grid simulation with 5 walkers:
+A 20×20 grid simulation with 5 walkers using 8-neighborhood and wrap boundary:
 
 ```{r sim-medium-stats}
 # Load pre-computed statistics
@@ -467,9 +454,38 @@ if (is.data.frame(stats_medium) || is.list(stats_medium)) {
 }
 ```
 
-```{r plot-medium-grid, fig.cap="Medium simulation grid visualization"}
+```{r plot-medium-grid, fig.cap="Medium simulation grid visualization (20×20)"}
 # Load pre-computed plot
 tar_read(plot_medium_grid)
+```
+
+## Large Simulation (High Coverage)
+
+A 30×30 grid simulation with 300 walkers, targeting >10% black pixel coverage.
+With 900 total pixels, this aims for 90+ black pixels through many walker paths:
+
+```{r sim-large-stats}
+# Load pre-computed statistics
+stats_large <- tar_read(stats_large)
+
+# Display statistics
+if (is.data.frame(stats_large) || is.list(stats_large)) {
+  print(stats_large)
+} else {
+  cat("Statistics available but format not suitable for display\n")
+}
+
+# Calculate and display coverage percentage
+if (is.list(stats_large) && !is.null(stats_large$black_pixels)) {
+  coverage_pct <- (stats_large$black_pixels / (30 * 30)) * 100
+  cat(sprintf("\n**Coverage: %.1f%% black pixels (%d of 900)**\n",
+              coverage_pct, stats_large$black_pixels))
+}
+```
+
+```{r plot-large-grid, fig.cap="Large simulation grid visualization (30×30, high coverage)"}
+# Load pre-computed plot
+tar_read(plot_large_grid)
 ```
 
 # System Information
