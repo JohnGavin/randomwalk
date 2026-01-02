@@ -36,24 +36,45 @@ navbar:
     articles:
       text: Articles
       menu:
-      # NOTE: Disabled broken vignettes (Issue #132)
-      # - text: Interactive Dashboard (Sync)
-      #   href: articles/dashboard.html
-      # - text: Async/Parallel Dashboard
-      #   href: articles/dashboard_async.html
-      - text: Sync Sequential Random Walks
-        href: articles/dynamic_broadcasting.html
+      # ═══════════════════════════════════════════════════════════
+      # R-SHINYLIVE: Interactive dashboards (run in browser via WebR)
+      # ═══════════════════════════════════════════════════════════
+      - text: "──── R-Shinylive Dashboards ────"
       - text: Comprehensive Dashboard (All Features)
         href: articles/dashboard_comprehensive.html
+      - text: Sync Sequential Random Walks
+        href: articles/dynamic_broadcasting.html
+      # ═══════════════════════════════════════════════════════════
+      # WEBR: Analysis vignettes using WebR
+      # ═══════════════════════════════════════════════════════════
+      - text: "──── WebR Analysis ────"
       - text: Step Distribution Analysis
         href: articles/step_distribution_analysis.html
+      # ═══════════════════════════════════════════════════════════
+      # BACKGROUND: Project documentation and development info
+      # ═══════════════════════════════════════════════════════════
+      - text: "──── Background & Documentation ────"
       - text: Defensive Programming Patterns
         href: articles/defensive_programming.html
       - text: Telemetry and Pipeline Performance
         href: articles/telemetry.html
 
-# Let pkgdown auto-discover articles from vignettes/articles/
-# Articles will be listed alphabetically by default
+# Organize articles on the Articles index page
+articles:
+- title: "R-Shinylive Dashboards"
+  desc: "Interactive dashboards running in your browser via WebR"
+  contents:
+  - dashboard_comprehensive
+  - dynamic_broadcasting
+- title: "WebR Analysis"
+  desc: "Statistical analysis vignettes using WebR"
+  contents:
+  - step_distribution_analysis
+- title: "Background & Documentation"
+  desc: "Project documentation and development patterns"
+  contents:
+  - defensive_programming
+  - telemetry
 
 footer:
   structure:
