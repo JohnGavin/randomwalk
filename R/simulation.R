@@ -1150,8 +1150,8 @@ run_simulation_chunked <- function(grid, walkers, n_workers, neighborhood,
             position <- c(sample(grid_size, 1), sample(grid_size, 1))
             path <- list()
 
-            # Check if started on black
-            if (local_grid[position[1], position[2]] == "black") {
+            # Check if started on black (grid uses 1 for black, 0 for white)
+            if (local_grid[position[1], position[2]] == 1) {
               return(list(
                 walker_id = walker_id,
                 status = "started_on_black",
@@ -1189,7 +1189,7 @@ run_simulation_chunked <- function(grid, walkers, n_workers, neighborhood,
                 if (pos[1] < 1 || pos[1] > grid_size || pos[2] < 1 || pos[2] > grid_size) {
                   return(FALSE)
                 }
-                local_grid[pos[1], pos[2]] == "black"
+                local_grid[pos[1], pos[2]] == 1  # Grid uses 1 for black
               }))
 
               if (has_black_neighbor) {
@@ -1203,28 +1203,14 @@ run_simulation_chunked <- function(grid, walkers, n_workers, neighborhood,
                 ))
               }
 
-              # Random walk
-              valid_neighbors <- Filter(function(pos) {
-                pos[1] >= 1 && pos[1] <= grid_size && pos[2] >= 1 && pos[2] <= grid_size
-              }, neighbors)
+              # Random walk - select from ALL neighbors (including out of bounds)
+              next_pos <- neighbors[[sample(length(neighbors), 1)]]
 
-              if (length(valid_neighbors) == 0) {
-                return(list(
-                  walker_id = walker_id,
-                  status = "no_valid_moves",
-                  steps = step,
-                  position = position,
-                  path = path,
-                  black_pixel_created = FALSE
-                ))
-              }
-
-              next_pos <- valid_neighbors[[sample(length(valid_neighbors), 1)]]
-
-              # Check boundary
+              # Check boundary AFTER selection
               if (next_pos[1] < 1 || next_pos[1] > grid_size ||
                   next_pos[2] < 1 || next_pos[2] > grid_size) {
                 if (boundary_val == "terminate") {
+                  # Walker walks off grid - terminate without creating black pixel
                   return(list(
                     walker_id = walker_id,
                     status = "boundary",
@@ -1234,6 +1220,7 @@ run_simulation_chunked <- function(grid, walkers, n_workers, neighborhood,
                     black_pixel_created = FALSE
                   ))
                 } else {
+                  # Wrap around
                   next_pos <- c(
                     ((next_pos[1] - 1) %% grid_size) + 1,
                     ((next_pos[2] - 1) %% grid_size) + 1
@@ -1282,7 +1269,7 @@ run_simulation_chunked <- function(grid, walkers, n_workers, neighborhood,
             # Update grid if walker created black pixel
             if (isTRUE(walker_result$black_pixel_created)) {
               pos <- walker_result$position
-              grid[pos[1], pos[2]] <- "black"
+              grid[pos[1], pos[2]] <- 1  # Grid uses 1 for black
               collision_count <- collision_count + 1
             }
           }

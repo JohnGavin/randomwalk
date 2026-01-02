@@ -42,7 +42,7 @@ simulate_walker_dynamic <- function(walker_id,
   # ═══════════════════════════════════════════════════════════
   position <- sample_start_position(grid_size, grid_size)
 
-  if (local_grid[position[1], position[2]] == "black") {
+  if (local_grid[position[1], position[2]] == 1) {
     # Started on black pixel - terminate immediately
     # This pixel was already broadcast by whoever created it
     return(list(
@@ -81,13 +81,13 @@ simulate_walker_dynamic <- function(walker_id,
       if (pos[1] < 1 || pos[1] > grid_size || pos[2] < 1 || pos[2] > grid_size) {
         return(FALSE)  # Out of bounds
       }
-      local_grid[pos[1], pos[2]] == "black"
+      local_grid[pos[1], pos[2]] == 1  # Grid uses 1 for black
     }))
 
     if (has_black_neighbor) {
       # FOUND BLACK NEIGHBOR!
       # Walker STOPS - current position becomes BLACK
-      local_grid[position[1], position[2]] <- "black"
+      local_grid[position[1], position[2]] <- 1  # Grid uses 1 for black
 
       # BROADCAST: New black pixel created at walker's current position
       # Only if pub_socket provided (main process may broadcast instead)
