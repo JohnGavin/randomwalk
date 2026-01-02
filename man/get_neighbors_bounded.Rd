@@ -2,7 +2,7 @@
 % Please edit documentation in R/walker_dynamic.R
 \name{get_neighbors_bounded}
 \alias{get_neighbors_bounded}
-\title{Get Neighbor Positions}
+\title{Get Neighbor Positions (Bounded)}
 \usage{
 get_neighbors_bounded(position, grid_size, neighborhood)
 }
@@ -14,9 +14,9 @@ get_neighbors_bounded(position, grid_size, neighborhood)
 \item{neighborhood}{Character "4-hood" or "8-hood"}
 }
 \value{
-List of neighbor positions
+List of neighbor positions (within bounds only)
 }
 \description{
-Returns list of neighbor positions based on neighborhood type
+Returns list of neighbor positions based on neighborhood type,
+filtering out positions that are out of bounds.
 }
-\keyword{internal}

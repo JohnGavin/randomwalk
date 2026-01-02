@@ -7,7 +7,7 @@
 simulate_walker_dynamic(
   walker_id,
   initial_grid,
-  pub_socket,
+  pub_socket = NULL,
   sub_socket,
   grid_size,
   neighborhood = "4-hood",
@@ -20,7 +20,8 @@ simulate_walker_dynamic(
 
 \item{initial_grid}{Matrix. Initial grid state.}
 
-\item{pub_socket}{Publisher socket for broadcasting updates.}
+\item{pub_socket}{Publisher socket for broadcasting updates (optional).
+If NULL, worker returns results without broadcasting (main process broadcasts).}
 
 \item{sub_socket}{Subscriber socket for receiving updates.}
 

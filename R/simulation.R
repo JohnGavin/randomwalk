@@ -1,3 +1,13 @@
+# Declare global variables to avoid R CMD check NOTEs
+# These are variables used in crew/mirai task code passed via data parameter
+utils::globalVariables(c(
+
+  # Chunked mode variables
+  "grid_snapshot", "walker_id", "max_steps_val", "neighborhood_val", "boundary_val",
+  # mirai_dynamic mode variables
+  ".gs", ".grid_data", ".grid_size", ".walker_id", ".max_steps", ".neighborhood", ".boundary"
+))
+
 #' Run a Random Walk Simulation
 #'
 #' Executes a complete random walk simulation with the specified parameters.
@@ -845,8 +855,8 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
       position <- c(sample(.grid_size, 1), sample(.grid_size, 1))
       path <- list()
 
-      # Check if started on black
-      if (local_grid[position[1], position[2]] == "black") {
+      # Check if started on black (grid uses 1 for black, 0 for white)
+      if (local_grid[position[1], position[2]] == 1) {
         return(list(
           walker_id = .walker_id,
           status = "started_on_black",
@@ -901,12 +911,11 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
           if (pos[1] < 1 || pos[1] > .grid_size || pos[2] < 1 || pos[2] > .grid_size) {
             return(FALSE)
           }
-          local_grid[pos[1], pos[2]] == "black"
+          local_grid[pos[1], pos[2]] == 1  # Grid uses 1 for black
         }))
 
         if (has_black_neighbor) {
-          local_grid[position[1], position[2]] <- "black"
-          assign(".daemon_local_grid", local_grid, envir = .GlobalEnv)
+          local_grid[position[1], position[2]] <- 1  # Grid uses 1 for black
 
           return(list(
             walker_id = .walker_id,
@@ -1071,7 +1080,7 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
 
   # Cleanup
   mirai::daemons(0)
-  tryCatch(nanonext::close(pub_socket), error = function(e) NULL)
+  tryCatch(nanonext::reap(pub_socket), error = function(e) NULL)
   logger::log_info("Cleaned up mirai daemons and sockets")
 
   # Collect statistics

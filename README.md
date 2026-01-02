@@ -126,6 +126,52 @@ result_static <- run_simulation(
 
 **Note on WebR/Browser**: The browser demos currently use `workers = 0` (synchronous mode) due to mirai/nanonext compatibility issues in WebAssembly. Async parallel processing with nanonext works in native R.
 
+#### Comparing Sync Modes: Static vs Chunked (RECOMMENDED)
+
+The `sync_mode` parameter controls how parallel workers share grid state. **Chunked mode is recommended** for better collision detection:
+
+```r
+library(randomwalk)
+
+# STATIC MODE: All workers see frozen grid snapshot
+# - Fast but workers can't see each other's black pixels
+# - Lower collision detection rate
+result_static <- run_simulation(
+  grid_size = 50,
+  n_walkers = 100,
+  workers = 2,
+
+  sync_mode = "static",
+  quiet = TRUE
+)
+
+# CHUNKED MODE (RECOMMENDED): Near-real-time grid updates
+# - Processes walkers in batches of 10
+# - Grid updated between batches
+# - Later batches see black pixels from earlier batches
+# - ~3x more collisions detected
+result_chunked <- run_simulation(
+  grid_size = 50,
+  n_walkers = 100,
+  workers = 2,
+  sync_mode = "chunked",
+  quiet = TRUE
+)
+
+# Compare results
+cat("Static mode:  ", result_static$statistics$black_pixels, "black pixels\n")
+cat("Chunked mode: ", result_chunked$statistics$black_pixels, "black pixels\n")
+# Typical output:
+# Static mode:   5 black pixels
+# Chunked mode:  15 black pixels  (3x more!)
+```
+
+| Mode | Description | Collision Detection | Use Case |
+|------|-------------|---------------------|----------|
+| `static` | Frozen grid snapshot | Low (~5%) | Fast runs, boundary testing |
+| `chunked` | Batched updates (10/batch) | High (~15%) | **Recommended for most uses** |
+| `dynamic` | Real-time broadcasting | Highest | Research, socket-compatible systems |
+
 ### Interactive Shiny Interface
 
 ```r
