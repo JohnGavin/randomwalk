@@ -1,1 +1,0 @@
-/Users/johngavin/docs_gh/llm/AGENTS.md

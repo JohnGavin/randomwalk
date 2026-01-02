@@ -32,3 +32,6 @@ result
 $WRAPPER_SCRIPT
 $WRAPPER_DIR
 R/setup/fix_issue_134.R
+
+# Symlinked from llm repo - not tracked here
+AGENTS.md
