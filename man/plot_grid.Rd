@@ -2,12 +2,21 @@
 % Please edit documentation in R/plotting.R
 \name{plot_grid}
 \alias{plot_grid}
+\alias{plot.randomwalk_result}
 \title{Plot Final Grid State}
 \usage{
 plot_grid(
   result,
   main = "Random Walk Simulation - Final Grid State",
-  col_palette = c("white", "black")
+  col_palette = c("white", "black"),
+  show_legend = TRUE
+)
+
+\method{plot}{randomwalk_result}(
+  result,
+  main = "Random Walk Simulation - Final Grid State",
+  col_palette = c("white", "black"),
+  show_legend = TRUE
 )
 }
 \arguments{
@@ -17,6 +26,8 @@ plot_grid(
 
 \item{col_palette}{A vector of two colors for white (0) and black (1) pixels.
 Default is c("white", "black")}
+
+\item{show_legend}{Logical. If FALSE, hides the legend. Default is TRUE.}
 }
 \value{
 A ggplot2 object that can be displayed or saved
@@ -31,6 +42,9 @@ for display via targets pipeline.
 result <- run_simulation(grid_size = 20, n_walkers = 8)
 p <- plot_grid(result)
 print(p)  # Display the plot
+
+# Without legend (for dashboards)
+p <- plot_grid(result, show_legend = FALSE)
 }
 
 }

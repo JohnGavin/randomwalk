@@ -60,11 +60,11 @@ test_that("run_simulation validates n_walkers", {
 })
 
 test_that("run_simulation validates neighborhood", {
-  expect_error(run_simulation(quiet = TRUE, neighborhood = "invalid"), "neighborhood must be")
+  expect_error(run_simulation(quiet = TRUE, neighborhood = "invalid"), "should be one of")
 })
 
 test_that("run_simulation validates boundary", {
-  expect_error(run_simulation(quiet = TRUE, boundary = "invalid"), "boundary must be")
+  expect_error(run_simulation(quiet = TRUE, boundary = "invalid"), "should be one of")
 })
 
 test_that("run_simulation returns correct grid size", {

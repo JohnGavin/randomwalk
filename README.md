@@ -7,16 +7,15 @@
 [![Project Status: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 <!-- badges: end -->
 
-Asynchronous Pixel Walking Simulation with Parallel Processing.
+Random Walk Simulation for Fractal Pattern Generation.
 
-## 🚀 Quick Links
+## Quick Links
 
-- **📊 [Async Parallel Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)** - Try async parallel simulation in your browser (WebR + mirai)
-- **✨ [Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)** - Full-featured dashboard with all visualizations (NEW!)
-- **📚 [Package Documentation](https://johngavin.github.io/randomwalk/)** - Full API reference and vignettes
-- **📖 [Wiki](https://github.com/JohnGavin/randomwalk/wiki)** - How-to guides, troubleshooting, and deployment docs
-- **🐙 [GitHub Repository](https://github.com/JohnGavin/randomwalk)** - Source code and issues
-- **🏷️ [Latest Release](https://github.com/JohnGavin/randomwalk/releases/latest)** - Download and release notes
+- [Interactive Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html) - Try simulation in your browser (WebR)
+- [Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html) - Full-featured dashboard with all visualizations
+- [Package Documentation](https://johngavin.github.io/randomwalk/) - Full API reference and vignettes
+- [Wiki](https://github.com/JohnGavin/randomwalk/wiki) - How-to guides, troubleshooting, and deployment docs
+- [GitHub Repository](https://github.com/JohnGavin/randomwalk) - Source code and issues
 
 ## Overview
 
@@ -24,35 +23,41 @@ Asynchronous Pixel Walking Simulation with Parallel Processing.
 
 ## Features
 
-- **True asynchronous parallel processing** with separate R worker processes
-- **Real-time grid state synchronization** across all workers via DuckDB
+- **Fast synchronous simulation** with vectorized neighbor checking
+- **Optional parallel processing** with crew workers (native R only)
 - **Comprehensive statistics tracking** with percentiles and formatting
-- **Responsive Shiny UI** that doesn't block simulation performance
-- **Programmatic API** for use without GUI
-- **Automatic resource cleanup** and process management
-- **Debug panel** with detailed system monitoring
-- **Graceful fallback** to synchronous mode if dependencies unavailable
+- **Interactive Shiny dashboards** with real-time parameter adjustment
+- **WebR/browser support** via Shinylive (synchronous mode)
+- **Programmatic API** for scripted simulations
+- **S3 plot methods** (`plot(result)` works directly)
+- **Graceful fallback** to synchronous mode if parallel dependencies unavailable
 
 ## Installation
 
 ```r
-# Install from GitHub (once published)
-# remotes::install_github("johngavin/randomwalk")
+# Option 1: Install from R-Universe (recommended - precompiled binaries)
+install.packages("randomwalk",
+  repos = c("https://johngavin.r-universe.dev", "https://cloud.r-project.org")
+)
 
-# Or install locally
-devtools::install()
+# Option 2: Install from GitHub
+remotes::install_github("johngavin/randomwalk")
+
+# Option 3: For development (after cloning repo)
+# git clone https://github.com/JohnGavin/randomwalk.git
+devtools::load_all()  # Load without installing
 ```
 
-## Interactive Async Parallel Demos
+## Interactive Browser Demos
 
 Try the simulation directly in your browser (no installation required):
 
 ### Basic Demo
-**[Launch Async Parallel Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)**
+**[Launch Interactive Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)**
 
-Simple demonstration of async parallel processing with basic visualizations.
+Simple demonstration with basic visualizations.
 
-### Comprehensive Dashboard (NEW!)
+### Comprehensive Dashboard
 **[Launch Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)**
 
 Full-featured showcase with all randomwalk capabilities:
@@ -61,13 +66,14 @@ Full-featured showcase with all randomwalk capabilities:
 - **Debug information**: Package versions, backend selection, periodic updates
 - **Documentation integration**: Links to wiki, issues, implementation notes
 
-Both dashboards run entirely in your browser using WebAssembly via [WebR](https://docs.r-wasm.org/webr/) with true async parallel processing using [mirai](https://shikokuchuo.net/mirai/). Features include:
+Both dashboards run entirely in your browser using WebAssembly via [WebR](https://docs.r-wasm.org/webr/). Features include:
 
 - Real-time parameter adjustment with sliders and dropdowns
-- **True async parallelization** (workers=2) running in-browser via mirai backend
-- Auto-detection of WebR environment (uses mirai instead of crew)
+- Synchronous mode (workers=0) for reliable in-browser execution
 - Complete simulation statistics and detailed walker information
 - No R installation or server required
+
+> **Note**: Browser dashboards use synchronous mode. Async parallel processing (workers > 0) is available in native R only.
 
 ## Usage
 
@@ -78,19 +84,23 @@ Both dashboards run entirely in your browser using WebAssembly via [WebR](https:
 ```r
 library(randomwalk)
 
-# Run a simulation directly (synchronous mode)
+# Run a simulation (synchronous mode, fast)
 result <- run_simulation(
-  grid_size = 20,
-  n_walkers = 8,
-  neighborhood = "4-hood",
-  boundary = "terminate",
-  workers = 0  # Synchronous mode
+  grid_size = 50,
+  n_walkers = 100,
+  neighborhood = c("4-hood", "8-hood"),  # First value is default
+  boundary = c("terminate", "wrap")       # First value is default
 )
 
 # Access simulation results
-result$grid           # Final grid state
-result$statistics     # Statistics
-result$walker_paths   # Walker trajectories
+result$grid           # Final grid state (matrix)
+result$statistics     # Statistics list
+result$walkers        # Walker objects with paths
+
+# Plot the result using S3 method
+plot(result)                                    # Same as plot_grid(result)
+plot_grid(result, main = "My Simulation")       # With custom title
+plot_walker_paths(result)                       # Show walker trajectories
 ```
 
 #### Async Parallel with Dynamic Broadcasting (nanonext)
@@ -164,7 +174,22 @@ cat("Chunked mode: ", result_chunked$statistics$black_pixels, "black pixels\n")
 # Typical output:
 # Static mode:   5 black pixels
 # Chunked mode:  15 black pixels  (3x more!)
+
+# View detailed statistics
+print(result_chunked$statistics$termination_reasons)
+# black_neighbor_detected: 15, boundary: 84, started_on_black: 1
+
+# Plot the final grid
+plot_grid(result_chunked$grid)
+
+# Plot walker paths (if available)
+plot_walker_paths(result_chunked)
 ```
+
+**Logging control:**
+- `quiet = TRUE` - Suppress progress logs (recommended for scripts)
+- `quiet = FALSE` (default) - Show batch progress
+- `verbose = TRUE` - Show detailed debug logs
 
 | Mode | Description | Collision Detection | Use Case |
 |------|-------------|---------------------|----------|
@@ -294,8 +319,8 @@ When using `workers > 0` with `sync_mode = "static"` (default), workers operate 
 
 ### Available Vignettes
 
-### **[Async Parallel Random Walks](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)** ⚡
-Interactive Shiny dashboard demonstrating **true async parallel processing** in WebAssembly. Uses mirai backend for parallel workers running entirely in-browser via WebR. Features real-time parameter adjustment, multiple visualization tabs, and complete simulation statistics - no R installation required.
+### **[Random Walk Dashboard](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)**
+Interactive Shiny dashboard running entirely in-browser via WebR. Features real-time parameter adjustment, multiple visualization tabs, and complete simulation statistics - no R installation required.
 
 ### **[Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)** ✨
 Full-featured showcase with all randomwalk capabilities including multiple visualizations, comprehensive statistics, debug information, and documentation integration.

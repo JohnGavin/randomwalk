@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:johngavin.github.io)"
+      "WebFetch(domain:johngavin.github.io)",
+      "WebFetch(domain:johngavin.r-universe.dev)"
     ],
     "deny": [],
     "ask": []

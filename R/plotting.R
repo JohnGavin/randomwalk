@@ -5,9 +5,12 @@
 #' for display via targets pipeline.
 #'
 #' @param result A simulation result object returned by \code{\link{run_simulation}}
+#'
+#' @aliases plot.randomwalk_result
 #' @param main Character string for the plot title. Default is "Random Walk Simulation - Final Grid State"
 #' @param col_palette A vector of two colors for white (0) and black (1) pixels.
 #'   Default is c("white", "black")
+#' @param show_legend Logical. If FALSE, hides the legend. Default is TRUE.
 #'
 #' @return A ggplot2 object that can be displayed or saved
 #'
@@ -16,12 +19,16 @@
 #' result <- run_simulation(grid_size = 20, n_walkers = 8)
 #' p <- plot_grid(result)
 #' print(p)  # Display the plot
+#'
+#' # Without legend (for dashboards)
+#' p <- plot_grid(result, show_legend = FALSE)
 #' }
 #'
 #' @export
 plot_grid <- function(result,
                       main = "Random Walk Simulation - Final Grid State",
-                      col_palette = c("white", "black")) {
+                      col_palette = c("white", "black"),
+                      show_legend = TRUE) {
 
   # Validate input
   if (!is.list(result) || !all(c("grid", "statistics") %in% names(result))) {
@@ -55,11 +62,16 @@ plot_grid <- function(result,
     ggplot2::theme(
       plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"),
       panel.grid = ggplot2::element_blank(),
-      legend.position = "right"
+      legend.position = if (show_legend) "right" else "none"
     )
 
   return(p)
 }
+
+
+#' @rdname plot_grid
+#' @export
+plot.randomwalk_result <- plot_grid
 
 
 #' Plot Walker Paths

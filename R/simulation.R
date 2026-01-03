@@ -60,16 +60,21 @@ utils::globalVariables(c(
 #' @export
 run_simulation <- function(grid_size = 10,
                             n_walkers = 5,
-                            neighborhood = "4-hood",
-                            boundary = "terminate",
+                            neighborhood = c("4-hood", "8-hood"),
+                            boundary = c("terminate", "wrap"),
                             workers = 0,
-                            sync_mode = "static",
+                            sync_mode = c("static", "dynamic", "mirai_dynamic", "chunked"),
                             max_steps = 10000L,
                             verbose = FALSE,
                             quiet = FALSE,
                             validate_strict = FALSE,
                             validate_percent = 5,
                             log_interval = 50) {
+
+  # Match character arguments (allows partial matching, uses first as default)
+  neighborhood <- match.arg(neighborhood)
+  boundary <- match.arg(boundary)
+  sync_mode <- match.arg(sync_mode)
 
   # Input validation
   if (grid_size < 3) {
@@ -79,18 +84,6 @@ run_simulation <- function(grid_size = 10,
   max_walkers <- floor(grid_size * grid_size * 0.6)
   if (n_walkers < 1 || n_walkers > max_walkers) {
     stop(sprintf("n_walkers must be between 1 and %d (60%% of grid)", max_walkers))
-  }
-
-  if (!neighborhood %in% c("4-hood", "8-hood")) {
-    stop("neighborhood must be '4-hood' or '8-hood'")
-  }
-
-  if (!boundary %in% c("terminate", "wrap")) {
-    stop("boundary must be 'terminate' or 'wrap'")
-  }
-
-  if (!sync_mode %in% c("static", "dynamic", "mirai_dynamic", "chunked")) {
-    stop("sync_mode must be 'static', 'dynamic', 'mirai_dynamic', or 'chunked'")
   }
 
   # Validate dynamic mode requirements
@@ -126,12 +119,17 @@ run_simulation <- function(grid_size = 10,
   grid <- initialize_grid(grid_size)
 
   # Create walkers
+  # PERF: Only store paths for first 20 and last 20 walkers (Issue #172)
+  # This avoids O(n²) path list growth for walkers we won't visualize
+  path_count <- 20L  # Number of paths to store from start and end
   walker_positions <- generate_walker_positions(n_walkers, grid)
   walkers <- lapply(seq_along(walker_positions), function(i) {
-    create_walker(i, walker_positions[[i]], grid_size)
+    # Store path only for first 20 or last 20 walkers
+    store_path <- (i <= path_count) || (i > n_walkers - path_count)
+    create_walker(i, walker_positions[[i]], grid_size, store_path = store_path)
   })
 
-  logger::log_info("Created {n_walkers} walkers")
+  logger::log_info("Created {n_walkers} walkers (storing paths for {min(n_walkers, 2 * path_count)})")
 
   # Choose async or sync mode
   if (workers > 0) {
@@ -201,7 +199,8 @@ run_simulation <- function(grid_size = 10,
     statistics <- result$statistics
 
   } else {
-    # === SYNC MODE (original implementation) ===
+    # === SYNC MODE (OPTIMIZED - Issue #172) ===
+    # Uses: active walker tracking, fast functions, selective path storage
 
     # Calculate validation interval based on percentage
     validate_interval <- max(1, round(n_walkers * validate_percent / 100))
@@ -213,66 +212,74 @@ run_simulation <- function(grid_size = 10,
     completed_count <- 0
     last_black_positions <- NULL  # Track validated black pixels for optimization
 
-    while (any(sapply(walkers, function(w) w$active))) {
-    step_count <- step_count + 1
+    # PERF: Track active walker indices instead of iterating all walkers
+    active_indices <- seq_len(n_walkers)
 
-    for (i in seq_along(walkers)) {
-      walker <- walkers[[i]]
+    while (length(active_indices) > 0) {
+      step_count <- step_count + 1
+      newly_inactive <- integer(0)
 
-      if (!walker$active) {
-        next
-      }
+      for (i in active_indices) {
+        walker <- walkers[[i]]
 
-      # Move walker
-      walker <- step_walker(walker, neighborhood, boundary)
-
-      # Check termination conditions
-      walker <- check_termination(walker, grid, neighborhood, boundary, max_steps)
-
-      # If terminated with black neighbor, make pixel black to extend connected graph
-      # FIX FOR ISSUE #168: Only paint for "black_neighbor" terminations
-      # - "touched_black": Already black, don't repaint
-      # - "black_neighbor": Paint to extend connected graph ✅
-      # - "max_steps": Would create isolated pixel, skip ❌
-      # - "hit_boundary": Out of bounds, skip ❌
-      if (!walker$active && walker$termination_reason == "black_neighbor") {
-        grid <- set_pixel_black(grid, walker$pos, boundary)
-        logger::log_debug("Walker {walker$id} terminated: {walker$termination_reason} at ({walker$pos[1]}, {walker$pos[2]}) after {walker$steps} steps")
-      }
-
-      # Increment completed count for any termination
-      if (!walker$active) {
-        completed_count <- completed_count + 1
-
-        # Periodic validation based on completed walker count
-        # OPTIMIZED: Only checks NEW black pixels, returns immediately on first isolated pixel
-        if (validate_percent > 0 && completed_count %% validate_interval == 0) {
-          logger::log_trace("Running optimized grid validation at {completed_count}/{n_walkers} walkers ({round(completed_count/n_walkers*100, 1)}%)")
-          validate_no_isolated_pixels(
-            grid = grid,
-            neighborhood = neighborhood,
-            strict = validate_strict,
-            last_black_positions = last_black_positions,
-            walkers = walkers,
-            step_count = step_count
-          )
-          # Update tracked positions for next validation
-          last_black_positions <- which(grid == 1, arr.ind = TRUE)
+        # Move walker using fast version (no path storage in fast version)
+        # But we need to use regular step_walker for walkers that store paths
+        if (isTRUE(walker$store_path)) {
+          walker <- step_walker(walker, neighborhood, boundary)
+        } else {
+          walker <- step_walker_fast(walker, grid_size, neighborhood, boundary)
         }
+
+        # Check termination conditions using fast version
+        if (walker$active) {
+          walker <- check_termination_fast(walker, grid, grid_size, neighborhood, max_steps)
+        }
+
+        # If terminated with black neighbor, make pixel black to extend connected graph
+        # FIX FOR ISSUE #168: Only paint for "black_neighbor" terminations
+        if (!walker$active && walker$termination_reason == "black_neighbor") {
+          grid[walker$pos[1], walker$pos[2]] <- 1L  # Direct assignment (faster)
+          logger::log_debug("Walker {walker$id} terminated: {walker$termination_reason} at ({walker$pos[1]}, {walker$pos[2]}) after {walker$steps} steps")
+        }
+
+        # Track newly inactive walkers
+        if (!walker$active) {
+          newly_inactive <- c(newly_inactive, i)
+          completed_count <- completed_count + 1
+
+          # Periodic validation based on completed walker count
+          if (validate_percent > 0 && completed_count %% validate_interval == 0) {
+            logger::log_trace("Running optimized grid validation at {completed_count}/{n_walkers} walkers ({round(completed_count/n_walkers*100, 1)}%)")
+            validate_no_isolated_pixels(
+              grid = grid,
+              neighborhood = neighborhood,
+              boundary = boundary,
+              strict = validate_strict,
+              last_black_positions = last_black_positions,
+              walkers = walkers,
+              step_count = step_count
+            )
+            # Update tracked positions for next validation
+            last_black_positions <- which(grid == 1, arr.ind = TRUE)
+          }
+        }
+
+        walkers[[i]] <- walker
       }
 
-      walkers[[i]] <- walker
-    }
+      # PERF: Remove inactive walkers from tracking (avoid iterating dead walkers)
+      if (length(newly_inactive) > 0) {
+        active_indices <- setdiff(active_indices, newly_inactive)
+      }
 
-    total_steps <- total_steps + sum(sapply(walkers, function(w) w$active))
+      total_steps <- total_steps + length(active_indices)
 
-    # Log progress periodically
-    if (step_count %% 100 == 0) {
-      active_count <- sum(sapply(walkers, function(w) w$active))
-      black_count <- count_black_pixels(grid)
-      logger::log_info("Step {step_count}: Active={active_count}, Black={black_count}")
+      # Log progress periodically
+      if (step_count %% 100 == 0) {
+        black_count <- sum(grid == 1L)
+        logger::log_info("Step {step_count}: Active={length(active_indices)}, Black={black_count}")
+      }
     }
-  }
 
     end_time <- Sys.time()
     elapsed_time <- as.numeric(difftime(end_time, start_time, units = "secs"))
@@ -286,6 +293,7 @@ run_simulation <- function(grid_size = 10,
     validate_no_isolated_pixels(
       grid = grid,
       neighborhood = neighborhood,
+      boundary = boundary,
       strict = validate_strict,
       last_black_positions = last_black_positions,
       walkers = walkers,
@@ -313,7 +321,7 @@ run_simulation <- function(grid_size = 10,
     )
   }  # End of if/else (async vs sync)
 
-  list(
+  result <- list(
     grid = grid,
     walkers = walkers,
     statistics = statistics,
@@ -326,6 +334,8 @@ run_simulation <- function(grid_size = 10,
       max_steps = max_steps
     )
   )
+  class(result) <- c("randomwalk_result", "list")
+  result
 }
 
 
@@ -452,11 +462,27 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
 
         # Update grid with terminated walker
         if (!walker$active && walker$termination_reason != "hit_boundary") {
-          # FIX FOR ISSUE #166: Disable strict validation in async mode
-          # Validation caused 99.9% rejection rate because workers operate on stale snapshots
-          # Accept all non-boundary terminations in async mode
-
           grid <- set_pixel_black(grid, walker$pos, boundary)
+
+          # --- DEBUG: Early detection of isolated pixels ---
+          # Check if the newly added pixel actually has a black neighbor in the current grid
+          # We construct a temporary walker object to reuse has_black_neighbor
+          temp_walker <- list(pos = walker$pos)
+          if (!has_black_neighbor(temp_walker, grid, neighborhood, boundary)) {
+             logger::log_error("ISOLATED PIXEL DETECTED at ({walker$pos[1]}, {walker$pos[2]})")
+             logger::log_error("Walker ID: {walker$id}, termination_reason: {walker$termination_reason}")
+             logger::log_error("Steps: {walker$steps}")
+             
+             # Check what neighbors ARE there
+             neighbors <- get_neighbors(walker$pos, neighborhood)
+             for (n in neighbors) {
+               val <- get_pixel(grid, n, boundary)
+               logger::log_error("Neighbor ({n[1]}, {n[2]}): {val}")
+             }
+             
+             stop("Isolated pixel detected - halting for debug")
+          }
+          # -------------------------------------------------
 
           # Note: No broadcasting needed - workers operate on static snapshot
           grid_state$version <- grid_state$version + 1L
@@ -476,6 +502,7 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
           validate_no_isolated_pixels(
             grid,
             neighborhood = neighborhood,
+            boundary = boundary,
             strict = validate_strict
           )
         }
@@ -503,6 +530,7 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
     validate_no_isolated_pixels(
       grid = grid,
       neighborhood = neighborhood,
+      boundary = boundary,
       strict = validate_strict,
       last_black_positions = last_black_positions,
       walkers = walkers,
@@ -716,6 +744,7 @@ run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
           validate_no_isolated_pixels(
             grid,
             neighborhood = neighborhood,
+            boundary = boundary,
             strict = validate_strict
           )
         }
@@ -744,6 +773,7 @@ run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
     validate_no_isolated_pixels(
       grid = grid,
       neighborhood = neighborhood,
+      boundary = boundary,
       strict = validate_strict,
       last_black_positions = last_black_positions,
       walkers = walkers,

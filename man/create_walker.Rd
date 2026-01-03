@@ -4,7 +4,7 @@
 \alias{create_walker}
 \title{Create a Walker}
 \usage{
-create_walker(id, pos, grid_size)
+create_walker(id, pos, grid_size, store_path = TRUE)
 }
 \arguments{
 \item{id}{Integer. Unique identifier for the walker.}
@@ -12,6 +12,9 @@ create_walker(id, pos, grid_size)
 \item{pos}{Integer vector of length 2 (row, col). Starting position.}
 
 \item{grid_size}{Integer. Size of the grid.}
+
+\item{store_path}{Logical. If TRUE, stores full path history. Default TRUE.
+Set to FALSE for performance when path visualization not needed.}
 }
 \value{
 A list representing the walker with components:
@@ -21,7 +24,8 @@ A list representing the walker with components:
 \item{steps}{Number of steps taken}
 \item{active}{Logical indicating if walker is still active}
 \item{termination_reason}{Character string if terminated, NULL otherwise}
-\item{path}{List of all positions visited}
+\item{path}{List of all positions visited (NULL if store_path=FALSE)}
+\item{store_path}{Logical indicating if path is being stored}
 }
 }
 \description{
@@ -29,5 +33,6 @@ Creates a walker object for the random walk simulation.
 }
 \examples{
 walker <- create_walker(1, c(5, 5), 10)
+walker_no_path <- create_walker(2, c(3, 3), 10, store_path = FALSE)
 
 }

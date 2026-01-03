@@ -4,13 +4,12 @@
 \alias{get_neighbors}
 \title{Get Neighboring Positions}
 \usage{
-get_neighbors(pos, neighborhood = "4-hood")
+get_neighbors(pos, neighborhood = c("4-hood", "8-hood"))
 }
 \arguments{
 \item{pos}{Integer vector of length 2 (row, col).}
 
-\item{neighborhood}{Character. Either "4-hood" (NSEW) or "8-hood" (includes diagonals).
-Default is "4-hood".}
+\item{neighborhood}{Character. Either "4-hood" (NSEW) or "8-hood" (includes diagonals).}
 }
 \value{
 A list of integer vectors, each of length 2.
@@ -19,7 +18,7 @@ A list of integer vectors, each of length 2.
 Returns all valid neighbor positions for a given position.
 }
 \examples{
-get_neighbors(c(5, 5), "4-hood")  # Returns 4 neighbors
-get_neighbors(c(5, 5), "8-hood")  # Returns 8 neighbors
+get_neighbors(c(5, 5), "4-hood")
+get_neighbors(c(5, 5), "8-hood")
 
 }

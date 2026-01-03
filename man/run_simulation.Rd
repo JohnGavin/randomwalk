@@ -7,10 +7,10 @@
 run_simulation(
   grid_size = 10,
   n_walkers = 5,
-  neighborhood = "4-hood",
-  boundary = "terminate",
+  neighborhood = c("4-hood", "8-hood"),
+  boundary = c("terminate", "wrap"),
   workers = 0,
-  sync_mode = "static",
+  sync_mode = c("static", "dynamic", "mirai_dynamic", "chunked"),
   max_steps = 10000L,
   verbose = FALSE,
   quiet = FALSE,

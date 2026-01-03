@@ -4,7 +4,7 @@
 \alias{touches_black}
 \title{Check if Walker Touches a Black Pixel}
 \usage{
-touches_black(walker, grid, boundary = "terminate")
+touches_black(walker, grid, boundary = c("terminate", "wrap"))
 }
 \arguments{
 \item{walker}{List. Walker object.}

@@ -7,6 +7,7 @@
 validate_no_isolated_pixels(
   grid,
   neighborhood = "4-hood",
+  boundary = "terminate",
   strict = FALSE,
   last_black_positions = NULL,
   walkers = NULL,
@@ -18,6 +19,8 @@ validate_no_isolated_pixels(
 
 \item{neighborhood}{Character, "4-hood" or "8-hood" for neighbor checking.
 Default is "4-hood".}
+
+\item{boundary}{Character. "terminate" or "wrap". Default "terminate".}
 
 \item{strict}{Logical, if TRUE throws error on isolation, if FALSE logs
 warning. Default FALSE.}

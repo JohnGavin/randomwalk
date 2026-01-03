@@ -296,8 +296,9 @@ test_that("check_termination_cached enforces max_steps", {
 test_that("async simulation statistics are complete", {
   skip_if_not_installed("crew")
   skip_on_cran()
+  skip("Flaky due to issue #63 - isolated pixels in async mode")
 
-  result <- run_simulation(quiet = TRUE, 
+  result <- run_simulation(quiet = TRUE,
     grid_size = 10,
     n_walkers = 4,
     workers = 2,

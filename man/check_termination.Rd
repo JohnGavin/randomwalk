@@ -7,8 +7,8 @@
 check_termination(
   walker,
   grid,
-  neighborhood = "4-hood",
-  boundary = "terminate",
+  neighborhood = c("4-hood", "8-hood"),
+  boundary = c("terminate", "wrap"),
   max_steps = 10000L
 )
 }

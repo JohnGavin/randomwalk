@@ -45,7 +45,7 @@ test_that("get_neighbors returns correct count for 8-hood", {
 })
 
 test_that("get_neighbors validates input", {
-  expect_error(get_neighbors(c(5, 5), "invalid"), "must be either")
+  expect_error(get_neighbors(c(5, 5), "invalid"), "should be one of")
 })
 
 test_that("touches_black detects black pixel", {

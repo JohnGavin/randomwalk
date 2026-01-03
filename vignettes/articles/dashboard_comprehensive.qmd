@@ -26,33 +26,6 @@ filters:
   - shinylive
 ---
 
-## Dashboard Comparison
-
-This vignette provides a **comprehensive, production-ready dashboard** with all package features. For a comparison with the simplified demo:
-
-**This Dashboard (Comprehensive):**
-- **Mode**: Both sync AND async parallel processing
-- **Scope**: Full-featured with all package capabilities
-- **Target**: Production-ready exploration and analysis tool
-- **Controls**: Complete parameter set (workers, sync_mode, max_steps, all simulation params)
-- **Visualization**: Multi-tab interface
-  - Grid display with real-time updates
-  - Histograms (steps, pixels, paths)
-  - Individual walker paths overlay
-  - Summary statistics table
-  - Telemetry and performance metrics
-- **Best for**: In-depth exploration, performance testing, research
-
-**Simplified Dashboard ([dynamic_broadcasting.html](dynamic_broadcasting.html){target="_blank"}):**
-- **Mode**: Synchronous only (workers=0)
-- **Scope**: Single focused demonstration
-- **Target**: Quick introduction to random walks
-- **Controls**: Essential parameters only (grid, walkers, neighborhood, boundary)
-- **Visualization**: Single grid display
-- **Best for**: Learning core concepts, quick demos
-
----
-
 ```{shinylive-r}
 #| standalone: true
 #| viewerHeight: 900
@@ -129,7 +102,7 @@ is_webr <- function() {
 # ============================================================================
 
 ui <- fluidPage(
-  titlePanel("Comprehensive Async Parallel Random Walks (Issue #136)"),
+  titlePanel("Comprehensive Random Walks Dashboard"),
 
   sidebarLayout(
     # LEFT PANEL: INPUTS
@@ -141,10 +114,6 @@ ui <- fluidPage(
 
       sliderInput("n_walkers", "Number of Walkers:",
                   min = 1, max = 5000, value = 2000, step = 50),
-
-      sliderInput("workers", "Parallel Workers:",
-                  min = 0, max = 4, value = 0, step = 1),
-      helpText("WebR: Use 0 for synchronous mode only (async not available due to mirai/nanonext compatibility)"),
 
       selectInput("neighborhood", "Neighborhood:",
                   choices = c("4-hood", "8-hood"),
@@ -227,45 +196,34 @@ ui <- fluidPage(
         # PAGE 6: Notes
         tabPanel("Notes",
                  h4("About This Dashboard"),
-                 h5("Differences from Basic Vignette"),
+                 h5("Browser Mode"),
+                 tags$p("This dashboard runs in ", strong("sync sequential mode"), " (workers=0)."),
+                 tags$p("Each walker is processed one at a time. This is a WebR/browser limitation."),
+                 hr(),
+                 h5("Features"),
                  tags$ul(
-                   tags$li(strong("Comprehensive:"), " Shows all randomwalk features, not just basic demo"),
-                   tags$li(strong("Multiple visualizations:"), " Fractal plots, path plots, distributions"),
-                   tags$li(strong("More walkers:"), " Default 10 walkers (vs 5 in basic demo)"),
-                   tags$li(strong("Detailed statistics:"), " Comprehensive stats across all tabs"),
-                   tags$li(strong("Debug information:"), " Package versions, inputs, backend selection"),
-                   tags$li(strong("Documentation links:"), " Cross-references to wiki and issues")
+                   tags$li(strong("Multiple visualizations:"), " Fractal graph, walker paths, distributions"),
+                   tags$li(strong("Comprehensive statistics:"), " Grid, walker, step, and performance metrics"),
+                   tags$li(strong("Debug information:"), " Package versions, environment detection, timing")
                  ),
                  hr(),
-                 h5("Related Documentation"),
+                 h5("Related Links"),
                  tags$ul(
-                   tags$li(tags$a(href="https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md", "WIKI_SHINYLIVE_LESSONS_LEARNED.md"), " - Complete lessons learned"),
-                   tags$li(tags$a(href="https://github.com/JohnGavin/randomwalk/issues/129", "Issue #129"), " - Async parallel support in WebAssembly"),
-                   tags$li(tags$a(href="https://github.com/JohnGavin/randomwalk/issues/136", "Issue #136"), " - This comprehensive dashboard"),
-                   tags$li(tags$a(href="https://github.com/JohnGavin/randomwalk/issues/130", "Issue #130"), " - Dynamic broadcasting (future work)"),
-                   tags$li(tags$a(href="https://johngavin.github.io/randomwalk/", "randomwalk website"), " - Package documentation")
+                   tags$li(tags$a(href="https://johngavin.github.io/randomwalk/", "randomwalk Package Documentation")),
+                   tags$li(tags$a(href="dynamic_broadcasting.html", "Simplified Dashboard"))
                  ),
                  hr(),
-                h5("Technical Details"),
-                tags$div(
-                  tags$h6("WebR Environment Detection"),
-                  tags$pre("is_webr <- exists('.webr_env', envir = .GlobalEnv) ||\n          identical(Sys.getenv('WEBR'), '1')"),
-                  tags$h6("Backend Selection"),
-                  tags$p(strong("Browser (WebR):"), " Sync sequential mode (workers=0) - one walker at a time"),
-                  tags$p(strong("Native R:"), " Async parallel mode with crew backend (workers=2+)"),
-                  tags$pre("if (workers > 0) {\n  if (is_webr) {\n    # mirai (not available in WebR)\n  } else {\n    # crew backend (native R)\n    controller <- crew::crew_controller_local(workers)\n  }\n}"),
-                  tags$h6("Package Installation"),
-                  tags$pre("webr::install('randomwalk',\n  repos = c(\n    'https://johngavin.github.io/randomwalk',\n    'https://johngavin.r-universe.dev',\n    'https://repo.r-wasm.org'\n  ))"),
-                  tags$h6("Error Handling"),
-                  tags$p("Comprehensive try-catch blocks with status updates and troubleshooting hints")
-                ),
+                 h5("Technical Details"),
+                 tags$div(
+                   tags$h6("Package Installation"),
+                   tags$pre("webr::install('randomwalk',\n  repos = c(\n    'https://johngavin.github.io/randomwalk',\n    'https://repo.r-wasm.org'\n  ))")
+                 ),
                  hr(),
                  h5("Known Limitations"),
                  tags$ul(
-                   tags$li("No worker count UI feedback (just slider)"),
-                   tags$li("No per-worker progress bars"),
-                   tags$li("Dynamic broadcasting not yet implemented (Issue #130)"),
-                   tags$li("First load can take 15-30 seconds (package downloads)")
+                   tags$li("Sync sequential only (no parallel processing in browser)"),
+                   tags$li("First load can take 15-30 seconds (package downloads)"),
+                   tags$li("Large simulations may be slow (consider reducing walkers/grid size)")
                  ))
       )
     )
@@ -306,7 +264,7 @@ server <- function(input, output, session) {
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Grid: ", input$grid_size, "×", input$grid_size, "\n",
           "Walkers: ", input$n_walkers, "\n",
-          "Workers: ", input$workers, if (input$workers > 0) " (async)" else " (sync)"
+          "Workers: 0 (sync sequential)"
         )
       })
     }
@@ -325,8 +283,7 @@ server <- function(input, output, session) {
         "Run #", sim_count(), "\n",
         "Grid: ", input$grid_size, "×", input$grid_size, "\n",
         "Walkers: ", input$n_walkers, "\n",
-        "Workers: ", input$workers,
-        if (input$workers > 0) " (async)" else " (sync)", "\n",
+        "Workers: 0 (sync sequential)\n",
         "Started: ", format(sim_start_time(), "%H:%M:%S"), "\n",
         "Status: Processing..."
       )
@@ -342,8 +299,8 @@ server <- function(input, output, session) {
         neighborhood = input$neighborhood,
         boundary = input$boundary,
         max_steps = input$max_steps,
-        workers = input$workers,  # Auto-detects backend (mirai in WebR)
-        sync_mode = "static",     # Grid snapshots (dynamic is Issue #130)
+        workers = 0,  # WebR: sync sequential only (no parallel in browser)
+        sync_mode = "static",
         verbose = FALSE,
         validate_percent = 0  # CRITICAL: Disable periodic validation (causes 100-1000x slowdown in WebR)
       )
@@ -377,11 +334,7 @@ server <- function(input, output, session) {
           "Finished: ", format(sim_end_time(), "%H:%M:%S"), "\n",
           "Elapsed:  ", sprintf("%.2f", elapsed), " seconds\n",
           "━━━━━━━━━━━━━━━━━━━━━━\n",
-          "Backend: ", if (input$workers > 0) {
-            if (is_webr()) "mirai (WebR)" else "crew (native R)"
-          } else {
-            "synchronous"
-          }, "\n",
+          "Backend: synchronous (WebR browser)\n",
           "Black Pixels: ", sum(result$grid == 1), "\n",
           "Walkers: ", input$n_walkers, " completed"
         )
@@ -419,7 +372,7 @@ server <- function(input, output, session) {
     req(sum(result$grid == 1) > 0)  # Ensure has black pixels
 
     # CRITICAL: Validate grid connectivity before plotting
-    plot_grid(result, main = "Fractal Pattern - Black Pixels on Grid")
+    plot_grid(result, main = "Fractal Pattern - Black Pixels on Grid", show_legend = FALSE)
   })
 
   output$fractal_stats <- renderText({
@@ -741,7 +694,7 @@ server <- function(input, output, session) {
       "=== CURRENT INPUTS ===\n",
       "Grid Size: ", input$grid_size, "\n",
       "Number of Walkers: ", input$n_walkers, "\n",
-      "Parallel Workers: ", input$workers, "\n",
+      "Mode: sync sequential (workers=0)\n",
       "Neighborhood: ", input$neighborhood, "\n",
       "Boundary: ", input$boundary, "\n",
       "Max Steps: ", input$max_steps
@@ -754,13 +707,9 @@ server <- function(input, output, session) {
 
     paste0(
       "=== BACKEND INFORMATION ===\n",
-      "Environment: ", if (env_is_webr) "WebR/Browser" else "Native R", "\n",
+      "Environment: WebR/Browser\n",
       "R Version: ", R.version.string, "\n",
-      "Backend: ", if (input$workers > 0) {
-        if (env_is_webr) "mirai (WebAssembly-compatible)" else "crew"
-      } else {
-        "synchronous (no parallelization)"
-      }, "\n",
+      "Backend: synchronous (no parallelization)\n",
       "Sync Mode: static (grid snapshots)\n",
       "\n=== ENVIRONMENT DETECTION ===\n",
       ".webr_env exists: ", exists(".webr_env", envir = .GlobalEnv), "\n",
@@ -809,16 +758,8 @@ server <- function(input, output, session) {
           "\n=== EXECUTION INFO ===\n",
           "Grid Size: ", input$grid_size, "×", input$grid_size, "\n",
           "Walkers: ", input$n_walkers, "\n",
-          "Workers: ", input$workers, "\n",
-          "Backend: ", if (input$workers > 0) {
-            if (exists(".webr_env", envir = .GlobalEnv) || identical(Sys.getenv("WEBR"), "1")) {
-              "mirai (WebR)"
-            } else {
-              "crew (native R)"
-            }
-          } else {
-            "synchronous"
-          }
+          "Workers: 0 (sync sequential)\n",
+          "Backend: synchronous"
         )
       } else {
         ""
@@ -834,162 +775,52 @@ server <- function(input, output, session) {
 shinyApp(ui = ui, server = server)
 ```
 
-## Comprehensive Random Walks Dashboard
+## About This Dashboard
 
-This vignette provides a **comprehensive interactive Shiny application** for random walk simulations running in your browser using WebAssembly.
+This dashboard provides a **comprehensive interactive Shiny application** for random walk simulations running in your browser using WebAssembly (WebR).
 
-> **Important:** This browser-based dashboard runs in **sync sequential mode** (no parallel processing):
->
-> - **WebR/Browser:** Sync sequential mode only (workers=0) - processes one walker at a time
-> - **Native R (outside webpage):** The randomwalk package supports **async parallel** processing with `crew` backend (workers=2+) when run in regular R
->
-> The WebR limitation is due to mirai/nanonext compatibility issues in WebAssembly. The dashboard is fully functional for visualizing random walk dynamics in the browser.
+> **Browser Mode:** This dashboard runs in **sync sequential mode** only (workers=0). Each walker is processed one at a time. This is a WebR/browser limitation - async parallel processing requires native R.
 
-**Related Documentation:**
-- [WIKI_SHINYLIVE_LESSONS_LEARNED.md](https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md) - Complete lessons learned
-- [Issue #129](https://github.com/JohnGavin/randomwalk/issues/129) - Async parallel support (native R only)
-- [Issue #136](https://github.com/JohnGavin/randomwalk/issues/136) - This comprehensive vignette
+## Features
 
-## Features Demonstrated
-
-This comprehensive dashboard showcases:
-
-### 1. **Multiple Visualization Types**
-- **Fractal graphs**: Black pixel patterns on grid
-- **Walker paths**: First 25 and last 25 trajectories
-- **Distributions**: Overall and by termination reason
+### Visualization Types
+- **Fractal Graph**: Black pixel patterns showing the final grid state
+- **Walker Paths**: Trajectories with selectable first N and last N paths
+- **Distributions**: Path length histograms overall and by termination reason
 - **Statistics**: Comprehensive simulation metrics
+- **Debug Info**: Package versions, environment detection, timing
 
-### 2. **Async Parallel Processing**
-- Auto-backend selection (mirai in WebR, crew in native R)
-- True parallelization with workers=2-4
-- Performance metrics and timing
-- Backend information display
+### Simulation Controls
+- **Grid Size**: 20-400 pixels (larger grids = more exploration space)
+- **Number of Walkers**: 1-5000 walkers
+- **Max Steps**: 100-10000 steps per walker
+- **Neighborhood**: 4-hood (cardinal) or 8-hood (diagonal)
+- **Boundary**: Terminate at edge or wrap (toroidal)
 
-### 3. **Comprehensive Statistics**
-- Grid statistics (black/white pixels)
-- Walker statistics (completion rates)
-- Step statistics (min/max/mean/median)
-- Performance metrics (steps per second)
-- Termination reason breakdown
+## Dashboard Comparison
 
-### 4. **Debug Information**
-- Package versions
-- Current input parameters
-- Backend selection details
-- Environment detection results
-- Periodic updates
+Both browser dashboards run in **sync sequential mode** (identical visualization capabilities):
 
-### 5. **Documentation Integration**
-- Links to wiki documentation
-- Cross-references to related issues
-- Implementation notes
-- Known limitations
-
-## Differences from Basic Vignette
-
-**dynamic_broadcasting.qmd** (basic demo):
-- 5 walkers (simple)
-- 2 output pages (Grid, Paths, Stats)
-- Minimal statistics
-- Basic demo focus
-
-**dashboard_comprehensive.qmd** (this vignette):
-- 10 walkers (more comprehensive)
-- 6 output pages (Fractal, Paths, Distributions, Stats, Debug, Notes)
-- Comprehensive statistics and visualizations
-- Production-ready showcase
+| Feature | This Dashboard | [Simplified Dashboard](dynamic_broadcasting.html){target="_blank"} |
+|---------|---------------|-----------------------------------|
+| Default walkers | 2000 | 2000 |
+| Output tabs | 6 (Fractal, Paths, Distributions, Stats, Debug, Notes) | 6 (Grid, Paths, Distributions, Stats, Details, Debug) |
+| Statistics | Comprehensive | Comprehensive |
+| Best for | Full exploration | Quick demos |
 
 ## Try It Yourself
 
 Experiment with different parameters:
 
-- **Larger grid**: More exploration space (try 30-50)
-- **More walkers**: Higher density (try 20-50)
-- **More workers**: Increased parallelization (try 4)
-- **8-hood**: Enable diagonal movement
-- **Wrap boundary**: Toroidal grid (no boundaries)
+- **Larger grid**: More exploration space (try 200-400)
+- **Fewer walkers**: Faster simulation (try 100-500)
+- **8-hood**: Enable diagonal movement for different patterns
+- **Wrap boundary**: Toroidal grid (no edge termination)
 
-## Sync vs Async: Understanding the Processing Modes
+## Related Links
 
-The `randomwalk` package supports different processing modes depending on your environment:
-
-### Mode Comparison
-
-| Aspect | Sync Sequential | Async Parallel |
-|--------|-----------------|----------------|
-| **Parameter** | `workers = 0` | `workers >= 1` |
-| **Processing** | One walker at a time | Multiple walkers simultaneously |
-| **Backend** | None (direct R) | `crew` with `mirai` |
-| **Grid sync** | Always consistent | Static snapshots (eventual consistency) |
-| **Speed** | Baseline | 2-4x faster (depending on cores) |
-| **Available in WebR** | ✅ Yes | ❌ No (browser limitation) |
-| **Available in Native R** | ✅ Yes | ✅ Yes |
-
-### When to Use Each Mode
-
-**Use Sync Sequential (`workers = 0`) when:**
-- Running in browser (WebR/Shinylive) - *only option*
-- Need deterministic, reproducible results
-- Debugging or understanding walker behavior
-- Grid size is small (<50×50)
-- Teaching/demonstrating concepts
-
-**Use Async Parallel (`workers >= 2`) when:**
-- Running in native R (not browser)
-- Large grids (100×100+) with many walkers
-- Performance is critical
-- You have multiple CPU cores available
-- Slight grid sync delays are acceptable
-
-### Grid Synchronization Modes
-
-When using async parallel, the `sync_mode` parameter controls how workers see the grid:
-
-| sync_mode | Description | Status |
-|-----------|-------------|--------|
-| `"static"` | Workers get initial snapshot, no updates | ✅ Current default |
-| `"dynamic"` | Real-time broadcasting via nanonext | 🚧 Future (Issue #130) |
-
-**Static mode** means workers may not see black pixels created by other workers during the same simulation. This is acceptable for most use cases and has minimal performance overhead.
-
-**Dynamic mode** (planned) will use nanonext pub/sub to broadcast black pixel events in real-time, enabling true walker interactions across workers.
-
-### Code Examples
-
-```r
-# Sync sequential (works everywhere including WebR)
-result_sync <- run_simulation(
-  grid_size = 100,
-  n_walkers = 500,
-  workers = 0  # Sequential processing
-)
-
-# Async parallel (native R only)
-result_async <- run_simulation(
-  grid_size = 100,
-  n_walkers = 500,
-  workers = 4,           # Use 4 parallel workers
-  sync_mode = "static"   # Grid snapshots (default)
-)
-```
-
-### Why WebR Can't Use Async
-
-WebR runs R in WebAssembly within the browser. This environment:
-- Has no access to system threads or processes
-- Cannot use `mirai`/`nanonext` (require native sockets)
-- Runs entirely in a single JavaScript thread
-
-The dashboards in this browser automatically use `workers = 0` and display a note about this limitation.
-
-## Related Documentation
-
-- **Issue #129**: [Async parallel support in WebAssembly](https://github.com/JohnGavin/randomwalk/issues/129)
-- **Issue #136**: [This comprehensive vignette](https://github.com/JohnGavin/randomwalk/issues/136)
-- **Issue #130**: [Dynamic broadcasting via nanonext](https://github.com/JohnGavin/randomwalk/issues/130) (future work)
-- **WIKI**: [WIKI_SHINYLIVE_LESSONS_LEARNED.md](https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md)
-- **randomwalk Website**: https://johngavin.github.io/randomwalk/
+- [randomwalk Package Documentation](https://johngavin.github.io/randomwalk/)
+- [Simplified Dashboard](dynamic_broadcasting.html)
 
 ## Session Info
 
@@ -1000,42 +831,30 @@ sessionInfo()
 ## Version Information
 
 ```{r version-info}
-#| code-fold: true
-#| code-summary: "Show version details"
+#| echo: false
+#| results: asis
 
-# Git commit information
-git_commit <- tryCatch(
-  system("git rev-parse HEAD", intern = TRUE),
-  error = function(e) "Not available"
+# Git commit information (captured at build time)
+git_sha <- tryCatch(
+  system("git rev-parse --short HEAD 2>/dev/null", intern = TRUE),
+  error = function(e) "N/A"
 )
-git_commit_short <- tryCatch(
-  system("git rev-parse --short HEAD", intern = TRUE),
-  error = function(e) "Not available"
-)
-
-# Nix environment information
-nix_version <- tryCatch(
-  system('nix-instantiate --eval -E "(import <nixpkgs> {}).lib.version"', intern = TRUE),
-  error = function(e) "Not in Nix environment"
-)
+git_sha <- if (length(git_sha) == 0 || git_sha == "") "N/A" else git_sha
 
 # Package version
-pkg_version <- tryCatch(
+pkg_ver <- tryCatch(
   as.character(packageVersion("randomwalk")),
-  error = function(e) "Package not loaded"
+  error = function(e) "N/A"
 )
 
 # Build timestamp
-build_time <- Sys.time()
+build_ts <- format(Sys.time(), "%Y-%m-%d %H:%M %Z")
 
-cat("=== BUILD INFORMATION ===\n\n")
-cat("Git Commit:\n")
-cat("  Full SHA:  ", git_commit, "\n")
-cat("  Short SHA: ", git_commit_short, "\n\n")
-cat("Nix Environment:\n")
-cat("  nixpkgs:   ", nix_version, "\n\n")
-cat("Package:\n")
-cat("  randomwalk:", pkg_version, "\n")
-cat("  R version: ", R.version.string, "\n\n")
-cat("Build Time:  ", format(build_time, "%Y-%m-%d %H:%M:%S %Z"), "\n")
+# Output as markdown table
+cat("| Item | Value |\n")
+cat("|------|-------|\n")
+cat(sprintf("| **Git SHA** | `%s` |\n", git_sha))
+cat(sprintf("| **Package** | randomwalk %s |\n", pkg_ver))
+cat(sprintf("| **R Version** | %s |\n", R.version.string))
+cat(sprintf("| **Built** | %s |\n", build_ts))
 ```

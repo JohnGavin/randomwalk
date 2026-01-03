@@ -126,7 +126,7 @@ set_pixel_black <- function(grid, pos, boundary = "terminate") {
     return(grid)
   }
 
-  grid[pos[1], pos[2]] <- 1
+  grid[pos[1], pos[2]] <- 1L
   logger::log_trace("Set pixel ({pos[1]}, {pos[2]}) to black")
   grid
 }
@@ -171,6 +171,7 @@ get_black_percentage <- function(grid) {
 #' @param grid Numeric matrix representing the grid.
 #' @param neighborhood Character, "4-hood" or "8-hood" for neighbor checking.
 #'   Default is "4-hood".
+#' @param boundary Character. "terminate" or "wrap". Default "terminate".
 #' @param strict Logical, if TRUE throws error on isolation, if FALSE logs
 #'   warning. Default FALSE.
 #' @param last_black_positions Matrix of previously validated black pixel
@@ -193,9 +194,9 @@ get_black_percentage <- function(grid) {
 #' validate_no_isolated_pixels(bad_grid)  # FALSE - isolated pixel
 #'
 #' @export
-validate_no_isolated_pixels <- function(grid, neighborhood = "4-hood", strict = FALSE,
-                                        last_black_positions = NULL, walkers = NULL,
-                                        step_count = NULL) {
+validate_no_isolated_pixels <- function(grid, neighborhood = "4-hood", boundary = "terminate",
+                                        strict = FALSE, last_black_positions = NULL, 
+                                        walkers = NULL, step_count = NULL) {
   # Get all current black pixel positions
   black_positions <- which(grid == 1, arr.ind = TRUE)
 
@@ -247,6 +248,12 @@ validate_no_isolated_pixels <- function(grid, neighborhood = "4-hood", strict = 
 
     has_black_neighbor <- FALSE
     for (neighbor_pos in neighbors) {
+      
+      # Handle wrapping
+      if (boundary == "wrap") {
+        neighbor_pos <- wrap_position(neighbor_pos, n)
+      }
+      
       if (is_within_bounds(neighbor_pos, n)) {
         if (grid[neighbor_pos[1], neighbor_pos[2]] == 1) {
           has_black_neighbor <- TRUE
