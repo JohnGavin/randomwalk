@@ -12,12 +12,7 @@ plot_grid(
   show_legend = TRUE
 )
 
-\method{plot}{randomwalk_result}(
-  result,
-  main = "Random Walk Simulation - Final Grid State",
-  col_palette = c("white", "black"),
-  show_legend = TRUE
-)
+\method{plot}{randomwalk_result}(x, ...)
 }
 \arguments{
 \item{result}{A simulation result object returned by \code{\link{run_simulation}}}
@@ -28,6 +23,10 @@ plot_grid(
 Default is c("white", "black")}
 
 \item{show_legend}{Logical. If FALSE, hides the legend. Default is TRUE.}
+
+\item{x}{A simulation result object (same as \code{result})}
+
+\item{...}{Additional arguments passed to \code{plot_grid}}
 }
 \value{
 A ggplot2 object that can be displayed or saved

@@ -70,8 +70,12 @@ plot_grid <- function(result,
 
 
 #' @rdname plot_grid
+#' @param x A simulation result object (same as \code{result})
+#' @param ... Additional arguments passed to \code{plot_grid}
 #' @export
-plot.randomwalk_result <- plot_grid
+plot.randomwalk_result <- function(x, ...) {
+ plot_grid(result = x, ...)
+}
 
 
 #' Plot Walker Paths
