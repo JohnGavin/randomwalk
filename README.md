@@ -11,8 +11,8 @@ Random Walk Simulation for Fractal Pattern Generation.
 
 ## Quick Links
 
-- [Interactive Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html) - Try simulation in your browser (WebR)
-- [Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html) - Full-featured dashboard with all visualizations
+- [Basic Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html) - Try simulation in your browser (WebR)
+- [Full-Featured Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html) - Walker paths, statistics, debug info
 - [Package Documentation](https://johngavin.github.io/randomwalk/) - Full API reference and vignettes
 - [Wiki](https://github.com/JohnGavin/randomwalk/wiki) - How-to guides, troubleshooting, and deployment docs
 - [GitHub Repository](https://github.com/JohnGavin/randomwalk) - Source code and issues
@@ -53,18 +53,17 @@ devtools::load_all()  # Load without installing
 Try the simulation directly in your browser (no installation required):
 
 ### Basic Demo
-**[Launch Interactive Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)**
+**[Launch Basic Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)**
 
-Simple demonstration with basic visualizations.
+Minimal interactive demo - try random walks in your browser with basic controls.
 
-### Comprehensive Dashboard
-**[Launch Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)**
+### Full-Featured Dashboard
+**[Launch Full-Featured Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)**
 
-Full-featured showcase with all randomwalk capabilities:
-- **Multiple visualizations**: Fractal plots, walker paths, distributions
-- **Comprehensive statistics**: Grid stats, walker stats, performance metrics
-- **Debug information**: Package versions, backend selection, periodic updates
-- **Documentation integration**: Links to wiki, issues, implementation notes
+Complete dashboard for in-depth exploration:
+- **Multiple visualizations**: Fractal plots, walker paths, step distributions
+- **Detailed statistics**: Grid stats, walker stats, performance metrics
+- **Debug panel**: Package versions, backend selection, diagnostic info
 
 Both dashboards run entirely in your browser using WebAssembly via [WebR](https://docs.r-wasm.org/webr/). Features include:
 
@@ -93,9 +92,9 @@ result <- run_simulation(
 )
 
 # Access simulation results
-result$grid           # Final grid state (matrix)
+# result$grid         # Final grid state (matrix) - avoid printing large grids!
 result$statistics     # Statistics list
-result$walkers        # Walker objects with paths
+str(result$walkers, list.len = 2)  # Walker objects (limit output)
 
 # Plot the result using S3 method
 plot(result)                                    # Same as plot_grid(result)
@@ -195,7 +194,10 @@ plot_walker_paths(result_chunked)
 |------|-------------|---------------------|----------|
 | `static` | Frozen grid snapshot | Low (~5%) | Fast runs, boundary testing |
 | `chunked` | Batched updates (10/batch) | High (~15%) | **Recommended for most uses** |
-| `dynamic` | Real-time broadcasting | Highest | Research, socket-compatible systems |
+| `dynamic` | ⚠️ DEPRECATED - falls back to static | Low (~5%) | Do not use |
+| `mirai_dynamic` | ⚠️ DEPRECATED - falls back to static | Low (~5%) | Do not use |
+
+> **Note**: `dynamic` and `mirai_dynamic` modes are deprecated. nanonext sockets fail in crew/mirai subprocesses, causing these modes to behave like `static` mode. Use `chunked` instead.
 
 ### Interactive Shiny Interface
 
@@ -229,17 +231,31 @@ cd randomwalk
 # Enter the user environment (includes all runtime dependencies)
 nix-shell shell.nix
 
-# Start R and use the package
-R
+# Start R
+R -q --no-save
 ```
 
 ```r
+# Install randomwalk (choose one):
+
+# Option 1: From R-Universe (recommended - prebuilt binaries)
+install.packages("randomwalk",
+  repos = c("https://johngavin.r-universe.dev", "https://cloud.r-project.org"))
+
+# Option 2: From GitHub (latest pushed version)
+remotes::install_github("JohnGavin/randomwalk")
+
+# Option 3: From local source (for development)
+devtools::load_all(".")
+
+# Then use the package:
 library(randomwalk)
 result <- run_simulation(grid_size = 20, n_walkers = 10)
-plot_grid(result)
+plot(result)
 
-# With parallel workers (native R only)
-result <- run_simulation(grid_size = 30, n_walkers = 20, workers = 2)
+# With parallel workers (use chunked mode for best results)
+result <- run_simulation(grid_size = 30, n_walkers = 20,
+                         workers = 2, sync_mode = "chunked")
 ```
 
 ### Using Nix Shell (Developers)
@@ -284,7 +300,7 @@ plot_grid(result)
 2. **GitHub source**: Install with `remotes::install_github("johngavin/randomwalk")`
 3. **Local development**: Use `devtools::load_all(".")` from the repository directory
 
-**Note**: The nix shell provides a reproducible R environment. See [`.claude/NIX_QUICKREF.md`](.claude/NIX_QUICKREF.md) for troubleshooting.
+**Note**: The nix shell provides a reproducible R environment. See the [Wiki Nix Troubleshooting](https://github.com/JohnGavin/randomwalk/wiki/Troubleshooting-Nix-Environment) guide.
 
 ## Simulation Parameters
 
@@ -319,11 +335,11 @@ When using `workers > 0` with `sync_mode = "static"` (default), workers operate 
 
 ### Available Vignettes
 
-### **[Random Walk Dashboard](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)**
-Interactive Shiny dashboard running entirely in-browser via WebR. Features real-time parameter adjustment, multiple visualization tabs, and complete simulation statistics - no R installation required.
+### **[Basic Random Walk Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)**
+Minimal interactive demo running entirely in-browser via WebR. Quick start with basic controls - no R installation required.
 
-### **[Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)** ✨
-Full-featured showcase with all randomwalk capabilities including multiple visualizations, comprehensive statistics, debug information, and documentation integration.
+### **[Full-Featured Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)** ✨
+Complete dashboard for in-depth exploration including walker paths, step distributions, detailed statistics, and debug panel.
 
 ### **[Step Distribution Analysis](https://johngavin.github.io/randomwalk/articles/step_distribution_analysis.html)** 📊
 Comprehensive analysis of random walk step distributions, parallel execution performance benchmarks, and visualization of density plots conditional on grid size and worker count.

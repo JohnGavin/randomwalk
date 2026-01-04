@@ -1,7 +1,14 @@
 # GitHub Issues Organized by Similarity and Difficulty
-Generated: 2025-12-27
+Generated: 2026-01-04
 
-**Total Open Issues: 27**
+**Total Open Issues: ~25** (several completed/deprecated since last update)
+
+## ⚠️ Key Status Updates (2026-01-04)
+
+- **#138** (shell.nix for users) - **COMPLETED**: Created shell.nix using `builtins.fetchGit` to install randomwalk from GitHub
+- **#144** (Async cache coherency) - **DOCUMENTED AS KNOWN LIMITATION**: nanonext sockets fail in crew subprocesses, dynamic modes deprecated
+- **#51, #89, #130** (Dynamic broadcasting) - **DEPRECATED**: Dynamic broadcasting approach does not work; use `sync_mode="chunked"` instead
+- **dynamic/mirai_dynamic modes** - **DEPRECATED**: Added runtime warnings, updated all documentation
 
 Issues grouped by topic/theme, ordered by difficulty (easiest first, hardest last within each group).
 Groups ordered from easiest overall to hardest overall.
@@ -52,11 +59,10 @@ Groups ordered from easiest overall to hardest overall.
    - **Type**: Create new analysis vignette page
 
 ### Medium-Hard
-8. **#89** - Document Dynamic Broadcasting Algorithm in Wiki/Vignette
-   - **Difficulty**: ⭐⭐⭐ Medium-Hard
-   - **Effort**: 6-8 hours
-   - **Type**: Deep technical documentation
-   - **Labels**: documentation, wiki, vignette, Group E
+8. ⚠️ **#89** - Document Dynamic Broadcasting Algorithm in Wiki/Vignette
+   - **Status**: ⚠️ **DEPRECATED** - Dynamic broadcasting doesn't work (nanonext socket failure)
+   - **Updated**: Documentation now includes deprecation notice and explains why approach failed
+   - **Note**: Existing docs at `vignettes/articles/dynamic_broadcasting_algorithm.md` updated with failure analysis
 
 ---
 
@@ -145,10 +151,10 @@ Groups ordered from easiest overall to hardest overall.
     - **Effort**: 4-6 hours
     - **Type**: Create automation script/hook
 
-19. **#138** - Add shell.nix for users (non-developers) to use randomwalk
-    - **Difficulty**: ⭐⭐⭐ Medium-Hard
-    - **Effort**: 4-6 hours
-    - **Type**: Create user-friendly Nix configuration
+19. ✅ **#138** - Add shell.nix for users (non-developers) to use randomwalk
+    - **Status**: ✅ **COMPLETED** (2026-01-04)
+    - **Solution**: Created shell.nix using `builtins.fetchGit` to install randomwalk from GitHub
+    - Uses nix-native approach (no sha256 required, always gets latest from branch)
 
 ---
 
@@ -219,18 +225,19 @@ Groups ordered from easiest overall to hardest overall.
     - **Type**: Maintain multiple parallel versions
 
 ### Very Hard
-28. **#130** - Switch entirely to mirai, remove crew dependency
+28. ⚠️ **#130** - Switch entirely to mirai, remove crew dependency
+    - **Status**: ⚠️ **DEPRIORITIZED** - Dynamic modes deprecated; switching to mirai won't help
     - **Difficulty**: ⭐⭐⭐⭐⭐ Very Hard
     - **Effort**: 20-30 hours
     - **Type**: Major refactoring, breaking changes
-    - **Labels**: enhancement, async, refactoring, simplification
+    - **Note**: The underlying issue (nanonext sockets fail in subprocesses) affects mirai too
 
-29. **#144** - Async cache coherency: Workers making decisions on stale grid state 🔥
-    - **Difficulty**: ⭐⭐⭐⭐⭐ Very Hard
-    - **Effort**: 30+ hours
-    - **Type**: Complex distributed state synchronization bug
-    - **Labels**: bug, performance, async
-    - **Challenge**: Race conditions, timing-dependent, requires deep async expertise
+29. 📝 **#144** - Async cache coherency: Workers making decisions on stale grid state
+    - **Status**: 📝 **DOCUMENTED AS KNOWN LIMITATION** (2026-01-04)
+    - **Root Cause**: nanonext sockets cannot be created inside crew/mirai subprocesses (fork boundary issue)
+    - **Solution**: Use `sync_mode="chunked"` for best collision detection (~15% vs ~5% for static)
+    - **Documentation**: Updated dynamic_broadcasting_algorithm.md, README.md, R/simulation.R with deprecation warnings
+    - **Note**: This is a fundamental NNG limitation, not something we can fix in R code
 
 ---
 
@@ -309,9 +316,17 @@ Groups ordered from easiest overall to hardest overall.
 ## Notes
 
 - **#157/#158**: Already completed, just needs merge confirmation
-- **#144**: Most challenging issue - distributed state synchronization
+- **#144**: ✅ Now documented as known limitation - nanonext sockets fail in subprocesses
 - **#155**: Requires WASM/C toolchain expertise
-- **#130**: Major breaking change, needs careful planning
+- **#130**: ⚠️ Deprioritized - switching to mirai won't fix the underlying socket issue
 - **#91**: High priority but complex optimization work
+- **#138**: ✅ Completed - shell.nix created with fetchGit approach
+- **#89**: ⚠️ Deprecated - dynamic broadcasting doesn't work, docs updated with failure analysis
 
-**Total Estimated Effort**: 160-230+ hours
+**Sync Mode Recommendations (2026-01-04)**:
+- ✅ `sync_mode="chunked"` - **RECOMMENDED** - Best collision detection (~15%)
+- ⚠️ `sync_mode="static"` - Fast but low collision detection (~5%)
+- ❌ `sync_mode="dynamic"` - **DEPRECATED** - Falls back to static
+- ❌ `sync_mode="mirai_dynamic"` - **DEPRECATED** - Falls back to static
+
+**Total Estimated Effort**: 120-180+ hours (reduced due to completed/deprecated items)

@@ -32,7 +32,6 @@ let
       devtools
       dplyr
       DT
-      duckdb
       furrr
       future
       future_apply
@@ -141,7 +140,6 @@ let
       cacert
       cmdstan
       curlMinimal
-      duckdb
       gettext
       gh
       git

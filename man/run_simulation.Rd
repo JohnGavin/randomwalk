@@ -35,10 +35,10 @@ Requires crew and nanonext packages.}
 
 \item{sync_mode}{Character. Grid synchronization mode for async simulations.
 Options: "static" (default, workers receive frozen grid snapshot),
-"dynamic" (crew-based with fallback to static if sockets fail),
-"mirai_dynamic" (mirai backend, currently static due to socket issues), or
+"dynamic" (DEPRECATED - nanonext sockets fail in crew, falls back to static),
+"mirai_dynamic" (DEPRECATED - same socket issues as dynamic), or
 "chunked" (RECOMMENDED - processes walkers in batches of 10, updating grid
-between batches for near-real-time collision detection).
+between batches for near-real-time collision detection - ~3x more black pixels).
 Only applies when workers > 0.}
 
 \item{max_steps}{Integer. Maximum steps per walker before forced termination.

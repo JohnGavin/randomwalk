@@ -6,10 +6,10 @@ Authors@R:
     person("John", "Gavin", , "john@example.com", role = c("aut", "cre"))
 Description: Implements parallel random walk simulations that create fractal
     graphs through asynchronous pixel walking on a grid. Features include
-    true asynchronous parallel processing with separate R worker processes,
-    real-time grid state synchronization via DuckDB, comprehensive statistics
-    tracking, and an optional Shiny interface for interactive visualization.
-    Core simulation functions can be used programmatically without the GUI.
+    parallel processing with crew workers (chunked mode recommended),
+    comprehensive statistics tracking, and an optional Shiny interface for
+    interactive visualization. Core simulation functions can be used
+    programmatically without the GUI.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -25,7 +25,6 @@ Suggests:
     mirai,
     munsell,
     dplyr,
-    duckdb,
     shiny,
     shinylive,
     shinytest2,

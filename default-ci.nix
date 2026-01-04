@@ -21,7 +21,6 @@ let
       devtools
       dplyr
       DT
-      duckdb
       ggplot2
       knitr
       logger

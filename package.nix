@@ -40,7 +40,6 @@ pkgs.rPackages.buildRPackage rec {
     testthat
     munsell
     dplyr
-    duckdb
   ];
 
   # Enable tests during build
@@ -52,10 +51,10 @@ pkgs.rPackages.buildRPackage rec {
     longDescription = ''
       Implements parallel random walk simulations that create fractal
       graphs through asynchronous pixel walking on a grid. Features include
-      true asynchronous parallel processing with separate R worker processes,
-      real-time grid state synchronization via DuckDB, comprehensive statistics
-      tracking, and an optional Shiny interface for interactive visualization.
-      Core simulation functions can be used programmatically without the GUI.
+      parallel processing with crew workers (chunked mode recommended),
+      comprehensive statistics tracking, and an optional Shiny interface
+      for interactive visualization. Core simulation functions can be used
+      programmatically without the GUI.
     '';
     homepage = "https://github.com/JohnGavin/randomwalk";
     license = licenses.mit;

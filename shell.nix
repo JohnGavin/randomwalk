@@ -1,52 +1,61 @@
-# shell.nix - User-focused environment for running randomwalk package
+# shell.nix - User environment with randomwalk installed from GitHub
 #
-# This provides a minimal environment for USERS (not developers) to run
-# the randomwalk package with all its features.
+# This builds randomwalk from GitHub (main branch) and provides all runtime
+# dependencies. Uses fetchGit which always gets the latest from the branch.
 #
 # Usage:
-#   nix-shell shell.nix              # Enter shell with R + dependencies
-#   nix-shell shell.nix --run R      # Start R directly
-#   nix-shell shell.nix --run "Rscript -e 'library(randomwalk); run_simulation()'"
+#   nix-shell shell.nix              # Enter shell with randomwalk installed
+#   nix-shell shell.nix --run "R -q --no-save -e 'library(randomwalk); run_simulation()'"
 #
 # For development (devtools, pkgdown, etc.), use default.nix instead.
 #
-# Note: Uses same nixpkgs revision as package.nix for consistency.
+# To pin to a specific version, uncomment and set the 'rev' field in fetchGit.
 
 { pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/1482d00f8f658fd443526febba6c9fd9754cb356.tar.gz") {}
 }:
 
 let
-  # Core dependencies (from DESCRIPTION Imports)
-  coreDeps = with pkgs.rPackages; [
-    logger
-    ggplot2
+  # Fetch randomwalk source from GitHub using fetchGit (no sha256 needed)
+  # Uses "main" branch by default - always gets latest
+  gitRef = "main";  # Can be branch, tag, or commit SHA
+
+  randomwalkSrc = builtins.fetchGit {
+    url = "https://github.com/JohnGavin/randomwalk.git";
+    ref = gitRef;
+    # Uncomment to pin to specific commit:
+    # rev = "abc123...";  # Full 40-char SHA
+  };
+
+  # Build randomwalk as a Nix package
+  randomwalk = pkgs.rPackages.buildRPackage {
+    name = "randomwalk";
+    src = randomwalkSrc;
+
+    # Runtime dependencies (from DESCRIPTION Imports)
+    propagatedBuildInputs = with pkgs.rPackages; [
+      logger
+      ggplot2
+    ];
+
+    # Optional dependencies for full functionality
+    buildInputs = with pkgs.rPackages; [
+      crew
+      mirai
+      nanonext
+      shiny
+      dplyr
+    ];
+  };
+
+  # Additional packages for the shell environment
+  additionalPackages = with pkgs.rPackages; [
+    devtools   # For development if needed
+    remotes    # For installing other packages
   ];
 
-  # Async/parallel dependencies (from DESCRIPTION Suggests)
-  # These enable workers > 0 for parallel simulations
-  asyncDeps = with pkgs.rPackages; [
-    crew
-    mirai
-    nanonext
-  ];
-
-  # Shiny dashboard dependencies (optional, for run_dashboard())
-  shinyDeps = with pkgs.rPackages; [
-    shiny
-  ];
-
-  # Data dependencies (optional, for advanced features)
-  dataDeps = with pkgs.rPackages; [
-    dplyr
-    duckdb
-  ];
-
-  # All user-facing dependencies
-  allDeps = coreDeps ++ asyncDeps ++ shinyDeps ++ dataDeps;
-
-  # R with packages
+  # R with all packages
   rWithPackages = pkgs.rWrapper.override {
-    packages = allDeps;
+    packages = [ randomwalk ] ++ additionalPackages;
   };
 
 in pkgs.mkShell {
@@ -61,28 +70,26 @@ in pkgs.mkShell {
     echo "╔════════════════════════════════════════════════════════════════╗"
     echo "║              randomwalk User Environment                       ║"
     echo "╠════════════════════════════════════════════════════════════════╣"
-    echo "║ Core packages:  logger, ggplot2                                ║"
-    echo "║ Async packages: crew, mirai, nanonext (for parallel sims)      ║"
-    echo "║ Shiny:          shiny (for run_dashboard())                    ║"
-    echo "║ Data:           dplyr, duckdb                                  ║"
+    echo "║ randomwalk installed from GitHub (ref: ${gitRef})               ║"
+    echo "║ Includes: logger, ggplot2, crew, mirai, nanonext, shiny, dplyr ║"
     echo "╠════════════════════════════════════════════════════════════════╣"
     echo "║ Quick Start:                                                   ║"
-    echo "║   R                                                            ║"
-    echo "║   > library(randomwalk)                                        ║"
-    echo "║   > result <- run_simulation(grid_size = 20, n_walkers = 10)   ║"
-    echo "║   > plot_grid(result)                                          ║"
+    echo "║   R -q --no-save                                               ║"
+    echo "║   library(randomwalk)                                          ║"
+    echo "║   result <- run_simulation(grid_size = 20, n_walkers = 10)     ║"
+    echo "║   plot(result)                                                 ║"
     echo "║                                                                ║"
-    echo "║ For async parallel (native R only):                            ║"
-    echo "║   > result <- run_simulation(workers = 2)                      ║"
+    echo "║ For parallel (use chunked mode):                               ║"
+    echo "║   result <- run_simulation(workers = 2, sync_mode = 'chunked') ║"
     echo "║                                                                ║"
-    echo "║ For interactive dashboard:                                     ║"
-    echo "║   > run_dashboard()                                            ║"
+    echo "║ For dashboard:                                                 ║"
+    echo "║   run_dashboard()                                              ║"
     echo "╠════════════════════════════════════════════════════════════════╣"
     echo "║ For development tools, use: nix-shell default.nix              ║"
     echo "╚════════════════════════════════════════════════════════════════╝"
     echo ""
   '';
 
-  # Environment variables
-  R_LIBS_USER = "";  # Don't use user library (use nix packages only)
+  # Don't use user library (use nix packages only)
+  R_LIBS_USER = "";
 }

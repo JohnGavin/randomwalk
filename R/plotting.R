@@ -7,10 +7,12 @@
 #' @param result A simulation result object returned by \code{\link{run_simulation}}
 #'
 #' @aliases plot.randomwalk_result
-#' @param main Character string for the plot title. Default is "Random Walk Simulation - Final Grid State"
+#' @param main Character string for the plot title. If NULL (default), generates
+#'   an informative title with statistics: black pixels, collisions, walkers, time.
 #' @param col_palette A vector of two colors for white (0) and black (1) pixels.
 #'   Default is c("white", "black")
-#' @param show_legend Logical. If FALSE, hides the legend. Default is TRUE.
+#' @param show_legend Logical. If FALSE, hides the legend. Default is FALSE
+#'   to save space.
 #'
 #' @return A ggplot2 object that can be displayed or saved
 #'
@@ -18,22 +20,48 @@
 #' \dontrun{
 #' result <- run_simulation(grid_size = 20, n_walkers = 8)
 #' p <- plot_grid(result)
-#' print(p)  # Display the plot
+#' print(p)  # Display the plot with auto-generated title
 #'
-#' # Without legend (for dashboards)
-#' p <- plot_grid(result, show_legend = FALSE)
+#' # Custom title
+#' p <- plot_grid(result, main = "My Custom Title")
+#'
+#' # With legend
+#' p <- plot_grid(result, show_legend = TRUE)
 #' }
 #'
 #' @export
 plot_grid <- function(result,
-                      main = "Random Walk Simulation - Final Grid State",
+                      main = NULL,
                       col_palette = c("white", "black"),
-                      show_legend = TRUE) {
+                      show_legend = FALSE) {
 
   # Validate input
   if (!is.list(result) || !all(c("grid", "statistics") %in% names(result))) {
     logger::log_error("Invalid result object. Must be output from run_simulation()")
     stop("Invalid result object")
+  }
+
+  # Generate informative title if not provided
+
+  if (is.null(main)) {
+    stats <- result$statistics
+    # Count collisions - check multiple possible field names/keys
+    # Async modes use collisions_detected field directly
+    # Sync mode uses termination_reasons table with "black_neighbor" key
+    # Async modes use "black_neighbor_detected" key in termination_reasons
+    collisions <- if (!is.null(stats$collisions_detected)) {
+      stats$collisions_detected
+    } else {
+      term_reasons <- stats$termination_reasons
+      # Try both sync ("black_neighbor") and async ("black_neighbor_detected") keys
+      sum(term_reasons[names(term_reasons) %in% c("black_neighbor", "black_neighbor_detected", "touched_black")], na.rm = TRUE)
+    }
+    # Format time
+    elapsed <- stats$elapsed_time_secs
+    mins <- floor(elapsed / 60)
+    secs <- round(elapsed %% 60, 1)
+    main <- sprintf("Random walk: %d black, %d collisions, %d walkers, %dm %.1fs",
+                    stats$black_pixels, collisions, stats$total_walkers, mins, secs)
   }
 
   # Convert grid matrix to data frame for ggplot2
@@ -171,13 +199,14 @@ plot_walker_paths <- function(result,
     }
     
     # Mark ending position with different shapes based on termination reason
-    # Square (15) for black-related, Triangle (17) for boundary, X (4) for max steps
-    end_pch <- if (walker$termination_reason %in% c("black_neighbor", "touched_black")) {
+    # Square (15) for black-related, Triangle (17) for boundary, X (4) for max steps/unknown
+    term_reason <- walker$termination_reason
+    end_pch <- if (!is.null(term_reason) && term_reason %in% c("black_neighbor", "touched_black")) {
       15  # Square for black-related terminations
-    } else if (walker$termination_reason == "hit_boundary") {
+    } else if (!is.null(term_reason) && term_reason == "hit_boundary") {
       17  # Triangle for boundary
     } else {
-      4   # X for max_steps or other
+      4   # X for max_steps, NULL, or other
     }
     points(walker$pos[2], walker$pos[1],
            pch = end_pch, col = colors[i], cex = cex_end)

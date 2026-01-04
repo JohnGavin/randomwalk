@@ -1,6 +1,6 @@
 ---
-title: "Sync Sequential Random Walks Dashboard"
-description: "Interactive Shiny dashboard for sequential random walk simulations with real-time visualization - runs in browser via WebR"
+title: "Basic Random Walk Demo"
+description: "Minimal interactive demo - try random walks in your browser with basic controls and visualization"
 format:
   html:
     code-fold: true
@@ -535,15 +535,22 @@ server <- function(input, output, session) {
       "  - Can process multiple walkers simultaneously\n",
       "  - Full async/parallel capabilities when running randomwalk package\n",
       "    in regular R (not in browser)\n\n",
-      "=== SYNC MODES (Both Environments) ===\n\n",
-      "sync_mode='static' (current):\n",
-      "  - Workers get grid snapshots\n",
-      "  - Used in native R async parallel mode\n",
-      "  - Not applicable in browser (no workers)\n\n",
-      "sync_mode='dynamic' (future):\n",
-      "  - Real-time broadcasting via nanonext\n",
-      "  - Issue #130 - future work\n",
-      "  - Would require nanonext WebR compatibility"
+      "=== SYNC MODES (Native R) ===\n\n",
+      "sync_mode='static':\n",
+      "  - Workers get frozen grid snapshots\n",
+      "  - Fastest, lowest collision detection (~5%)\n\n",
+      "sync_mode='chunked' (RECOMMENDED):\n",
+      "  - Batched updates every 10 walkers\n",
+      "  - Best collision detection (~15%)\n",
+      "  - Recommended for most use cases\n\n",
+      "sync_mode='dynamic' (DEPRECATED):\n",
+      "  - nanonext sockets fail in crew subprocesses\n",
+      "  - Falls back to static behavior\n",
+      "  - DO NOT USE\n\n",
+      "sync_mode='mirai_dynamic' (DEPRECATED):\n",
+      "  - Same issue as dynamic mode\n",
+      "  - Falls back to static behavior\n",
+      "  - DO NOT USE"
     )
   })
 }

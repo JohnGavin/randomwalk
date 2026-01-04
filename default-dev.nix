@@ -52,7 +52,6 @@ let
       dotenv
       dplyr
       DT
-      duckdb
       elevatr
       ellmer
       emmeans
@@ -196,7 +195,6 @@ let
       cmdstan
       copilot-cli
       curlMinimal
-      duckdb
       gemini-cli
       gettext
       gh
@@ -241,7 +239,7 @@ unset CI ;
 cat ~/.gemini/.env ; 
 # confirm quarto is inside nix
 echo $ANTHROPIC_API_KEY
-which nodejs tinytex curl nano duckdb tree awscli2 bc ollama gh git less unzip
+which nodejs tinytex curl nano tree awscli2 bc ollama gh git less unzip
 # Add to shell startup
 echo '$(date): Nix shell started' >> ~/.nix-session.log
 echo 'PATH: $PATH' >> ~/.nix-session.log

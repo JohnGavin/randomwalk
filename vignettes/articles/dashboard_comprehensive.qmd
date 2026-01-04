@@ -1,6 +1,6 @@
 ---
-title: "Comprehensive Sync Sequential Random Walks Dashboard"
-description: "Full-featured dashboard with multiple visualizations, statistics, debug panel, and documentation links - runs in browser via WebR"
+title: "Full-Featured Dashboard"
+description: "Complete dashboard with walker paths, step distributions, detailed statistics, and debug info - for in-depth exploration"
 format:
   html:
     code-fold: true

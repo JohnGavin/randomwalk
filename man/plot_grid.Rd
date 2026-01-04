@@ -7,9 +7,9 @@
 \usage{
 plot_grid(
   result,
-  main = "Random Walk Simulation - Final Grid State",
+  main = NULL,
   col_palette = c("white", "black"),
-  show_legend = TRUE
+  show_legend = FALSE
 )
 
 \method{plot}{randomwalk_result}(x, ...)
@@ -17,12 +17,14 @@ plot_grid(
 \arguments{
 \item{result}{A simulation result object returned by \code{\link{run_simulation}}}
 
-\item{main}{Character string for the plot title. Default is "Random Walk Simulation - Final Grid State"}
+\item{main}{Character string for the plot title. If NULL (default), generates
+an informative title with statistics: black pixels, collisions, walkers, time.}
 
 \item{col_palette}{A vector of two colors for white (0) and black (1) pixels.
 Default is c("white", "black")}
 
-\item{show_legend}{Logical. If FALSE, hides the legend. Default is TRUE.}
+\item{show_legend}{Logical. If FALSE, hides the legend. Default is FALSE
+to save space.}
 
 \item{x}{A simulation result object (same as \code{result})}
 
@@ -40,10 +42,13 @@ for display via targets pipeline.
 \dontrun{
 result <- run_simulation(grid_size = 20, n_walkers = 8)
 p <- plot_grid(result)
-print(p)  # Display the plot
+print(p)  # Display the plot with auto-generated title
 
-# Without legend (for dashboards)
-p <- plot_grid(result, show_legend = FALSE)
+# Custom title
+p <- plot_grid(result, main = "My Custom Title")
+
+# With legend
+p <- plot_grid(result, show_legend = TRUE)
 }
 
 }

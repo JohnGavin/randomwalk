@@ -23,10 +23,10 @@ utils::globalVariables(c(
 #'   Requires crew and nanonext packages.
 #' @param sync_mode Character. Grid synchronization mode for async simulations.
 #'   Options: "static" (default, workers receive frozen grid snapshot),
-#'   "dynamic" (crew-based with fallback to static if sockets fail),
-#'   "mirai_dynamic" (mirai backend, currently static due to socket issues), or
+#'   "dynamic" (DEPRECATED - nanonext sockets fail in crew, falls back to static),
+#'   "mirai_dynamic" (DEPRECATED - same socket issues as dynamic), or
 #'   "chunked" (RECOMMENDED - processes walkers in batches of 10, updating grid
-#'   between batches for near-real-time collision detection).
+#'   between batches for near-real-time collision detection - ~3x more black pixels).
 #'   Only applies when workers > 0.
 #' @param max_steps Integer. Maximum steps per walker before forced termination.
 #'   Default 10000.
@@ -101,6 +101,20 @@ run_simulation <- function(grid_size = 10,
     logger::log_threshold(logger::WARN)
   }
 
+  # Adaptive log interval based on n_walkers (reduce log spam for large sims)
+  # Use default of 50 for small sims, scale up for larger ones
+  if (log_interval == 50) {  # Using default
+    log_interval <- if (n_walkers <= 100) {
+      50L
+    } else if (n_walkers <= 500) {
+      100L
+    } else if (n_walkers <= 1000) {
+      500L
+    } else {
+      1000L
+    }
+  }
+
   logger::log_info("=== STARTING SIMULATION ===")
   logger::log_info("Grid: {grid_size}x{grid_size}")
   logger::log_info("Walkers: {n_walkers}")
@@ -134,6 +148,14 @@ run_simulation <- function(grid_size = 10,
   # Choose async or sync mode
   if (workers > 0) {
     # === ASYNC MODE ===
+
+    # Warn about deprecated socket-based modes
+    if (sync_mode %in% c("dynamic", "mirai_dynamic")) {
+      logger::log_warn("sync_mode='{sync_mode}' is DEPRECATED: nanonext sockets fail in crew/mirai subprocesses")
+      logger::log_warn("This will behave like 'static' mode with very few black pixels")
+      logger::log_warn("Use sync_mode='chunked' for ~3x more black pixels (RECOMMENDED)")
+    }
+
     if (sync_mode == "mirai_dynamic") {
       # TRUE dynamic mode - mirai with nanonext pub/sub
       result <- run_simulation_mirai_dynamic(
@@ -274,8 +296,8 @@ run_simulation <- function(grid_size = 10,
 
       total_steps <- total_steps + length(active_indices)
 
-      # Log progress periodically
-      if (step_count %% 100 == 0) {
+      # Log progress periodically (using adaptive log_interval)
+      if (step_count %% log_interval == 0) {
         black_count <- sum(grid == 1L)
         logger::log_info("Step {step_count}: Active={length(active_indices)}, Black={black_count}")
       }
@@ -1030,7 +1052,8 @@ run_simulation_mirai_dynamic <- function(grid, walkers, n_workers, neighborhood,
   last_log_time <- Sys.time()
   loop_start_time <- Sys.time()
   check_count <- 0
-  timeout_secs <- 120  # 2 minute timeout
+  # Timeout proportional to n_walkers: 2 secs per walker with 60s minimum
+  timeout_secs <- max(60, n_total * 2)
 
   while (n_completed < n_total) {
     check_count <- check_count + 1

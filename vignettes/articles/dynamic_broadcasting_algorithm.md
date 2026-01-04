@@ -1,6 +1,10 @@
 # Dynamic Grid Broadcasting Algorithm
 
-This document describes the real-time grid synchronization algorithm implemented in the `randomwalk` package for parallel walker simulations.
+> ⚠️ **DEPRECATED**: Dynamic broadcasting via nanonext sockets is **no longer supported**. The nanonext sockets fail when created inside crew/mirai subprocesses, causing `sync_mode="dynamic"` and `sync_mode="mirai_dynamic"` to silently fall back to static behavior. Use `sync_mode="chunked"` instead for best collision detection.
+>
+> This document is preserved for historical reference and to document the known limitation.
+
+This document describes the real-time grid synchronization algorithm that was *intended* for the `randomwalk` package for parallel walker simulations.
 
 ## Problem Statement
 
@@ -163,19 +167,49 @@ Worker 2:  ░░░░░░░░░░░░░░░░░░░░░ recei
 - Race conditions only affect edge cases (same-step collisions)
 - Results are statistically equivalent to sync mode
 
-## Limitations
+## Why This Approach Failed
+
+The dynamic broadcasting approach was designed but **does not work in practice** due to a fundamental limitation:
+
+### nanonext Socket Failure in Subprocesses
+
+When `nanonext::socket()` is called inside a crew/mirai worker subprocess, it fails silently:
+
+```r
+# In R/simulation.R:643-650
+socket <- tryCatch(
+  nanonext::socket(...),
+  error = function(e) NULL  # Falls back to NULL = static mode
+)
+```
+
+The socket creation fails because:
+1. NNG (Nanomsg Next Gen) sockets cannot be inherited across fork boundaries
+2. Crew/mirai use forked processes on Unix systems
+3. The socket must be created in the main process, not the subprocess
+
+### Recommended Alternative: Chunked Mode
+
+Use `sync_mode = "chunked"` instead:
+- Processes walkers in batches of 10
+- Updates grid between batches
+- Achieves ~15% collision detection (vs ~5% for static, ~0% for broken dynamic)
+- No socket dependencies
+
+## Original Limitations (Historical)
 
 1. **Not available in WebR/browser** - nanonext requires native sockets
 2. **Requires nanonext package** - Additional dependency
 3. **Network overhead** - Minimal but non-zero
-4. **Not implemented yet for crew backend** - Currently sync_mode="static" only in crew
+4. ⚠️ **CRITICAL: Sockets fail in crew/mirai subprocesses** - Makes this approach non-functional
 
 ## Related Issues
 
-- **#51** - Original issue: Dynamic grid state broadcasting
+- **#51** - Original issue: Dynamic grid state broadcasting (DEPRECATED)
 - **#89** - This documentation
-- **#130** - Switch entirely to mirai (enables dynamic mode)
-- **#158** - WebR compatibility (nanonext not available)
+- **#130** - Switch entirely to mirai (no longer relevant)
+- **#144** - Cache coherency issue (now documented as known limitation)
+- **#158** - WebR compatibility (nanonext not available in WASM)
 
 ## Files
 
