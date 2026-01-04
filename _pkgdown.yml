@@ -10,14 +10,14 @@ template:
       <script src="https://johngavin.github.io/randomwalk/open-vignettes-in-new-tab.js"></script>
 
 home:
-  title: randomwalk - Asynchronous Pixel Walking Simulation
+  title: randomwalk - Random Walk Fractal Simulation
   description: >
     Parallel random walk simulations that create fractal graphs through
-    asynchronous pixel walking on a grid.
+    pixel walking on a grid. Features sync and async modes with crew workers.
   links:
-  - text: Async Parallel Demo
+  - text: Basic Demo (Browser)
     href: articles/dynamic_broadcasting.html
-  - text: Comprehensive Dashboard
+  - text: Full Dashboard (Browser)
     href: articles/dashboard_comprehensive.html
   - text: Step Distribution Analysis
     href: articles/step_distribution_analysis.html
@@ -39,10 +39,10 @@ navbar:
       # ═══════════════════════════════════════════════════════════
       # R-SHINYLIVE: Interactive dashboards (run in browser via WebR)
       # ═══════════════════════════════════════════════════════════
-      - text: "──── R-Shinylive Dashboards ────"
-      - text: Comprehensive Dashboard (All Features)
+      - text: "──── Browser Dashboards (WebR) ────"
+      - text: Full Dashboard (All Features)
         href: articles/dashboard_comprehensive.html
-      - text: Sync Sequential Random Walks
+      - text: Basic Demo
         href: articles/dynamic_broadcasting.html
       # ═══════════════════════════════════════════════════════════
       # WEBR: Analysis vignettes using WebR
@@ -61,8 +61,8 @@ navbar:
 
 # Organize articles on the Articles index page
 articles:
-- title: "R-Shinylive Dashboards"
-  desc: "Interactive dashboards running in your browser via WebR"
+- title: "Browser Dashboards (WebR)"
+  desc: "Interactive dashboards running in your browser via WebR/Shinylive"
   contents:
   - dashboard_comprehensive
   - dynamic_broadcasting

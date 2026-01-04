@@ -1,10 +1,11 @@
 # randomwalk
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/JohnGavin/randomwalk/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JohnGavin/randomwalk/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/JohnGavin/randomwalk/actions/workflows/r-cmd-check.yaml/badge.svg)](https://github.com/JohnGavin/randomwalk/actions/workflows/r-cmd-check.yaml)
 [![codecov](https://codecov.io/gh/JohnGavin/randomwalk/branch/main/graph/badge.svg)](https://codecov.io/gh/JohnGavin/randomwalk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Project Status: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![R-universe](https://johngavin.r-universe.dev/badges/randomwalk)](https://johngavin.r-universe.dev/randomwalk)
 <!-- badges: end -->
 
 Random Walk Simulation for Fractal Pattern Generation.
