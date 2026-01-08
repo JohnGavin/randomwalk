@@ -28,7 +28,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Need to fetch with token that can push
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup R
@@ -42,6 +41,10 @@ jobs:
           extra-packages: |
             any::covr
             any::devtools
+            any::crew
+            any::mirai
+          # Note: nanonext may not be available via RSPM, but crew/mirai provide
+          # the core async functionality needed for coverage
 
       - name: Generate coverage
         run: |
@@ -49,14 +52,29 @@ jobs:
             library(covr)
 
             cat("=== Generating Code Coverage ===\n")
-            cat("R version:", R.version.string, "\n\n")
+            cat("R version:", R.version.string, "\n")
+            cat("covr version:", as.character(packageVersion("covr")), "\n\n")
 
-            # Generate coverage
-            coverage <- package_coverage()
+            # Generate coverage with error handling
+            coverage <- tryCatch({
+              package_coverage(
+                type = "tests",
+                quiet = FALSE
+              )
+            }, error = function(e) {
+              cat("Error generating coverage:", e$message, "\n")
+              cat("Trying with fewer options...\n")
+              # Try again with minimal options
+              package_coverage(quiet = FALSE)
+            })
+
+            if (is.null(coverage)) {
+              stop("Failed to generate coverage")
+            }
 
             # Calculate summary statistics
             overall_pct <- percent_coverage(coverage)
-            cat(sprintf("Overall coverage: %.1f%%\n", overall_pct))
+            cat(sprintf("\nOverall coverage: %.1f%%\n", overall_pct))
 
             # Get file-level summary
             file_coverage <- tally_coverage(coverage, by = "file")
@@ -92,19 +110,25 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Check if coverage.rds changed
-          if git diff --quiet inst/extdata/coverage.rds 2>/dev/null; then
-            echo "No changes to coverage data"
-          else
+          # Check if coverage.rds changed or is new
+          if [ -f inst/extdata/coverage.rds ]; then
             git add inst/extdata/coverage.rds
-            git commit -m "AUTO: Update pre-computed code coverage [skip ci]" || echo "Nothing to commit"
-            git push
-            echo "Coverage data committed and pushed"
+            if git diff --cached --quiet; then
+              echo "No changes to coverage data"
+            else
+              git commit -m "AUTO: Update pre-computed code coverage [skip ci]"
+              git push
+              echo "Coverage data committed and pushed"
+            fi
+          else
+            echo "Warning: coverage.rds not found"
           fi
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: coverage-report
           path: inst/extdata/coverage.rds
           retention-days: 30
+          if-no-files-found: warn
