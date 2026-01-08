@@ -305,19 +305,48 @@ plot_grid(result)
 
 ## Simulation Parameters
 
-- **Grid Size**: n×n simulation grid (default 10×10)
-- **Walkers**: Number of simultaneous random walkers (1 to 60% of grid, default 5)
-- **Neighborhood**: 4-hood (NSEW) or 8-hood (includes diagonals)
-- **Boundary**: Wrap-around (torus) or terminate at edges (default)
-- **Workers**: Number of parallel R processes (0-16, default 0)
-  - 0 = Synchronous mode (single process)
-  - 2+ = Async parallel mode (requires crew package)
-- **Sync Mode**: Grid synchronization for async simulations (default "static")
-  - "static" = Workers get frozen grid snapshots (fast, some rejections expected)
-  - "dynamic" = Workers get real-time updates (slower, enables collision detection)
-- **Log Interval**: Progress logging frequency (default 50 walkers)
-  - Set to 100+ for less verbose output
-  - Set to 5-10 for detailed progress tracking
+| Parameter | Description | Default | Range |
+|-----------|-------------|---------|-------|
+| `grid_size` | n×n simulation grid | 10 | 10-500 |
+| `n_walkers` | Number of random walkers | 5 | 1 to 60% of grid cells |
+| `neighborhood` | Movement pattern | "4-hood" | "4-hood" (NSEW), "8-hood" (diagonals) |
+| `boundary` | Edge behavior | "terminate" | "terminate", "wrap" (torus) |
+| `workers` | Parallel R processes | 0 | 0-16 |
+| `sync_mode` | Grid synchronization | "static" | See table below |
+| `max_steps` | Max steps per walker | 1000 | 100-50000 |
+
+### Sync Mode Options
+
+| Mode | Description | Collision Detection | Recommendation |
+|------|-------------|---------------------|----------------|
+| `static` | Frozen grid snapshots | Low (~5%) | Fast runs |
+| `chunked` | Batched updates (10/batch) | High (~15%) | **RECOMMENDED** |
+| `dynamic` | ⚠️ DEPRECATED | N/A | Do not use |
+| `mirai_dynamic` | ⚠️ DEPRECATED | N/A | Do not use |
+
+## Scalability
+
+The package scales from quick tests to large simulations:
+
+```r
+# Quick test (< 1 second)
+run_simulation(grid_size = 20, n_walkers = 10, workers = 0)
+
+# Typical use (2-5 seconds with parallel)
+run_simulation(grid_size = 100, n_walkers = 500, workers = 4, sync_mode = "chunked")
+
+# Large scale (30-60 seconds)
+run_simulation(grid_size = 200, n_walkers = 2000, workers = 4, sync_mode = "chunked")
+
+# Stress test (several minutes)
+run_simulation(grid_size = 400, n_walkers = 10000, workers = 8, sync_mode = "chunked")
+```
+
+**Performance Tips:**
+- Use `workers = 4` for most systems (matches typical CPU cores)
+- Use `sync_mode = "chunked"` for best collision detection with parallel workers
+- Larger grids (200+) benefit most from parallelization
+- Browser demos are limited to `workers = 0` (sync mode)
 
 ### Async Parallel Processing Notes
 
