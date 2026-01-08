@@ -43,11 +43,6 @@ jobs:
       - name: Run R CMD check
         run: nix-shell default-ci.nix --quiet --run "Rscript -e \"devtools::check(error_on = 'warning', check_dir = 'check')\""
 
-      - name: Test coverage
-        run: nix-shell default-ci.nix --quiet --run "Rscript -e \"covr::codecov(quiet = FALSE)\""
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
       - name: Upload check results
         if: failure()
         uses: actions/upload-artifact@v4
