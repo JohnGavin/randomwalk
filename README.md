@@ -103,38 +103,47 @@ plot_grid(result, main = "My Simulation")       # With custom title
 plot_walker_paths(result)                       # Show walker trajectories
 ```
 
-#### Async Parallel with Dynamic Broadcasting (nanonext)
+#### Async Parallel Processing
 
-The package supports two async synchronization modes when using `workers > 0`:
+The package supports parallel walker processing when using `workers > 0`:
 
 ```r
 library(randomwalk)
 
-# Dynamic mode: Real-time grid broadcasting via nanonext pub/sub
-# - Walkers receive grid updates as they happen
-# - More realistic collision detection
-# - Requires nanonext package
-result_dynamic <- run_simulation(
-  grid_size = 20,
-  n_walkers = 8,
+# RECOMMENDED: Chunked mode for best collision detection
+# - Processes walkers in batches of 10
+# - Grid updates between batches
+# - ~15% collision detection rate
+result_chunked <- run_simulation(
+  grid_size = 50,
+  n_walkers = 100,
   neighborhood = "4-hood",
-  sync_mode = "dynamic",  # Use nanonext broadcasting
-  workers = 2
+  sync_mode = "chunked",  # RECOMMENDED
+  workers = 4
 )
 
-# Static mode: Snapshot-based synchronization (original)
-# - Walkers work on grid snapshots
-# - Faster but less accurate collision detection
-# - Default async mode
+# Static mode: Snapshot-based synchronization
+# - Workers see frozen grid snapshots
+# - Faster but lower collision detection (~5%)
 result_static <- run_simulation(
-  grid_size = 20,
-  n_walkers = 8,
+  grid_size = 50,
+  n_walkers = 100,
   sync_mode = "static",  # Snapshot mode
-  workers = 2
+  workers = 4
 )
+
+# Check collision detection
+cat("Chunked collisions:", result_chunked$statistics$black_pixels, "\n")
+cat("Static collisions:", result_static$statistics$black_pixels, "\n")
 ```
 
-**Note on WebR/Browser**: The browser demos currently use `workers = 0` (synchronous mode) due to mirai/nanonext compatibility issues in WebAssembly. Async parallel processing with nanonext works in native R.
+**Note on WebR/Browser**: Browser demos use `workers = 0` (synchronous mode). Async parallel processing requires native R.
+
+#### About nanonext and Dynamic Modes
+
+The `dynamic` and `mirai_dynamic` sync modes attempted real-time grid broadcasting via nanonext pub/sub sockets. **These modes are DEPRECATED** because nanonext sockets cannot be created inside crew/mirai subprocesses (NNG fork boundary limitation). They silently fall back to static behavior.
+
+Use `sync_mode = "chunked"` instead - it achieves similar collision detection without socket dependencies.
 
 #### Comparing Sync Modes: Static vs Chunked (RECOMMENDED)
 
@@ -220,6 +229,10 @@ run_dashboard(launch.browser = function(url) {
 
 **Note**: If you see `Error in utils::browseURL(appUrl): 'browser' must be a non-empty character string`, use `launch.browser = FALSE` and manually open the URL printed to the console.
 
+## Nix Environment
+
+The package provides reproducible R environments via Nix. Two configurations are available depending on your needs.
+
 ### Using Nix Shell (Users)
 
 For **users** who just want to run randomwalk (not develop it), use `shell.nix`:
@@ -302,6 +315,49 @@ plot_grid(result)
 3. **Local development**: Use `devtools::load_all(".")` from the repository directory
 
 **Note**: The nix shell provides a reproducible R environment. See the [Wiki Nix Troubleshooting](https://github.com/JohnGavin/randomwalk/wiki/Troubleshooting-Nix-Environment) guide.
+
+### Nix Files Overview
+
+| File | Purpose | Audience |
+|------|---------|----------|
+| `shell.nix` | Runtime environment with randomwalk from GitHub | End users |
+| `default.nix` | Full dev environment (devtools, pkgdown, testing) | Developers |
+| `default-ci.nix` | Minimal environment for CI/CD workflows | GitHub Actions |
+| `package.nix` | Package definition for nix builds | Infrastructure |
+
+## Parallel Processing Architecture
+
+The package uses a layered architecture for parallel execution:
+
+```
+Application Layer:    randomwalk::run_simulation()
+                             ↓
+Worker Management:    crew (worker pools, task distribution)
+                             ↓
+Async Framework:      mirai (parallel task execution)
+                             ↓
+Messaging Layer:      nanonext (NNG socket bindings)
+```
+
+### Package Dependencies
+
+| Package | Purpose | Native R | WebR/WASM |
+|---------|---------|----------|-----------|
+| **crew** | Worker pool management | ✅ Available | ❌ Not available |
+| **mirai** | Async task execution | ✅ Available | ✅ Available |
+| **nanonext** | Low-level messaging (NNG) | ✅ Available | ✅ Available* |
+
+*nanonext is available in WASM but sockets cannot be created inside forked subprocesses.
+
+### Why Chunked Mode Instead of Dynamic
+
+The original `dynamic` mode attempted to use nanonext pub/sub sockets for real-time grid updates. This failed because:
+
+1. **NNG fork limitation**: nanonext sockets cannot be inherited across Unix fork() boundaries
+2. **Crew/mirai architecture**: Workers are forked processes on Unix systems
+3. **Silent fallback**: Socket creation fails, mode falls back to static behavior
+
+**Solution**: `sync_mode = "chunked"` achieves similar results by processing walkers in batches of 10, updating the grid between batches. This gives later batches visibility of black pixels from earlier batches without requiring sockets.
 
 ## Simulation Parameters
 
