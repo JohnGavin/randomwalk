@@ -120,12 +120,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="dashboard-comparison" class="level2">
-<h2 class="anchored" data-anchor-id="dashboard-comparison">Dashboard Comparison</h2>
-<p>This vignette provides a <strong>comprehensive, production-ready dashboard</strong> with all package features. For a comparison with the simplified demo:</p>
-<p><strong>This Dashboard (Comprehensive):</strong> - <strong>Mode</strong>: Both sync AND async parallel processing - <strong>Scope</strong>: Full-featured with all package capabilities - <strong>Target</strong>: Production-ready exploration and analysis tool - <strong>Controls</strong>: Complete parameter set (workers, sync_mode, max_steps, all simulation params) - <strong>Visualization</strong>: Multi-tab interface - Grid display with real-time updates - Histograms (steps, pixels, paths) - Individual walker paths overlay - Summary statistics table - Telemetry and performance metrics - <strong>Best for</strong>: In-depth exploration, performance testing, research</p>
-<p><strong>Simplified Dashboard (<a href="dynamic_broadcasting.html" target="_blank">dynamic_broadcasting.html</a>):</strong> - <strong>Mode</strong>: Synchronous only (workers=0) - <strong>Scope</strong>: Single focused demonstration - <strong>Target</strong>: Quick introduction to random walks - <strong>Controls</strong>: Essential parameters only (grid, walkers, neighborhood, boundary) - <strong>Visualization</strong>: Single grid display - <strong>Best for</strong>: Learning core concepts, quick demos</p>
-<hr>
+<section id="interactive-dashboard" class="level2">
+<h2 class="anchored" data-anchor-id="interactive-dashboard">Interactive Dashboard</h2>
+<p>This dashboard provides a <strong>comprehensive, production-ready interface</strong> for exploring random walk simulations with all package features including parallel processing, multi-tab visualization, and detailed statistics.</p>
 <pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
@@ -971,11 +968,6 @@ shinyApp(ui = ui, server = server)</code></pre>
 <li>Known limitations</li>
 </ul>
 </section>
-</section>
-<section id="differences-from-basic-vignette" class="level2">
-<h2 class="anchored" data-anchor-id="differences-from-basic-vignette">Differences from Basic Vignette</h2>
-<p><strong>dynamic_broadcasting.qmd</strong> (basic demo): - 5 walkers (simple) - 2 output pages (Grid, Paths, Stats) - Minimal statistics - Basic demo focus</p>
-<p><strong>dashboard_comprehensive.qmd</strong> (this vignette): - 10 walkers (more comprehensive) - 6 output pages (Fractal, Paths, Distributions, Stats, Debug, Notes) - Comprehensive statistics and visualizations - Production-ready showcase</p>
 </section>
 <section id="try-it-yourself" class="level2">
 <h2 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h2>

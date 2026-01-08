@@ -4,10 +4,9 @@ pkgdown_sha: ~
 articles:
   articles/dashboard_comprehensive: dashboard_comprehensive.html
   articles/defensive_programming: defensive_programming.html
-  articles/dynamic_broadcasting: dynamic_broadcasting.html
   articles/step_distribution_analysis: step_distribution_analysis.html
   articles/telemetry: telemetry.html
-last_built: 2026-01-01T15:16Z
+last_built: 2026-01-08T21:25Z
 urls:
   reference: https://johngavin.github.io/randomwalk/reference
   article: https://johngavin.github.io/randomwalk/articles
