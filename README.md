@@ -12,8 +12,7 @@ Random Walk Simulation for Fractal Pattern Generation.
 
 ## Quick Links
 
-- [Basic Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html) - Try simulation in your browser (WebR)
-- [Full-Featured Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html) - Walker paths, statistics, debug info
+- [Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html) - Try simulation in your browser (WebR)
 - [Package Documentation](https://johngavin.github.io/randomwalk/) - Full API reference and vignettes
 - [Wiki](https://github.com/JohnGavin/randomwalk/wiki) - How-to guides, troubleshooting, and deployment docs
 - [GitHub Repository](https://github.com/JohnGavin/randomwalk) - Source code and issues
@@ -49,31 +48,20 @@ remotes::install_github("johngavin/randomwalk")
 devtools::load_all()  # Load without installing
 ```
 
-## Interactive Browser Demos
+## Interactive Browser Demo
 
-Try the simulation directly in your browser (no installation required):
+**[Launch Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)** - No installation required!
 
-### Basic Demo
-**[Launch Basic Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)**
+Features:
+- **Fractal visualization**: Black pixel patterns on grid
+- **Walker paths**: Trajectory visualization (first/last N)
+- **Distributions**: Path length histograms by termination reason
+- **Statistics**: Grid, walker, step, and performance metrics
+- **Debug panel**: Package versions, environment detection
 
-Minimal interactive demo - try random walks in your browser with basic controls.
+Runs entirely in your browser via [WebR](https://docs.r-wasm.org/webr/) (WebAssembly). Uses synchronous mode (workers=0) for reliable in-browser execution.
 
-### Full-Featured Dashboard
-**[Launch Full-Featured Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)**
-
-Complete dashboard for in-depth exploration:
-- **Multiple visualizations**: Fractal plots, walker paths, step distributions
-- **Detailed statistics**: Grid stats, walker stats, performance metrics
-- **Debug panel**: Package versions, backend selection, diagnostic info
-
-Both dashboards run entirely in your browser using WebAssembly via [WebR](https://docs.r-wasm.org/webr/). Features include:
-
-- Real-time parameter adjustment with sliders and dropdowns
-- Synchronous mode (workers=0) for reliable in-browser execution
-- Complete simulation statistics and detailed walker information
-- No R installation or server required
-
-> **Note**: Browser dashboards use synchronous mode. Async parallel processing (workers > 0) is available in native R only.
+> **Note**: Async parallel processing (workers > 0) is available in native R only.
 
 ## Usage
 
@@ -421,26 +409,9 @@ When using `workers > 0` with `sync_mode = "static"` (default), workers operate 
 
 ### Available Vignettes
 
-### **[Basic Random Walk Demo](https://johngavin.github.io/randomwalk/articles/dynamic_broadcasting.html)**
-Minimal interactive demo running entirely in-browser via WebR. Quick start with basic controls - no R installation required.
-
-### **[Full-Featured Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)** ✨
-Complete dashboard for in-depth exploration including walker paths, step distributions, detailed statistics, and debug panel.
-
-### **[Step Distribution Analysis](https://johngavin.github.io/randomwalk/articles/step_distribution_analysis.html)** 📊
-Comprehensive analysis of random walk step distributions, parallel execution performance benchmarks, and visualization of density plots conditional on grid size and worker count.
-
-### **[Telemetry and Pipeline Performance](https://johngavin.github.io/randomwalk/articles/telemetry.html)** 📈
-Pipeline performance metrics including code coverage analysis, longest-running targets, memory usage statistics, and network visualization of the targets dependency graph.
-
-### Temporarily Disabled Vignettes
-
-The following vignettes are temporarily disabled (see [Issue #132](https://github.com/JohnGavin/randomwalk/issues/132)):
-
-- **Interactive Dashboard** (dashboard.html) - Service Worker errors, requires Shinylive/webR update
-- **Async/Parallel Dashboard** (dashboard_async.html) - ⚠️ **Use [Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html) instead** - Same Service Worker issues as dashboard
-
-> **Note**: For async parallel dashboard functionality, use the [Comprehensive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html) which includes all features from dashboard_async plus additional visualizations and statistics.
+- **[Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)** - Full-featured dashboard in-browser via WebR
+- **[Step Distribution Analysis](https://johngavin.github.io/randomwalk/articles/step_distribution_analysis.html)** - Statistical analysis of path lengths
+- **[Telemetry](https://johngavin.github.io/randomwalk/articles/telemetry.html)** - Pipeline performance and code coverage
 
 ## 📋 Essential Documentation
 
@@ -488,7 +459,7 @@ randomwalk/
 │   └── qmd/                   # Source Quarto documents
 │
 ├── vignettes/                 # Package vignettes
-│   ├── dynamic_broadcasting.qmd # Async parallel demo (✅ active)
+│   ├── dashboard_comprehensive.qmd # Interactive dashboard (✅ active)
 │   ├── dashboard.qmd          # Interactive dashboard (⏸️ disabled, Issue #132)
 │   ├── dashboard_async.qmd    # Async dashboard (⏸️ disabled, Issue #132)
 │   └── telemetry.qmd          # Telemetry statistics (⏸️ disabled, Issue #132)

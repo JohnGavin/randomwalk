@@ -127,83 +127,49 @@ if (cov_available) {
 }
 ```
 
-## Coverage by File
-
-```{r coverage-by-file}
+```{r coverage-details}
 #| eval: true
 
-# Use pre-computed file summary from targets (if available)
+# Only show coverage details if data is available
 if (cov_available) {
   file_summary <- cov_data$file_summary
 
-  file_summary %>%
-    kable(
-      digits = 1,
-      col.names = c("File", "Total Lines", "Covered Lines", "Coverage (%)"),
-      caption = "Test Coverage by File"
-    )
-} else {
-  cat("Coverage data not available - code_coverage target is disabled\n")
-}
-```
+  # Coverage by File table
+  cat("## Coverage by File\n\n")
+  print(kable(file_summary,
+    digits = 1,
+    col.names = c("File", "Total Lines", "Covered Lines", "Coverage (%)"),
+    caption = "Test Coverage by File"
+  ))
 
-## Coverage Visualization
+  # Coverage visualization
+  cat("\n## Coverage Visualization\n\n")
+  print(
+    file_summary %>%
+      mutate(filename = reorder(filename, coverage_pct)) %>%
+      ggplot(aes(x = filename, y = coverage_pct)) +
+      geom_col(aes(fill = coverage_pct), alpha = 0.8) +
+      geom_hline(yintercept = 80, linetype = "dashed", color = "red") +
+      scale_fill_gradient2(
+        low = "red", mid = "yellow", high = "green",
+        midpoint = 50, limits = c(0, 100),
+        name = "Coverage %"
+      ) +
+      coord_flip() +
+      labs(title = "Test Coverage by File", x = "File", y = "Coverage (%)") +
+      theme_minimal() +
+      theme(legend.position = "bottom")
+  )
 
-```{r coverage-plot}
-#| eval: true
-#| cache: true
-#| fig.cap: "Test coverage by file"
-
-if (cov_available) {
-  file_summary %>%
-    mutate(filename = reorder(filename, coverage_pct)) %>%
-    ggplot(aes(x = filename, y = coverage_pct)) +
-    geom_col(aes(fill = coverage_pct), alpha = 0.8) +
-    geom_hline(yintercept = 80, linetype = "dashed", color = "red") +
-    scale_fill_gradient2(
-      low = "red", mid = "yellow", high = "green",
-      midpoint = 50, limits = c(0, 100),
-      name = "Coverage %"
-    ) +
-    coord_flip() +
-    labs(
-      title = "Test Coverage by File",
-      subtitle = "Dashed line shows 80% coverage target",
-      x = "File",
-      y = "Coverage (%)"
-    ) +
-    theme_minimal() +
-    theme(legend.position = "bottom")
-} else {
-  cat("Coverage visualization not available - code_coverage target is disabled\n")
-}
-```
-
-## Untested Code Hotspots
-
-Files with low coverage that need additional tests:
-
-```{r untested-hotspots}
-#| eval: true
-#| cache: true
-
-if (cov_available) {
-  low_coverage <- file_summary %>%
-    filter(coverage_pct < 80) %>%
-    arrange(coverage_pct)
-
+  # Low coverage files
+  low_coverage <- file_summary %>% filter(coverage_pct < 80) %>% arrange(coverage_pct)
   if (nrow(low_coverage) > 0) {
-    low_coverage %>%
-      kable(
-        digits = 1,
-        col.names = c("File", "Total Lines", "Covered Lines", "Coverage (%)"),
-        caption = "Files Below 80% Coverage (Need More Tests)"
-      )
-  } else {
-    cat("✅ All files have >80% coverage!\n")
+    cat("\n## Files Below 80% Coverage\n\n")
+    print(kable(low_coverage, digits = 1,
+      col.names = c("File", "Total Lines", "Covered Lines", "Coverage (%)"),
+      caption = "Files Needing More Tests"
+    ))
   }
-} else {
-  cat("Coverage data not available - code_coverage target is disabled\n")
 }
 ```
 

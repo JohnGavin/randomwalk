@@ -15,9 +15,7 @@ home:
     Parallel random walk simulations that create fractal graphs through
     pixel walking on a grid. Features sync and async modes with crew workers.
   links:
-  - text: Basic Demo (Browser)
-    href: articles/dynamic_broadcasting.html
-  - text: Full Dashboard (Browser)
+  - text: Interactive Dashboard (Browser)
     href: articles/dashboard_comprehensive.html
   - text: Step Distribution Analysis
     href: articles/step_distribution_analysis.html
@@ -39,11 +37,9 @@ navbar:
       # ═══════════════════════════════════════════════════════════
       # R-SHINYLIVE: Interactive dashboards (run in browser via WebR)
       # ═══════════════════════════════════════════════════════════
-      - text: "──── Browser Dashboards (WebR) ────"
-      - text: Full Dashboard (All Features)
+      - text: "──── Browser Dashboard (WebR) ────"
+      - text: Interactive Dashboard
         href: articles/dashboard_comprehensive.html
-      - text: Basic Demo
-        href: articles/dynamic_broadcasting.html
       # ═══════════════════════════════════════════════════════════
       # WEBR: Analysis vignettes using WebR
       # ═══════════════════════════════════════════════════════════
@@ -61,11 +57,10 @@ navbar:
 
 # Organize articles on the Articles index page
 articles:
-- title: "Browser Dashboards (WebR)"
-  desc: "Interactive dashboards running in your browser via WebR/Shinylive"
+- title: "Browser Dashboard (WebR)"
+  desc: "Interactive dashboard running in your browser via WebR/Shinylive"
   contents:
   - dashboard_comprehensive
-  - dynamic_broadcasting
 - title: "WebR Analysis"
   desc: "Statistical analysis vignettes using WebR"
   contents:

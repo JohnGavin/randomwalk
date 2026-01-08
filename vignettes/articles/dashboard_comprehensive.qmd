@@ -196,35 +196,29 @@ ui <- fluidPage(
         # PAGE 6: Notes
         tabPanel("Notes",
                  h4("About This Dashboard"),
+                 tags$p("Interactive random walk simulation via WebR/Shinylive."),
+                 hr(),
                  h5("Browser Mode"),
-                 tags$p("This dashboard runs in ", strong("sync sequential mode"), " (workers=0)."),
-                 tags$p("Each walker is processed one at a time. This is a WebR/browser limitation."),
+                 tags$p("Runs in ", strong("sync sequential mode"), " (workers=0)."),
+                 tags$p("Async parallel (workers > 0) requires native R with crew."),
                  hr(),
-                 h5("Features"),
+                 h5("Sync Modes (Native R)"),
                  tags$ul(
-                   tags$li(strong("Multiple visualizations:"), " Fractal graph, walker paths, distributions"),
-                   tags$li(strong("Comprehensive statistics:"), " Grid, walker, step, and performance metrics"),
-                   tags$li(strong("Debug information:"), " Package versions, environment detection, timing")
+                   tags$li(strong("static:"), " Frozen snapshots (~5% collision)"),
+                   tags$li(strong("chunked:"), " Batched updates (~15% collision) - RECOMMENDED"),
+                   tags$li(tags$em("dynamic/mirai_dynamic:"), " DEPRECATED")
                  ),
                  hr(),
-                 h5("Related Links"),
+                 h5("Limitations"),
                  tags$ul(
-                   tags$li(tags$a(href="https://johngavin.github.io/randomwalk/", "randomwalk Package Documentation")),
-                   tags$li(tags$a(href="dynamic_broadcasting.html", "Simplified Dashboard"))
+                   tags$li("Browser: sync sequential only"),
+                   tags$li("First load: 15-30s (downloads)"),
+                   tags$li("Large sims may be slow")
                  ),
                  hr(),
-                 h5("Technical Details"),
-                 tags$div(
-                   tags$h6("Package Installation"),
-                   tags$pre("webr::install('randomwalk',\n  repos = c(\n    'https://johngavin.github.io/randomwalk',\n    'https://repo.r-wasm.org'\n  ))")
-                 ),
-                 hr(),
-                 h5("Known Limitations"),
-                 tags$ul(
-                   tags$li("Sync sequential only (no parallel processing in browser)"),
-                   tags$li("First load can take 15-30 seconds (package downloads)"),
-                   tags$li("Large simulations may be slow (consider reducing walkers/grid size)")
-                 ))
+                 tags$a(href="https://johngavin.github.io/randomwalk/", "Documentation"),
+                 tags$span(" | "),
+                 tags$a(href="https://github.com/JohnGavin/randomwalk", "GitHub"))
       )
     )
   )
@@ -775,86 +769,21 @@ server <- function(input, output, session) {
 shinyApp(ui = ui, server = server)
 ```
 
-## About This Dashboard
+## Tips
 
-This dashboard provides a **comprehensive interactive Shiny application** for random walk simulations running in your browser using WebAssembly (WebR).
-
-> **Browser Mode:** This dashboard runs in **sync sequential mode** only (workers=0). Each walker is processed one at a time. This is a WebR/browser limitation - async parallel processing requires native R.
-
-## Features
-
-### Visualization Types
-- **Fractal Graph**: Black pixel patterns showing the final grid state
-- **Walker Paths**: Trajectories with selectable first N and last N paths
-- **Distributions**: Path length histograms overall and by termination reason
-- **Statistics**: Comprehensive simulation metrics
-- **Debug Info**: Package versions, environment detection, timing
-
-### Simulation Controls
-- **Grid Size**: 20-400 pixels (larger grids = more exploration space)
-- **Number of Walkers**: 1-5000 walkers
-- **Max Steps**: 100-10000 steps per walker
-- **Neighborhood**: 4-hood (cardinal) or 8-hood (diagonal)
-- **Boundary**: Terminate at edge or wrap (toroidal)
-
-## Dashboard Comparison
-
-Both browser dashboards run in **sync sequential mode** (identical visualization capabilities):
-
-| Feature | This Dashboard | [Simplified Dashboard](dynamic_broadcasting.html){target="_blank"} |
-|---------|---------------|-----------------------------------|
-| Default walkers | 2000 | 2000 |
-| Output tabs | 6 (Fractal, Paths, Distributions, Stats, Debug, Notes) | 6 (Grid, Paths, Distributions, Stats, Details, Debug) |
-| Statistics | Comprehensive | Comprehensive |
-| Best for | Full exploration | Quick demos |
-
-## Try It Yourself
-
-Experiment with different parameters:
-
-- **Larger grid**: More exploration space (try 200-400)
-- **Fewer walkers**: Faster simulation (try 100-500)
-- **8-hood**: Enable diagonal movement for different patterns
+- **Larger grid** (200-400): More exploration space
+- **Fewer walkers** (100-500): Faster simulation
+- **8-hood**: Diagonal movement for different patterns
 - **Wrap boundary**: Toroidal grid (no edge termination)
 
-## Related Links
-
-- [randomwalk Package Documentation](https://johngavin.github.io/randomwalk/)
-- [Simplified Dashboard](dynamic_broadcasting.html)
-
-## Session Info
-
-```{r session-info}
-sessionInfo()
-```
-
-## Version Information
+## Build Info
 
 ```{r version-info}
 #| echo: false
 #| results: asis
-
-# Git commit information (captured at build time)
-git_sha <- tryCatch(
-  system("git rev-parse --short HEAD 2>/dev/null", intern = TRUE),
-  error = function(e) "N/A"
-)
+git_sha <- tryCatch(system("git rev-parse --short HEAD 2>/dev/null", intern = TRUE), error = function(e) "N/A")
 git_sha <- if (length(git_sha) == 0 || git_sha == "") "N/A" else git_sha
-
-# Package version
-pkg_ver <- tryCatch(
-  as.character(packageVersion("randomwalk")),
-  error = function(e) "N/A"
-)
-
-# Build timestamp
-build_ts <- format(Sys.time(), "%Y-%m-%d %H:%M %Z")
-
-# Output as markdown table
-cat("| Item | Value |\n")
-cat("|------|-------|\n")
-cat(sprintf("| **Git SHA** | `%s` |\n", git_sha))
-cat(sprintf("| **Package** | randomwalk %s |\n", pkg_ver))
-cat(sprintf("| **R Version** | %s |\n", R.version.string))
-cat(sprintf("| **Built** | %s |\n", build_ts))
+pkg_ver <- tryCatch(as.character(packageVersion("randomwalk")), error = function(e) "N/A")
+cat(sprintf("**randomwalk** %s | **Git** `%s` | **R** %s | **Built** %s",
+    pkg_ver, git_sha, getRversion(), format(Sys.time(), "%Y-%m-%d")))
 ```

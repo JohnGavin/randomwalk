@@ -1,4 +1,13 @@
 # randomwalk (development version)
+
+## Changes
+
+* Archived `dynamic_broadcasting.qmd` vignette - consolidated into `dashboard_comprehensive.qmd` which has all the same features plus better organization.
+
+* Simplified `dashboard_comprehensive.qmd` - moved documentation into Notes tab, removed redundant sections.
+
+* Updated telemetry vignette to handle missing coverage data gracefully.
+
 # randomwalk 2.1.0
 
 ## Breaking Changes
