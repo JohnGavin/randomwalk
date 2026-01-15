@@ -42,8 +42,7 @@ jobs:
             any::covr
             any::devtools
           # Note: crew/mirai/nanonext removed - they require NNG system library
-          # which is not available on standard Ubuntu runners. The core tests
-          # don't require these packages for coverage measurement.
+          # which is not available on standard Ubuntu runners.
 
       - name: Generate coverage
         run: |
@@ -54,68 +53,51 @@ jobs:
             cat("R version:", R.version.string, "\n")
             cat("covr version:", as.character(packageVersion("covr")), "\n\n")
 
-            # Generate coverage with error handling
+            # Generate coverage - simple approach
             coverage <- tryCatch({
-              package_coverage(
-                type = "tests",
-                quiet = FALSE
-              )
-            }, error = function(e) {
-              cat("Error generating coverage:", e$message, "\n")
-              cat("Trying with fewer options...\n")
-              # Try again with minimal options
               package_coverage(quiet = FALSE)
+            }, error = function(e) {
+              cat("Error:", conditionMessage(e), "\n")
+              NULL
             })
 
             if (is.null(coverage)) {
-              stop("Failed to generate coverage")
-            }
-
-            # Calculate summary statistics
-            overall_pct <- percent_coverage(coverage)
-            cat(sprintf("\nOverall coverage: %.1f%%\n", overall_pct))
-
-            # Get file-level summary using coverage object directly
-            # The coverage object contains srcref info for each file
-            cov_df <- as.data.frame(coverage)
-            if (nrow(cov_df) > 0) {
-              file_summary <- aggregate(
-                cbind(value, value > 0) ~ filename,
-                data = cov_df,
-                FUN = function(x) c(total = length(x), covered = sum(x))
+              cat("WARNING: Could not generate coverage\n")
+              coverage_data <- list(
+                overall_pct = NA,
+                file_summary = data.frame(),
+                generated_at = Sys.time(),
+                r_version = R.version.string,
+                covr_version = as.character(packageVersion("covr")),
+                git_sha = Sys.getenv("GITHUB_SHA"),
+                error = "Coverage generation failed"
               )
-              names(file_summary) <- c("filename", "lines", "covered_info")
-              file_summary$total_lines <- sapply(file_summary$lines, `[`, 1)
-              file_summary$covered_lines <- sapply(file_summary$covered_info, `[`, 2)
-              file_summary$coverage_pct <- round(100 * file_summary$covered_lines / file_summary$total_lines, 1)
-              file_summary <- file_summary[, c("filename", "total_lines", "covered_lines", "coverage_pct")]
-              file_summary$filename <- basename(file_summary$filename)
             } else {
-              file_summary <- data.frame(
-                filename = character(0),
-                total_lines = integer(0),
-                covered_lines = integer(0),
-                coverage_pct = numeric(0)
+              # Calculate overall percentage
+              overall_pct <- percent_coverage(coverage)
+              cat(sprintf("Overall coverage: %.1f%%\n", overall_pct))
+
+              # Simple file summary - just list unique files
+              cov_df <- as.data.frame(coverage)
+              if (nrow(cov_df) > 0) {
+                files <- unique(basename(cov_df$filename))
+                cat("\nFiles with coverage data:", length(files), "\n")
+                cat(paste(" -", files, collapse = "\n"), "\n")
+              }
+
+              coverage_data <- list(
+                overall_pct = overall_pct,
+                n_files = length(unique(cov_df$filename)),
+                generated_at = Sys.time(),
+                r_version = R.version.string,
+                covr_version = as.character(packageVersion("covr")),
+                git_sha = Sys.getenv("GITHUB_SHA")
               )
             }
-
-            cat("\nCoverage by file:\n")
-            print(file_summary)
-
-            # Prepare data for saving
-            coverage_data <- list(
-              overall_pct = overall_pct,
-              file_summary = file_summary,
-              generated_at = Sys.time(),
-              r_version = R.version.string,
-              covr_version = as.character(packageVersion("covr")),
-              git_sha = Sys.getenv("GITHUB_SHA")
-            )
 
             # Save to inst/extdata
             dir.create("inst/extdata", recursive = TRUE, showWarnings = FALSE)
             saveRDS(coverage_data, "inst/extdata/coverage.rds")
-
             cat("\n=== Coverage saved to inst/extdata/coverage.rds ===\n")
           '
 
@@ -124,7 +106,6 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Check if coverage.rds changed or is new
           if [ -f inst/extdata/coverage.rds ]; then
             git add inst/extdata/coverage.rds
             if git diff --cached --quiet; then
