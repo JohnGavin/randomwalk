@@ -40,11 +40,12 @@ jobs:
       - name: Setup R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          # Only install Depends/Imports - skip Suggests which includes
+          # nanonext/crew/mirai that require NNG system library
+          dependencies: '"hard"'
           extra-packages: |
             any::covr
             any::devtools
-          # Note: crew/mirai/nanonext removed - they require NNG system library
-          # which is not available on standard Ubuntu runners.
 
       - name: Generate coverage
         run: |
