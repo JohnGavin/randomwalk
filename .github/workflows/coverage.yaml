@@ -75,14 +75,29 @@ jobs:
             overall_pct <- percent_coverage(coverage)
             cat(sprintf("\nOverall coverage: %.1f%%\n", overall_pct))
 
-            # Get file-level summary
-            file_coverage <- tally_coverage(coverage, by = "file")
-            file_summary <- data.frame(
-              filename = basename(file_coverage$filename),
-              total_lines = file_coverage$relevant,
-              covered_lines = file_coverage$covered,
-              coverage_pct = round(file_coverage$coverage, 1)
-            )
+            # Get file-level summary using coverage object directly
+            # The coverage object contains srcref info for each file
+            cov_df <- as.data.frame(coverage)
+            if (nrow(cov_df) > 0) {
+              file_summary <- aggregate(
+                cbind(value, value > 0) ~ filename,
+                data = cov_df,
+                FUN = function(x) c(total = length(x), covered = sum(x))
+              )
+              names(file_summary) <- c("filename", "lines", "covered_info")
+              file_summary$total_lines <- sapply(file_summary$lines, `[`, 1)
+              file_summary$covered_lines <- sapply(file_summary$covered_info, `[`, 2)
+              file_summary$coverage_pct <- round(100 * file_summary$covered_lines / file_summary$total_lines, 1)
+              file_summary <- file_summary[, c("filename", "total_lines", "covered_lines", "coverage_pct")]
+              file_summary$filename <- basename(file_summary$filename)
+            } else {
+              file_summary <- data.frame(
+                filename = character(0),
+                total_lines = integer(0),
+                covered_lines = integer(0),
+                coverage_pct = numeric(0)
+              )
+            }
 
             cat("\nCoverage by file:\n")
             print(file_summary)
