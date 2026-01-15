@@ -1,0 +1,18 @@
+# Test R-universe build workflow
+# This runs the exact same build process as R-universe.dev
+# See: https://ropensci.org/blog/2026/01/03/r-universe-workflows/
+name: Test R-universe
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build:
+    name: R-universe testing
+    uses: r-universe-org/workflows/.github/workflows/build.yml@v3
+    with:
+      universe: ${{ github.repository_owner }}

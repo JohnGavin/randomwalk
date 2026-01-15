@@ -3,7 +3,16 @@
     "allow": [
       "WebFetch(domain:johngavin.github.io)",
       "WebFetch(domain:johngavin.r-universe.dev)",
-      "mcp__r-btw__btw_tool_github"
+      "mcp__r-btw__btw_tool_github",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:tidyverse.org)",
+      "WebFetch(domain:design.tidyverse.org)",
+      "WebFetch(domain:ropensci.org)",
+      "WebFetch(domain:www.r-bloggers.com)",
+      "WebFetch(domain:statmodeling.stat.columbia.edu)",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:sites.stat.columbia.edu)",
+      "WebFetch(domain:anthropic.skilljar.com)"
     ],
     "deny": [],
     "ask": []
