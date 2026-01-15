@@ -110,10 +110,10 @@ ui <- fluidPage(
       h4("Simulation Parameters"),
 
       sliderInput("grid_size", "Grid Size:",
-                  min = 20, max = 400, value = 100, step = 20),
+                  min = 20, max = 200, value = 80, step = 20),
 
       sliderInput("n_walkers", "Number of Walkers:",
-                  min = 1, max = 5000, value = 2000, step = 50),
+                  min = 1, max = 1000, value = 200, step = 50),
 
       selectInput("neighborhood", "Neighborhood:",
                   choices = c("4-hood", "8-hood"),
@@ -124,7 +124,13 @@ ui <- fluidPage(
                   selected = "terminate"),
 
       sliderInput("max_steps", "Max Steps per Walker:",
-                  min = 100, max = 10000, value = 5000, step = 100),
+                  min = 100, max = 2000, value = 500, step = 100),
+
+      hr(),
+
+      # Runtime estimate (WebR ~400 steps/sec observed)
+      h5("Estimated Runtime:"),
+      uiOutput("runtime_estimate"),
 
       hr(),
 
@@ -211,9 +217,10 @@ ui <- fluidPage(
                  hr(),
                  h5("Limitations"),
                  tags$ul(
-                   tags$li("Browser: sync sequential only"),
+                   tags$li("Browser: sync sequential only (~400 steps/sec)"),
                    tags$li("First load: 15-30s (downloads)"),
-                   tags$li("Large sims may be slow")
+                   tags$li("Recommended: grid ≤100, walkers ≤500, steps ≤1000"),
+                   tags$li("For larger simulations, use native R with crew")
                  ),
                  hr(),
                  tags$a(href="https://johngavin.github.io/randomwalk/", "Documentation"),
@@ -236,6 +243,35 @@ server <- function(input, output, session) {
   sim_state <- reactiveVal("idle")  # States: idle, running, complete, error
   sim_start_time <- reactiveVal(NULL)
   sim_end_time <- reactiveVal(NULL)
+
+  # Runtime estimate (WebR ~400-500 steps/sec observed in Issue #172)
+  output$runtime_estimate <- renderUI({
+    max_steps <- input$n_walkers * input$max_steps
+    # Conservative estimate: 400 steps/sec for WebR
+    est_seconds <- max_steps / 400
+
+    if (est_seconds < 60) {
+      est_text <- sprintf("~%.0f seconds", est_seconds)
+      color <- "green"
+    } else if (est_seconds < 300) {
+      est_text <- sprintf("~%.1f minutes", est_seconds / 60)
+      color <- "orange"
+    } else {
+      est_text <- sprintf("~%.1f minutes (consider smaller params)", est_seconds / 60)
+      color <- "red"
+    }
+
+    tags$div(
+      style = paste0("color: ", color, "; font-weight: bold;"),
+      est_text,
+      tags$br(),
+      tags$small(style = "color: gray;",
+                 sprintf("(%s walkers × %s steps = %sK steps)",
+                         format(input$n_walkers, big.mark=","),
+                         format(input$max_steps, big.mark=","),
+                         format(round(max_steps/1000), big.mark=",")))
+    )
+  })
 
   # Periodic timer for debug updates and status indicator
   timer <- reactiveTimer(1000)  # Update every second
