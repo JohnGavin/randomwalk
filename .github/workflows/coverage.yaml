@@ -41,10 +41,9 @@ jobs:
           extra-packages: |
             any::covr
             any::devtools
-            any::crew
-            any::mirai
-          # Note: nanonext may not be available via RSPM, but crew/mirai provide
-          # the core async functionality needed for coverage
+          # Note: crew/mirai/nanonext removed - they require NNG system library
+          # which is not available on standard Ubuntu runners. The core tests
+          # don't require these packages for coverage measurement.
 
       - name: Generate coverage
         run: |
