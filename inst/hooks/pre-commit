@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+#
+# pre-commit hook: Auto-regenerate nix files when DESCRIPTION changes
+#
+# Installation:
+#   Rscript -e 'source("R/setup/nix/install_hooks.R"); install_git_hooks()'
+#   OR manually: cp inst/hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+#
+# What it does:
+#   1. Detects if DESCRIPTION is staged for commit
+#   2. Regenerates nix files (package.nix, default-ci.nix)
+#   3. Stages the updated nix files
+#   4. Continues with commit (or aborts on failure)
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Check if DESCRIPTION is staged for commit
+if git diff --cached --name-only | grep -q '^DESCRIPTION$'; then
+    echo -e "${YELLOW}[pre-commit]${NC} DESCRIPTION changed - regenerating nix files..."
+
+    # Check if R is available
+    if ! command -v Rscript &> /dev/null; then
+        echo -e "${RED}[pre-commit]${NC} Error: Rscript not found in PATH"
+        echo "Please ensure you're in the nix shell or have R installed"
+        exit 1
+    fi
+
+    # Check if the generation script exists
+    if [ ! -f "R/setup/nix/generate_nix_files.R" ]; then
+        echo -e "${RED}[pre-commit]${NC} Error: R/setup/nix/generate_nix_files.R not found"
+        exit 1
+    fi
+
+    # Run the nix file generation
+    echo -e "${YELLOW}[pre-commit]${NC} Running generate_all_nix_files()..."
+
+    if Rscript -e 'source("R/setup/nix/generate_nix_files.R"); generate_all_nix_files()' 2>&1; then
+        echo -e "${GREEN}[pre-commit]${NC} Nix files regenerated successfully"
+    else
+        echo -e "${RED}[pre-commit]${NC} Failed to regenerate nix files"
+        echo "Please fix the error and try again"
+        exit 1
+    fi
+
+    # Check if nix files changed
+    NIX_FILES_CHANGED=0
+
+    for nixfile in package.nix default-ci.nix; do
+        if [ -f "$nixfile" ]; then
+            # Check if file has changes (staged or unstaged)
+            if ! git diff --quiet "$nixfile" 2>/dev/null || ! git diff --cached --quiet "$nixfile" 2>/dev/null; then
+                NIX_FILES_CHANGED=1
+                git add "$nixfile"
+                echo -e "${GREEN}[pre-commit]${NC} Staged: $nixfile"
+            fi
+        fi
+    done
+
+    if [ $NIX_FILES_CHANGED -eq 0 ]; then
+        echo -e "${GREEN}[pre-commit]${NC} No nix file changes needed"
+    else
+        echo -e "${GREEN}[pre-commit]${NC} Nix files updated and staged"
+    fi
+fi
+
+# Continue with commit
+exit 0
