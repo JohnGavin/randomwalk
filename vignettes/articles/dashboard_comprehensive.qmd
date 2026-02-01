@@ -114,6 +114,7 @@ ui <- fluidPage(
 
       sliderInput("n_walkers", "Number of Walkers:",
                   min = 1, max = 1000, value = 200, step = 50),
+      helpText(HTML("Number of walkers to simulate<br><em>Max: 70% of grid pixels (updates automatically)</em>")),
 
       selectInput("neighborhood", "Neighborhood:",
                   choices = c("4-hood", "8-hood"),
@@ -237,6 +238,17 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
 
+  # Dynamic walker constraint: Limit to 70% of grid pixels
+  observe({
+    max_walkers <- floor(0.7 * input$grid_size^2)
+    updateSliderInput(
+      session,
+      "n_walkers",
+      max = max_walkers,
+      value = min(input$n_walkers, max_walkers)
+    )
+  })
+
   # Reactive values for simulation state and history
   sim_result <- reactiveVal(NULL)
   sim_count <- reactiveVal(0)  # Count total simulations run
@@ -320,6 +332,13 @@ server <- function(input, output, session) {
     })
 
     tryCatch({
+      # Validate walker count doesn't exceed 70% of grid
+      max_allowed <- floor(0.7 * input$grid_size^2)
+      if (input$n_walkers > max_allowed) {
+        stop(sprintf("Too many walkers (%d) for grid size %dx%d. Maximum allowed: %d (70%% of grid pixels)",
+                     input$n_walkers, input$grid_size, input$grid_size, max_allowed))
+      }
+
       start_time <- Sys.time()
 
       # Run simulation with async support

@@ -154,9 +154,9 @@ server <- function(input, output, session) {
     playing = FALSE
   )
 
-  # Update max walkers based on grid size
+  # Update max walkers based on grid size (70% of grid pixels)
   observe({
-    max_walkers <- floor(input$grid_size * input$grid_size * 0.3)
+    max_walkers <- floor(0.7 * input$grid_size^2)
     updateSliderInput(session, "n_walkers",
                      max = max_walkers,
                      value = min(input$n_walkers, max_walkers))
