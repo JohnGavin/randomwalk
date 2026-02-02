@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Full-featured dashboard with multiple visualizations, statistics, debug panel, and documentation links - runs in browser via WebR">
+<meta name="description" content="Complete dashboard with walker paths, step distributions, detailed statistics, and debug info - for in-depth exploration">
 
-<title>Comprehensive Sync Sequential Random Walks Dashboard</title>
+<title>Full-Featured Dashboard</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,41 +20,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -98,12 +63,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Comprehensive Sync Sequential Random Walks Dashboard</h1>
+<h1 class="title">Full-Featured Dashboard</h1>
 </div>
 
 <div>
   <div class="description">
-    Full-featured dashboard with multiple visualizations, statistics, debug panel, and documentation links - runs in browser via WebR
+    Complete dashboard with walker paths, step distributions, detailed statistics, and debug info - for in-depth exploration
   </div>
 </div>
 
@@ -120,12 +85,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="dashboard-comparison" class="level2">
-<h2 class="anchored" data-anchor-id="dashboard-comparison">Dashboard Comparison</h2>
-<p>This vignette provides a <strong>comprehensive, production-ready dashboard</strong> with all package features. For a comparison with the simplified demo:</p>
-<p><strong>This Dashboard (Comprehensive):</strong> - <strong>Mode</strong>: Both sync AND async parallel processing - <strong>Scope</strong>: Full-featured with all package capabilities - <strong>Target</strong>: Production-ready exploration and analysis tool - <strong>Controls</strong>: Complete parameter set (workers, sync_mode, max_steps, all simulation params) - <strong>Visualization</strong>: Multi-tab interface - Grid display with real-time updates - Histograms (steps, pixels, paths) - Individual walker paths overlay - Summary statistics table - Telemetry and performance metrics - <strong>Best for</strong>: In-depth exploration, performance testing, research</p>
-<p><strong>Simplified Dashboard (<a href="dynamic_broadcasting.html" target="_blank">dynamic_broadcasting.html</a>):</strong> - <strong>Mode</strong>: Synchronous only (workers=0) - <strong>Scope</strong>: Single focused demonstration - <strong>Target</strong>: Quick introduction to random walks - <strong>Controls</strong>: Essential parameters only (grid, walkers, neighborhood, boundary) - <strong>Visualization</strong>: Single grid display - <strong>Best for</strong>: Learning core concepts, quick demos</p>
-<hr>
 <pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
@@ -204,7 +163,28 @@ is_webr &lt;- function() {
 # ============================================================================
 
 ui &lt;- fluidPage(
-  titlePanel("Comprehensive Async Parallel Random Walks (Issue #136)"),
+  titlePanel("Comprehensive Random Walks Dashboard"),
+
+  # Add CSS for timer display
+  tags$head(
+    tags$style(HTML("
+      .timer-display {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+        text-align: center;
+        padding: 10px;
+        background: #f0f8ff;
+        border-radius: 5px;
+        margin: 10px 0;
+      }
+
+      #run_sim:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    "))
+  ),
 
   sidebarLayout(
     # LEFT PANEL: INPUTS
@@ -215,11 +195,8 @@ ui &lt;- fluidPage(
                   min = 20, max = 400, value = 100, step = 20),
 
       sliderInput("n_walkers", "Number of Walkers:",
-                  min = 1, max = 5000, value = 2000, step = 50),
-
-      sliderInput("workers", "Parallel Workers:",
-                  min = 0, max = 4, value = 0, step = 1),
-      helpText("WebR: Use 0 for synchronous mode only (async not available due to mirai/nanonext compatibility)"),
+                  min = 1, max = 1000, value = 200, step = 50),
+      helpText(HTML("Number of walkers to simulate&lt;br&gt;&lt;em&gt;Max: 70% of grid pixels (updates automatically)&lt;/em&gt;")),
 
       selectInput("neighborhood", "Neighborhood:",
                   choices = c("4-hood", "8-hood"),
@@ -233,6 +210,18 @@ ui &lt;- fluidPage(
                   min = 100, max = 10000, value = 5000, step = 100),
 
       hr(),
+
+      # Runtime estimate (WebR ~400 steps/sec observed)
+      h5("Estimated Runtime:"),
+      uiOutput("runtime_estimate"),
+
+      hr(),
+
+      # Running timer (shows elapsed time)
+      div(id = "running_timer", style = "margin: 10px 0;",
+        tags$div(class = "timer-display",
+                 textOutput("elapsed_time"))
+      ),
 
       actionButton("run_sim", "Run Simulation",
                    class = "btn-primary btn-lg",
@@ -302,46 +291,30 @@ ui &lt;- fluidPage(
         # PAGE 6: Notes
         tabPanel("Notes",
                  h4("About This Dashboard"),
-                 h5("Differences from Basic Vignette"),
+                 tags$p("Interactive random walk simulation via WebR/Shinylive."),
+                 hr(),
+                 h5("Browser Mode"),
+                 tags$p("Runs in ", strong("sync sequential mode"), " (workers=0)."),
+                 tags$p("Async parallel (workers &gt; 0) requires native R with crew."),
+                 hr(),
+                 h5("Sync Modes (Native R)"),
                  tags$ul(
-                   tags$li(strong("Comprehensive:"), " Shows all randomwalk features, not just basic demo"),
-                   tags$li(strong("Multiple visualizations:"), " Fractal plots, path plots, distributions"),
-                   tags$li(strong("More walkers:"), " Default 10 walkers (vs 5 in basic demo)"),
-                   tags$li(strong("Detailed statistics:"), " Comprehensive stats across all tabs"),
-                   tags$li(strong("Debug information:"), " Package versions, inputs, backend selection"),
-                   tags$li(strong("Documentation links:"), " Cross-references to wiki and issues")
+                   tags$li(strong("static:"), " Frozen snapshots (~5% collision)"),
+                   tags$li(strong("chunked:"), " Batched updates (~15% collision) - RECOMMENDED"),
+                   tags$li(tags$em("dynamic/mirai_dynamic:"), " DEPRECATED")
                  ),
                  hr(),
-                 h5("Related Documentation"),
+                 h5("Limitations"),
                  tags$ul(
-                   tags$li(tags$a(href="https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md", "WIKI_SHINYLIVE_LESSONS_LEARNED.md"), " - Complete lessons learned"),
-                   tags$li(tags$a(href="https://github.com/JohnGavin/randomwalk/issues/129", "Issue #129"), " - Async parallel support in WebAssembly"),
-                   tags$li(tags$a(href="https://github.com/JohnGavin/randomwalk/issues/136", "Issue #136"), " - This comprehensive dashboard"),
-                   tags$li(tags$a(href="https://github.com/JohnGavin/randomwalk/issues/130", "Issue #130"), " - Dynamic broadcasting (future work)"),
-                   tags$li(tags$a(href="https://johngavin.github.io/randomwalk/", "randomwalk website"), " - Package documentation")
+                   tags$li("Browser: sync sequential only (~400 steps/sec)"),
+                   tags$li("First load: 15-30s (downloads)"),
+                   tags$li("Recommended: grid ≤100, walkers ≤500, steps ≤1000"),
+                   tags$li("For larger simulations, use native R with crew")
                  ),
                  hr(),
-                h5("Technical Details"),
-                tags$div(
-                  tags$h6("WebR Environment Detection"),
-                  tags$pre("is_webr &lt;- exists('.webr_env', envir = .GlobalEnv) ||\n          identical(Sys.getenv('WEBR'), '1')"),
-                  tags$h6("Backend Selection"),
-                  tags$p(strong("Browser (WebR):"), " Sync sequential mode (workers=0) - one walker at a time"),
-                  tags$p(strong("Native R:"), " Async parallel mode with crew backend (workers=2+)"),
-                  tags$pre("if (workers &gt; 0) {\n  if (is_webr) {\n    # mirai (not available in WebR)\n  } else {\n    # crew backend (native R)\n    controller &lt;- crew::crew_controller_local(workers)\n  }\n}"),
-                  tags$h6("Package Installation"),
-                  tags$pre("webr::install('randomwalk',\n  repos = c(\n    'https://johngavin.github.io/randomwalk',\n    'https://johngavin.r-universe.dev',\n    'https://repo.r-wasm.org'\n  ))"),
-                  tags$h6("Error Handling"),
-                  tags$p("Comprehensive try-catch blocks with status updates and troubleshooting hints")
-                ),
-                 hr(),
-                 h5("Known Limitations"),
-                 tags$ul(
-                   tags$li("No worker count UI feedback (just slider)"),
-                   tags$li("No per-worker progress bars"),
-                   tags$li("Dynamic broadcasting not yet implemented (Issue #130)"),
-                   tags$li("First load can take 15-30 seconds (package downloads)")
-                 ))
+                 tags$a(href="https://johngavin.github.io/randomwalk/", "Documentation"),
+                 tags$span(" | "),
+                 tags$a(href="https://github.com/JohnGavin/randomwalk", "GitHub"))
       )
     )
   )
@@ -353,12 +326,58 @@ ui &lt;- fluidPage(
 
 server &lt;- function(input, output, session) {
 
+  # Dynamic walker constraint: Limit to 70% of grid pixels
+  observe({
+    max_walkers &lt;- floor(0.7 * input$grid_size^2)
+    updateSliderInput(
+      session,
+      "n_walkers",
+      max = max_walkers,
+      value = min(input$n_walkers, max_walkers)
+    )
+  })
+
   # Reactive values for simulation state and history
   sim_result &lt;- reactiveVal(NULL)
   sim_count &lt;- reactiveVal(0)  # Count total simulations run
   sim_state &lt;- reactiveVal("idle")  # States: idle, running, complete, error
   sim_start_time &lt;- reactiveVal(NULL)
   sim_end_time &lt;- reactiveVal(NULL)
+
+  # Output for conditional panel to show running indicator
+  output$is_running &lt;- reactive({
+    sim_state() == "running"
+  })
+  outputOptions(output, "is_running", suspendWhenHidden = FALSE)
+
+  # Runtime estimate (WebR ~400-500 steps/sec observed in Issue #172)
+  output$runtime_estimate &lt;- renderUI({
+    max_steps &lt;- input$n_walkers * input$max_steps
+    # Conservative estimate: 400 steps/sec for WebR
+    est_seconds &lt;- max_steps / 400
+
+    if (est_seconds &lt; 60) {
+      est_text &lt;- sprintf("~%.0f seconds", est_seconds)
+      color &lt;- "green"
+    } else if (est_seconds &lt; 300) {
+      est_text &lt;- sprintf("~%.1f minutes", est_seconds / 60)
+      color &lt;- "orange"
+    } else {
+      est_text &lt;- sprintf("~%.1f minutes (consider smaller params)", est_seconds / 60)
+      color &lt;- "red"
+    }
+
+    tags$div(
+      style = paste0("color: ", color, "; font-weight: bold;"),
+      est_text,
+      tags$br(),
+      tags$small(style = "color: gray;",
+                 sprintf("(%s walkers × %s steps = %sK steps)",
+                         format(input$n_walkers, big.mark=","),
+                         format(input$max_steps, big.mark=","),
+                         format(round(max_steps/1000), big.mark=",")))
+    )
+  })
 
   # Periodic timer for debug updates and status indicator
   timer &lt;- reactiveTimer(1000)  # Update every second
@@ -381,9 +400,30 @@ server &lt;- function(input, output, session) {
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Grid: ", input$grid_size, "×", input$grid_size, "\n",
           "Walkers: ", input$n_walkers, "\n",
-          "Workers: ", input$workers, if (input$workers &gt; 0) " (async)" else " (sync)"
+          "Workers: 0 (sync sequential)"
         )
       })
+    }
+  })
+
+  # Update elapsed time display in timer
+  output$elapsed_time &lt;- renderText({
+    timer()  # Update every second
+
+    if (sim_state() == "running" &amp;&amp; !is.null(sim_start_time())) {
+      elapsed_secs &lt;- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+      mins &lt;- floor(elapsed_secs / 60)
+      secs &lt;- floor(elapsed_secs %% 60)
+      sprintf("⏱️ Elapsed: %02d:%02d", mins, secs)
+    } else if (sim_state() == "complete" &amp;&amp; !is.null(sim_end_time()) &amp;&amp; !is.null(sim_start_time())) {
+      total_secs &lt;- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
+      mins &lt;- floor(total_secs / 60)
+      secs &lt;- floor(total_secs %% 60)
+      sprintf("✅ Completed in %02d:%02d", mins, secs)
+    } else if (sim_state() == "error") {
+      "❌ Error occurred"
+    } else {
+      "⏳ Ready to run"
     }
   })
 
@@ -394,20 +434,31 @@ server &lt;- function(input, output, session) {
     sim_start_time(Sys.time())
     sim_count(sim_count() + 1)
 
+    # Disable the button while running (using updateActionButton for WebR compatibility)
+    updateActionButton(session, "run_sim",
+                      label = "Running...",
+                      disabled = TRUE)
+
     output$status &lt;- renderText({
       paste0(
         "🏃 SIMULATION RUNNING...\n",
         "Run #", sim_count(), "\n",
         "Grid: ", input$grid_size, "×", input$grid_size, "\n",
         "Walkers: ", input$n_walkers, "\n",
-        "Workers: ", input$workers,
-        if (input$workers &gt; 0) " (async)" else " (sync)", "\n",
+        "Workers: 0 (sync sequential)\n",
         "Started: ", format(sim_start_time(), "%H:%M:%S"), "\n",
         "Status: Processing..."
       )
     })
 
     tryCatch({
+      # Validate walker count doesn't exceed 70% of grid
+      max_allowed &lt;- floor(0.7 * input$grid_size^2)
+      if (input$n_walkers &gt; max_allowed) {
+        stop(sprintf("Too many walkers (%d) for grid size %dx%d. Maximum allowed: %d (70%% of grid pixels)",
+                     input$n_walkers, input$grid_size, input$grid_size, max_allowed))
+      }
+
       start_time &lt;- Sys.time()
 
       # Run simulation with async support
@@ -417,8 +468,8 @@ server &lt;- function(input, output, session) {
         neighborhood = input$neighborhood,
         boundary = input$boundary,
         max_steps = input$max_steps,
-        workers = input$workers,  # Auto-detects backend (mirai in WebR)
-        sync_mode = "static",     # Grid snapshots (dynamic is Issue #130)
+        workers = 0,  # WebR: sync sequential only (no parallel in browser)
+        sync_mode = "static",
         verbose = FALSE,
         validate_percent = 0  # CRITICAL: Disable periodic validation (causes 100-1000x slowdown in WebR)
       )
@@ -430,6 +481,11 @@ server &lt;- function(input, output, session) {
       sim_state("complete")
       sim_end_time(end_time)
       sim_result(result)
+
+      # Re-enable the button
+      updateActionButton(session, "run_sim",
+                        label = "Run Simulation",
+                        disabled = FALSE)
 
       # Browser console logging for WebR diagnostics (Issue #157)
       message(sprintf("\n=== SIMULATION COMPLETE ==="))
@@ -452,11 +508,7 @@ server &lt;- function(input, output, session) {
           "Finished: ", format(sim_end_time(), "%H:%M:%S"), "\n",
           "Elapsed:  ", sprintf("%.2f", elapsed), " seconds\n",
           "━━━━━━━━━━━━━━━━━━━━━━\n",
-          "Backend: ", if (input$workers &gt; 0) {
-            if (is_webr()) "mirai (WebR)" else "crew (native R)"
-          } else {
-            "synchronous"
-          }, "\n",
+          "Backend: synchronous (WebR browser)\n",
           "Black Pixels: ", sum(result$grid == 1), "\n",
           "Walkers: ", input$n_walkers, " completed"
         )
@@ -465,6 +517,11 @@ server &lt;- function(input, output, session) {
     }, error = function(e) {
       sim_state("error")
       sim_end_time(Sys.time())
+
+      # Re-enable the button
+      updateActionButton(session, "run_sim",
+                        label = "Run Simulation",
+                        disabled = FALSE)
 
       output$status &lt;- renderText({
         paste0(
@@ -494,7 +551,7 @@ server &lt;- function(input, output, session) {
     req(sum(result$grid == 1) &gt; 0)  # Ensure has black pixels
 
     # CRITICAL: Validate grid connectivity before plotting
-    plot_grid(result, main = "Fractal Pattern - Black Pixels on Grid")
+    plot_grid(result, main = "Fractal Pattern - Black Pixels on Grid", show_legend = FALSE)
   })
 
   output$fractal_stats &lt;- renderText({
@@ -816,7 +873,7 @@ server &lt;- function(input, output, session) {
       "=== CURRENT INPUTS ===\n",
       "Grid Size: ", input$grid_size, "\n",
       "Number of Walkers: ", input$n_walkers, "\n",
-      "Parallel Workers: ", input$workers, "\n",
+      "Mode: sync sequential (workers=0)\n",
       "Neighborhood: ", input$neighborhood, "\n",
       "Boundary: ", input$boundary, "\n",
       "Max Steps: ", input$max_steps
@@ -829,13 +886,9 @@ server &lt;- function(input, output, session) {
 
     paste0(
       "=== BACKEND INFORMATION ===\n",
-      "Environment: ", if (env_is_webr) "WebR/Browser" else "Native R", "\n",
+      "Environment: WebR/Browser\n",
       "R Version: ", R.version.string, "\n",
-      "Backend: ", if (input$workers &gt; 0) {
-        if (env_is_webr) "mirai (WebAssembly-compatible)" else "crew"
-      } else {
-        "synchronous (no parallelization)"
-      }, "\n",
+      "Backend: synchronous (no parallelization)\n",
       "Sync Mode: static (grid snapshots)\n",
       "\n=== ENVIRONMENT DETECTION ===\n",
       ".webr_env exists: ", exists(".webr_env", envir = .GlobalEnv), "\n",
@@ -884,16 +937,8 @@ server &lt;- function(input, output, session) {
           "\n=== EXECUTION INFO ===\n",
           "Grid Size: ", input$grid_size, "×", input$grid_size, "\n",
           "Walkers: ", input$n_walkers, "\n",
-          "Workers: ", input$workers, "\n",
-          "Backend: ", if (input$workers &gt; 0) {
-            if (exists(".webr_env", envir = .GlobalEnv) || identical(Sys.getenv("WEBR"), "1")) {
-              "mirai (WebR)"
-            } else {
-              "crew (native R)"
-            }
-          } else {
-            "synchronous"
-          }
+          "Workers: 0 (sync sequential)\n",
+          "Backend: synchronous"
         )
       } else {
         ""
@@ -907,229 +952,18 @@ server &lt;- function(input, output, session) {
 # ============================================================================
 
 shinyApp(ui = ui, server = server)</code></pre>
-</section>
-<section id="comprehensive-random-walks-dashboard" class="level2">
-<h2 class="anchored" data-anchor-id="comprehensive-random-walks-dashboard">Comprehensive Random Walks Dashboard</h2>
-<p>This vignette provides a <strong>comprehensive interactive Shiny application</strong> for random walk simulations running in your browser using WebAssembly.</p>
-<blockquote class="blockquote">
-<p><strong>Important:</strong> This browser-based dashboard runs in <strong>sync sequential mode</strong> (no parallel processing):</p>
+<section id="tips" class="level2">
+<h2 class="anchored" data-anchor-id="tips">Tips</h2>
 <ul>
-<li><strong>WebR/Browser:</strong> Sync sequential mode only (workers=0) - processes one walker at a time</li>
-<li><strong>Native R (outside webpage):</strong> The randomwalk package supports <strong>async parallel</strong> processing with <code>crew</code> backend (workers=2+) when run in regular R</li>
-</ul>
-<p>The WebR limitation is due to mirai/nanonext compatibility issues in WebAssembly. The dashboard is fully functional for visualizing random walk dynamics in the browser.</p>
-</blockquote>
-<p><strong>Related Documentation:</strong> - <a href="https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md">WIKI_SHINYLIVE_LESSONS_LEARNED.md</a> - Complete lessons learned - <a href="https://github.com/JohnGavin/randomwalk/issues/129">Issue #129</a> - Async parallel support (native R only) - <a href="https://github.com/JohnGavin/randomwalk/issues/136">Issue #136</a> - This comprehensive vignette</p>
-</section>
-<section id="features-demonstrated" class="level2">
-<h2 class="anchored" data-anchor-id="features-demonstrated">Features Demonstrated</h2>
-<p>This comprehensive dashboard showcases:</p>
-<section id="multiple-visualization-types" class="level3">
-<h3 class="anchored" data-anchor-id="multiple-visualization-types">1. <strong>Multiple Visualization Types</strong></h3>
-<ul>
-<li><strong>Fractal graphs</strong>: Black pixel patterns on grid</li>
-<li><strong>Walker paths</strong>: First 25 and last 25 trajectories</li>
-<li><strong>Distributions</strong>: Overall and by termination reason</li>
-<li><strong>Statistics</strong>: Comprehensive simulation metrics</li>
+<li><strong>Larger grid</strong> (200-400): More exploration space</li>
+<li><strong>Fewer walkers</strong> (100-500): Faster simulation</li>
+<li><strong>8-hood</strong>: Diagonal movement for different patterns</li>
+<li><strong>Wrap boundary</strong>: Toroidal grid (no edge termination)</li>
 </ul>
 </section>
-<section id="async-parallel-processing" class="level3">
-<h3 class="anchored" data-anchor-id="async-parallel-processing">2. <strong>Async Parallel Processing</strong></h3>
-<ul>
-<li>Auto-backend selection (mirai in WebR, crew in native R)</li>
-<li>True parallelization with workers=2-4</li>
-<li>Performance metrics and timing</li>
-<li>Backend information display</li>
-</ul>
-</section>
-<section id="comprehensive-statistics" class="level3">
-<h3 class="anchored" data-anchor-id="comprehensive-statistics">3. <strong>Comprehensive Statistics</strong></h3>
-<ul>
-<li>Grid statistics (black/white pixels)</li>
-<li>Walker statistics (completion rates)</li>
-<li>Step statistics (min/max/mean/median)</li>
-<li>Performance metrics (steps per second)</li>
-<li>Termination reason breakdown</li>
-</ul>
-</section>
-<section id="debug-information" class="level3">
-<h3 class="anchored" data-anchor-id="debug-information">4. <strong>Debug Information</strong></h3>
-<ul>
-<li>Package versions</li>
-<li>Current input parameters</li>
-<li>Backend selection details</li>
-<li>Environment detection results</li>
-<li>Periodic updates</li>
-</ul>
-</section>
-<section id="documentation-integration" class="level3">
-<h3 class="anchored" data-anchor-id="documentation-integration">5. <strong>Documentation Integration</strong></h3>
-<ul>
-<li>Links to wiki documentation</li>
-<li>Cross-references to related issues</li>
-<li>Implementation notes</li>
-<li>Known limitations</li>
-</ul>
-</section>
-</section>
-<section id="differences-from-basic-vignette" class="level2">
-<h2 class="anchored" data-anchor-id="differences-from-basic-vignette">Differences from Basic Vignette</h2>
-<p><strong>dynamic_broadcasting.qmd</strong> (basic demo): - 5 walkers (simple) - 2 output pages (Grid, Paths, Stats) - Minimal statistics - Basic demo focus</p>
-<p><strong>dashboard_comprehensive.qmd</strong> (this vignette): - 10 walkers (more comprehensive) - 6 output pages (Fractal, Paths, Distributions, Stats, Debug, Notes) - Comprehensive statistics and visualizations - Production-ready showcase</p>
-</section>
-<section id="try-it-yourself" class="level2">
-<h2 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h2>
-<p>Experiment with different parameters:</p>
-<ul>
-<li><strong>Larger grid</strong>: More exploration space (try 30-50)</li>
-<li><strong>More walkers</strong>: Higher density (try 20-50)</li>
-<li><strong>More workers</strong>: Increased parallelization (try 4)</li>
-<li><strong>8-hood</strong>: Enable diagonal movement</li>
-<li><strong>Wrap boundary</strong>: Toroidal grid (no boundaries)</li>
-</ul>
-</section>
-<section id="related-documentation" class="level2">
-<h2 class="anchored" data-anchor-id="related-documentation">Related Documentation</h2>
-<ul>
-<li><strong>Issue #129</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/129">Async parallel support in WebAssembly</a></li>
-<li><strong>Issue #136</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/136">This comprehensive vignette</a></li>
-<li><strong>Issue #130</strong>: <a href="https://github.com/JohnGavin/randomwalk/issues/130">Dynamic broadcasting via nanonext</a> (future work)</li>
-<li><strong>WIKI</strong>: <a href="https://github.com/JohnGavin/llm/blob/main/WIKI_CONTENT/WIKI_SHINYLIVE_LESSONS_LEARNED.md">WIKI_SHINYLIVE_LESSONS_LEARNED.md</a></li>
-<li><strong>randomwalk Website</strong>: https://johngavin.github.io/randomwalk/</li>
-</ul>
-</section>
-<section id="session-info" class="level2">
-<h2 class="anchored" data-anchor-id="session-info">Session Info</h2>
-<div class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>R version 4.5.2 (2025-10-31)
-Platform: aarch64-apple-darwin24.6.0
-Running under: macOS Sequoia 15.7.1
-
-Matrix products: default
-BLAS:   /nix/store/jammm5gz621n7dkzfzc1c43gs6xv9a10-blas-3/lib/libblas.dylib 
-LAPACK: /nix/store/30ypx3jnyq4r1z4nv742j1csfflsd66v-openblas-0.3.30/lib/libopenblasp-r0.3.30.dylib;  LAPACK version 3.12.0
-
-locale:
-[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
-
-time zone: Europe/Dublin
-tzcode source: internal
-
-attached base packages:
-[1] stats     graphics  grDevices utils     datasets  methods   base     
-
-loaded via a namespace (and not attached):
- [1] htmlwidgets_1.6.4 compiler_4.5.2    fastmap_1.2.0     cli_3.6.5        
- [5] tools_4.5.2       htmltools_0.5.8.1 yaml_2.3.10       rmarkdown_2.30   
- [9] knitr_1.50        jsonlite_2.0.0    xfun_0.54         digest_0.6.37    
-[13] rlang_1.1.6       evaluate_1.0.5   </code></pre>
-</div>
-</div>
-</section>
-<section id="version-information" class="level2">
-<h2 class="anchored" data-anchor-id="version-information">Version Information</h2>
-<div class="cell">
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Git commit information</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>git_commit <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system</span>(<span class="st">"git rev-parse HEAD"</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Not available"</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>git_commit_short <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system</span>(<span class="st">"git rev-parse --short HEAD"</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Not available"</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Nix environment information</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>nix_version <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system</span>(<span class="st">'nix-instantiate --eval -E "(import &lt;nixpkgs&gt; {}).lib.version"'</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Not in Nix environment"</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Package version</span></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>pkg_version <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.character</span>(<span class="fu">packageVersion</span>(<span class="st">"randomwalk"</span>)),</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Package not loaded"</span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Build timestamp</span></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>build_time <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"=== BUILD INFORMATION ===</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>=== BUILD INFORMATION ===</code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Git Commit:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Git Commit:</code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  Full SHA:  "</span>, git_commit, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>  Full SHA:   c4269eb48e0faf87912558107f2cdf3b1fef6727 </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  Short SHA: "</span>, git_commit_short, <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>  Short SHA:  c4269eb </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Nix Environment:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Nix Environment:</code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  nixpkgs:   "</span>, nix_version, <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>  nixpkgs:    "26.05pre-git" </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Package:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Package:</code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  randomwalk:"</span>, pkg_version, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>  randomwalk: Package not loaded </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  R version: "</span>, R.version.string, <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>  R version:  R version 4.5.2 (2025-10-31) </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Build Time:  "</span>, <span class="fu">format</span>(build_time, <span class="st">"%Y-%m-%d %H:%M:%S %Z"</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Build Time:   2026-01-01 18:51:44 GMT </code></pre>
-</div>
-</div>
+<section id="build-info" class="level2">
+<h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
+<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>68ead0c</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-02</p>
 </section>
 
 </main>
