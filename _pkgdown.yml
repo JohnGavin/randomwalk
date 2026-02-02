@@ -60,16 +60,16 @@ articles:
 - title: "Browser Dashboard (WebR)"
   desc: "Interactive dashboard running in your browser via WebR/Shinylive"
   contents:
-  - dashboard_comprehensive
+  - 'dashboard_comprehensive'
 - title: "WebR Analysis"
   desc: "Statistical analysis vignettes using WebR"
   contents:
-  - step_distribution_analysis
+  - 'step_distribution_analysis'
 - title: "Background & Documentation"
   desc: "Project documentation and development patterns"
   contents:
-  - defensive_programming
-  - telemetry
+  - 'defensive_programming'
+  - 'telemetry'
 
 footer:
   structure:
