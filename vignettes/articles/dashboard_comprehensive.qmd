@@ -162,15 +162,12 @@ ui <- fluidPage(
 
       hr(),
 
-      # Running timer (shows elapsed time)
-      div(id = "running_timer", style = "margin: 10px 0;",
-        tags$div(class = "timer-display",
-                 textOutput("elapsed_time"))
-      ),
+      # Note about WebR limitations
+      tags$small(style = "color: #666; display: block; margin-bottom: 10px;",
+                 "Note: Timer updates after completion (WebR limitation)"),
 
-      actionButton("run_sim", "Run Simulation",
-                   class = "btn-primary btn-lg",
-                   style = "width: 100%;"),
+      # Combined button with status
+      uiOutput("run_button_ui"),
 
       hr(),
 
@@ -383,24 +380,34 @@ server <- function(input, output, session) {
     }
   })
 
-  # Update elapsed time display in timer
-  output$elapsed_time <- renderText({
-    timer()  # Update every second
+  # Render button with integrated status/timer
+  output$run_button_ui <- renderUI({
+    # Note: In WebR, the UI won't update during simulation due to single-threaded execution
+    # The button will show "Running..." during execution and update to completion time after
 
-    if (sim_state() == "running" && !is.null(sim_start_time())) {
-      elapsed_secs <- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
-      mins <- floor(elapsed_secs / 60)
-      secs <- floor(elapsed_secs %% 60)
-      sprintf("Elapsed: %02d:%02d", mins, secs)
+    if (sim_state() == "running") {
+      # Show disabled button with running status
+      # Note: This won't actually display during execution in WebR
+      actionButton("run_sim_disabled", "Running... (please wait)",
+                   class = "btn-warning btn-lg",
+                   style = "width: 100%;",
+                   disabled = TRUE)
     } else if (sim_state() == "complete" && !is.null(sim_end_time()) && !is.null(sim_start_time())) {
+      # Show completion time on button
       total_secs <- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
       mins <- floor(total_secs / 60)
       secs <- floor(total_secs %% 60)
-      sprintf("Completed in %02d:%02d", mins, secs)
+      actionButton("run_sim", sprintf("Run Simulation (Last: %02d:%02d)", mins, secs),
+                   class = "btn-success btn-lg",
+                   style = "width: 100%;")
     } else if (sim_state() == "error") {
-      "Error occurred"
+      actionButton("run_sim", "Run Simulation (Error - Try Again)",
+                   class = "btn-danger btn-lg",
+                   style = "width: 100%;")
     } else {
-      "Ready to run"
+      actionButton("run_sim", "Run Simulation",
+                   class = "btn-primary btn-lg",
+                   style = "width: 100%;")
     }
   })
 
