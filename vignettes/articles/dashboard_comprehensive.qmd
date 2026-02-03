@@ -162,9 +162,9 @@ ui <- fluidPage(
 
       hr(),
 
-      # Note about WebR limitations
+      # Timer updates every 500ms using invalidateLater pattern
       tags$small(style = "color: #666; display: block; margin-bottom: 10px;",
-                 "Note: Timer updates after completion (WebR limitation)"),
+                 "Timer updates every 0.5 seconds during simulation"),
 
       # Combined button with status
       uiOutput("run_button_ui"),
@@ -380,15 +380,19 @@ server <- function(input, output, session) {
     }
   })
 
-  # Render button with integrated status/timer
+  # Render button with integrated timer using invalidateLater pattern
   output$run_button_ui <- renderUI({
-    # Note: In WebR, the UI won't update during simulation due to single-threaded execution
-    # The button will show "Running..." during execution and update to completion time after
-
+    # Use invalidateLater to refresh button text during simulation
     if (sim_state() == "running") {
-      # Show disabled button with running status
-      # Note: This won't actually display during execution in WebR
-      actionButton("run_sim_disabled", "Running... (please wait)",
+      invalidateLater(500)  # Refresh every 500ms while running
+    }
+
+    if (sim_state() == "running" && !is.null(sim_start_time())) {
+      # Show live updating timer in button
+      elapsed_secs <- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+      mins <- floor(elapsed_secs / 60)
+      secs <- floor(elapsed_secs %% 60)
+      actionButton("run_sim_disabled", sprintf("Running... %02d:%02d", mins, secs),
                    class = "btn-warning btn-lg",
                    style = "width: 100%;",
                    disabled = TRUE)
@@ -411,17 +415,21 @@ server <- function(input, output, session) {
     }
   })
 
+  # Observe block to continuously update UI during simulation
+  # This follows the crew/shiny pattern for responsive updates
+  observe({
+    if (sim_state() == "running") {
+      # Keep refreshing UI while simulation runs
+      invalidateLater(500)
+    }
+  })
+
   # Run simulation when button clicked
   observeEvent(input$run_sim, {
     # Update state to running
     sim_state("running")
     sim_start_time(Sys.time())
     sim_count(sim_count() + 1)
-
-    # Disable the button while running (using updateActionButton for WebR compatibility)
-    updateActionButton(session, "run_sim",
-                      label = "Running...",
-                      disabled = TRUE)
 
     output$status <- renderText({
       paste0(
