@@ -1,15 +1,12 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
-
-<meta charset="utf-8">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta charset="UTF-8">
 <meta name="generator" content="quarto-1.7.34">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-
 <meta name="author" content="randomwalk package">
 <meta name="dcterms.date" content="2026-01-01">
 <meta name="description" content="Best practices for validation, error handling, and robust code patterns in the randomwalk package">
-
 <title>Defensive Programming in randomwalk</title>
 <style>
 code{white-space: pre-wrap;}
@@ -59,86 +56,91 @@ div.sourceCode
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
-
-
-<script src="defensive_programming_files/libs/clipboard/clipboard.min.js"></script>
-<script src="defensive_programming_files/libs/quarto-html/quarto.js" type="module"></script>
-<script src="defensive_programming_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="defensive_programming_files/libs/quarto-html/popper.min.js"></script>
-<script src="defensive_programming_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="defensive_programming_files/libs/quarto-html/anchor.min.js"></script>
-<link href="defensive_programming_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<script src="defensive_programming_files/libs/clipboard/clipboard.min.js"></script><script src="defensive_programming_files/libs/quarto-html/quarto.js" type="module"></script><script src="defensive_programming_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script><script src="defensive_programming_files/libs/quarto-html/popper.min.js"></script><script src="defensive_programming_files/libs/quarto-html/tippy.umd.min.js"></script><script src="defensive_programming_files/libs/quarto-html/anchor.min.js"></script><link href="defensive_programming_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="defensive_programming_files/libs/quarto-html/quarto-syntax-highlighting-c8ad9e5dbd60b7b70b38521ab19b7da4.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="defensive_programming_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="defensive_programming_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<script src="defensive_programming_files/libs/bootstrap/bootstrap.min.js"></script><link href="defensive_programming_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="defensive_programming_files/libs/bootstrap/bootstrap-b232414f0569882df4359abfb7cfba3f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
-
-
 </head>
-
 <body class="quarto-light">
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
 <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-  <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">Table of contents</h2>
+  <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a>
+<li>
+<a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a>
   <ul class="collapse">
-  <li><a href="#key-principles" id="toc-key-principles" class="nav-link" data-scroll-target="#key-principles">Key Principles</a></li>
-  </ul></li>
-  <li><a href="#pattern-1-input-validation-with-informative-errors" id="toc-pattern-1-input-validation-with-informative-errors" class="nav-link" data-scroll-target="#pattern-1-input-validation-with-informative-errors">Pattern 1: Input Validation with Informative Errors</a>
-  <ul class="collapse">
-  <li><a href="#example-grid-size-validation" id="toc-example-grid-size-validation" class="nav-link" data-scroll-target="#example-grid-size-validation">Example: Grid Size Validation</a></li>
-  </ul></li>
-  <li><a href="#pattern-2-graceful-degradation" id="toc-pattern-2-graceful-degradation" class="nav-link" data-scroll-target="#pattern-2-graceful-degradation">Pattern 2: Graceful Degradation</a>
-  <ul class="collapse">
-  <li><a href="#example-backend-selection-with-fallback" id="toc-example-backend-selection-with-fallback" class="nav-link" data-scroll-target="#example-backend-selection-with-fallback">Example: Backend Selection with Fallback</a></li>
-  </ul></li>
-  <li><a href="#pattern-3-state-validation-with-diagnostics" id="toc-pattern-3-state-validation-with-diagnostics" class="nav-link" data-scroll-target="#pattern-3-state-validation-with-diagnostics">Pattern 3: State Validation with Diagnostics</a>
-  <ul class="collapse">
-  <li><a href="#example-isolated-pixel-detection-from-issue-157" id="toc-example-isolated-pixel-detection-from-issue-157" class="nav-link" data-scroll-target="#example-isolated-pixel-detection-from-issue-157">Example: Isolated Pixel Detection (from Issue #157)</a></li>
-  </ul></li>
-  <li><a href="#pattern-4-diagnostic-logging" id="toc-pattern-4-diagnostic-logging" class="nav-link" data-scroll-target="#pattern-4-diagnostic-logging">Pattern 4: Diagnostic Logging</a>
-  <ul class="collapse">
-  <li><a href="#example-async-worker-validation" id="toc-example-async-worker-validation" class="nav-link" data-scroll-target="#example-async-worker-validation">Example: Async Worker Validation</a></li>
-  </ul></li>
-  <li><a href="#pattern-5-assertion-helpers" id="toc-pattern-5-assertion-helpers" class="nav-link" data-scroll-target="#pattern-5-assertion-helpers">Pattern 5: Assertion Helpers</a>
-  <ul class="collapse">
-  <li><a href="#example-parameter-assertions" id="toc-example-parameter-assertions" class="nav-link" data-scroll-target="#example-parameter-assertions">Example: Parameter Assertions</a></li>
-  </ul></li>
-  <li><a href="#pattern-6-safe-defaults" id="toc-pattern-6-safe-defaults" class="nav-link" data-scroll-target="#pattern-6-safe-defaults">Pattern 6: Safe Defaults</a>
-  <ul class="collapse">
-  <li><a href="#example-configuration-with-fallbacks" id="toc-example-configuration-with-fallbacks" class="nav-link" data-scroll-target="#example-configuration-with-fallbacks">Example: Configuration with Fallbacks</a></li>
-  </ul></li>
-  <li><a href="#best-practices-summary" id="toc-best-practices-summary" class="nav-link" data-scroll-target="#best-practices-summary">Best Practices Summary</a>
-  <ul class="collapse">
-  <li><a href="#do" id="toc-do" class="nav-link" data-scroll-target="#do">✅ DO:</a></li>
-  <li><a href="#dont" id="toc-dont" class="nav-link" data-scroll-target="#dont">❌ DON’T:</a></li>
-  </ul></li>
-  <li><a href="#real-world-example-issue-157" id="toc-real-world-example-issue-157" class="nav-link" data-scroll-target="#real-world-example-issue-157">Real-World Example: Issue #157</a></li>
-  <li><a href="#testing-defensive-code" id="toc-testing-defensive-code" class="nav-link" data-scroll-target="#testing-defensive-code">Testing Defensive Code</a>
-  <ul class="collapse">
-  <li><a href="#unit-test-example" id="toc-unit-test-example" class="nav-link" data-scroll-target="#unit-test-example">Unit Test Example</a></li>
-  </ul></li>
-  <li><a href="#live-examples" id="toc-live-examples" class="nav-link" data-scroll-target="#live-examples">Live Examples</a>
-  <ul class="collapse">
-  <li><a href="#validation-performance-comparison" id="toc-validation-performance-comparison" class="nav-link" data-scroll-target="#validation-performance-comparison">Validation Performance Comparison</a></li>
-  <li><a href="#input-validation-error-messages" id="toc-input-validation-error-messages" class="nav-link" data-scroll-target="#input-validation-error-messages">Input Validation Error Messages</a></li>
-  </ul></li>
-  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a>
-  <ul class="collapse">
-  <li><a href="#session-info" id="toc-session-info" class="nav-link" data-scroll-target="#session-info">Session Info</a></li>
-  <li><a href="#version-information" id="toc-version-information" class="nav-link" data-scroll-target="#version-information">Version Information</a></li>
-  </ul></li>
+<li><a href="#key-principles" id="toc-key-principles" class="nav-link" data-scroll-target="#key-principles">Key Principles</a></li>
   </ul>
-</nav>
+</li>
+  <li>
+<a href="#pattern-1-input-validation-with-informative-errors" id="toc-pattern-1-input-validation-with-informative-errors" class="nav-link" data-scroll-target="#pattern-1-input-validation-with-informative-errors">Pattern 1: Input Validation with Informative Errors</a>
+  <ul class="collapse">
+<li><a href="#example-grid-size-validation" id="toc-example-grid-size-validation" class="nav-link" data-scroll-target="#example-grid-size-validation">Example: Grid Size Validation</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#pattern-2-graceful-degradation" id="toc-pattern-2-graceful-degradation" class="nav-link" data-scroll-target="#pattern-2-graceful-degradation">Pattern 2: Graceful Degradation</a>
+  <ul class="collapse">
+<li><a href="#example-backend-selection-with-fallback" id="toc-example-backend-selection-with-fallback" class="nav-link" data-scroll-target="#example-backend-selection-with-fallback">Example: Backend Selection with Fallback</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#pattern-3-state-validation-with-diagnostics" id="toc-pattern-3-state-validation-with-diagnostics" class="nav-link" data-scroll-target="#pattern-3-state-validation-with-diagnostics">Pattern 3: State Validation with Diagnostics</a>
+  <ul class="collapse">
+<li><a href="#example-isolated-pixel-detection-from-issue-157" id="toc-example-isolated-pixel-detection-from-issue-157" class="nav-link" data-scroll-target="#example-isolated-pixel-detection-from-issue-157">Example: Isolated Pixel Detection (from Issue #157)</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#pattern-4-diagnostic-logging" id="toc-pattern-4-diagnostic-logging" class="nav-link" data-scroll-target="#pattern-4-diagnostic-logging">Pattern 4: Diagnostic Logging</a>
+  <ul class="collapse">
+<li><a href="#example-async-worker-validation" id="toc-example-async-worker-validation" class="nav-link" data-scroll-target="#example-async-worker-validation">Example: Async Worker Validation</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#pattern-5-assertion-helpers" id="toc-pattern-5-assertion-helpers" class="nav-link" data-scroll-target="#pattern-5-assertion-helpers">Pattern 5: Assertion Helpers</a>
+  <ul class="collapse">
+<li><a href="#example-parameter-assertions" id="toc-example-parameter-assertions" class="nav-link" data-scroll-target="#example-parameter-assertions">Example: Parameter Assertions</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#pattern-6-safe-defaults" id="toc-pattern-6-safe-defaults" class="nav-link" data-scroll-target="#pattern-6-safe-defaults">Pattern 6: Safe Defaults</a>
+  <ul class="collapse">
+<li><a href="#example-configuration-with-fallbacks" id="toc-example-configuration-with-fallbacks" class="nav-link" data-scroll-target="#example-configuration-with-fallbacks">Example: Configuration with Fallbacks</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#best-practices-summary" id="toc-best-practices-summary" class="nav-link" data-scroll-target="#best-practices-summary">Best Practices Summary</a>
+  <ul class="collapse">
+<li><a href="#do" id="toc-do" class="nav-link" data-scroll-target="#do">✅ DO:</a></li>
+  <li><a href="#dont" id="toc-dont" class="nav-link" data-scroll-target="#dont">❌ DON’T:</a></li>
+  </ul>
+</li>
+  <li><a href="#real-world-example-issue-157" id="toc-real-world-example-issue-157" class="nav-link" data-scroll-target="#real-world-example-issue-157">Real-World Example: Issue #157</a></li>
+  <li>
+<a href="#testing-defensive-code" id="toc-testing-defensive-code" class="nav-link" data-scroll-target="#testing-defensive-code">Testing Defensive Code</a>
+  <ul class="collapse">
+<li><a href="#unit-test-example" id="toc-unit-test-example" class="nav-link" data-scroll-target="#unit-test-example">Unit Test Example</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#live-examples" id="toc-live-examples" class="nav-link" data-scroll-target="#live-examples">Live Examples</a>
+  <ul class="collapse">
+<li><a href="#validation-performance-comparison" id="toc-validation-performance-comparison" class="nav-link" data-scroll-target="#validation-performance-comparison">Validation Performance Comparison</a></li>
+  <li><a href="#input-validation-error-messages" id="toc-input-validation-error-messages" class="nav-link" data-scroll-target="#input-validation-error-messages">Input Validation Error Messages</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a>
+  <ul class="collapse">
+<li><a href="#session-info" id="toc-session-info" class="nav-link" data-scroll-target="#session-info">Session Info</a></li>
+  <li><a href="#version-information" id="toc-version-information" class="nav-link" data-scroll-target="#version-information">Version Information</a></li>
+  </ul>
+</li>
+  </ul></nav>
 </div>
-<main class="content" id="quarto-document-content">
-
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
 <h1 class="title">Defensive Programming in randomwalk</h1>
 </div>
 
@@ -170,32 +172,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   
 
 
-</header>
-
-
-<section id="overview" class="level1">
-<h1>Overview</h1>
+</header><section id="overview" class="section level2"><h2>Overview</h2>
 <p>This vignette demonstrates defensive programming patterns used in the <code>randomwalk</code> package. Defensive programming helps prevent bugs, validates inputs, and provides clear error messages to users.</p>
-<section id="key-principles" class="level2">
-<h2 class="anchored" data-anchor-id="key-principles">Key Principles</h2>
+<section id="key-principles" class="level2"><h3 class="anchored" data-anchor-id="key-principles">Key Principles</h3>
 <ol type="1">
-<li><strong>Input Validation</strong> - Check parameters before use</li>
-<li><strong>Graceful Degradation</strong> - Handle errors without crashing</li>
-<li><strong>Informative Errors</strong> - Tell users what went wrong and how to fix it</li>
-<li><strong>State Validation</strong> - Verify assumptions about data structures</li>
-<li><strong>Diagnostic Logging</strong> - Provide debugging information when issues occur</li>
+<li>
+<strong>Input Validation</strong> - Check parameters before use</li>
+<li>
+<strong>Graceful Degradation</strong> - Handle errors without crashing</li>
+<li>
+<strong>Informative Errors</strong> - Tell users what went wrong and how to fix it</li>
+<li>
+<strong>State Validation</strong> - Verify assumptions about data structures</li>
+<li>
+<strong>Diagnostic Logging</strong> - Provide debugging information when issues occur</li>
 </ol>
-<hr>
-</section>
-</section>
-<section id="pattern-1-input-validation-with-informative-errors" class="level1">
-<h1>Pattern 1: Input Validation with Informative Errors</h1>
-<section id="example-grid-size-validation" class="level2">
-<h2 class="anchored" data-anchor-id="example-grid-size-validation">Example: Grid Size Validation</h2>
+<hr></section></section><section id="pattern-1-input-validation-with-informative-errors" class="section level2"><h2>Pattern 1: Input Validation with Informative Errors</h2>
+<section id="example-grid-size-validation" class="level2"><h3 class="anchored" data-anchor-id="example-grid-size-validation">Example: Grid Size Validation</h3>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#' Validate grid size parameter (using stopifnot for conciseness)</span></span>
+<details open="" class="code-fold"><summary>Show code</summary><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#' Validate grid size parameter (using stopifnot for conciseness)</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param grid_size Integer grid dimension</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">#' @return Validated grid_size or error</span></span>
@@ -241,17 +236,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p><strong>Why This Approach is Better:</strong> - <strong><code>stopifnot()</code></strong>: Concise, avoids repetitive if statements, named messages show which condition failed - <strong><code>cli</code> package</strong>: Tidyverse-style formatting with styled text (<code>{.arg}</code>, <code>{.val}</code>), bullet points for clarity - <strong>Both approaches</strong>: Reduce code duplication, improve readability, consistent error formatting - Performance warnings help users avoid slow operations - <code>call. = FALSE</code> removes confusing stack traces from errors</p>
-<hr>
-</section>
-</section>
-<section id="pattern-2-graceful-degradation" class="level1">
-<h1>Pattern 2: Graceful Degradation</h1>
-<section id="example-backend-selection-with-fallback" class="level2">
-<h2 class="anchored" data-anchor-id="example-backend-selection-with-fallback">Example: Backend Selection with Fallback</h2>
+<hr></section></section><section id="pattern-2-graceful-degradation" class="section level2"><h2>Pattern 2: Graceful Degradation</h2>
+<section id="example-backend-selection-with-fallback" class="level2"><h3 class="anchored" data-anchor-id="example-backend-selection-with-fallback">Example: Backend Selection with Fallback</h3>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#' Select appropriate async backend for environment</span></span>
+<details open="" class="code-fold"><summary>Show code</summary><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#' Select appropriate async backend for environment</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param workers Number of parallel workers requested</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#' @return Backend name ("crew", "mirai", "sync")</span></span>
@@ -299,17 +287,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p><strong>Why This Works:</strong> - Environment detection prevents incompatibility errors - Multiple fallback levels ensure the function always works - Informative messages explain what’s happening - Suggests specific fixes (how to install missing packages)</p>
-<hr>
-</section>
-</section>
-<section id="pattern-3-state-validation-with-diagnostics" class="level1">
-<h1>Pattern 3: State Validation with Diagnostics</h1>
-<section id="example-isolated-pixel-detection-from-issue-157" class="level2">
-<h2 class="anchored" data-anchor-id="example-isolated-pixel-detection-from-issue-157">Example: Isolated Pixel Detection (from Issue #157)</h2>
+<hr></section></section><section id="pattern-3-state-validation-with-diagnostics" class="section level2"><h2>Pattern 3: State Validation with Diagnostics</h2>
+<section id="example-isolated-pixel-detection-from-issue-157" class="level2"><h3 class="anchored" data-anchor-id="example-isolated-pixel-detection-from-issue-157">Example: Isolated Pixel Detection (from Issue #157)</h3>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#' Detect isolated pixels in grid that violate connectivity</span></span>
+<details open="" class="code-fold"><summary>Show code</summary><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#' Detect isolated pixels in grid that violate connectivity</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param grid Numeric matrix</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param neighborhood "4-hood" or "8-hood"</span></span>
@@ -385,17 +366,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p><strong>Why This Works:</strong> - Validates input types before processing - Checks boundary conditions (out-of-bounds neighbors) - Returns structured diagnostic data (positions + values) - NULL return for “no issues” allows easy conditional logic - Clear variable names make the algorithm understandable</p>
-<hr>
-</section>
-</section>
-<section id="pattern-4-diagnostic-logging" class="level1">
-<h1>Pattern 4: Diagnostic Logging</h1>
-<section id="example-async-worker-validation" class="level2">
-<h2 class="anchored" data-anchor-id="example-async-worker-validation">Example: Async Worker Validation</h2>
+<hr></section></section><section id="pattern-4-diagnostic-logging" class="section level2"><h2>Pattern 4: Diagnostic Logging</h2>
+<section id="example-async-worker-validation" class="level2"><h3 class="anchored" data-anchor-id="example-async-worker-validation">Example: Async Worker Validation</h3>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#' Process walker results with defensive validation</span></span>
+<details open="" class="code-fold"><summary>Show code</summary><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#' Process walker results with defensive validation</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param results List of walker results from workers</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param grid Current grid state</span></span>
@@ -484,17 +458,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p><strong>Why This Works:</strong> - Multi-level validation catches different error types - Diagnostic logging helps debug async race conditions - Summary statistics quantify validation effectiveness - Verbose mode can be disabled in production - Returns both results and diagnostic metadata</p>
-<hr>
-</section>
-</section>
-<section id="pattern-5-assertion-helpers" class="level1">
-<h1>Pattern 5: Assertion Helpers</h1>
-<section id="example-parameter-assertions" class="level2">
-<h2 class="anchored" data-anchor-id="example-parameter-assertions">Example: Parameter Assertions</h2>
+<hr></section></section><section id="pattern-5-assertion-helpers" class="section level2"><h2>Pattern 5: Assertion Helpers</h2>
+<section id="example-parameter-assertions" class="level2"><h3 class="anchored" data-anchor-id="example-parameter-assertions">Example: Parameter Assertions</h3>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">#' Assert parameter is within valid range</span></span>
+<details open="" class="code-fold"><summary>Show code</summary><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">#' Assert parameter is within valid range</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param x Parameter value</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param min Minimum allowed value</span></span>
@@ -556,17 +523,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p><strong>Why This Works:</strong> - Reusable assertion functions reduce code duplication - <code>deparse(substitute(x))</code> provides automatic parameter names - <code>invisible(x)</code> allows chaining: <code>assert_range(assert_positive(x), 1, 100)</code> - Upfront validation catches errors before expensive operations</p>
-<hr>
-</section>
-</section>
-<section id="pattern-6-safe-defaults" class="level1">
-<h1>Pattern 6: Safe Defaults</h1>
-<section id="example-configuration-with-fallbacks" class="level2">
-<h2 class="anchored" data-anchor-id="example-configuration-with-fallbacks">Example: Configuration with Fallbacks</h2>
+<hr></section></section><section id="pattern-6-safe-defaults" class="section level2"><h2>Pattern 6: Safe Defaults</h2>
+<section id="example-configuration-with-fallbacks" class="level2"><h3 class="anchored" data-anchor-id="example-configuration-with-fallbacks">Example: Configuration with Fallbacks</h3>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#' Get simulation configuration with safe defaults</span></span>
+<details open="" class="code-fold"><summary>Show code</summary><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#' Get simulation configuration with safe defaults</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param config User-provided configuration list</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#' @return Complete configuration with validated values</span></span>
@@ -606,45 +566,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p><strong>Why This Works:</strong> - Users only specify what they want to change - Missing parameters get sensible defaults - All parameters are validated, even defaults - Configuration is explicit and documented</p>
-<hr>
-</section>
-</section>
-<section id="best-practices-summary" class="level1">
-<h1>Best Practices Summary</h1>
-<section id="do" class="level2">
-<h2 class="anchored" data-anchor-id="do">✅ DO:</h2>
+<hr></section></section><section id="best-practices-summary" class="section level2"><h2>Best Practices Summary</h2>
+<section id="do" class="level2"><h3 class="anchored" data-anchor-id="do">✅ DO:</h3>
 <ol type="1">
-<li><strong>Validate Early</strong> - Check inputs at function entry</li>
-<li><strong>Fail Fast</strong> - Stop execution when assumptions are violated</li>
-<li><strong>Be Specific</strong> - Error messages should explain what’s wrong and how to fix it</li>
-<li><strong>Log Diagnostics</strong> - Provide debugging information for complex failures</li>
-<li><strong>Use Assertions</strong> - Create reusable validation helpers</li>
-<li><strong>Test Edge Cases</strong> - Validate boundary conditions and unusual inputs</li>
-<li><strong>Provide Defaults</strong> - Make common use cases easy</li>
-</ol>
-</section>
-<section id="dont" class="level2">
-<h2 class="anchored" data-anchor-id="dont">❌ DON’T:</h2>
+<li>
+<strong>Validate Early</strong> - Check inputs at function entry</li>
+<li>
+<strong>Fail Fast</strong> - Stop execution when assumptions are violated</li>
+<li>
+<strong>Be Specific</strong> - Error messages should explain what’s wrong and how to fix it</li>
+<li>
+<strong>Log Diagnostics</strong> - Provide debugging information for complex failures</li>
+<li>
+<strong>Use Assertions</strong> - Create reusable validation helpers</li>
+<li>
+<strong>Test Edge Cases</strong> - Validate boundary conditions and unusual inputs</li>
+<li>
+<strong>Provide Defaults</strong> - Make common use cases easy</li>
+</ol></section><section id="dont" class="level2"><h3 class="anchored" data-anchor-id="dont">❌ DON’T:</h3>
 <ol type="1">
-<li><strong>Silent Failures</strong> - Never ignore errors or return invalid data</li>
-<li><strong>Generic Errors</strong> - Avoid “Error: something went wrong”</li>
-<li><strong>Assume Inputs</strong> - Never trust user input or external data</li>
-<li><strong>Skip Type Checks</strong> - R’s dynamic typing makes this essential</li>
-<li><strong>Ignore Performance</strong> - Warn users about expensive operations</li>
-<li><strong>Crash on Warnings</strong> - Use warnings for non-fatal issues</li>
+<li>
+<strong>Silent Failures</strong> - Never ignore errors or return invalid data</li>
+<li>
+<strong>Generic Errors</strong> - Avoid “Error: something went wrong”</li>
+<li>
+<strong>Assume Inputs</strong> - Never trust user input or external data</li>
+<li>
+<strong>Skip Type Checks</strong> - R’s dynamic typing makes this essential</li>
+<li>
+<strong>Ignore Performance</strong> - Warn users about expensive operations</li>
+<li>
+<strong>Crash on Warnings</strong> - Use warnings for non-fatal issues</li>
 </ol>
-<hr>
-</section>
-</section>
-<section id="real-world-example-issue-157" class="level1">
-<h1>Real-World Example: Issue #157</h1>
+<hr></section></section><section id="real-world-example-issue-157" class="section level2"><h2>Real-World Example: Issue #157</h2>
 <p>The WebR isolated pixels bug (Issue #157) demonstrates why defensive programming matters:</p>
 <p><strong>The Problem:</strong> Async workers making decisions on stale grid state caused isolated pixels that violated connectivity rules.</p>
 <p><strong>The Solution:</strong> Added defensive validation:</p>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before: Trust worker results blindly</span></span>
+<details open="" class="code-fold"><summary>Show code</summary><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before: Trust worker results blindly</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>grid[pos[<span class="dv">1</span>], pos[<span class="dv">2</span>]] <span class="ot">&lt;-</span> walker_id</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># After: Validate before accepting</span></span>
@@ -657,16 +616,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p><strong>Benefits:</strong> - Caught race conditions in async code - Provided clear diagnostics for debugging - Prevented data corruption - Maintained simulation invariants</p>
-<hr>
-</section>
-<section id="testing-defensive-code" class="level1">
-<h1>Testing Defensive Code</h1>
-<section id="unit-test-example" class="level2">
-<h2 class="anchored" data-anchor-id="unit-test-example">Unit Test Example</h2>
+<hr></section><section id="testing-defensive-code" class="section level2"><h2>Testing Defensive Code</h2>
+<section id="unit-test-example" class="level2"><h3 class="anchored" data-anchor-id="unit-test-example">Unit Test Example</h3>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">"validate_grid_size rejects invalid inputs"</span>, {</span>
+<details open="" class="code-fold"><summary>Show code</summary><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">"validate_grid_size rejects invalid inputs"</span>, {</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Type errors</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">expect_error</span>(</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">validate_grid_size</span>(<span class="st">"10"</span>),</span>
@@ -696,20 +649,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<hr>
-</section>
-</section>
-<section id="live-examples" class="level1">
-<h1>Live Examples</h1>
+<hr></section></section><section id="live-examples" class="section level2"><h2>Live Examples</h2>
 <p>This section demonstrates defensive programming patterns with actual executed code.</p>
 <p>For implementation details, see: - <a href="https://github.com/JohnGavin/randomwalk/blob/main/R/simulation.R">R/simulation.R</a> - Main simulation with validation - <a href="https://github.com/JohnGavin/randomwalk/blob/main/R/grid.R">R/grid.R</a> - Grid validation functions - <a href="https://github.com/JohnGavin/randomwalk/wiki/Issue-157-WebR-Isolated-Pixels">Wiki: Issue #157 Diagnostics</a></p>
-<section id="validation-performance-comparison" class="level2">
-<h2 class="anchored" data-anchor-id="validation-performance-comparison">Validation Performance Comparison</h2>
+<section id="validation-performance-comparison" class="level2"><h3 class="anchored" data-anchor-id="validation-performance-comparison">Validation Performance Comparison</h3>
 <p>Compare validation overhead across different grid sizes:</p>
 <div class="cell" data-tbl-cap="Validation overhead decreases with grid size (% of total time)">
-<details open="" class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<details open="" class="code-fold"><summary>Show code</summary><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulate validation timing across grid sizes</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>grid_sizes <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">50</span>, <span class="dv">100</span>, <span class="dv">200</span>)</span>
@@ -728,19 +674,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(validation_overhead,</span>
 <span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Validation overhead scales with grid size but remains acceptable"</span>,</span>
 <span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">align =</span> <span class="fu">c</span>(<span class="st">"l"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Validation overhead decreases with grid size (% of total time)</caption>
-<thead>
-<tr class="header">
+<thead><tr class="header">
 <th style="text-align: left;">Grid Size</th>
 <th style="text-align: right;">Pixels</th>
 <th style="text-align: right;">Validation (ms)</th>
 <th style="text-align: right;">Simulation (ms)</th>
 <th style="text-align: right;">Overhead (%)</th>
-</tr>
-</thead>
+</tr></thead>
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">10×10</td>
@@ -782,14 +725,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p><strong>Key insight</strong>: Validation overhead is &lt;10% for grids ≥50×50, making it practical for debugging without significant performance impact when used judiciously (once per simulation, not per render).</p>
-</section>
-<section id="input-validation-error-messages" class="level2">
-<h2 class="anchored" data-anchor-id="input-validation-error-messages">Input Validation Error Messages</h2>
+</section><section id="input-validation-error-messages" class="level2"><h3 class="anchored" data-anchor-id="input-validation-error-messages">Input Validation Error Messages</h3>
 <p>Demonstrate informative error handling:</p>
 <div class="cell" data-tbl-cap="Example validation errors with user-friendly messages">
-<details open="" class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create validation test cases</span></span>
+<details open="" class="code-fold"><summary>Show code</summary><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create validation test cases</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>test_cases <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Input =</span> <span class="fu">c</span>(</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"grid_size = -5"</span>,</span>
@@ -818,8 +757,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(test_cases,</span>
 <span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Defensive validation provides specific, actionable error messages"</span>,</span>
 <span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">align =</span> <span class="fu">c</span>(<span class="st">"l"</span>, <span class="st">"l"</span>, <span class="st">"l"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Example validation errors with user-friendly messages</caption>
 <colgroup>
@@ -827,13 +765,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <col style="width: 63%">
 <col style="width: 14%">
 </colgroup>
-<thead>
-<tr class="header">
+<thead><tr class="header">
 <th style="text-align: left;">Input</th>
 <th style="text-align: left;">Error</th>
 <th style="text-align: left;">Pattern</th>
-</tr>
-</thead>
+</tr></thead>
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">grid_size = -5</td>
@@ -865,34 +801,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p><strong>Learn more</strong>: See <a href="https://github.com/JohnGavin/randomwalk/blob/main/R/simulation.R#L70-L95">R/simulation.R:70-95</a> for complete parameter validation implementation.</p>
-<hr>
-</section>
-</section>
-<section id="conclusion" class="level1">
-<h1>Conclusion</h1>
+<hr></section></section><section id="conclusion" class="section level2"><h2>Conclusion</h2>
 <p>Defensive programming is essential for:</p>
 <ul>
-<li><strong>Reliability</strong> - Code that handles unexpected inputs gracefully</li>
-<li><strong>Debuggability</strong> - Clear error messages and diagnostic logging</li>
-<li><strong>Performance</strong> - Early validation prevents expensive operations on bad data</li>
-<li><strong>User Experience</strong> - Helpful errors guide users to solutions</li>
+<li>
+<strong>Reliability</strong> - Code that handles unexpected inputs gracefully</li>
+<li>
+<strong>Debuggability</strong> - Clear error messages and diagnostic logging</li>
+<li>
+<strong>Performance</strong> - Early validation prevents expensive operations on bad data</li>
+<li>
+<strong>User Experience</strong> - Helpful errors guide users to solutions</li>
 </ul>
 <p>The <code>randomwalk</code> package uses these patterns throughout to ensure robust async parallel processing even in challenging environments like WebR.</p>
-<section id="session-info" class="level2">
-<h2 class="anchored" data-anchor-id="session-info">Session Info</h2>
+<section id="session-info" class="level2"><h3 class="anchored" data-anchor-id="session-info">Session Info</h3>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Show code</summary>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details open="" class="code-fold"><summary>Show code</summary><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-</section>
-<section id="version-information" class="level2">
-<h2 class="anchored" data-anchor-id="version-information">Version Information</h2>
+</section><section id="version-information" class="level2"><h3 class="anchored" data-anchor-id="version-information">Version Information</h3>
 <div class="cell">
-<details class="code-fold">
-<summary>Show version details</summary>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Git commit information</span></span>
+<details class="code-fold"><summary>Show version details</summary><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Git commit information</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>git_commit <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system</span>(<span class="st">"git rev-parse HEAD"</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>),</span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Not available"</span></span>
@@ -929,12 +858,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Build Time:  "</span>, <span class="fu">format</span>(build_time, <span class="st">"%Y-%m-%d %H:%M:%S %Z"</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-</section>
-</section>
-
-</main>
-<!-- /main column -->
-<script id="quarto-html-after-body" type="application/javascript">
+</section></section></main><!-- /main column --><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
     const anchorJS = new window.AnchorJS();
@@ -1338,4 +1262,5 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-</body></html>
+</body>
+</html>

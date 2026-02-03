@@ -48,24 +48,14 @@ remotes::install_github("johngavin/randomwalk")
 devtools::load_all()  # Load without installing
 ```
 
-## Interactive Browser Demo
 
-**[Launch Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)** - No installation required!
+## Getting Started
 
-Features:
-- **Fractal visualization**: Black pixel patterns on grid
-- **Walker paths**: Trajectory visualization (first/last N)
-- **Distributions**: Path length histograms by termination reason
-- **Statistics**: Grid, walker, step, and performance metrics
-- **Debug panel**: Package versions, environment detection
+### Quickstart Examples
 
-Runs entirely in your browser via [WebR](https://docs.r-wasm.org/webr/) (WebAssembly). Uses synchronous mode (workers=0) for reliable in-browser execution.
+Choose your preferred interface:
 
-> **Note**: Async parallel processing (workers > 0) is available in native R only.
-
-## Usage
-
-### Programmatic Usage (No GUI)
+#### Option 1: Programmatic Usage (No GUI)
 
 #### Basic Example
 
@@ -127,11 +117,6 @@ cat("Static collisions:", result_static$statistics$black_pixels, "\n")
 
 **Note on WebR/Browser**: Browser demos use `workers = 0` (synchronous mode). Async parallel processing requires native R.
 
-#### About nanonext and Dynamic Modes
-
-The `dynamic` and `mirai_dynamic` sync modes attempted real-time grid broadcasting via nanonext pub/sub sockets. **These modes are DEPRECATED** because nanonext sockets cannot be created inside crew/mirai subprocesses (NNG fork boundary limitation). They silently fall back to static behavior.
-
-Use `sync_mode = "chunked"` instead - it achieves similar collision detection without socket dependencies.
 
 #### Comparing Sync Modes: Static vs Chunked (RECOMMENDED)
 
@@ -192,12 +177,8 @@ plot_walker_paths(result_chunked)
 |------|-------------|---------------------|----------|
 | `static` | Frozen grid snapshot | Low (~5%) | Fast runs, boundary testing |
 | `chunked` | Batched updates (10/batch) | High (~15%) | **Recommended for most uses** |
-| `dynamic` | ⚠️ DEPRECATED - falls back to static | Low (~5%) | Do not use |
-| `mirai_dynamic` | ⚠️ DEPRECATED - falls back to static | Low (~5%) | Do not use |
 
-> **Note**: `dynamic` and `mirai_dynamic` modes are deprecated. nanonext sockets fail in crew/mirai subprocesses, causing these modes to behave like `static` mode. Use `chunked` instead.
-
-### Interactive Shiny Interface
+#### Option 2: Interactive Shiny Dashboard
 
 ```r
 library(randomwalk)
@@ -217,7 +198,13 @@ run_dashboard(launch.browser = function(url) {
 
 **Note**: If you see `Error in utils::browseURL(appUrl): 'browser' must be a non-empty character string`, use `launch.browser = FALSE` and manually open the URL printed to the console.
 
-## Nix Environment
+#### Option 3: Browser Demo (WebR/Shinylive)
+
+**[Launch Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)** - No installation required! Runs entirely in your browser via WebAssembly.
+
+## Configuration & Environments
+
+### Nix Environment
 
 The package provides reproducible R environments via Nix. Two configurations are available depending on your needs.
 
@@ -313,7 +300,9 @@ plot_grid(result)
 | `default-ci.nix` | Minimal environment for CI/CD workflows | GitHub Actions |
 | `package.nix` | Package definition for nix builds | Infrastructure |
 
-## Parallel Processing Architecture
+## Advanced Topics
+
+### Parallel Processing Architecture
 
 The package uses a layered architecture for parallel execution:
 
@@ -337,17 +326,11 @@ Messaging Layer:      nanonext (NNG socket bindings)
 
 *nanonext is available in WASM but sockets cannot be created inside forked subprocesses.
 
-### Why Chunked Mode Instead of Dynamic
+### Chunked Synchronization
 
-The original `dynamic` mode attempted to use nanonext pub/sub sockets for real-time grid updates. This failed because:
+The `sync_mode = "chunked"` mode processes walkers in batches of 10 and updates the grid between batches. This approach gives later batches visibility of black pixels from earlier batches, achieving superior collision detection (~15%) compared to static mode (~5%) without complex socket-based synchronization.
 
-1. **NNG fork limitation**: nanonext sockets cannot be inherited across Unix fork() boundaries
-2. **Crew/mirai architecture**: Workers are forked processes on Unix systems
-3. **Silent fallback**: Socket creation fails, mode falls back to static behavior
-
-**Solution**: `sync_mode = "chunked"` achieves similar results by processing walkers in batches of 10, updating the grid between batches. This gives later batches visibility of black pixels from earlier batches without requiring sockets.
-
-## Simulation Parameters
+### Simulation Parameters
 
 | Parameter | Description | Default | Range |
 |-----------|-------------|---------|-------|
@@ -365,10 +348,8 @@ The original `dynamic` mode attempted to use nanonext pub/sub sockets for real-t
 |------|-------------|---------------------|----------------|
 | `static` | Frozen grid snapshots | Low (~5%) | Fast runs |
 | `chunked` | Batched updates (10/batch) | High (~15%) | **RECOMMENDED** |
-| `dynamic` | ⚠️ DEPRECATED | N/A | Do not use |
-| `mirai_dynamic` | ⚠️ DEPRECATED | N/A | Do not use |
 
-## Scalability
+### Scalability
 
 The package scales from quick tests to large simulations:
 
@@ -392,30 +373,18 @@ run_simulation(grid_size = 400, n_walkers = 10000, workers = 8, sync_mode = "chu
 - Larger grids (200+) benefit most from parallelization
 - Browser demos are limited to `workers = 0` (sync mode)
 
-### Async Parallel Processing Notes
+### WebR/Browser Restrictions
 
-When using `workers > 0` with `sync_mode = "static"` (default), workers operate on frozen grid snapshots. This means:
+- **Async parallel processing (workers > 0) is only available in native R**. Browser demos use `workers = 0` (synchronous mode only).
+- **Recommended approach for parallel processing**: Use `sync_mode = "chunked"` with `workers = 2-4` for best collision detection and performance in native R environments.
 
-- **Position rejections are normal**: Workers may propose positions that would create isolated pixels (violating 4-hood connectivity). These are rejected by the main process during validation.
-- **High rejection rates with many workers**: With `boundary="terminate"` and many workers, rejection rates can be 90%+ for "black_neighbor" terminations. This is expected behavior - workers see phantom black pixels on stale snapshots that are no longer valid by the time results return.
-  - Example: 8000 walkers, 8 workers → 631 "black_neighbor" terminations, but only 4-5 black pixels created (99% rejected)
-  - Most walkers still hit boundaries successfully (typically 75-80%)
-- **When to use static vs dynamic mode**:
-  - **Static (default)**: Best for large grids with `boundary="terminate"`. Fast, but expect high rejection rates.
-  - **Dynamic**: Use when you need accurate collision detection or when rejection rates are unacceptable. ~10-15% slower but eliminates rejections.
-- **Logging**: Rejection messages are logged at DEBUG level (use `verbose=TRUE` to see them). Use `log_interval=100` or higher to reduce progress log verbosity.
+## Documentation
 
-## 📚 Vignettes & Documentation
-
-### Available Vignettes
+### Vignettes
 
 - **[Interactive Dashboard](https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html)** - Full-featured dashboard in-browser via WebR
 - **[Step Distribution Analysis](https://johngavin.github.io/randomwalk/articles/step_distribution_analysis.html)** - Statistical analysis of path lengths
 - **[Telemetry](https://johngavin.github.io/randomwalk/articles/telemetry.html)** - Pipeline performance and code coverage
-
-## 📋 Essential Documentation
-
-Key documentation for development and deployment workflows:
 
 ### Deployment & Workflow
 
@@ -434,7 +403,7 @@ Key documentation for development and deployment workflows:
 - **[Open Issues](https://github.com/JohnGavin/randomwalk/issues)** - GitHub issue tracker (primary)
 - **[Project Board](https://github.com/JohnGavin/randomwalk/projects)** - Visual progress tracking
 
-## 📁 Package Structure
+### Package Structure
 
 ```
 randomwalk/
@@ -474,23 +443,14 @@ randomwalk/
 └── default.nix                # Nix environment for development
 ```
 
-## 📖 Documentation & Resources
-
-### Wiki Guides
+### Guides & Troubleshooting
 
 Visit the [project wiki](https://github.com/JohnGavin/randomwalk/wiki) for comprehensive guides:
 
-- **[Troubleshooting Nix Environment](https://github.com/JohnGavin/randomwalk/wiki/Troubleshooting-Nix-Environment)** - Solutions for nix environment degradation during long development sessions
-- **[Working with Claude Across Sessions](https://github.com/JohnGavin/randomwalk/wiki/Working-with-Claude-Across-Sessions)** - How to preserve context when using Claude Code
-- **[Using Gemini CLI for Large Codebases](https://github.com/JohnGavin/randomwalk/wiki/Using-Gemini-CLI-for-Large-Codebases)** - Leverage Gemini's large context window for codebase analysis
-- **[Deploying Shinylive Dashboards](https://github.com/JohnGavin/randomwalk/wiki/Deploying-Shinylive-Dashboards)** - Complete deployment guide with solutions to common issues
-
-### Additional Resources
-
-- **[Agent Guidelines](AGENTS.md)** - Mandatory testing requirements and workflow for AI agents
-- [R/setup/](R/setup/) - Development workflow scripts for reproducibility
-- [.github/workflows/](.github/workflows/) - CI/CD workflow configurations
-- [archive/](archive/) - Historical session logs and documentation
+- **[Troubleshooting Nix Environment](https://github.com/JohnGavin/randomwalk/wiki/Troubleshooting-Nix-Environment)** - Solutions for nix environment issues
+- **[Deploying Shinylive Dashboards](https://github.com/JohnGavin/randomwalk/wiki/Deploying-Shinylive-Dashboards)** - Deployment guide with solutions to common issues
+- **[Working with Claude Across Sessions](https://github.com/JohnGavin/randomwalk/wiki/Working-with-Claude-Across-Sessions)** - Preserve context when using Claude Code
+- **[Using Gemini for Large Codebases](https://github.com/JohnGavin/randomwalk/wiki/Using-Gemini-CLI-for-Large-Codebases)** - Large context window codebase analysis
 
 ## License
 

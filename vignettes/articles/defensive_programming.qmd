@@ -10,6 +10,11 @@ format:
     code-fold: show
     code-summary: "Show code"
     theme: cosmo
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Defensive Programming}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
@@ -33,7 +38,6 @@ This vignette demonstrates defensive programming patterns used in the `randomwal
 4. **State Validation** - Verify assumptions about data structures
 5. **Diagnostic Logging** - Provide debugging information when issues occur
 
----
 
 # Pattern 1: Input Validation with Informative Errors
 
@@ -92,7 +96,6 @@ validate_grid_size_cli <- function(grid_size) {
 - Performance warnings help users avoid slow operations
 - `call. = FALSE` removes confusing stack traces from errors
 
----
 
 # Pattern 2: Graceful Degradation
 
@@ -152,7 +155,6 @@ select_backend <- function(workers) {
 - Informative messages explain what's happening
 - Suggests specific fixes (how to install missing packages)
 
----
 
 # Pattern 3: State Validation with Diagnostics
 
@@ -241,7 +243,6 @@ find_isolated_pixels <- function(grid, neighborhood = "4-hood") {
 - NULL return for "no issues" allows easy conditional logic
 - Clear variable names make the algorithm understandable
 
----
 
 # Pattern 4: Diagnostic Logging
 
@@ -343,7 +344,6 @@ process_results_defensively <- function(results, grid, verbose = TRUE) {
 - Verbose mode can be disabled in production
 - Returns both results and diagnostic metadata
 
----
 
 # Pattern 5: Assertion Helpers
 
@@ -417,7 +417,6 @@ run_simulation_safe <- function(grid_size = 20,
 - `invisible(x)` allows chaining: `assert_range(assert_positive(x), 1, 100)`
 - Upfront validation catches errors before expensive operations
 
----
 
 # Pattern 6: Safe Defaults
 
@@ -469,7 +468,6 @@ config <- get_simulation_config(list(
 - All parameters are validated, even defaults
 - Configuration is explicit and documented
 
----
 
 # Best Practices Summary
 
@@ -492,7 +490,6 @@ config <- get_simulation_config(list(
 5. **Ignore Performance** - Warn users about expensive operations
 6. **Crash on Warnings** - Use warnings for non-fatal issues
 
----
 
 # Real-World Example: Issue #157
 
@@ -523,7 +520,6 @@ if (!is.null(isolated)) {
 - Prevented data corruption
 - Maintained simulation invariants
 
----
 
 # Testing Defensive Code
 
@@ -560,7 +556,6 @@ test_that("validate_grid_size rejects invalid inputs", {
 })
 ```
 
----
 
 # Live Examples
 
@@ -641,7 +636,6 @@ kable(test_cases,
 
 **Learn more**: See [R/simulation.R:70-95](https://github.com/JohnGavin/randomwalk/blob/main/R/simulation.R#L70-L95) for complete parameter validation implementation.
 
----
 
 # Conclusion
 

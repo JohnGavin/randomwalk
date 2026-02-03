@@ -57,23 +57,6 @@ navbar:
       - text: Telemetry and Pipeline Performance
         href: articles/telemetry.html
 
-# Organize articles on the Articles index page
-articles:
-- title: "Browser Dashboard (WebR)"
-  desc: "Interactive dashboard running in your browser via WebR/Shinylive"
-  contents:
-  - dashboard_comprehensive
-- title: "WebR Analysis"
-  desc: "Statistical analysis vignettes using WebR"
-  contents:
-  - step_distribution_analysis
-- title: "Background & Documentation"
-  desc: "Project documentation and development patterns"
-  contents:
-  - dla_theory
-  - defensive_programming
-  - telemetry
-
 footer:
   structure:
     left: developed_by

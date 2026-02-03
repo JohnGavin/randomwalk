@@ -1,13 +1,10 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
-
-<meta charset="utf-8">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta charset="UTF-8">
 <meta name="generator" content="quarto-1.7.34">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-
 <meta name="description" content="Complete dashboard with walker paths, step distributions, detailed statistics, and debug info - for in-depth exploration">
-
 <title>Full-Featured Dashboard</title>
 <style>
 code{white-space: pre-wrap;}
@@ -22,23 +19,12 @@ ul.task-list li input[type="checkbox"] {
   vertical-align: middle;
 }
 </style>
-
-
-<script src="dashboard_comprehensive_files/libs/clipboard/clipboard.min.js"></script>
-<script src="dashboard_comprehensive_files/libs/quarto-html/quarto.js" type="module"></script>
-<script src="dashboard_comprehensive_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="dashboard_comprehensive_files/libs/quarto-html/popper.min.js"></script>
-<script src="dashboard_comprehensive_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="dashboard_comprehensive_files/libs/quarto-html/anchor.min.js"></script>
-<link href="dashboard_comprehensive_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<script src="dashboard_comprehensive_files/libs/clipboard/clipboard.min.js"></script><script src="dashboard_comprehensive_files/libs/quarto-html/quarto.js" type="module"></script><script src="dashboard_comprehensive_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script><script src="dashboard_comprehensive_files/libs/quarto-html/popper.min.js"></script><script src="dashboard_comprehensive_files/libs/quarto-html/tippy.umd.min.js"></script><script src="dashboard_comprehensive_files/libs/quarto-html/anchor.min.js"></script><link href="dashboard_comprehensive_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="dashboard_comprehensive_files/libs/quarto-html/quarto-syntax-highlighting-c8ad9e5dbd60b7b70b38521ab19b7da4.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="dashboard_comprehensive_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="dashboard_comprehensive_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<script src="dashboard_comprehensive_files/libs/bootstrap/bootstrap.min.js"></script><link href="dashboard_comprehensive_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="dashboard_comprehensive_files/libs/bootstrap/bootstrap-b232414f0569882df4359abfb7cfba3f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <meta name="shinylive:serviceworker_dir" content="../..">
-<script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/load-shinylive-sw.js" type="module"></script>
-<script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/run-python-blocks.js" type="module"></script>
-<link href="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/shinylive.css" rel="stylesheet">
+<script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/load-shinylive-sw.js" type="module"></script><script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/run-python-blocks.js" type="module"></script><link href="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/shinylive.css" rel="stylesheet">
 <link href="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-quarto-css/shinylive-quarto.css" rel="stylesheet">
 <script>
 // Fix serviceworker_dir meta tag BEFORE Shinylive loads
@@ -51,18 +37,12 @@ ul.task-list li input[type="checkbox"] {
   }
 })();
 </script>
-
-
 </head>
-
 <body class="fullcontent quarto-light">
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
 
-<main class="content" id="quarto-document-content">
-
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
 <h1 class="title">Full-Featured Dashboard</h1>
 </div>
 
@@ -82,10 +62,7 @@ ul.task-list li input[type="checkbox"] {
   
 
 
-</header>
-
-
-<pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
+</header><pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
 #| standalone: true
@@ -952,23 +929,19 @@ server &lt;- function(input, output, session) {
 # ============================================================================
 
 shinyApp(ui = ui, server = server)</code></pre>
-<section id="tips" class="level2">
-<h2 class="anchored" data-anchor-id="tips">Tips</h2>
+<section id="tips" class="level2"><h2 class="anchored" data-anchor-id="tips">Tips</h2>
 <ul>
-<li><strong>Larger grid</strong> (200-400): More exploration space</li>
-<li><strong>Fewer walkers</strong> (100-500): Faster simulation</li>
-<li><strong>8-hood</strong>: Diagonal movement for different patterns</li>
-<li><strong>Wrap boundary</strong>: Toroidal grid (no edge termination)</li>
-</ul>
-</section>
-<section id="build-info" class="level2">
-<h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
+<li>
+<strong>Larger grid</strong> (200-400): More exploration space</li>
+<li>
+<strong>Fewer walkers</strong> (100-500): Faster simulation</li>
+<li>
+<strong>8-hood</strong>: Diagonal movement for different patterns</li>
+<li>
+<strong>Wrap boundary</strong>: Toroidal grid (no edge termination)</li>
+</ul></section><section id="build-info" class="level2"><h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
 <p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>b9f0f37</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-02</p>
-</section>
-
-</main>
-<!-- /main column -->
-<script id="quarto-html-after-body" type="application/javascript">
+</section></main><!-- /main column --><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
     const anchorJS = new window.AnchorJS();
@@ -1372,4 +1345,5 @@ shinyApp(ui = ui, server = server)</code></pre>
 
 
 
-</body></html>
+</body>
+</html>

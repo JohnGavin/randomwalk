@@ -25,6 +25,7 @@ which violates the connectivity requirement for DLA simulations."><meta name="sh
     <li><h6 class="dropdown-header" data-toc-skip>──── WebR Analysis ────</h6></li>
     <li><a class="dropdown-item" href="../articles/step_distribution_analysis.html">Step Distribution Analysis</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>──── Background &amp; Documentation ────</h6></li>
+    <li><a class="dropdown-item" href="../articles/dla_theory.html">DLA Theory &amp; Mathematical Foundations</a></li>
     <li><a class="dropdown-item" href="../articles/defensive_programming.html">Defensive Programming Patterns</a></li>
     <li><a class="dropdown-item" href="../articles/telemetry.html">Telemetry and Pipeline Performance</a></li>
   </ul></li>
@@ -89,10 +90,10 @@ Returns empty list if no isolated pixels found.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="initialize_grid.html">initialize_grid</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-02-03 11:17:20] Initializing grid of size 10x10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-02-03 16:23:07] Initializing grid of size 10x10</span>
 <span class="r-in"><span><span class="va">grid</span><span class="op">[</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span>  <span class="co"># Add isolated pixel far from center</span></span></span>
 <span class="r-in"><span><span class="va">isolated</span> <span class="op">&lt;-</span> <span class="fu">find_isolated_pixels</span><span class="op">(</span><span class="va">grid</span>, <span class="st">"4-hood"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> WARN [2026-02-03 11:17:20] Grid has 2 isolated pixel(s)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> WARN [2026-02-03 16:23:07] Grid has 2 isolated pixel(s)</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">isolated</span><span class="op">)</span>  <span class="co"># Should be 1</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2</span>
 <span class="r-in"><span></span></span>

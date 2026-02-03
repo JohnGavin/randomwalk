@@ -1,0 +1,888 @@
+# Full-Featured Dashboard
+
+# Full-Featured Dashboard
+
+Complete dashboard with walker paths, step distributions, detailed
+statistics, and debug info - for in-depth exploration
+
+``` shinylive-r
+#| '!! shinylive warning !!': |
+#|   shinylive does not work in self-contained HTML documents.
+#|   Please set `embed-resources: false` in your metadata.
+#| standalone: true
+#| viewerHeight: 900
+
+# ============================================================================
+# FAST Package Loading (Pre-built webR binaries from GitHub Pages)
+# ============================================================================
+# Packages built by GitHub Actions and deployed to GitHub Pages
+# See: https://github.com/JohnGavin/randomwalk/wiki/Shinylive-Lessons-Learned
+
+cat("\n=== DASHBOARD SETUP ===\n")
+cat("Installing packages from GitHub Pages...\n\n")
+
+# Install randomwalk from GitHub Pages (built by deploy-pages.yaml workflow)
+tryCatch({
+  webr::install(
+    "randomwalk",
+    repos = c(
+      "https://johngavin.github.io/randomwalk",  # GitHub Pages webR repo
+      "https://repo.r-wasm.org"                   # Standard webR packages
+    )
+  )
+  cat("✅ randomwalk installed\n")
+}, error = function(e) {
+  cat("❌ ERROR installing randomwalk:", e$message, "\n")
+})
+
+# Load shiny (usually pre-installed)
+library(shiny)
+cat("✅ shiny\n")
+
+# Install ggplot2 dependencies and ggplot2
+tryCatch({
+  library(ggplot2)
+  cat("✅ ggplot2\n")
+}, error = function(e) {
+  cat("⚠️  ggplot2 not found, installing dependencies...\n")
+  # Install munsell first (required ggplot2 dependency often missing)
+  webr::install("munsell", repos = "https://repo.r-wasm.org")
+  cat("✅ munsell installed\n")
+  webr::install("ggplot2", repos = "https://repo.r-wasm.org")
+  library(ggplot2)
+  cat("✅ ggplot2 installed and loaded\n")
+})
+
+# Load randomwalk
+tryCatch({
+  library(randomwalk)
+  cat("✅ randomwalk (v", as.character(packageVersion("randomwalk")), ")\n", sep = "")
+}, error = function(e) {
+  cat("❌ ERROR loading randomwalk:", e$message, "\n")
+  cat("Available packages:\n")
+  print(installed.packages()[, c("Package", "Version")])
+})
+
+cat("\n⚠️  WebR Mode: Synchronous only (workers=0)\n")
+cat("   Reason: mirai/nanonext not available in WebAssembly\n")
+cat("   Note: Async works in native R with crew backend\n")
+
+cat("\n=== SETUP COMPLETE ===\n\n")
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+# WebR environment detection (from Issue #129)
+is_webr <- function() {
+  exists(".webr_env", envir = .GlobalEnv) ||
+    identical(Sys.getenv("WEBR"), "1")
+}
+
+# ============================================================================
+# Shiny UI
+# ============================================================================
+
+ui <- fluidPage(
+  titlePanel("Comprehensive Random Walks Dashboard"),
+
+  # Add CSS for timer display
+  tags$head(
+    tags$style(HTML("
+      .timer-display {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+        text-align: center;
+        padding: 10px;
+        background: #f0f8ff;
+        border-radius: 5px;
+        margin: 10px 0;
+      }
+
+      #run_sim:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    "))
+  ),
+
+  sidebarLayout(
+    # LEFT PANEL: INPUTS
+    sidebarPanel(
+      h4("Simulation Parameters"),
+
+      sliderInput("grid_size", "Grid Size:",
+                  min = 20, max = 400, value = 100, step = 20),
+
+      sliderInput("n_walkers", "Number of Walkers:",
+                  min = 1, max = 1000, value = 200, step = 50),
+      helpText(HTML("Number of walkers to simulate<br><em>Max: 70% of grid pixels (updates automatically)</em>")),
+
+      selectInput("neighborhood", "Neighborhood:",
+                  choices = c("4-hood", "8-hood"),
+                  selected = "4-hood"),
+
+      selectInput("boundary", "Boundary Behavior:",
+                  choices = c("terminate", "wrap"),
+                  selected = "terminate"),
+
+      sliderInput("max_steps", "Max Steps per Walker:",
+                  min = 100, max = 10000, value = 5000, step = 100),
+
+      hr(),
+
+      # Runtime estimate (WebR ~400 steps/sec observed)
+      h5("Estimated Runtime:"),
+      uiOutput("runtime_estimate"),
+
+      hr(),
+
+      # Running timer (shows elapsed time)
+      div(id = "running_timer", style = "margin: 10px 0;",
+        tags$div(class = "timer-display",
+                 textOutput("elapsed_time"))
+      ),
+
+      actionButton("run_sim", "Run Simulation",
+                   class = "btn-primary btn-lg",
+                   style = "width: 100%;"),
+
+      hr(),
+
+      h5("Status:"),
+      verbatimTextOutput("status", placeholder = TRUE)
+    ),
+
+    # RIGHT PANEL: MULTIPLE OUTPUT PAGES
+    mainPanel(
+      tabsetPanel(
+        id = "tabs",
+
+        # PAGE 1: Fractal Graph (Black Pixels)
+        tabPanel("Fractal Graph",
+                 h4("Grid Visualization - Black Pixels"),
+                 plotOutput("fractal_plot", height = "600px"),
+                 hr(),
+                 verbatimTextOutput("fractal_stats")),
+
+        # PAGE 2: Walker Paths (First 25 and Last 25)
+        tabPanel("Walker Paths",
+                 h4("Walker Trajectories"),
+                 fluidRow(
+                   column(6,
+                     sliderInput("first_n_paths", "First N paths:",
+                                min = 0, max = 20, value = 5, step = 1)),
+                   column(6,
+                     sliderInput("last_n_paths", "Last N paths:",
+                                min = 0, max = 20, value = 5, step = 1))
+                 ),
+                 helpText("Select first N and/or last N walker paths to display (max 40 total)"),
+                 plotOutput("paths_plot_first25", height = "500px")),
+
+        # PAGE 3: Distributions (Path Lengths by Termination Reason)
+        tabPanel("Distributions",
+                 h4("Path Length Distributions"),
+                 plotOutput("dist_overall", height = "300px"),
+                 h5("Overall Distribution"),
+                 hr(),
+                 plotOutput("dist_by_reason", height = "300px"),
+                 h5("By Termination Reason")),
+
+        # PAGE 4: Statistics
+        tabPanel("Statistics",
+                 h4("Comprehensive Simulation Statistics"),
+                 verbatimTextOutput("stats_comprehensive")),
+
+        # PAGE 5: Debug Info
+        tabPanel("Debug",
+                 h4("Debug Information"),
+                 h5("Package Versions"),
+                 verbatimTextOutput("debug_versions"),
+                 hr(),
+                 h5("Current Inputs"),
+                 verbatimTextOutput("debug_inputs"),
+                 hr(),
+                 h5("Backend Information"),
+                 verbatimTextOutput("debug_backend"),
+                 hr(),
+                 h5("Periodic Updates"),
+                 verbatimTextOutput("debug_periodic")),
+
+        # PAGE 6: Notes
+        tabPanel("Notes",
+                 h4("About This Dashboard"),
+                 tags$p("Interactive random walk simulation via WebR/Shinylive."),
+                 hr(),
+                 h5("Browser Mode"),
+                 tags$p("Runs in ", strong("sync sequential mode"), " (workers=0)."),
+                 tags$p("Async parallel (workers > 0) requires native R with crew."),
+                 hr(),
+                 h5("Sync Modes (Native R)"),
+                 tags$ul(
+                   tags$li(strong("static:"), " Frozen snapshots (~5% collision)"),
+                   tags$li(strong("chunked:"), " Batched updates (~15% collision) - RECOMMENDED"),
+                   tags$li(tags$em("dynamic/mirai_dynamic:"), " DEPRECATED")
+                 ),
+                 hr(),
+                 h5("Limitations"),
+                 tags$ul(
+                   tags$li("Browser: sync sequential only (~400 steps/sec)"),
+                   tags$li("First load: 15-30s (downloads)"),
+                   tags$li("Recommended: grid ≤100, walkers ≤500, steps ≤1000"),
+                   tags$li("For larger simulations, use native R with crew")
+                 ),
+                 hr(),
+                 tags$a(href="https://johngavin.github.io/randomwalk/", "Documentation"),
+                 tags$span(" | "),
+                 tags$a(href="https://github.com/JohnGavin/randomwalk", "GitHub"))
+      )
+    )
+  )
+)
+
+# ============================================================================
+# Shiny Server
+# ============================================================================
+
+server <- function(input, output, session) {
+
+  # Dynamic walker constraint: Limit to 70% of grid pixels
+  observe({
+    max_walkers <- floor(0.7 * input$grid_size^2)
+    updateSliderInput(
+      session,
+      "n_walkers",
+      max = max_walkers,
+      value = min(input$n_walkers, max_walkers)
+    )
+  })
+
+  # Reactive values for simulation state and history
+  sim_result <- reactiveVal(NULL)
+  sim_count <- reactiveVal(0)  # Count total simulations run
+  sim_state <- reactiveVal("idle")  # States: idle, running, complete, error
+  sim_start_time <- reactiveVal(NULL)
+  sim_end_time <- reactiveVal(NULL)
+
+  # Output for conditional panel to show running indicator
+  output$is_running <- reactive({
+    sim_state() == "running"
+  })
+  outputOptions(output, "is_running", suspendWhenHidden = FALSE)
+
+  # Runtime estimate (WebR ~400-500 steps/sec observed in Issue #172)
+  output$runtime_estimate <- renderUI({
+    max_steps <- input$n_walkers * input$max_steps
+    # Conservative estimate: 400 steps/sec for WebR
+    est_seconds <- max_steps / 400
+
+    if (est_seconds < 60) {
+      est_text <- sprintf("~%.0f seconds", est_seconds)
+      color <- "green"
+    } else if (est_seconds < 300) {
+      est_text <- sprintf("~%.1f minutes", est_seconds / 60)
+      color <- "orange"
+    } else {
+      est_text <- sprintf("~%.1f minutes (consider smaller params)", est_seconds / 60)
+      color <- "red"
+    }
+
+    tags$div(
+      style = paste0("color: ", color, "; font-weight: bold;"),
+      est_text,
+      tags$br(),
+      tags$small(style = "color: gray;",
+                 sprintf("(%s walkers × %s steps = %sK steps)",
+                         format(input$n_walkers, big.mark=","),
+                         format(input$max_steps, big.mark=","),
+                         format(round(max_steps/1000), big.mark=",")))
+    )
+  })
+
+  # Periodic timer for debug updates and status indicator
+  timer <- reactiveTimer(1000)  # Update every second
+
+  # Update status display with ticking clock during execution
+  observe({
+    timer()  # Depend on timer
+
+    if (sim_state() == "running" && !is.null(sim_start_time())) {
+      elapsed <- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+
+      output$status <- renderText({
+        paste0(
+          "🏃 SIMULATION RUNNING...\n",
+          "Run #", sim_count(), "\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
+          "Elapsed:  ", sprintf("%.0f", elapsed), " seconds\n",
+          "Status:   ", rep(c("⏳", "⌛"), ceiling(elapsed))[elapsed %% 2 + 1], " Processing...\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Grid: ", input$grid_size, "×", input$grid_size, "\n",
+          "Walkers: ", input$n_walkers, "\n",
+          "Workers: 0 (sync sequential)"
+        )
+      })
+    }
+  })
+
+  # Update elapsed time display in timer
+  output$elapsed_time <- renderText({
+    timer()  # Update every second
+
+    if (sim_state() == "running" && !is.null(sim_start_time())) {
+      elapsed_secs <- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+      mins <- floor(elapsed_secs / 60)
+      secs <- floor(elapsed_secs %% 60)
+      sprintf("⏱️ Elapsed: %02d:%02d", mins, secs)
+    } else if (sim_state() == "complete" && !is.null(sim_end_time()) && !is.null(sim_start_time())) {
+      total_secs <- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
+      mins <- floor(total_secs / 60)
+      secs <- floor(total_secs %% 60)
+      sprintf("✅ Completed in %02d:%02d", mins, secs)
+    } else if (sim_state() == "error") {
+      "❌ Error occurred"
+    } else {
+      "⏳ Ready to run"
+    }
+  })
+
+  # Run simulation when button clicked
+  observeEvent(input$run_sim, {
+    # Update state to running
+    sim_state("running")
+    sim_start_time(Sys.time())
+    sim_count(sim_count() + 1)
+
+    # Disable the button while running (using updateActionButton for WebR compatibility)
+    updateActionButton(session, "run_sim",
+                      label = "Running...",
+                      disabled = TRUE)
+
+    output$status <- renderText({
+      paste0(
+        "🏃 SIMULATION RUNNING...\n",
+        "Run #", sim_count(), "\n",
+        "Grid: ", input$grid_size, "×", input$grid_size, "\n",
+        "Walkers: ", input$n_walkers, "\n",
+        "Workers: 0 (sync sequential)\n",
+        "Started: ", format(sim_start_time(), "%H:%M:%S"), "\n",
+        "Status: Processing..."
+      )
+    })
+
+    tryCatch({
+      # Validate walker count doesn't exceed 70% of grid
+      max_allowed <- floor(0.7 * input$grid_size^2)
+      if (input$n_walkers > max_allowed) {
+        stop(sprintf("Too many walkers (%d) for grid size %dx%d. Maximum allowed: %d (70%% of grid pixels)",
+                     input$n_walkers, input$grid_size, input$grid_size, max_allowed))
+      }
+
+      start_time <- Sys.time()
+
+      # Run simulation with async support
+      result <- run_simulation(
+        grid_size = input$grid_size,
+        n_walkers = input$n_walkers,
+        neighborhood = input$neighborhood,
+        boundary = input$boundary,
+        max_steps = input$max_steps,
+        workers = 0,  # WebR: sync sequential only (no parallel in browser)
+        sync_mode = "static",
+        verbose = FALSE,
+        validate_percent = 0  # CRITICAL: Disable periodic validation (causes 100-1000x slowdown in WebR)
+      )
+
+      end_time <- Sys.time()
+      elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+
+      # Update state variables
+      sim_state("complete")
+      sim_end_time(end_time)
+      sim_result(result)
+
+      # Re-enable the button
+      updateActionButton(session, "run_sim",
+                        label = "Run Simulation",
+                        disabled = FALSE)
+
+      # Browser console logging for WebR diagnostics (Issue #157)
+      message(sprintf("\n=== SIMULATION COMPLETE ==="))
+      message(sprintf("Grid size: %dx%d", input$grid_size, input$grid_size))
+      message(sprintf("Walkers: %d", input$n_walkers))
+      message(sprintf("Black pixels: %d", sum(result$grid == 1)))
+      message(sprintf("Elapsed time: %.2f seconds", elapsed))
+
+      # NOTE: find_isolated_pixels() check removed due to performance impact
+      # Even "once after simulation" was too slow in reactive context
+      # See Issue #166 for async validation approach
+      message(sprintf("==========================\n"))
+
+      output$status <- renderText({
+        paste0(
+          "✅ SIMULATION COMPLETE\n",
+          "Run #", sim_count(), "\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
+          "Finished: ", format(sim_end_time(), "%H:%M:%S"), "\n",
+          "Elapsed:  ", sprintf("%.2f", elapsed), " seconds\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Backend: synchronous (WebR browser)\n",
+          "Black Pixels: ", sum(result$grid == 1), "\n",
+          "Walkers: ", input$n_walkers, " completed"
+        )
+      })
+
+    }, error = function(e) {
+      sim_state("error")
+      sim_end_time(Sys.time())
+
+      # Re-enable the button
+      updateActionButton(session, "run_sim",
+                        label = "Run Simulation",
+                        disabled = FALSE)
+
+      output$status <- renderText({
+        paste0(
+          "❌ SIMULATION ERROR\n",
+          "Run #", sim_count(), "\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Error: ", e$message, "\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Troubleshooting:\n",
+          "- Check JavaScript console (F12)\n",
+          "- Verify randomwalk package loaded\n",
+          "- Check workers setting (0-4)\n",
+          "- See WIKI_SHINYLIVE_LESSONS_LEARNED.md"
+        )
+      })
+    })
+  })
+
+  # PAGE 1: Fractal Graph
+  output$fractal_plot <- renderPlot({
+    req(sim_result())
+    result <- sim_result()
+
+    # Defensive checks for WebR environment (Issue #157)
+    req(!is.null(result$grid))
+    req(nrow(result$grid) > 0)
+    req(sum(result$grid == 1) > 0)  # Ensure has black pixels
+
+    # CRITICAL: Validate grid connectivity before plotting
+    plot_grid(result, main = "Fractal Pattern - Black Pixels on Grid", show_legend = FALSE)
+  })
+
+  output$fractal_stats <- renderText({
+    req(sim_result())
+    stats <- sim_result()$statistics
+    paste0(
+      "Black Pixels: ", stats$black_pixels,
+      " (", sprintf("%.2f%%", stats$black_percentage), " of grid)\n",
+      "Grid Size: ", stats$grid_size, "×", stats$grid_size,
+      " (", stats$grid_size^2, " total cells)"
+    )
+  })
+
+  # PAGE 2: Walker Paths
+  output$paths_plot_first25 <- renderPlot({
+    req(sim_result())
+    result <- sim_result()
+    n_walkers <- length(result$walkers)
+
+    if (n_walkers >= 1) {
+      first_n <- min(input$first_n_paths, n_walkers)
+      last_n <- min(input$last_n_paths, n_walkers)
+
+      # Select walker IDs: first N and last N
+      walker_ids <- unique(c(
+        if(first_n > 0) 1:first_n else NULL,
+        if(last_n > 0) (n_walkers - last_n + 1):n_walkers else NULL
+      ))
+
+      if (length(walker_ids) > 0) {
+        # Plot only selected walkers' paths
+        filtered_walkers <- result$walkers[walker_ids]
+        result_filtered <- result
+        result_filtered$walkers <- filtered_walkers
+        plot_walker_paths(result_filtered,
+                          main = paste(length(walker_ids), "Selected Walker Paths"))
+      } else {
+        plot.new()
+        text(0.5, 0.5, "No walkers selected")
+      }
+    } else {
+      plot.new()
+      text(0.5, 0.5, "No walkers available")
+    }
+  })
+
+  # PAGE 3: Distributions
+  output$dist_overall <- renderPlot({
+    req(sim_result())
+    result <- sim_result()
+
+    # Defensive check for walkers
+    if (is.null(result$walkers) || length(result$walkers) == 0) {
+      plot.new()
+      text(0.5, 0.5, "Run a simulation first", cex = 1.5, col = "gray")
+      return()
+    }
+
+    # Extract path lengths safely
+    # NOTE: walker$path is a LIST of positions, not a matrix
+    # Use walker$steps for accurate step count
+    path_lengths <- tryCatch({
+      sapply(result$walkers, function(w) {
+        if (!is.null(w$steps)) {
+          w$steps
+        } else {
+          NA
+        }
+      })
+    }, error = function(e) {
+      numeric(0)
+    })
+
+    # Remove NAs and ensure numeric type
+    path_lengths <- as.numeric(path_lengths[!is.na(path_lengths)])
+
+    if (length(path_lengths) == 0 || !is.numeric(path_lengths)) {
+      plot.new()
+      text(0.5, 0.5, "No valid path data available", cex = 1.5, col = "gray")
+      return()
+    }
+
+    # Need at least 2 values for meaningful distribution
+    if (length(path_lengths) < 2) {
+      plot.new()
+      text(0.5, 0.5, paste0("Only ", length(path_lengths), " path - need at least 2"),
+           cex = 1.2, col = "gray")
+      return()
+    }
+
+    # Plot histogram with error handling
+    tryCatch({
+      hist(path_lengths,
+           breaks = min(30, max(5, length(unique(path_lengths)))),
+           col = "steelblue",
+           border = "white",
+           main = "Overall Path Length Distribution",
+           xlab = "Path Length (steps)",
+           ylab = "Frequency")
+      abline(v = median(path_lengths), col = "red", lwd = 2, lty = 2)
+      legend("topright",
+             legend = c(paste("Median:", median(path_lengths)),
+                       paste("Mean:", sprintf("%.1f", mean(path_lengths)))),
+             col = c("red", "black"),
+             lty = c(2, 1),
+             lwd = 2)
+    }, error = function(e) {
+      plot.new()
+      text(0.5, 0.5, paste0("Error creating plot:\n", e$message), cex = 1, col = "red")
+    })
+  })
+
+  output$dist_by_reason <- renderPlot({
+    req(sim_result())
+    result <- sim_result()
+
+    # Defensive check for walkers
+    if (is.null(result$walkers) || length(result$walkers) == 0) {
+      plot.new()
+      text(0.5, 0.5, "Run a simulation first", cex = 1.5, col = "gray")
+      return()
+    }
+
+    # Extract termination reasons and path lengths safely
+    # NOTE: walker$path is a LIST, not a matrix - use walker$steps
+    path_lengths <- tryCatch({
+      sapply(result$walkers, function(w) {
+        if (!is.null(w$steps)) w$steps else NA
+      })
+    }, error = function(e) numeric(0))
+
+    reasons <- tryCatch({
+      sapply(result$walkers, function(w) {
+        if (!is.null(w$termination_reason)) w$termination_reason else "unknown"
+      })
+    }, error = function(e) character(0))
+
+    # Remove NAs and ensure same length
+    valid_idx <- !is.na(path_lengths)
+    path_lengths <- as.numeric(path_lengths[valid_idx])
+    reasons <- as.character(reasons[valid_idx])
+
+    # Defensive check: ensure vectors are same length
+    min_len <- min(length(path_lengths), length(reasons))
+    if (min_len < length(path_lengths) || min_len < length(reasons)) {
+      path_lengths <- path_lengths[1:min_len]
+      reasons <- reasons[1:min_len]
+    }
+
+    # Check if we have valid data
+    if (length(path_lengths) == 0 || length(reasons) == 0 ||
+        !is.numeric(path_lengths) || !is.character(reasons)) {
+      plot.new()
+      text(0.5, 0.5, "No valid termination data available", cex = 1.5, col = "gray")
+      return()
+    }
+
+    # Need at least 2 data points
+    if (length(path_lengths) < 2) {
+      plot.new()
+      text(0.5, 0.5, "Need at least 2 walkers for distribution", cex = 1.2, col = "gray")
+      return()
+    }
+
+    # Create data frame with error handling
+    walkers_data <- tryCatch({
+      data.frame(
+        path_length = path_lengths,
+        reason = reasons,
+        stringsAsFactors = FALSE
+      )
+    }, error = function(e) {
+      NULL
+    })
+
+    if (is.null(walkers_data)) {
+      plot.new()
+      text(0.5, 0.5, "Error creating data frame", cex = 1.2, col = "red")
+      return()
+    }
+
+    # Plot boxplot by termination reason with error handling
+    tryCatch({
+      print(
+        ggplot(walkers_data, aes(x = reason, y = path_length, fill = reason)) +
+          geom_boxplot(alpha = 0.7) +
+          geom_jitter(width = 0.2, alpha = 0.3) +
+          labs(title = "Path Lengths by Termination Reason",
+               x = "Termination Reason",
+               y = "Path Length (steps)") +
+          theme_minimal() +
+          theme(legend.position = "none")
+      )
+    }, error = function(e) {
+      plot.new()
+      text(0.5, 0.5, paste0("Error creating plot:\n", e$message), cex = 1, col = "red")
+    })
+  })
+
+  # PAGE 4: Statistics
+  output$stats_comprehensive <- renderText({
+    req(sim_result())
+    result <- sim_result()
+
+    # Defensive check for statistics
+    if (is.null(result$statistics)) {
+      return("No statistics available. Run a simulation first.")
+    }
+
+    stats <- result$statistics
+
+    # Safely extract values with defaults - improved version
+    safe_get <- function(x, default = 0) {
+      tryCatch({
+        if (is.null(x)) return(default)
+        if (length(x) == 0) return(default)
+        if (!is.atomic(x)) return(default)
+        # Ensure single value for calculations
+        if (length(x) > 1) return(x[1])
+        return(as.numeric(x))
+      }, error = function(e) {
+        default
+      })
+    }
+
+    # Calculate std dev safely
+    std_dev <- tryCatch({
+      path_lengths <- sapply(result$walkers, function(w) {
+        if (!is.null(w$path) && is.matrix(w$path)) nrow(w$path) else NA
+      })
+      path_lengths <- as.numeric(path_lengths[!is.na(path_lengths)])
+      if (length(path_lengths) > 1) {
+        sd(path_lengths)
+      } else {
+        0
+      }
+    }, error = function(e) 0)
+
+    # Extract grid size safely
+    grid_size <- safe_get(stats$grid_size, default = 0)
+    black_pixels <- safe_get(stats$black_pixels, default = 0)
+    black_pct <- safe_get(stats$black_percentage, default = 0)
+    total_walkers <- safe_get(stats$total_walkers, default = 1)
+    completed_walkers <- safe_get(stats$completed_walkers, default = 0)
+    total_steps <- safe_get(stats$total_steps, default = 0)
+    elapsed_time <- safe_get(stats$elapsed_time_secs, default = 0.001)
+
+    # Build output with error handling
+    tryCatch({
+      paste0(
+        "=== GRID STATISTICS ===\n",
+        "Grid Size: ", grid_size, "×", grid_size, "\n",
+        "Total Cells: ", grid_size^2, "\n",
+        "Black Pixels: ", black_pixels,
+        sprintf(" (%.2f%%)\n", black_pct),
+        "White Pixels: ", grid_size^2 - black_pixels,
+        sprintf(" (%.2f%%)\n", 100 - black_pct),
+        "\n=== WALKER STATISTICS ===\n",
+        "Total Walkers: ", total_walkers, "\n",
+        "Completed: ", completed_walkers, "\n",
+        "Success Rate: ",
+        sprintf("%.1f%%", 100 * completed_walkers / max(total_walkers, 1)), "\n",
+        "\n=== STEP STATISTICS ===\n",
+        "Total Steps: ", total_steps, "\n",
+        "Min Steps: ", safe_get(stats$min_steps, 0), "\n",
+        "Max Steps: ", safe_get(stats$max_steps, 0), "\n",
+        "Mean Steps: ", sprintf("%.1f", safe_get(stats$mean_steps, 0)), "\n",
+        "Median Steps: ", safe_get(stats$median_steps, 0), "\n",
+        "Std Dev: ", sprintf("%.1f", std_dev), "\n",
+        "\n=== PERFORMANCE ===\n",
+        "Elapsed Time: ", sprintf("%.2f", elapsed_time), " seconds\n",
+        "Steps per Second: ",
+        sprintf("%.0f", total_steps / max(elapsed_time, 0.001)), "\n",
+        "\n=== TERMINATION REASONS ===\n",
+        if (!is.null(stats$termination_reasons) && length(stats$termination_reasons) > 0) {
+          tryCatch({
+            reasons_vec <- as.numeric(stats$termination_reasons)
+            reasons_names <- names(stats$termination_reasons)
+            if (is.null(reasons_names)) reasons_names <- paste0("Reason_", seq_along(reasons_vec))
+            paste(sprintf("  %s: %d (%.1f%%)",
+                          reasons_names,
+                          reasons_vec,
+                          100 * reasons_vec / max(total_walkers, 1)),
+                  collapse = "\n")
+          }, error = function(e) {
+            "  Error formatting termination reasons"
+          })
+        } else {
+          "  No data available"
+        }
+      )
+    }, error = function(e) {
+      paste0("Error displaying statistics:\n", e$message)
+    })
+  })
+
+  # PAGE 5: Debug - Versions
+  output$debug_versions <- renderText({
+    paste0(
+      "=== PACKAGE VERSIONS ===\n",
+      "randomwalk: ", packageVersion("randomwalk"), "\n",
+      "shiny: ", packageVersion("shiny"), "\n",
+      "ggplot2: ", packageVersion("ggplot2"), "\n",
+      if (requireNamespace("mirai", quietly = TRUE)) {
+        paste0("mirai: ", packageVersion("mirai"), "\n")
+      } else "",
+      if (requireNamespace("nanonext", quietly = TRUE)) {
+        paste0("nanonext: ", packageVersion("nanonext"), "\n")
+      } else "",
+      if (requireNamespace("crew", quietly = TRUE)) {
+        paste0("crew: ", packageVersion("crew"), "\n")
+      } else ""
+    )
+  })
+
+  # PAGE 5: Debug - Inputs
+  output$debug_inputs <- renderText({
+    paste0(
+      "=== CURRENT INPUTS ===\n",
+      "Grid Size: ", input$grid_size, "\n",
+      "Number of Walkers: ", input$n_walkers, "\n",
+      "Mode: sync sequential (workers=0)\n",
+      "Neighborhood: ", input$neighborhood, "\n",
+      "Boundary: ", input$boundary, "\n",
+      "Max Steps: ", input$max_steps
+    )
+  })
+
+  # PAGE 5: Debug - Backend
+  output$debug_backend <- renderText({
+    env_is_webr <- is_webr()
+
+    paste0(
+      "=== BACKEND INFORMATION ===\n",
+      "Environment: WebR/Browser\n",
+      "R Version: ", R.version.string, "\n",
+      "Backend: synchronous (no parallelization)\n",
+      "Sync Mode: static (grid snapshots)\n",
+      "\n=== ENVIRONMENT DETECTION ===\n",
+      ".webr_env exists: ", exists(".webr_env", envir = .GlobalEnv), "\n",
+      "WEBR env var: ", Sys.getenv("WEBR"), "\n",
+      "is_webr() result: ", env_is_webr
+    )
+  })
+
+  # PAGE 5: Debug - Periodic Updates
+  output$debug_periodic <- renderText({
+    # Depend on timer to update every second
+    timer()
+
+    # Enhanced debug info during execution
+    state_info <- switch(sim_state(),
+      "idle" = "💤 Idle - waiting for user to click 'Run Simulation'",
+      "running" = {
+        elapsed <- if (!is.null(sim_start_time())) {
+          as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+        } else {
+          0
+        }
+        paste0("🏃 Running - ", sprintf("%.0f", elapsed), " seconds elapsed")
+      },
+      "complete" = {
+        elapsed <- if (!is.null(sim_end_time()) && !is.null(sim_start_time())) {
+          as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
+        } else {
+          0
+        }
+        paste0("✅ Complete - took ", sprintf("%.2f", elapsed), " seconds")
+      },
+      "error" = "❌ Error - see status tab for details",
+      "Unknown state"
+    )
+
+    paste0(
+      "=== PERIODIC UPDATES ===\n",
+      "Current Time: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n",
+      "Simulation State: ", state_info, "\n",
+      "Simulation Count: ", sim_count(), "\n",
+      "Result Available: ", if (is.null(sim_result())) "No" else "Yes", "\n",
+      "Active Tab: ", input$tabs, "\n",
+      if (sim_state() == "running" && !is.null(sim_start_time())) {
+        paste0(
+          "\n=== EXECUTION INFO ===\n",
+          "Grid Size: ", input$grid_size, "×", input$grid_size, "\n",
+          "Walkers: ", input$n_walkers, "\n",
+          "Workers: 0 (sync sequential)\n",
+          "Backend: synchronous"
+        )
+      } else {
+        ""
+      }
+    )
+  })
+}
+
+# ============================================================================
+# Run Shiny App
+# ============================================================================
+
+shinyApp(ui = ui, server = server)
+```
+
+## Tips
+
+- **Larger grid** (200-400): More exploration space
+- **Fewer walkers** (100-500): Faster simulation
+- **8-hood**: Diagonal movement for different patterns
+- **Wrap boundary**: Toroidal grid (no edge termination)
+
+## Build Info
+
+**randomwalk** N/A \| **Git** `b9f0f37` \| **R** 4.5.2 \| **Built**
+2026-02-02

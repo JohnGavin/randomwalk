@@ -11,6 +11,13 @@ format:
     code-summary: "Show code"
     theme: cosmo
     embed-resources: false
+execute:
+  eval: false
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Telemetry and Pipeline Performance}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
@@ -583,7 +590,6 @@ This telemetry vignette provides comprehensive performance insights:
 
 All statistics are generated automatically from the targets pipeline, ensuring consistency across builds.
 
----
 
 *Generated on: `r Sys.time()`*
 

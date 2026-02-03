@@ -1,6 +1,11 @@
 ---
 title: "Full-Featured Dashboard"
 description: "Complete dashboard with walker paths, step distributions, detailed statistics, and debug info - for in-depth exploration"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Full-Featured Dashboard}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
 format:
   html:
     code-fold: true
@@ -25,6 +30,7 @@ format:
 filters:
   - shinylive
 ---
+
 
 ```{shinylive-r}
 #| standalone: true
@@ -289,27 +295,39 @@ server <- function(input, output, session) {
   })
   outputOptions(output, "is_running", suspendWhenHidden = FALSE)
 
-  # Runtime estimate (WebR performance varies: ~50-500 steps/sec depending on grid size)
+  # Runtime estimate (WebR performance varies: ~50-500 steps/sec depending on grid size & walker count)
   output$runtime_estimate <- renderUI({
-    # Actual runtime is proportional to max_steps, not n_walkers * max_steps
-    # All walkers move simultaneously each step
-    # Performance degrades with larger grids due to neighbor checking
+    # Runtime calculation considers BOTH factors:
+    # 1. Simulation steps = max_steps (all walkers move simultaneously each step)
+    # 2. Per-step cost increases with more walkers due to collision checks & neighbor lookups
+    #
+    # Total cost = max_steps × (base_per_step_cost + walker_scaling × n_walkers)
+    # Rearranged: effective_steps_per_sec = base_steps_per_sec / (1 + walker_scaling × n_walkers)
+
     grid_area <- input$grid_size^2
 
-    # Empirical performance model based on observed runtimes:
-    # Small grids (≤100x100): ~200-500 steps/sec
-    # Medium grids (100-200): ~100-200 steps/sec
-    # Large grids (>200): ~50-100 steps/sec
+    # Empirical base performance model (1 walker) based on grid size:
+    # Small grids (≤100x100): ~300 steps/sec
+    # Medium grids (100-200): ~150 steps/sec
+    # Large grids (>200): ~75 steps/sec
     if (grid_area <= 10000) {
-      steps_per_sec <- 300
+      base_steps_per_sec <- 300
     } else if (grid_area <= 40000) {
-      steps_per_sec <- 150
+      base_steps_per_sec <- 150
     } else {
-      steps_per_sec <- 75
+      base_steps_per_sec <- 75
     }
 
-    # Total simulation steps (not walker*steps)
-    est_seconds <- input$max_steps / steps_per_sec
+    # Walker scaling factor: each walker adds ~0.2% overhead per step
+    # (collision checks, neighbor lookups, state updates scale with active walkers)
+    walker_scaling <- 0.002
+
+    # Effective throughput accounting for both factors
+    effective_steps_per_sec <- base_steps_per_sec / (1 + walker_scaling * input$n_walkers)
+
+    # Total simulation time
+    total_steps <- input$max_steps
+    est_seconds <- total_steps / effective_steps_per_sec
 
     if (est_seconds < 60) {
       est_text <- sprintf("~%.0f seconds", est_seconds)
@@ -322,15 +340,19 @@ server <- function(input, output, session) {
       color <- "red"
     }
 
+    # Calculate total walker steps for reference
+    total_walker_steps <- input$n_walkers * input$max_steps
+
     tags$div(
       style = paste0("color: ", color, "; font-weight: bold;"),
       est_text,
       tags$br(),
       tags$small(style = "color: gray;",
-                 sprintf("(%s walkers × %s steps = %sK steps)",
-                         format(input$n_walkers, big.mark=","),
+                 sprintf("Max steps: %s | Walkers: %s\n(%sK total walker-steps, ~%.0f steps/sec effective)",
                          format(input$max_steps, big.mark=","),
-                         format(round(max_steps/1000), big.mark=",")))
+                         format(input$n_walkers, big.mark=","),
+                         format(round(total_walker_steps/1000), big.mark=","),
+                         effective_steps_per_sec))
     )
   })
 
@@ -555,7 +577,7 @@ server <- function(input, output, session) {
         result_filtered <- result
         result_filtered$walkers <- filtered_walkers
         plot_walker_paths(result_filtered,
-                          main = paste(length(walker_ids), "Selected Walker Paths"))
+                          main = paste(length(walker_indices), "Selected Walker Paths (by termination order)"))
       } else {
         plot.new()
         text(0.5, 0.5, "No walkers selected")

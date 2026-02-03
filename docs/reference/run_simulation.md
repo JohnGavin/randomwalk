@@ -1,0 +1,120 @@
+# Run a Random Walk Simulation
+
+Executes a complete random walk simulation with the specified
+parameters. This is the main entry point for running simulations
+programmatically.
+
+## Usage
+
+``` r
+run_simulation(
+  grid_size = 10,
+  n_walkers = 5,
+  neighborhood = c("4-hood", "8-hood"),
+  boundary = c("terminate", "wrap"),
+  workers = 0,
+  sync_mode = c("static", "dynamic", "mirai_dynamic", "chunked"),
+  max_steps = 10000L,
+  verbose = FALSE,
+  quiet = FALSE,
+  validate_strict = FALSE,
+  validate_percent = 5,
+  log_interval = 50
+)
+```
+
+## Arguments
+
+- grid_size:
+
+  Integer. Size of the grid (n x n). Default 10.
+
+- n_walkers:
+
+  Integer. Number of simultaneous walkers. Default 5. Must be between 1
+  and 60% of grid size.
+
+- neighborhood:
+
+  Character. Either "4-hood" or "8-hood". Default "4-hood".
+
+- boundary:
+
+  Character. Either "terminate" or "wrap". Default "terminate".
+
+- workers:
+
+  Integer. Number of parallel workers (0 = synchronous). Default 0. For
+  async mode, use 2-4 workers for medium grids, 4-8 for large grids.
+  Requires crew and nanonext packages.
+
+- sync_mode:
+
+  Character. Grid synchronization mode for async simulations. Options:
+  "static" (default, workers receive frozen grid snapshot), "dynamic"
+  (DEPRECATED - nanonext sockets fail in crew, falls back to static),
+  "mirai_dynamic" (DEPRECATED - same socket issues as dynamic), or
+  "chunked" (RECOMMENDED - processes walkers in batches of 10, updating
+  grid between batches for near-real-time collision detection - ~3x more
+  black pixels). Only applies when workers \> 0.
+
+- max_steps:
+
+  Integer. Maximum steps per walker before forced termination. Default
+  10000.
+
+- verbose:
+
+  Logical. If TRUE, enables detailed logging. Default FALSE.
+
+- quiet:
+
+  Logical. If TRUE, suppresses INFO-level logs (shows only WARN/ERROR).
+  Useful for tests to reduce console output. Default FALSE.
+
+- validate_strict:
+
+  Logical. If TRUE, validation errors stop simulation. If FALSE, they
+  only log warnings. Default FALSE. Tests should use TRUE.
+
+- validate_percent:
+
+  Numeric. Validate grid every X% of walkers complete. Default 5
+  (validates every 5% = 20 times total). Set to 0 to disable periodic
+  validation (only validates at end). Minimum interval is 1 walker.
+
+- log_interval:
+
+  Integer. Log progress every N completed walkers. Default 50. Set to 0
+  to disable progress logging (only shows start/end). Lower values
+  (e.g., 5) increase verbosity, higher values (e.g., 100) reduce output.
+
+## Value
+
+A list with components:
+
+- grid:
+
+  Final grid state
+
+- walkers:
+
+  List of final walker states
+
+- statistics:
+
+  Simulation statistics
+
+- parameters:
+
+  Input parameters
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+result <- run_simulation(grid_size = 20, n_walkers = 8)
+plot_grid(result$grid)
+print(result$statistics)
+} # }
+```

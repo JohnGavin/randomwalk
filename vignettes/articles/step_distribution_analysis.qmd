@@ -7,8 +7,14 @@ format:
     code-summary: "Show code"
     toc: true
     toc-depth: 3
+execute:
+  eval: false
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Step Distribution Analysis}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
 ---
-
 ## Overview
 
 This vignette uses the `targets` package to analyze how the distribution of steps per walker varies across different conditions:
