@@ -50,6 +50,8 @@ navbar:
       # BACKGROUND: Project documentation and development info
       # ═══════════════════════════════════════════════════════════
       - text: "──── Background & Documentation ────"
+      - text: DLA Theory & Mathematical Foundations
+        href: articles/dla_theory.html
       - text: Defensive Programming Patterns
         href: articles/defensive_programming.html
       - text: Telemetry and Pipeline Performance
@@ -68,6 +70,7 @@ articles:
 - title: "Background & Documentation"
   desc: "Project documentation and development patterns"
   contents:
+  - dla_theory
   - defensive_programming
   - telemetry
 

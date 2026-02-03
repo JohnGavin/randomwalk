@@ -289,11 +289,27 @@ server <- function(input, output, session) {
   })
   outputOptions(output, "is_running", suspendWhenHidden = FALSE)
 
-  # Runtime estimate (WebR ~400-500 steps/sec observed in Issue #172)
+  # Runtime estimate (WebR performance varies: ~50-500 steps/sec depending on grid size)
   output$runtime_estimate <- renderUI({
-    max_steps <- input$n_walkers * input$max_steps
-    # Conservative estimate: 400 steps/sec for WebR
-    est_seconds <- max_steps / 400
+    # Actual runtime is proportional to max_steps, not n_walkers * max_steps
+    # All walkers move simultaneously each step
+    # Performance degrades with larger grids due to neighbor checking
+    grid_area <- input$grid_size^2
+
+    # Empirical performance model based on observed runtimes:
+    # Small grids (≤100x100): ~200-500 steps/sec
+    # Medium grids (100-200): ~100-200 steps/sec
+    # Large grids (>200): ~50-100 steps/sec
+    if (grid_area <= 10000) {
+      steps_per_sec <- 300
+    } else if (grid_area <= 40000) {
+      steps_per_sec <- 150
+    } else {
+      steps_per_sec <- 75
+    }
+
+    # Total simulation steps (not walker*steps)
+    est_seconds <- input$max_steps / steps_per_sec
 
     if (est_seconds < 60) {
       est_text <- sprintf("~%.0f seconds", est_seconds)
@@ -353,7 +369,7 @@ server <- function(input, output, session) {
       elapsed_secs <- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
       mins <- floor(elapsed_secs / 60)
       secs <- floor(elapsed_secs %% 60)
-      sprintf("⏱️ Elapsed: %02d:%02d", mins, secs)
+      sprintf("Elapsed: %02d:%02d", mins, secs)
     } else if (sim_state() == "complete" && !is.null(sim_end_time()) && !is.null(sim_start_time())) {
       total_secs <- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
       mins <- floor(total_secs / 60)
@@ -479,7 +495,7 @@ server <- function(input, output, session) {
     })
   })
 
-  # PAGE 1: Fractal Graph
+  # PAGE 1: Fractal Graph with arrival time coloring
   output$fractal_plot <- renderPlot({
     req(sim_result())
     result <- sim_result()
@@ -489,8 +505,15 @@ server <- function(input, output, session) {
     req(nrow(result$grid) > 0)
     req(sum(result$grid == 1) > 0)  # Ensure has black pixels
 
-    # CRITICAL: Validate grid connectivity before plotting
-    plot_grid(result, main = "Fractal Pattern - Black Pixels on Grid", show_legend = FALSE)
+    # Enhanced plot with pixel statistics in title
+    stats <- result$statistics
+    black_count <- stats$black_pixels
+    total_pixels <- input$grid_size^2
+    black_percent <- round(100 * black_count / total_pixels, 2)
+
+    title <- sprintf("DLA Fractal: %d black pixels (%.2f%% of %dx%d grid)",
+                    black_count, black_percent, input$grid_size, input$grid_size)
+    plot_grid(result, main = title, show_legend = FALSE)
   })
 
   output$fractal_stats <- renderText({
