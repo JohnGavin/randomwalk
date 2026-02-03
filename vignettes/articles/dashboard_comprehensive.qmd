@@ -189,13 +189,13 @@ ui <- fluidPage(
                  h4("Walker Trajectories"),
                  fluidRow(
                    column(6,
-                     sliderInput("first_n_paths", "First N paths:",
+                     sliderInput("first_n_paths", "First N to terminate:",
                                 min = 0, max = 20, value = 5, step = 1)),
                    column(6,
-                     sliderInput("last_n_paths", "Last N paths:",
+                     sliderInput("last_n_paths", "Last N to terminate:",
                                 min = 0, max = 20, value = 5, step = 1))
                  ),
-                 helpText("Select first N and/or last N walker paths to display (max 40 total)"),
+                 helpText("Select walkers by termination order (chronological), not ID (max 40 total)"),
                  plotOutput("paths_plot_first25", height = "500px")),
 
         # PAGE 3: Distributions (Path Lengths by Termination Reason)
@@ -514,15 +514,21 @@ server <- function(input, output, session) {
       first_n <- min(input$first_n_paths, n_walkers)
       last_n <- min(input$last_n_paths, n_walkers)
 
-      # Select walker IDs: first N and last N
-      walker_ids <- unique(c(
+      # Sort walkers by termination order (chronological)
+      # If termination_order is missing (old simulations), fall back to ID
+      walkers_ordered <- result$walkers[order(sapply(result$walkers, function(w) {
+        if (!is.null(w$termination_order)) w$termination_order else w$id
+      }))]
+
+      # Select first N and last N by termination order
+      walker_indices <- unique(c(
         if(first_n > 0) 1:first_n else NULL,
         if(last_n > 0) (n_walkers - last_n + 1):n_walkers else NULL
       ))
 
-      if (length(walker_ids) > 0) {
+      if (length(walker_indices) > 0) {
         # Plot only selected walkers' paths
-        filtered_walkers <- result$walkers[walker_ids]
+        filtered_walkers <- walkers_ordered[walker_indices]
         result_filtered <- result
         result_filtered$walkers <- filtered_walkers
         plot_walker_paths(result_filtered,

@@ -33,6 +33,7 @@ create_walker <- function(id, pos, grid_size, store_path = TRUE) {
     steps = 0L,
     active = TRUE,
     termination_reason = NULL,
+    termination_order = NULL,
     path = if (store_path) list(pos) else NULL,
     grid_size = grid_size,
     store_path = store_path

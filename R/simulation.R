@@ -232,6 +232,7 @@ run_simulation <- function(grid_size = 10,
     total_steps <- 0
     step_count <- 0
     completed_count <- 0
+    termination_counter <- 0  # Track order of walker termination
     last_black_positions <- NULL  # Track validated black pixels for optimization
 
     # PERF: Track active walker indices instead of iterating all walkers
@@ -266,6 +267,10 @@ run_simulation <- function(grid_size = 10,
 
         # Track newly inactive walkers
         if (!walker$active) {
+          if (is.null(walker$termination_order)) {
+            termination_counter <- termination_counter + 1
+            walker$termination_order <- termination_counter
+          }
           newly_inactive <- c(newly_inactive, i)
           completed_count <- completed_count + 1
 
@@ -709,6 +714,7 @@ run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
     # Poll for completed tasks
     completed_walkers <- list()
     n_completed <- 0
+    termination_counter <- 0  # Track order of walker termination
     last_black_positions <- NULL  # Track validated black pixels for optimization
     step_count <- 0  # Track steps for debugging context
 
@@ -737,6 +743,10 @@ run_simulation_async_dynamic <- function(grid, walkers, n_workers, neighborhood,
           logger::log_error("Result status: {result$status}, error: {if(!is.null(result$error)) result$error else 'none'}")
           next
         }
+
+        # Add termination order
+        termination_counter <- termination_counter + 1
+        walker_result$termination_order <- termination_counter
 
         completed_walkers[[as.character(walker_result$walker_id)]] <- walker_result
 
@@ -1193,6 +1203,7 @@ run_simulation_chunked <- function(grid, walkers, n_workers, neighborhood,
 
   completed_walkers <- list()
   collision_count <- 0
+  termination_counter <- 0  # Track order of walker termination
 
   tryCatch({
     for (batch_num in seq_len(n_batches)) {
@@ -1325,6 +1336,10 @@ run_simulation_chunked <- function(grid, walkers, n_workers, neighborhood,
           walker_result <- result$result[[1]]
 
           if (!is.null(walker_result$walker_id)) {
+            # Add termination order
+            termination_counter <- termination_counter + 1
+            walker_result$termination_order <- termination_counter
+
             batch_results[[as.character(walker_result$walker_id)]] <- walker_result
             batch_completed <- batch_completed + 1
 

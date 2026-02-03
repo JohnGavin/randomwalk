@@ -441,10 +441,6 @@ README.qmd            # Source for README.md (NEVER edit README.md directly)</co
 <p><strong>Use targets for reproducible documentation:</strong> - Pre-compute vignette data in Nix environment - Save results to inst/extdata/ - Vignettes load pre-computed data (never compute on-the-fly) - This ensures CI can render docs without package installation</p>
 </div>
 <div class="section level3">
-<h3 id="shiny-dashboard-requirements-mandatory">Shiny Dashboard Requirements (MANDATORY)<a class="anchor" aria-label="anchor" href="#shiny-dashboard-requirements-mandatory"></a></h3>
-<p><strong>For ALL r-shinylive dashboards in vignettes:</strong> - <strong>NEVER use spinners</strong> - they contain no useful information - <strong>ALWAYS use elapsed time timers</strong> showing MM:SS format - Timer should update every second using reactiveTimer(1000) - Show states: Ready/Running (with elapsed)/Completed (with total time)/Error - Example format: “⏱️ Elapsed: 01:23” while running - Timer should be always visible, not just when running - Button should disable during execution to prevent multiple clicks</p>
-</div>
-<div class="section level3">
 <h3 id="code-display-best-practices-mandatory">Code Display Best Practices (MANDATORY)<a class="anchor" aria-label="anchor" href="#code-display-best-practices-mandatory"></a></h3>
 <p><strong>NEVER show code with prompts or console output markers:</strong> - ❌ WRONG: <code>&gt; library(millsratio)</code> - Cannot copy/paste - ✅ RIGHT: <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library(millsratio)</a></code> - Clean, copyable code</p>
 <p><strong>In vignettes/examples, NEVER use:</strong> - ❌ <code><a href="https://devtools.r-lib.org/reference/load_all.html" class="external-link">devtools::load_all()</a></code> - Assumes devtools is installed - ✅ <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library(package_name)</a></code> - Standard package loading</p>
