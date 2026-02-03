@@ -368,12 +368,12 @@ server <- function(input, output, session) {
 
       output$status <- renderText({
         paste0(
-          "🏃 SIMULATION RUNNING...\n",
+          "SIMULATION RUNNING...\n",
           "Run #", sim_count(), "\n",
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
           "Elapsed:  ", sprintf("%.0f", elapsed), " seconds\n",
-          "Status:   ", rep(c("⏳", "⌛"), ceiling(elapsed))[elapsed %% 2 + 1], " Processing...\n",
+          "Status:   Processing...\n",
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Grid: ", input$grid_size, "×", input$grid_size, "\n",
           "Walkers: ", input$n_walkers, "\n",
@@ -396,11 +396,11 @@ server <- function(input, output, session) {
       total_secs <- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
       mins <- floor(total_secs / 60)
       secs <- floor(total_secs %% 60)
-      sprintf("✅ Completed in %02d:%02d", mins, secs)
+      sprintf("Completed in %02d:%02d", mins, secs)
     } else if (sim_state() == "error") {
-      "❌ Error occurred"
+      "Error occurred"
     } else {
-      "⏳ Ready to run"
+      "Ready to run"
     }
   })
 
@@ -531,9 +531,9 @@ server <- function(input, output, session) {
     stats <- result$statistics
     black_count <- stats$black_pixels
     total_pixels <- input$grid_size^2
-    black_percent <- round(100 * black_count / total_pixels, 2)
+    black_percent <- round(100 * black_count / total_pixels)
 
-    title <- sprintf("DLA Fractal: %d black pixels (%.2f%% of %dx%d grid)",
+    title <- sprintf("DLA Fractal: %d black pixels (%d%% of %dx%d grid)",
                     black_count, black_percent, input$grid_size, input$grid_size)
     plot_grid(result, main = title, show_legend = FALSE)
   })
@@ -543,7 +543,7 @@ server <- function(input, output, session) {
     stats <- sim_result()$statistics
     paste0(
       "Black Pixels: ", stats$black_pixels,
-      " (", sprintf("%.2f%%", stats$black_percentage), " of grid)\n",
+      " (", sprintf("%d%%", round(stats$black_percentage)), " of grid)\n",
       "Grid Size: ", stats$grid_size, "×", stats$grid_size,
       " (", stats$grid_size^2, " total cells)"
     )
