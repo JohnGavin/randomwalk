@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
-<head>
-<meta charset="UTF-8">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
 <meta name="generator" content="quarto-1.7.34">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
 <meta name="description" content="Complete dashboard with walker paths, step distributions, detailed statistics, and debug info - for in-depth exploration">
+
 <title>Full-Featured Dashboard</title>
 <style>
 code{white-space: pre-wrap;}
@@ -19,12 +22,23 @@ ul.task-list li input[type="checkbox"] {
   vertical-align: middle;
 }
 </style>
-<script src="dashboard_comprehensive_files/libs/clipboard/clipboard.min.js"></script><script src="dashboard_comprehensive_files/libs/quarto-html/quarto.js" type="module"></script><script src="dashboard_comprehensive_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script><script src="dashboard_comprehensive_files/libs/quarto-html/popper.min.js"></script><script src="dashboard_comprehensive_files/libs/quarto-html/tippy.umd.min.js"></script><script src="dashboard_comprehensive_files/libs/quarto-html/anchor.min.js"></script><link href="dashboard_comprehensive_files/libs/quarto-html/tippy.css" rel="stylesheet">
+
+
+<script src="dashboard_comprehensive_files/libs/clipboard/clipboard.min.js"></script>
+<script src="dashboard_comprehensive_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="dashboard_comprehensive_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="dashboard_comprehensive_files/libs/quarto-html/popper.min.js"></script>
+<script src="dashboard_comprehensive_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="dashboard_comprehensive_files/libs/quarto-html/anchor.min.js"></script>
+<link href="dashboard_comprehensive_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="dashboard_comprehensive_files/libs/quarto-html/quarto-syntax-highlighting-c8ad9e5dbd60b7b70b38521ab19b7da4.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="dashboard_comprehensive_files/libs/bootstrap/bootstrap.min.js"></script><link href="dashboard_comprehensive_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<script src="dashboard_comprehensive_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="dashboard_comprehensive_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="dashboard_comprehensive_files/libs/bootstrap/bootstrap-b232414f0569882df4359abfb7cfba3f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <meta name="shinylive:serviceworker_dir" content="../..">
-<script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/load-shinylive-sw.js" type="module"></script><script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/run-python-blocks.js" type="module"></script><link href="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/shinylive.css" rel="stylesheet">
+<script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/load-shinylive-sw.js" type="module"></script>
+<script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/run-python-blocks.js" type="module"></script>
+<link href="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/shinylive.css" rel="stylesheet">
 <link href="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-quarto-css/shinylive-quarto.css" rel="stylesheet">
 <script>
 // Fix serviceworker_dir meta tag BEFORE Shinylive loads
@@ -37,12 +51,18 @@ ul.task-list li input[type="checkbox"] {
   }
 })();
 </script>
+
+
 </head>
+
 <body class="fullcontent quarto-light">
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
 
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
 <h1 class="title">Full-Featured Dashboard</h1>
 </div>
 
@@ -62,7 +82,10 @@ ul.task-list li input[type="checkbox"] {
   
 
 
-</header><pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
+</header>
+
+
+<pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
 #| standalone: true
@@ -227,13 +250,13 @@ ui &lt;- fluidPage(
                  h4("Walker Trajectories"),
                  fluidRow(
                    column(6,
-                     sliderInput("first_n_paths", "First N paths:",
+                     sliderInput("first_n_paths", "First N to terminate:",
                                 min = 0, max = 20, value = 5, step = 1)),
                    column(6,
-                     sliderInput("last_n_paths", "Last N paths:",
+                     sliderInput("last_n_paths", "Last N to terminate:",
                                 min = 0, max = 20, value = 5, step = 1))
                  ),
-                 helpText("Select first N and/or last N walker paths to display (max 40 total)"),
+                 helpText("Select walkers by termination order (chronological), not ID (max 40 total)"),
                  plotOutput("paths_plot_first25", height = "500px")),
 
         # PAGE 3: Distributions (Path Lengths by Termination Reason)
@@ -327,11 +350,39 @@ server &lt;- function(input, output, session) {
   })
   outputOptions(output, "is_running", suspendWhenHidden = FALSE)
 
-  # Runtime estimate (WebR ~400-500 steps/sec observed in Issue #172)
+  # Runtime estimate (WebR performance varies: ~50-500 steps/sec depending on grid size &amp; walker count)
   output$runtime_estimate &lt;- renderUI({
-    max_steps &lt;- input$n_walkers * input$max_steps
-    # Conservative estimate: 400 steps/sec for WebR
-    est_seconds &lt;- max_steps / 400
+    # Runtime calculation considers BOTH factors:
+    # 1. Simulation steps = max_steps (all walkers move simultaneously each step)
+    # 2. Per-step cost increases with more walkers due to collision checks &amp; neighbor lookups
+    #
+    # Total cost = max_steps × (base_per_step_cost + walker_scaling × n_walkers)
+    # Rearranged: effective_steps_per_sec = base_steps_per_sec / (1 + walker_scaling × n_walkers)
+
+    grid_area &lt;- input$grid_size^2
+
+    # Empirical base performance model (1 walker) based on grid size:
+    # Small grids (≤100x100): ~300 steps/sec
+    # Medium grids (100-200): ~150 steps/sec
+    # Large grids (&gt;200): ~75 steps/sec
+    if (grid_area &lt;= 10000) {
+      base_steps_per_sec &lt;- 300
+    } else if (grid_area &lt;= 40000) {
+      base_steps_per_sec &lt;- 150
+    } else {
+      base_steps_per_sec &lt;- 75
+    }
+
+    # Walker scaling factor: each walker adds ~0.2% overhead per step
+    # (collision checks, neighbor lookups, state updates scale with active walkers)
+    walker_scaling &lt;- 0.002
+
+    # Effective throughput accounting for both factors
+    effective_steps_per_sec &lt;- base_steps_per_sec / (1 + walker_scaling * input$n_walkers)
+
+    # Total simulation time
+    total_steps &lt;- input$max_steps
+    est_seconds &lt;- total_steps / effective_steps_per_sec
 
     if (est_seconds &lt; 60) {
       est_text &lt;- sprintf("~%.0f seconds", est_seconds)
@@ -344,15 +395,19 @@ server &lt;- function(input, output, session) {
       color &lt;- "red"
     }
 
+    # Calculate total walker steps for reference
+    total_walker_steps &lt;- input$n_walkers * input$max_steps
+
     tags$div(
       style = paste0("color: ", color, "; font-weight: bold;"),
       est_text,
       tags$br(),
       tags$small(style = "color: gray;",
-                 sprintf("(%s walkers × %s steps = %sK steps)",
-                         format(input$n_walkers, big.mark=","),
+                 sprintf("Max steps: %s | Walkers: %s\n(%sK total walker-steps, ~%.0f steps/sec effective)",
                          format(input$max_steps, big.mark=","),
-                         format(round(max_steps/1000), big.mark=",")))
+                         format(input$n_walkers, big.mark=","),
+                         format(round(total_walker_steps/1000), big.mark=","),
+                         effective_steps_per_sec))
     )
   })
 
@@ -391,7 +446,7 @@ server &lt;- function(input, output, session) {
       elapsed_secs &lt;- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
       mins &lt;- floor(elapsed_secs / 60)
       secs &lt;- floor(elapsed_secs %% 60)
-      sprintf("⏱️ Elapsed: %02d:%02d", mins, secs)
+      sprintf("Elapsed: %02d:%02d", mins, secs)
     } else if (sim_state() == "complete" &amp;&amp; !is.null(sim_end_time()) &amp;&amp; !is.null(sim_start_time())) {
       total_secs &lt;- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
       mins &lt;- floor(total_secs / 60)
@@ -517,7 +572,7 @@ server &lt;- function(input, output, session) {
     })
   })
 
-  # PAGE 1: Fractal Graph
+  # PAGE 1: Fractal Graph with arrival time coloring
   output$fractal_plot &lt;- renderPlot({
     req(sim_result())
     result &lt;- sim_result()
@@ -527,8 +582,15 @@ server &lt;- function(input, output, session) {
     req(nrow(result$grid) &gt; 0)
     req(sum(result$grid == 1) &gt; 0)  # Ensure has black pixels
 
-    # CRITICAL: Validate grid connectivity before plotting
-    plot_grid(result, main = "Fractal Pattern - Black Pixels on Grid", show_legend = FALSE)
+    # Enhanced plot with pixel statistics in title
+    stats &lt;- result$statistics
+    black_count &lt;- stats$black_pixels
+    total_pixels &lt;- input$grid_size^2
+    black_percent &lt;- round(100 * black_count / total_pixels, 2)
+
+    title &lt;- sprintf("DLA Fractal: %d black pixels (%.2f%% of %dx%d grid)",
+                    black_count, black_percent, input$grid_size, input$grid_size)
+    plot_grid(result, main = title, show_legend = FALSE)
   })
 
   output$fractal_stats &lt;- renderText({
@@ -552,19 +614,25 @@ server &lt;- function(input, output, session) {
       first_n &lt;- min(input$first_n_paths, n_walkers)
       last_n &lt;- min(input$last_n_paths, n_walkers)
 
-      # Select walker IDs: first N and last N
-      walker_ids &lt;- unique(c(
+      # Sort walkers by termination order (chronological)
+      # If termination_order is missing (old simulations), fall back to ID
+      walkers_ordered &lt;- result$walkers[order(sapply(result$walkers, function(w) {
+        if (!is.null(w$termination_order)) w$termination_order else w$id
+      }))]
+
+      # Select first N and last N by termination order
+      walker_indices &lt;- unique(c(
         if(first_n &gt; 0) 1:first_n else NULL,
         if(last_n &gt; 0) (n_walkers - last_n + 1):n_walkers else NULL
       ))
 
-      if (length(walker_ids) &gt; 0) {
+      if (length(walker_indices) &gt; 0) {
         # Plot only selected walkers' paths
-        filtered_walkers &lt;- result$walkers[walker_ids]
+        filtered_walkers &lt;- walkers_ordered[walker_indices]
         result_filtered &lt;- result
         result_filtered$walkers &lt;- filtered_walkers
         plot_walker_paths(result_filtered,
-                          main = paste(length(walker_ids), "Selected Walker Paths"))
+                          main = paste(length(walker_indices), "Selected Walker Paths (by termination order)"))
       } else {
         plot.new()
         text(0.5, 0.5, "No walkers selected")
@@ -929,19 +997,23 @@ server &lt;- function(input, output, session) {
 # ============================================================================
 
 shinyApp(ui = ui, server = server)</code></pre>
-<section id="tips" class="level2"><h2 class="anchored" data-anchor-id="tips">Tips</h2>
+<section id="tips" class="level2">
+<h2 class="anchored" data-anchor-id="tips">Tips</h2>
 <ul>
-<li>
-<strong>Larger grid</strong> (200-400): More exploration space</li>
-<li>
-<strong>Fewer walkers</strong> (100-500): Faster simulation</li>
-<li>
-<strong>8-hood</strong>: Diagonal movement for different patterns</li>
-<li>
-<strong>Wrap boundary</strong>: Toroidal grid (no edge termination)</li>
-</ul></section><section id="build-info" class="level2"><h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>b9f0f37</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-02</p>
-</section></main><!-- /main column --><script id="quarto-html-after-body" type="application/javascript">
+<li><strong>Larger grid</strong> (200-400): More exploration space</li>
+<li><strong>Fewer walkers</strong> (100-500): Faster simulation</li>
+<li><strong>8-hood</strong>: Diagonal movement for different patterns</li>
+<li><strong>Wrap boundary</strong>: Toroidal grid (no edge termination)</li>
+</ul>
+</section>
+<section id="build-info" class="level2">
+<h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
+<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>8fb5dfd</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-03</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
     const anchorJS = new window.AnchorJS();
@@ -1345,5 +1417,4 @@ shinyApp(ui = ui, server = server)</code></pre>
 
 
 
-</body>
-</html>
+</body></html>
