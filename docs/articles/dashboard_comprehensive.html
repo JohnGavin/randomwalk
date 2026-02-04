@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Complete dashboard with walker paths, step distributions, detailed statistics, and debug info - for in-depth exploration">
+<meta name="description" content="Interactive dashboard with walker paths, step distributions, and fractal visualizations">
 
-<title>Full-Featured Dashboard</title>
+<title>Random Walks Dashboard</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -63,12 +63,12 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Full-Featured Dashboard</h1>
+<h1 class="title">Random Walks Dashboard</h1>
 </div>
 
 <div>
   <div class="description">
-    Complete dashboard with walker paths, step distributions, detailed statistics, and debug info - for in-depth exploration
+    Interactive dashboard with walker paths, step distributions, and fractal visualizations
   </div>
 </div>
 
@@ -163,7 +163,6 @@ is_webr &lt;- function() {
 # ============================================================================
 
 ui &lt;- fluidPage(
-  titlePanel("Comprehensive Random Walks Dashboard"),
 
   # Add CSS for timer display
   tags$head(
@@ -217,17 +216,8 @@ ui &lt;- fluidPage(
 
       hr(),
 
-      # Timer updates every 500ms using invalidateLater pattern
-      tags$small(style = "color: #666; display: block; margin-bottom: 10px;",
-                 "Timer updates every 0.5 seconds during simulation"),
-
       # Combined button with status
-      uiOutput("run_button_ui"),
-
-      hr(),
-
-      h5("Status:"),
-      verbatimTextOutput("status", placeholder = TRUE)
+      uiOutput("run_button_ui")
     ),
 
     # RIGHT PANEL: MULTIPLE OUTPUT PAGES
@@ -312,7 +302,12 @@ ui &lt;- fluidPage(
                  tags$a(href="https://johngavin.github.io/randomwalk/", "Documentation"),
                  tags$span(" | "),
                  tags$a(href="https://github.com/JohnGavin/randomwalk", "GitHub"))
-      )
+      ),
+
+      # Status output at bottom of main page
+      hr(),
+      h5("Simulation Status:"),
+      verbatimTextOutput("status", placeholder = TRUE)
     )
   )
 )
@@ -435,28 +430,27 @@ server &lt;- function(input, output, session) {
     }
   })
 
-  # Render button with integrated timer using invalidateLater pattern
+  # Render button with walker/pixel counts (no timer during sync simulation)
   output$run_button_ui &lt;- renderUI({
-    # Use invalidateLater to refresh button text during simulation
     if (sim_state() == "running") {
-      invalidateLater(500)  # Refresh every 500ms while running
-    }
-
-    if (sim_state() == "running" &amp;&amp; !is.null(sim_start_time())) {
-      # Show live updating timer in button
-      elapsed_secs &lt;- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
-      mins &lt;- floor(elapsed_secs / 60)
-      secs &lt;- floor(elapsed_secs %% 60)
-      actionButton("run_sim_disabled", sprintf("Running... %02d:%02d", mins, secs),
+      # During sync simulation, just show "Running..."
+      actionButton("run_sim_disabled", "Running...",
                    class = "btn-warning btn-lg",
                    style = "width: 100%;",
                    disabled = TRUE)
-    } else if (sim_state() == "complete" &amp;&amp; !is.null(sim_end_time()) &amp;&amp; !is.null(sim_start_time())) {
-      # Show completion time on button
+    } else if (sim_state() == "complete" &amp;&amp; !is.null(sim_result())) {
+      # Show walker count and black pixel count when complete
+      result &lt;- sim_result()
       total_secs &lt;- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
       mins &lt;- floor(total_secs / 60)
       secs &lt;- floor(total_secs %% 60)
-      actionButton("run_sim", sprintf("Run Simulation (Last: %02d:%02d)", mins, secs),
+
+      # Get walker and black pixel counts
+      walker_count &lt;- result$statistics$completed_walkers
+      black_count &lt;- result$statistics$black_pixels
+
+      actionButton("run_sim", sprintf("Run Simulation (Walkers: %d. Black: %d. Time: %02d:%02d)",
+                                     walker_count, black_count, mins, secs),
                    class = "btn-success btn-lg",
                    style = "width: 100%;")
     } else if (sim_state() == "error") {
@@ -470,14 +464,6 @@ server &lt;- function(input, output, session) {
     }
   })
 
-  # Observe block to continuously update UI during simulation
-  # This follows the crew/shiny pattern for responsive updates
-  observe({
-    if (sim_state() == "running") {
-      # Keep refreshing UI while simulation runs
-      invalidateLater(500)
-    }
-  })
 
   # Run simulation when button clicked
   observeEvent(input$run_sim, {
@@ -488,7 +474,7 @@ server &lt;- function(input, output, session) {
 
     output$status &lt;- renderText({
       paste0(
-        "🏃 SIMULATION RUNNING...\n",
+        "SIMULATION RUNNING...\n",
         "Run #", sim_count(), "\n",
         "Grid: ", input$grid_size, "×", input$grid_size, "\n",
         "Walkers: ", input$n_walkers, "\n",
@@ -548,7 +534,7 @@ server &lt;- function(input, output, session) {
 
       output$status &lt;- renderText({
         paste0(
-          "✅ SIMULATION COMPLETE\n",
+          "SIMULATION COMPLETE\n",
           "Run #", sim_count(), "\n",
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
@@ -572,7 +558,7 @@ server &lt;- function(input, output, session) {
 
       output$status &lt;- renderText({
         paste0(
-          "❌ SIMULATION ERROR\n",
+          "SIMULATION ERROR\n",
           "Run #", sim_count(), "\n",
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Error: ", e$message, "\n",
@@ -597,15 +583,10 @@ server &lt;- function(input, output, session) {
     req(nrow(result$grid) &gt; 0)
     req(sum(result$grid == 1) &gt; 0)  # Ensure has black pixels
 
-    # Enhanced plot with pixel statistics in title
-    stats &lt;- result$statistics
-    black_count &lt;- stats$black_pixels
-    total_pixels &lt;- input$grid_size^2
-    black_percent &lt;- round(100 * black_count / total_pixels)
-
-    title &lt;- sprintf("DLA Fractal: %d black pixels (%d%% of %dx%d grid)",
-                    black_count, black_percent, input$grid_size, input$grid_size)
-    plot_grid(result, main = title, show_legend = FALSE)
+    # Use enhanced plot with color-coded arrival times
+    plot_grid_enhanced(result,
+                      quantiles = 5,
+                      color_scheme = "viridis")
   })
 
   output$fractal_stats &lt;- renderText({
@@ -1023,7 +1004,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 </section>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>9f7b366</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-04</p>
+<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>cf4989b</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-04</p>
 </section>
 
 </main>

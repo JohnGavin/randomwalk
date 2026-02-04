@@ -1,6 +1,6 @@
 ---
-title: "Full-Featured Dashboard"
-description: "Complete dashboard with walker paths, step distributions, detailed statistics, and debug info - for in-depth exploration"
+title: "Random Walks Dashboard"
+description: "Interactive dashboard with walker paths, step distributions, and fractal visualizations"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Full-Featured Dashboard}
@@ -108,7 +108,6 @@ is_webr <- function() {
 # ============================================================================
 
 ui <- fluidPage(
-  titlePanel("Comprehensive Random Walks Dashboard"),
 
   # Add CSS for timer display
   tags$head(
@@ -162,17 +161,8 @@ ui <- fluidPage(
 
       hr(),
 
-      # Timer updates every 500ms using invalidateLater pattern
-      tags$small(style = "color: #666; display: block; margin-bottom: 10px;",
-                 "Timer updates every 0.5 seconds during simulation"),
-
       # Combined button with status
-      uiOutput("run_button_ui"),
-
-      hr(),
-
-      h5("Status:"),
-      verbatimTextOutput("status", placeholder = TRUE)
+      uiOutput("run_button_ui")
     ),
 
     # RIGHT PANEL: MULTIPLE OUTPUT PAGES
@@ -257,7 +247,12 @@ ui <- fluidPage(
                  tags$a(href="https://johngavin.github.io/randomwalk/", "Documentation"),
                  tags$span(" | "),
                  tags$a(href="https://github.com/JohnGavin/randomwalk", "GitHub"))
-      )
+      ),
+
+      # Status output at bottom of main page
+      hr(),
+      h5("Simulation Status:"),
+      verbatimTextOutput("status", placeholder = TRUE)
     )
   )
 )
@@ -380,28 +375,27 @@ server <- function(input, output, session) {
     }
   })
 
-  # Render button with integrated timer using invalidateLater pattern
+  # Render button with walker/pixel counts (no timer during sync simulation)
   output$run_button_ui <- renderUI({
-    # Use invalidateLater to refresh button text during simulation
     if (sim_state() == "running") {
-      invalidateLater(500)  # Refresh every 500ms while running
-    }
-
-    if (sim_state() == "running" && !is.null(sim_start_time())) {
-      # Show live updating timer in button
-      elapsed_secs <- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
-      mins <- floor(elapsed_secs / 60)
-      secs <- floor(elapsed_secs %% 60)
-      actionButton("run_sim_disabled", sprintf("Running... %02d:%02d", mins, secs),
+      # During sync simulation, just show "Running..."
+      actionButton("run_sim_disabled", "Running...",
                    class = "btn-warning btn-lg",
                    style = "width: 100%;",
                    disabled = TRUE)
-    } else if (sim_state() == "complete" && !is.null(sim_end_time()) && !is.null(sim_start_time())) {
-      # Show completion time on button
+    } else if (sim_state() == "complete" && !is.null(sim_result())) {
+      # Show walker count and black pixel count when complete
+      result <- sim_result()
       total_secs <- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
       mins <- floor(total_secs / 60)
       secs <- floor(total_secs %% 60)
-      actionButton("run_sim", sprintf("Run Simulation (Last: %02d:%02d)", mins, secs),
+
+      # Get walker and black pixel counts
+      walker_count <- result$statistics$completed_walkers
+      black_count <- result$statistics$black_pixels
+
+      actionButton("run_sim", sprintf("Run Simulation (Walkers: %d. Black: %d. Time: %02d:%02d)",
+                                     walker_count, black_count, mins, secs),
                    class = "btn-success btn-lg",
                    style = "width: 100%;")
     } else if (sim_state() == "error") {
@@ -415,14 +409,6 @@ server <- function(input, output, session) {
     }
   })
 
-  # Observe block to continuously update UI during simulation
-  # This follows the crew/shiny pattern for responsive updates
-  observe({
-    if (sim_state() == "running") {
-      # Keep refreshing UI while simulation runs
-      invalidateLater(500)
-    }
-  })
 
   # Run simulation when button clicked
   observeEvent(input$run_sim, {
@@ -433,7 +419,7 @@ server <- function(input, output, session) {
 
     output$status <- renderText({
       paste0(
-        "🏃 SIMULATION RUNNING...\n",
+        "SIMULATION RUNNING...\n",
         "Run #", sim_count(), "\n",
         "Grid: ", input$grid_size, "×", input$grid_size, "\n",
         "Walkers: ", input$n_walkers, "\n",
@@ -493,7 +479,7 @@ server <- function(input, output, session) {
 
       output$status <- renderText({
         paste0(
-          "✅ SIMULATION COMPLETE\n",
+          "SIMULATION COMPLETE\n",
           "Run #", sim_count(), "\n",
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
@@ -517,7 +503,7 @@ server <- function(input, output, session) {
 
       output$status <- renderText({
         paste0(
-          "❌ SIMULATION ERROR\n",
+          "SIMULATION ERROR\n",
           "Run #", sim_count(), "\n",
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Error: ", e$message, "\n",
@@ -542,15 +528,10 @@ server <- function(input, output, session) {
     req(nrow(result$grid) > 0)
     req(sum(result$grid == 1) > 0)  # Ensure has black pixels
 
-    # Enhanced plot with pixel statistics in title
-    stats <- result$statistics
-    black_count <- stats$black_pixels
-    total_pixels <- input$grid_size^2
-    black_percent <- round(100 * black_count / total_pixels)
-
-    title <- sprintf("DLA Fractal: %d black pixels (%d%% of %dx%d grid)",
-                    black_count, black_percent, input$grid_size, input$grid_size)
-    plot_grid(result, main = title, show_legend = FALSE)
+    # Use enhanced plot with color-coded arrival times
+    plot_grid_enhanced(result,
+                      quantiles = 5,
+                      color_scheme = "viridis")
   })
 
   output$fractal_stats <- renderText({
