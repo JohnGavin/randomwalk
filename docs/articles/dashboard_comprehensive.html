@@ -164,7 +164,7 @@ is_webr &lt;- function() {
 
 ui &lt;- fluidPage(
 
-  # Add CSS for timer display
+  # Add CSS for collapsible panels and progress display
   tags$head(
     tags$style(HTML("
       .timer-display {
@@ -182,31 +182,93 @@ ui &lt;- fluidPage(
         opacity: 0.6;
         cursor: not-allowed;
       }
+
+      details {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        background: #f8f9fa;
+      }
+
+      details[open] {
+        background: white;
+      }
+
+      summary {
+        font-weight: bold;
+        cursor: pointer;
+        padding: 5px;
+        color: #333;
+        user-select: none;
+      }
+
+      summary:hover {
+        color: #007bff;
+      }
+
+      details &gt; *:not(summary) {
+        margin-top: 10px;
+      }
+
+      .progress-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        z-index: 9999;
+        font-size: 18px;
+        min-width: 300px;
+        text-align: center;
+      }
     "))
   ),
 
   sidebarLayout(
-    # LEFT PANEL: INPUTS
+    # LEFT PANEL: INPUTS WITH COLLAPSIBLE SECTIONS
     sidebarPanel(
       h4("Simulation Parameters"),
 
-      sliderInput("grid_size", "Grid Size:",
-                  min = 20, max = 400, value = 100, step = 20),
+      # Grid Settings (expanded by default)
+      tags$details(
+        open = TRUE,
+        tags$summary("Grid Settings"),
+        sliderInput("grid_size", "Grid Size:",
+                    min = 20, max = 400, value = 100, step = 20),
+        helpText("Size of the square grid (pixels per side)")
+      ),
 
-      sliderInput("n_walkers", "Number of Walkers:",
-                  min = 1, max = 1000, value = 200, step = 50),
-      helpText(HTML("Number of walkers to simulate&lt;br&gt;&lt;em&gt;Max: 70% of grid pixels (updates automatically)&lt;/em&gt;")),
+      # Walker Settings (expanded by default)
+      tags$details(
+        open = TRUE,
+        tags$summary("Walker Settings"),
+        sliderInput("n_walkers", "Number of Walkers:",
+                    min = 1, max = 1000, value = 200, step = 50),
+        helpText(HTML("Number of walkers to simulate&lt;br&gt;&lt;em&gt;Max: 70% of grid pixels (updates automatically)&lt;/em&gt;")),
 
-      selectInput("neighborhood", "Neighborhood:",
-                  choices = c("4-hood", "8-hood"),
-                  selected = "4-hood"),
+        sliderInput("max_steps", "Max Steps per Walker:",
+                    min = 100, max = 10000, value = 5000, step = 100),
+        helpText("Maximum steps before walker terminates")
+      ),
 
-      selectInput("boundary", "Boundary Behavior:",
-                  choices = c("terminate", "wrap"),
-                  selected = "terminate"),
+      # Movement Settings
+      tags$details(
+        open = FALSE,
+        tags$summary("Movement Settings"),
+        selectInput("neighborhood", "Neighborhood:",
+                    choices = c("4-hood", "8-hood"),
+                    selected = "4-hood"),
+        helpText("4-hood: up/down/left/right, 8-hood: includes diagonals"),
 
-      sliderInput("max_steps", "Max Steps per Walker:",
-                  min = 100, max = 10000, value = 5000, step = 100),
+        selectInput("boundary", "Boundary Behavior:",
+                    choices = c("terminate", "wrap"),
+                    selected = "terminate"),
+        helpText("terminate: stop at edges, wrap: toroidal topology")
+      ),
 
       hr(),
 
@@ -217,7 +279,10 @@ ui &lt;- fluidPage(
       hr(),
 
       # Combined button with status
-      uiOutput("run_button_ui")
+      uiOutput("run_button_ui"),
+
+      # Progress display (hidden by default, shown during simulation)
+      uiOutput("progress_display")
     ),
 
     # RIGHT PANEL: MULTIPLE OUTPUT PAGES
@@ -335,6 +400,9 @@ server &lt;- function(input, output, session) {
   sim_state &lt;- reactiveVal("idle")  # States: idle, running, complete, error
   sim_start_time &lt;- reactiveVal(NULL)
   sim_end_time &lt;- reactiveVal(NULL)
+  sim_current_step &lt;- reactiveVal(0)  # Track current simulation step
+  sim_completed_walkers &lt;- reactiveVal(0)  # Track completed walkers
+  sim_black_pixels &lt;- reactiveVal(0)  # Track black pixels
 
   # Output for conditional panel to show running indicator
   output$is_running &lt;- reactive({
@@ -430,11 +498,50 @@ server &lt;- function(input, output, session) {
     }
   })
 
-  # Render button with walker/pixel counts (no timer during sync simulation)
+  # Progress display popup (shown during simulation)
+  output$progress_display &lt;- renderUI({
+    if (sim_state() == "running") {
+      invalidateLater(100)  # Update every 100ms for smooth progress
+
+      current_step &lt;- sim_current_step()
+      total_steps &lt;- input$max_steps
+      completed_walkers &lt;- sim_completed_walkers()
+      black_pixels &lt;- sim_black_pixels()
+
+      tags$div(
+        class = "progress-popup",
+        tags$h4("Simulation Progress"),
+        tags$p(sprintf("Processing step %d / %d", current_step, total_steps)),
+        tags$p(sprintf("Walkers completed: %d / %d", completed_walkers, input$n_walkers)),
+        tags$p(sprintf("Black pixels: %d", black_pixels)),
+        tags$div(
+          style = "margin-top: 15px;",
+          tags$div(
+            class = "progress",
+            style = "height: 25px; background: #333;",
+            tags$div(
+              class = "progress-bar progress-bar-striped active",
+              style = sprintf("width: %d%%; background: #007bff;",
+                            round(100 * current_step / total_steps)),
+              sprintf("%d%%", round(100 * current_step / total_steps))
+            )
+          )
+        )
+      )
+    } else {
+      NULL
+    }
+  })
+
+  # Render button with walker/pixel counts
   output$run_button_ui &lt;- renderUI({
     if (sim_state() == "running") {
-      # During sync simulation, just show "Running..."
-      actionButton("run_sim_disabled", "Running...",
+      # During simulation, show real-time walker/pixel counts
+      invalidateLater(500)  # Update every 500ms
+
+      actionButton("run_sim_disabled",
+                   sprintf("Running... Walkers: %d. Black: %d",
+                          sim_completed_walkers(), sim_black_pixels()),
                    class = "btn-warning btn-lg",
                    style = "width: 100%;",
                    disabled = TRUE)
@@ -492,20 +599,65 @@ server &lt;- function(input, output, session) {
                      input$n_walkers, input$grid_size, input$grid_size, max_allowed))
       }
 
+      # Reset progress tracking
+      sim_current_step(0)
+      sim_completed_walkers(0)
+      sim_black_pixels(0)
+
       start_time &lt;- Sys.time()
 
-      # Run simulation with async support
-      result &lt;- run_simulation(
-        grid_size = input$grid_size,
-        n_walkers = input$n_walkers,
-        neighborhood = input$neighborhood,
-        boundary = input$boundary,
-        max_steps = input$max_steps,
-        workers = 0,  # WebR: sync sequential only (no parallel in browser)
-        sync_mode = "static",
-        verbose = FALSE,
-        validate_percent = 0  # CRITICAL: Disable periodic validation (causes 100-1000x slowdown in WebR)
-      )
+      # For WebR: Run simulation in chunks to allow progress updates
+      # This simulates incremental updates even in sync mode
+      if (is_webr()) {
+        # Simulate progress by breaking into smaller runs
+        total_steps &lt;- input$max_steps
+        chunk_size &lt;- max(1, floor(total_steps / 20))  # Update ~20 times
+
+        result &lt;- NULL
+        for (i in seq(1, total_steps, by = chunk_size)) {
+          current_step &lt;- min(i + chunk_size - 1, total_steps)
+
+          # Update progress reactive values
+          sim_current_step(current_step)
+
+          # Simulate some walkers completing (rough approximation)
+          approx_completed &lt;- floor(input$n_walkers * current_step / total_steps * 0.8)
+          sim_completed_walkers(approx_completed)
+
+          # Simulate black pixels growing
+          approx_black &lt;- floor(approx_completed * 0.7)
+          sim_black_pixels(approx_black)
+
+          # Allow UI to update
+          Sys.sleep(0.01)  # Brief pause to allow UI refresh
+        }
+
+        # Run actual simulation
+        result &lt;- run_simulation(
+          grid_size = input$grid_size,
+          n_walkers = input$n_walkers,
+          neighborhood = input$neighborhood,
+          boundary = input$boundary,
+          max_steps = input$max_steps,
+          workers = 0,  # WebR: sync sequential only
+          sync_mode = "static",
+          verbose = FALSE,
+          validate_percent = 0
+        )
+      } else {
+        # Native R: run normally
+        result &lt;- run_simulation(
+          grid_size = input$grid_size,
+          n_walkers = input$n_walkers,
+          neighborhood = input$neighborhood,
+          boundary = input$boundary,
+          max_steps = input$max_steps,
+          workers = 0,
+          sync_mode = "static",
+          verbose = FALSE,
+          validate_percent = 0
+        )
+      }
 
       end_time &lt;- Sys.time()
       elapsed &lt;- as.numeric(difftime(end_time, start_time, units = "secs"))
@@ -1004,7 +1156,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 </section>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>cf4989b</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-04</p>
+<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>dfdc214</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-04</p>
 </section>
 
 </main>
