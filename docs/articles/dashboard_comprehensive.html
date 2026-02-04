@@ -217,15 +217,12 @@ ui &lt;- fluidPage(
 
       hr(),
 
-      # Running timer (shows elapsed time)
-      div(id = "running_timer", style = "margin: 10px 0;",
-        tags$div(class = "timer-display",
-                 textOutput("elapsed_time"))
-      ),
+      # Timer updates every 500ms using invalidateLater pattern
+      tags$small(style = "color: #666; display: block; margin-bottom: 10px;",
+                 "Timer updates every 0.5 seconds during simulation"),
 
-      actionButton("run_sim", "Run Simulation",
-                   class = "btn-primary btn-lg",
-                   style = "width: 100%;"),
+      # Combined button with status
+      uiOutput("run_button_ui"),
 
       hr(),
 
@@ -438,24 +435,47 @@ server &lt;- function(input, output, session) {
     }
   })
 
-  # Update elapsed time display in timer
-  output$elapsed_time &lt;- renderText({
-    timer()  # Update every second
+  # Render button with integrated timer using invalidateLater pattern
+  output$run_button_ui &lt;- renderUI({
+    # Use invalidateLater to refresh button text during simulation
+    if (sim_state() == "running") {
+      invalidateLater(500)  # Refresh every 500ms while running
+    }
 
     if (sim_state() == "running" &amp;&amp; !is.null(sim_start_time())) {
+      # Show live updating timer in button
       elapsed_secs &lt;- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
       mins &lt;- floor(elapsed_secs / 60)
       secs &lt;- floor(elapsed_secs %% 60)
-      sprintf("Elapsed: %02d:%02d", mins, secs)
+      actionButton("run_sim_disabled", sprintf("Running... %02d:%02d", mins, secs),
+                   class = "btn-warning btn-lg",
+                   style = "width: 100%;",
+                   disabled = TRUE)
     } else if (sim_state() == "complete" &amp;&amp; !is.null(sim_end_time()) &amp;&amp; !is.null(sim_start_time())) {
+      # Show completion time on button
       total_secs &lt;- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
       mins &lt;- floor(total_secs / 60)
       secs &lt;- floor(total_secs %% 60)
-      sprintf("Completed in %02d:%02d", mins, secs)
+      actionButton("run_sim", sprintf("Run Simulation (Last: %02d:%02d)", mins, secs),
+                   class = "btn-success btn-lg",
+                   style = "width: 100%;")
     } else if (sim_state() == "error") {
-      "Error occurred"
+      actionButton("run_sim", "Run Simulation (Error - Try Again)",
+                   class = "btn-danger btn-lg",
+                   style = "width: 100%;")
     } else {
-      "Ready to run"
+      actionButton("run_sim", "Run Simulation",
+                   class = "btn-primary btn-lg",
+                   style = "width: 100%;")
+    }
+  })
+
+  # Observe block to continuously update UI during simulation
+  # This follows the crew/shiny pattern for responsive updates
+  observe({
+    if (sim_state() == "running") {
+      # Keep refreshing UI while simulation runs
+      invalidateLater(500)
     }
   })
 
@@ -465,11 +485,6 @@ server &lt;- function(input, output, session) {
     sim_state("running")
     sim_start_time(Sys.time())
     sim_count(sim_count() + 1)
-
-    # Disable the button while running (using updateActionButton for WebR compatibility)
-    updateActionButton(session, "run_sim",
-                      label = "Running...",
-                      disabled = TRUE)
 
     output$status &lt;- renderText({
       paste0(
@@ -1008,7 +1023,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 </section>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>7570d10</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-03</p>
+<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>9f7b366</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-04</p>
 </section>
 
 </main>
