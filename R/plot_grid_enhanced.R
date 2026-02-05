@@ -128,6 +128,8 @@ plot_grid_enhanced <- function(result,
     ggplot2::theme(
       plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 12),
       panel.grid = ggplot2::element_blank(),
+      panel.background = ggplot2::element_rect(fill = "gray97", color = NA),
+      plot.background = ggplot2::element_rect(fill = "gray98", color = NA),
       axis.text = ggplot2::element_blank(),
       axis.ticks = ggplot2::element_blank(),
       plot.margin = ggplot2::margin(10, 10, 40, 10)  # Extra bottom margin for caption

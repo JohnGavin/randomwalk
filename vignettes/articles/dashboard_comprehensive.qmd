@@ -233,7 +233,7 @@ ui <- fluidPage(
                           min = 20, max = 400, value = 100, step = 20),
               helpText("Size of the square grid (pixels per side)")
             ),
-            column(4,
+            column(8,
               h5("Walker Settings"),
               sliderInput("n_walkers", "Number of Walkers:",
                           min = 1, max = 1000, value = 200, step = 50),
@@ -242,12 +242,6 @@ ui <- fluidPage(
               sliderInput("max_steps", "Max Steps per Walker:",
                           min = 100, max = 10000, value = 5000, step = 100),
               helpText("Maximum steps before walker terminates")
-            ),
-            column(4,
-              h5("Runtime Estimate"),
-              uiOutput("runtime_estimate"),
-              hr(),
-              uiOutput("run_button_ui")
             )
           )
         )
@@ -271,6 +265,20 @@ ui <- fluidPage(
                           selected = "terminate"),
               helpText("terminate: stop at edges, wrap: toroidal topology")
             )
+          )
+        )
+      ),
+
+      # Runtime Estimate and Run Button (always visible)
+      wellPanel(
+        style = "background-color: #f0f8ff; margin-top: 15px;",
+        fluidRow(
+          column(6,
+            h5("Estimated Runtime:"),
+            uiOutput("runtime_estimate")
+          ),
+          column(6,
+            uiOutput("run_button_ui")
           )
         )
       ),
@@ -539,16 +547,27 @@ server <- function(input, output, session) {
     if (sim_state() == "running") {
       invalidateLater(100)  # Update every 100ms
 
+      # Get current counts
       completed_walkers <- sim_completed_walkers()
       black_pixels <- sim_black_pixels()
 
+      # Calculate elapsed time
+      elapsed <- if (!is.null(sim_start_time())) {
+        as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+      } else {
+        0
+      }
+
       tags$div(
         class = "status-display",
-        tags$strong("Simulation Running"),
-        tags$br(),
-        sprintf("Walkers: %d", completed_walkers),
-        tags$br(),
-        sprintf("Black pixels: %d", black_pixels)
+        style = "display: block !important; visibility: visible !important;",
+        tags$h4("Running...", style = "margin: 0 0 10px 0; color: #ffc107;"),
+        tags$p(sprintf("Walkers: %d / %d", completed_walkers, input$n_walkers),
+               style = "margin: 5px 0;"),
+        tags$p(sprintf("Black pixels: %d", black_pixels),
+               style = "margin: 5px 0;"),
+        tags$p(sprintf("Time: %s", format_duration(elapsed)),
+               style = "margin: 5px 0; font-size: 12px; color: #aaa;")
       )
     } else {
       NULL
@@ -834,13 +853,47 @@ server <- function(input, output, session) {
       if (length(walker_indices) > 0) {
         # Plot only selected walkers' paths
         filtered_walkers <- walkers_ordered[walker_indices]
-        result_filtered <- result
-        result_filtered$walkers <- filtered_walkers
-        plot_walker_paths(result_filtered,
-                          main = paste(length(walker_indices), "Selected Walker Paths (by termination order)"),
-                          grid_col = "gray90",
-                          lwd = 2.5,
-                          colors = grDevices::rainbow(length(walker_indices), s = 0.8, v = 0.7))
+
+        # Create custom plot with better visibility
+        grid_size <- result$parameters$grid_size
+
+        # Create plot with light gray background
+        par(bg = "gray98")
+        plot(1, type = "n", xlim = c(1, grid_size), ylim = c(1, grid_size),
+             xlab = "X", ylab = "Y",
+             main = paste(length(walker_indices), "Selected Walker Paths (by termination order)"),
+             asp = 1)
+
+        # Add light grid
+        grid(nx = grid_size, ny = grid_size, col = "gray85", lty = 1, lwd = 0.5)
+
+        # Use high contrast colors
+        path_colors <- grDevices::rainbow(length(filtered_walkers), s = 1, v = 0.6, alpha = 0.8)
+
+        # Plot each walker's path
+        for (i in seq_along(filtered_walkers)) {
+          walker <- filtered_walkers[[i]]
+
+          # Check if path exists and is not empty
+          if (!is.null(walker$path) && length(walker$path) > 0) {
+            path_matrix <- do.call(rbind, walker$path)
+
+            # Draw path with thicker line and solid style
+            lines(path_matrix[, 2], path_matrix[, 1],
+                  col = path_colors[i], lwd = 3, lty = 1)
+
+            # Mark start with circle
+            points(path_matrix[1, 2], path_matrix[1, 1],
+                   pch = 21, bg = path_colors[i], col = "black", cex = 2, lwd = 2)
+          }
+
+          # Always mark end position
+          if (!is.null(walker$pos)) {
+            # End position with square
+            points(walker$pos[2], walker$pos[1],
+                   pch = 22, bg = path_colors[i], col = "black", cex = 2.5, lwd = 2)
+          }
+        }
       } else {
         plot.new()
         text(0.5, 0.5, "No walkers selected")
@@ -855,6 +908,9 @@ server <- function(input, output, session) {
   output$dist_overall <- renderPlot({
     req(sim_result())
     result <- sim_result()
+
+    # Set gray background
+    par(bg = "gray98")
 
     # Defensive check for walkers
     if (is.null(result$walkers) || length(result$walkers) == 0) {
