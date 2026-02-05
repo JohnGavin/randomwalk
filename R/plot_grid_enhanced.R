@@ -88,15 +88,19 @@ plot_grid_enhanced <- function(result,
                                   labels = FALSE)
     grid_df$quantile_group[grid_df$is_black == 0] <- NA
 
-    # Create color mapping
+    # Create color mapping - ensure colors are dark enough
     if (color_scheme == "viridis") {
-      colors <- viridisLite::viridis(quantiles)
+      # Use darker part of viridis palette (skip the lightest yellows)
+      all_colors <- viridisLite::viridis(quantiles * 2)
+      colors <- all_colors[1:quantiles]  # Use darker half
     } else if (color_scheme == "plasma") {
       colors <- viridisLite::plasma(quantiles)
     } else if (color_scheme == "blues") {
-      colors <- rev(RColorBrewer::brewer.pal(max(3, quantiles), "Blues"))
+      # Use darker blues
+      colors <- RColorBrewer::brewer.pal(max(3, min(9, quantiles + 2)), "Blues")[3:(quantiles + 2)]
     } else {
-      colors <- heat.colors(quantiles, rev = TRUE)
+      # Use grayscale for maximum contrast
+      colors <- gray.colors(quantiles, start = 0.1, end = 0.7, rev = FALSE)
     }
   } else {
     # Fallback if no arrival times available

@@ -192,14 +192,20 @@ ui <- fluidPage(
 
       .status-display {
         position: absolute;
-        top: 10px;
-        right: 10px;
-        background: rgba(0, 0, 0, 0.7);
+        top: 50px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.85);
         color: white;
-        padding: 10px;
-        border-radius: 5px;
-        font-size: 14px;
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 16px;
         z-index: 1000;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        min-width: 150px;
+      }
+
+      .plot-container {
+        position: relative;
       }
 
       /* Dark theme for plots */
@@ -214,52 +220,57 @@ ui <- fluidPage(
   # TOP SECTION: COLLAPSIBLE PARAMETER GROUPS
   fluidRow(
     column(12,
-      # Main Simulation Parameters dropdown (closed by default)
-      tags$details(
-        open = FALSE,
-        tags$summary("Simulation Parameters"),
-        fluidRow(
-          column(4,
-            h5("Grid Settings"),
-            sliderInput("grid_size", "Grid Size:",
-                        min = 20, max = 400, value = 100, step = 20),
-            helpText("Size of the square grid (pixels per side)")
-          ),
-          column(4,
-            h5("Walker Settings"),
-            sliderInput("n_walkers", "Number of Walkers:",
-                        min = 1, max = 1000, value = 200, step = 50),
-            helpText(HTML("Number of walkers to simulate<br><em>Max: 70% of grid pixels (updates automatically)</em>")),
+      # Use Shiny's wellPanel with conditional rendering for collapsible sections
+      wellPanel(
+        actionButton("toggle_sim_params", "▶ Simulation Parameters",
+                    style = "background: none; border: none; font-weight: bold; font-size: 16px; padding: 0; margin-bottom: 10px;"),
+        conditionalPanel(
+          condition = "output.show_sim_params",
+          fluidRow(
+            column(4,
+              h5("Grid Settings"),
+              sliderInput("grid_size", "Grid Size:",
+                          min = 20, max = 400, value = 100, step = 20),
+              helpText("Size of the square grid (pixels per side)")
+            ),
+            column(4,
+              h5("Walker Settings"),
+              sliderInput("n_walkers", "Number of Walkers:",
+                          min = 1, max = 1000, value = 200, step = 50),
+              helpText(HTML("Number of walkers to simulate<br><em>Max: 70% of grid pixels (updates automatically)</em>")),
 
-            sliderInput("max_steps", "Max Steps per Walker:",
-                        min = 100, max = 10000, value = 5000, step = 100),
-            helpText("Maximum steps before walker terminates")
-          ),
-          column(4,
-            h5("Runtime Estimate"),
-            uiOutput("runtime_estimate"),
-            hr(),
-            uiOutput("run_button_ui")
+              sliderInput("max_steps", "Max Steps per Walker:",
+                          min = 100, max = 10000, value = 5000, step = 100),
+              helpText("Maximum steps before walker terminates")
+            ),
+            column(4,
+              h5("Runtime Estimate"),
+              uiOutput("runtime_estimate"),
+              hr(),
+              uiOutput("run_button_ui")
+            )
           )
         )
       ),
 
-      # Movement Settings dropdown (closed by default)
-      tags$details(
-        open = FALSE,
-        tags$summary("Movement Settings"),
-        fluidRow(
-          column(6,
-            selectInput("neighborhood", "Neighborhood:",
-                        choices = c("4-hood", "8-hood"),
-                        selected = "4-hood"),
-            helpText("4-hood: up/down/left/right, 8-hood: includes diagonals")
-          ),
-          column(6,
-            selectInput("boundary", "Boundary Behavior:",
-                        choices = c("terminate", "wrap"),
-                        selected = "terminate"),
-            helpText("terminate: stop at edges, wrap: toroidal topology")
+      wellPanel(
+        actionButton("toggle_move_params", "▶ Movement Settings",
+                    style = "background: none; border: none; font-weight: bold; font-size: 16px; padding: 0; margin-bottom: 10px;"),
+        conditionalPanel(
+          condition = "output.show_move_params",
+          fluidRow(
+            column(6,
+              selectInput("neighborhood", "Neighborhood:",
+                          choices = c("4-hood", "8-hood"),
+                          selected = "4-hood"),
+              helpText("4-hood: up/down/left/right, 8-hood: includes diagonals")
+            ),
+            column(6,
+              selectInput("boundary", "Boundary Behavior:",
+                          choices = c("terminate", "wrap"),
+                          selected = "terminate"),
+              helpText("terminate: stop at edges, wrap: toroidal topology")
+            )
           )
         )
       ),
@@ -280,9 +291,13 @@ ui <- fluidPage(
         # PAGE 1: Fractal Graph (Black Pixels)
         tabPanel("Fractal Graph",
                  h4("Grid Visualization - Black Pixels"),
-                 # Status overlay for real-time updates
-                 uiOutput("status_overlay"),
-                 plotOutput("fractal_plot", height = "600px"),
+                 tags$div(
+                   class = "plot-container",
+                   style = "position: relative;",
+                   # Status overlay for real-time updates
+                   uiOutput("status_overlay"),
+                   plotOutput("fractal_plot", height = "600px")
+                 ),
                  hr(),
                  verbatimTextOutput("fractal_stats")),
 
@@ -396,6 +411,34 @@ server <- function(input, output, session) {
   sim_current_step <- reactiveVal(0)  # Track current simulation step
   sim_completed_walkers <- reactiveVal(0)  # Track completed walkers
   sim_black_pixels <- reactiveVal(0)  # Track black pixels
+
+  # Reactive values for collapsible panels
+  show_sim_params <- reactiveVal(FALSE)
+  show_move_params <- reactiveVal(FALSE)
+
+  # Toggle simulation parameters panel
+  observeEvent(input$toggle_sim_params, {
+    current <- show_sim_params()
+    show_sim_params(!current)
+    # Update button text
+    updateActionButton(session, "toggle_sim_params",
+                      label = ifelse(!current, "▼ Simulation Parameters", "▶ Simulation Parameters"))
+  })
+
+  # Toggle movement settings panel
+  observeEvent(input$toggle_move_params, {
+    current <- show_move_params()
+    show_move_params(!current)
+    # Update button text
+    updateActionButton(session, "toggle_move_params",
+                      label = ifelse(!current, "▼ Movement Settings", "▶ Movement Settings"))
+  })
+
+  # Output for conditional panels
+  output$show_sim_params <- reactive({ show_sim_params() })
+  output$show_move_params <- reactive({ show_move_params() })
+  outputOptions(output, "show_sim_params", suspendWhenHidden = FALSE)
+  outputOptions(output, "show_move_params", suspendWhenHidden = FALSE)
 
   # Output for conditional panel to show running indicator
   output$is_running <- reactive({
@@ -794,7 +837,10 @@ server <- function(input, output, session) {
         result_filtered <- result
         result_filtered$walkers <- filtered_walkers
         plot_walker_paths(result_filtered,
-                          main = paste(length(walker_indices), "Selected Walker Paths (by termination order)"))
+                          main = paste(length(walker_indices), "Selected Walker Paths (by termination order)"),
+                          grid_col = "gray90",
+                          lwd = 2.5,
+                          colors = grDevices::rainbow(length(walker_indices), s = 0.8, v = 0.7))
       } else {
         plot.new()
         text(0.5, 0.5, "No walkers selected")
