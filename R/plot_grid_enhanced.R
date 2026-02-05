@@ -10,6 +10,8 @@
 #' @param color_scheme Color palette name: "viridis", "plasma", "blues", "heat"
 #'
 #' @return A ggplot2 object
+#' @importFrom grDevices gray.colors
+#' @importFrom rlang .data
 #' @export
 plot_grid_enhanced <- function(result,
                               main = NULL,
@@ -111,7 +113,7 @@ plot_grid_enhanced <- function(result,
 
   # Create the plot
   p <- ggplot2::ggplot(grid_df, ggplot2::aes(x = x, y = y)) +
-    ggplot2::geom_tile(ggplot2::aes(fill = factor(quantile_group)),
+    ggplot2::geom_tile(ggplot2::aes(fill = factor(.data$quantile_group)),
                       color = "gray90", linewidth = 0.05) +
     ggplot2::scale_fill_manual(
       values = colors,

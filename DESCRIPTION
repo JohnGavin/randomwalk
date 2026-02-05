@@ -18,7 +18,10 @@ Depends:
     R (>= 4.1.0)
 Imports:
     logger,
-    ggplot2
+    ggplot2,
+    RColorBrewer,
+    viridisLite,
+    rlang
 Suggests:
     nanonext,
     crew,

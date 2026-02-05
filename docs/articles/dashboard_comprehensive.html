@@ -670,13 +670,20 @@ server &lt;- function(input, output, session) {
   output$run_button_ui &lt;- renderUI({
     if (sim_state() == "running") {
       # During simulation, show real-time walker/pixel counts
-      invalidateLater(500)  # Update every 500ms
+      invalidateLater(200)  # Update every 200ms
+
+      elapsed &lt;- if (!is.null(sim_start_time())) {
+        as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+      } else {
+        0
+      }
 
       actionButton("run_sim_disabled",
-                   sprintf("Running... Walkers: %d. Black: %d",
-                          sim_completed_walkers(), sim_black_pixels()),
+                   sprintf("Running... W: %d/%d | B: %d | %s",
+                          sim_completed_walkers(), input$n_walkers,
+                          sim_black_pixels(), format_duration(elapsed)),
                    class = "btn-warning btn-lg",
-                   style = "width: 100%;",
+                   style = "width: 100%; font-size: 14px;",
                    disabled = TRUE)
     } else if (sim_state() == "complete" &amp;&amp; !is.null(sim_result())) {
       # Show walker count and black pixel count when complete
@@ -868,9 +875,16 @@ server &lt;- function(input, output, session) {
     req(sum(result$grid == 1) &gt; 0)  # Ensure has black pixels
 
     # Use enhanced plot with color-coded arrival times
-    plot_grid_enhanced(result,
-                      quantiles = 5,
-                      color_scheme = "viridis")
+    # Force gray background using ggplot2 theme override
+    p &lt;- plot_grid_enhanced(result,
+                           quantiles = 5,
+                           color_scheme = "viridis")
+
+    # Override the background color
+    p + ggplot2::theme(
+      panel.background = ggplot2::element_rect(fill = "gray70", color = NA),
+      plot.background = ggplot2::element_rect(fill = "gray75", color = NA)
+    )
   })
 
   output$fractal_stats &lt;- renderText({
@@ -927,7 +941,7 @@ server &lt;- function(input, output, session) {
         # Use distinct colors that will show on gray background
         distinct_colors &lt;- c("red", "blue", "darkgreen", "purple", "orange",
                            "brown", "pink", "cyan", "magenta", "darkblue",
-                           "darkred", "darkgreen", "black", "yellow", "lime")
+                           "darkred", "forestgreen", "black", "goldenrod", "darkviolet")
         path_colors &lt;- rep(distinct_colors, length.out = length(filtered_walkers))
 
         # Plot each walker's path
@@ -1332,7 +1346,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 </section>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>523a953</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-05</p>
+<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>f6bd311</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-05</p>
 </section>
 
 </main>
