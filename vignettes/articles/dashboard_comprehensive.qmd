@@ -190,25 +190,6 @@ ui <- fluidPage(
         text-align: center;
       }
 
-      .status-display {
-        position: fixed;
-        top: 200px;
-        right: 50px;
-        background: rgba(255, 0, 0, 0.9);
-        color: white;
-        padding: 20px;
-        border-radius: 10px;
-        font-size: 18px;
-        font-weight: bold;
-        z-index: 9999;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
-        min-width: 200px;
-        border: 3px solid yellow;
-      }
-
-      .plot-container {
-        position: relative;
-      }
 
       /* Dark theme for plots */
       .dark-plot-container {
@@ -301,13 +282,7 @@ ui <- fluidPage(
         # PAGE 1: Fractal Graph (Black Pixels)
         tabPanel("Fractal Graph",
                  h4("Grid Visualization - Black Pixels"),
-                 tags$div(
-                   class = "plot-container",
-                   style = "position: relative;",
-                   # Status overlay for real-time updates
-                   uiOutput("status_overlay"),
-                   plotOutput("fractal_plot", height = "600px")
-                 ),
+                 plotOutput("fractal_plot", height = "600px"),
                  hr(),
                  verbatimTextOutput("fractal_stats")),
 
