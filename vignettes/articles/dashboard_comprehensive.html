@@ -158,6 +158,25 @@ is_webr &lt;- function() {
     identical(Sys.getenv("WEBR"), "1")
 }
 
+# Format duration in seconds to mm:ss or hh:mm:ss format
+format_duration &lt;- function(seconds) {
+  if (is.null(seconds) || is.na(seconds)) return("00:00")
+
+  seconds &lt;- round(seconds)
+  if (seconds &lt; 60) {
+    return(sprintf("00:%02d", seconds))
+  } else if (seconds &lt; 3600) {
+    mins &lt;- floor(seconds / 60)
+    secs &lt;- seconds %% 60
+    return(sprintf("%02d:%02d", mins, secs))
+  } else {
+    hours &lt;- floor(seconds / 3600)
+    mins &lt;- floor((seconds %% 3600) / 60)
+    secs &lt;- seconds %% 60
+    return(sprintf("%02d:%02d:%02d", hours, mins, secs))
+  }
+}
+
 # ============================================================================
 # Shiny UI
 # ============================================================================
@@ -225,74 +244,99 @@ ui &lt;- fluidPage(
         min-width: 300px;
         text-align: center;
       }
+
+      .status-display {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        z-index: 1000;
+      }
+
+      /* Dark theme for plots */
+      .dark-plot-container {
+        background-color: #2b2b2b;
+        padding: 10px;
+        border-radius: 5px;
+      }
     "))
   ),
 
-  sidebarLayout(
-    # LEFT PANEL: INPUTS WITH COLLAPSIBLE SECTIONS
-    sidebarPanel(
-      h4("Simulation Parameters"),
-
-      # Grid Settings (expanded by default)
+  # TOP SECTION: COLLAPSIBLE PARAMETER GROUPS
+  fluidRow(
+    column(12,
+      # Main Simulation Parameters dropdown (closed by default)
       tags$details(
-        open = TRUE,
-        tags$summary("Grid Settings"),
-        sliderInput("grid_size", "Grid Size:",
-                    min = 20, max = 400, value = 100, step = 20),
-        helpText("Size of the square grid (pixels per side)")
+        open = FALSE,
+        tags$summary("Simulation Parameters"),
+        fluidRow(
+          column(4,
+            h5("Grid Settings"),
+            sliderInput("grid_size", "Grid Size:",
+                        min = 20, max = 400, value = 100, step = 20),
+            helpText("Size of the square grid (pixels per side)")
+          ),
+          column(4,
+            h5("Walker Settings"),
+            sliderInput("n_walkers", "Number of Walkers:",
+                        min = 1, max = 1000, value = 200, step = 50),
+            helpText(HTML("Number of walkers to simulate&lt;br&gt;&lt;em&gt;Max: 70% of grid pixels (updates automatically)&lt;/em&gt;")),
+
+            sliderInput("max_steps", "Max Steps per Walker:",
+                        min = 100, max = 10000, value = 5000, step = 100),
+            helpText("Maximum steps before walker terminates")
+          ),
+          column(4,
+            h5("Runtime Estimate"),
+            uiOutput("runtime_estimate"),
+            hr(),
+            uiOutput("run_button_ui")
+          )
+        )
       ),
 
-      # Walker Settings (expanded by default)
-      tags$details(
-        open = TRUE,
-        tags$summary("Walker Settings"),
-        sliderInput("n_walkers", "Number of Walkers:",
-                    min = 1, max = 1000, value = 200, step = 50),
-        helpText(HTML("Number of walkers to simulate&lt;br&gt;&lt;em&gt;Max: 70% of grid pixels (updates automatically)&lt;/em&gt;")),
-
-        sliderInput("max_steps", "Max Steps per Walker:",
-                    min = 100, max = 10000, value = 5000, step = 100),
-        helpText("Maximum steps before walker terminates")
-      ),
-
-      # Movement Settings
+      # Movement Settings dropdown (closed by default)
       tags$details(
         open = FALSE,
         tags$summary("Movement Settings"),
-        selectInput("neighborhood", "Neighborhood:",
-                    choices = c("4-hood", "8-hood"),
-                    selected = "4-hood"),
-        helpText("4-hood: up/down/left/right, 8-hood: includes diagonals"),
-
-        selectInput("boundary", "Boundary Behavior:",
-                    choices = c("terminate", "wrap"),
-                    selected = "terminate"),
-        helpText("terminate: stop at edges, wrap: toroidal topology")
+        fluidRow(
+          column(6,
+            selectInput("neighborhood", "Neighborhood:",
+                        choices = c("4-hood", "8-hood"),
+                        selected = "4-hood"),
+            helpText("4-hood: up/down/left/right, 8-hood: includes diagonals")
+          ),
+          column(6,
+            selectInput("boundary", "Boundary Behavior:",
+                        choices = c("terminate", "wrap"),
+                        selected = "terminate"),
+            helpText("terminate: stop at edges, wrap: toroidal topology")
+          )
+        )
       ),
-
-      hr(),
-
-      # Runtime estimate (WebR ~400 steps/sec observed)
-      h5("Estimated Runtime:"),
-      uiOutput("runtime_estimate"),
-
-      hr(),
-
-      # Combined button with status
-      uiOutput("run_button_ui"),
 
       # Progress display (hidden by default, shown during simulation)
       uiOutput("progress_display")
-    ),
+    )
+  ),
 
-    # RIGHT PANEL: MULTIPLE OUTPUT PAGES
-    mainPanel(
+  hr(),
+
+  # MAIN SECTION: FULL-WIDTH TABSET
+  fluidRow(
+    column(12,
       tabsetPanel(
         id = "tabs",
 
         # PAGE 1: Fractal Graph (Black Pixels)
         tabPanel("Fractal Graph",
                  h4("Grid Visualization - Black Pixels"),
+                 # Status overlay for real-time updates
+                 uiOutput("status_overlay"),
                  plotOutput("fractal_plot", height = "600px"),
                  hr(),
                  verbatimTextOutput("fractal_stats")),
@@ -367,10 +411,14 @@ ui &lt;- fluidPage(
                  tags$a(href="https://johngavin.github.io/randomwalk/", "Documentation"),
                  tags$span(" | "),
                  tags$a(href="https://github.com/JohnGavin/randomwalk", "GitHub"))
-      ),
+      ) # End of tabs
+    ) # End of column
+  ), # End of fluidRow
 
-      # Status output at bottom of main page
-      hr(),
+  # Status output at bottom of page
+  hr(),
+  fluidRow(
+    column(12,
       h5("Simulation Status:"),
       verbatimTextOutput("status", placeholder = TRUE)
     )
@@ -445,13 +493,13 @@ server &lt;- function(input, output, session) {
     est_seconds &lt;- total_steps / effective_steps_per_sec
 
     if (est_seconds &lt; 60) {
-      est_text &lt;- sprintf("~%.0f seconds", est_seconds)
+      est_text &lt;- paste0("~", format_duration(est_seconds))
       color &lt;- "green"
     } else if (est_seconds &lt; 300) {
-      est_text &lt;- sprintf("~%.1f minutes", est_seconds / 60)
+      est_text &lt;- paste0("~", format_duration(est_seconds))
       color &lt;- "orange"
     } else {
-      est_text &lt;- sprintf("~%.1f minutes (consider smaller params)", est_seconds / 60)
+      est_text &lt;- paste0("~", format_duration(est_seconds), " (consider smaller params)")
       color &lt;- "red"
     }
 
@@ -487,7 +535,7 @@ server &lt;- function(input, output, session) {
           "Run #", sim_count(), "\n",
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
-          "Elapsed:  ", sprintf("%.0f", elapsed), " seconds\n",
+          "Elapsed:  ", format_duration(elapsed), "\n",
           "Status:   Processing...\n",
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Grid: ", input$grid_size, "×", input$grid_size, "\n",
@@ -495,6 +543,27 @@ server &lt;- function(input, output, session) {
           "Workers: 0 (sync sequential)"
         )
       })
+    }
+  })
+
+  # Status overlay for real-time updates during simulation
+  output$status_overlay &lt;- renderUI({
+    if (sim_state() == "running") {
+      invalidateLater(100)  # Update every 100ms
+
+      completed_walkers &lt;- sim_completed_walkers()
+      black_pixels &lt;- sim_black_pixels()
+
+      tags$div(
+        class = "status-display",
+        tags$strong("Simulation Running"),
+        tags$br(),
+        sprintf("Walkers: %d", completed_walkers),
+        tags$br(),
+        sprintf("Black pixels: %d", black_pixels)
+      )
+    } else {
+      NULL
     }
   })
 
@@ -677,7 +746,7 @@ server &lt;- function(input, output, session) {
       message(sprintf("Grid size: %dx%d", input$grid_size, input$grid_size))
       message(sprintf("Walkers: %d", input$n_walkers))
       message(sprintf("Black pixels: %d", sum(result$grid == 1)))
-      message(sprintf("Elapsed time: %.2f seconds", elapsed))
+      message(sprintf("Elapsed time: %s", format_duration(elapsed)))
 
       # NOTE: find_isolated_pixels() check removed due to performance impact
       # Even "once after simulation" was too slow in reactive context
@@ -691,7 +760,7 @@ server &lt;- function(input, output, session) {
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
           "Finished: ", format(sim_end_time(), "%H:%M:%S"), "\n",
-          "Elapsed:  ", sprintf("%.2f", elapsed), " seconds\n",
+          "Elapsed:  ", format_duration(elapsed), "\n",
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Backend: synchronous (WebR browser)\n",
           "Black Pixels: ", sum(result$grid == 1), "\n",
@@ -1015,7 +1084,7 @@ server &lt;- function(input, output, session) {
         "Median Steps: ", safe_get(stats$median_steps, 0), "\n",
         "Std Dev: ", sprintf("%.1f", std_dev), "\n",
         "\n=== PERFORMANCE ===\n",
-        "Elapsed Time: ", sprintf("%.2f", elapsed_time), " seconds\n",
+        "Elapsed Time: ", format_duration(elapsed_time), "\n",
         "Steps per Second: ",
         sprintf("%.0f", total_steps / max(elapsed_time, 0.001)), "\n",
         "\n=== TERMINATION REASONS ===\n",
@@ -1104,7 +1173,7 @@ server &lt;- function(input, output, session) {
         } else {
           0
         }
-        paste0("🏃 Running - ", sprintf("%.0f", elapsed), " seconds elapsed")
+        paste0("Running - ", format_duration(elapsed), " elapsed")
       },
       "complete" = {
         elapsed &lt;- if (!is.null(sim_end_time()) &amp;&amp; !is.null(sim_start_time())) {
@@ -1112,7 +1181,7 @@ server &lt;- function(input, output, session) {
         } else {
           0
         }
-        paste0("✅ Complete - took ", sprintf("%.2f", elapsed), " seconds")
+        paste0("Complete - took ", format_duration(elapsed))
       },
       "error" = "❌ Error - see status tab for details",
       "Unknown state"
@@ -1156,7 +1225,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 </section>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>dfdc214</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-04</p>
+<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>ffd70c7</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-05</p>
 </section>
 
 </main>

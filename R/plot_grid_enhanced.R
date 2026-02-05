@@ -28,11 +28,11 @@ plot_grid_enhanced <- function(result,
   # Calculate pixel statistics
   black_count <- stats$black_pixels
   total_pixels <- n * n
-  black_percent <- round(100 * black_count / total_pixels, 2)
+  black_percent <- round(100 * black_count / total_pixels)  # Round to nearest percent
 
   # Generate title with pixel statistics
   if (is.null(main)) {
-    main <- sprintf("DLA Fractal Pattern: %d black pixels (%.2f%% of %dx%d grid)",
+    main <- sprintf("DLA Fractal Pattern: %d black pixels (%d%% of %dx%d grid)",
                    black_count, black_percent, n, n)
   }
 
@@ -108,10 +108,10 @@ plot_grid_enhanced <- function(result,
   # Create the plot
   p <- ggplot2::ggplot(grid_df, ggplot2::aes(x = x, y = y)) +
     ggplot2::geom_tile(ggplot2::aes(fill = factor(quantile_group)),
-                      color = "gray95", linewidth = 0.05) +
+                      color = "gray90", linewidth = 0.05) +
     ggplot2::scale_fill_manual(
-      values = c("white", colors),
-      na.value = "white",
+      values = colors,
+      na.value = "gray95",  # Light gray background for empty cells
       guide = "none"  # No legend, using caption instead
     ) +
     ggplot2::coord_fixed() +
