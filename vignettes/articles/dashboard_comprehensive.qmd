@@ -191,17 +191,19 @@ ui <- fluidPage(
       }
 
       .status-display {
-        position: absolute;
-        top: 50px;
-        right: 20px;
-        background: rgba(0, 0, 0, 0.85);
+        position: fixed;
+        top: 200px;
+        right: 50px;
+        background: rgba(255, 0, 0, 0.9);
         color: white;
-        padding: 15px;
-        border-radius: 8px;
-        font-size: 16px;
-        z-index: 1000;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        min-width: 150px;
+        padding: 20px;
+        border-radius: 10px;
+        font-size: 18px;
+        font-weight: bold;
+        z-index: 9999;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+        min-width: 200px;
+        border: 3px solid yellow;
       }
 
       .plot-container {
@@ -682,31 +684,26 @@ server <- function(input, output, session) {
 
       start_time <- Sys.time()
 
-      # For WebR: Run simulation in chunks to allow progress updates
-      # This simulates incremental updates even in sync mode
+      # For WebR: Simulate progress updates
+      # Since simulation runs synchronously, we fake progress updates
       if (is_webr()) {
-        # Simulate progress by breaking into smaller runs
-        total_steps <- input$max_steps
-        chunk_size <- max(1, floor(total_steps / 20))  # Update ~20 times
+        # Create observer to update progress during simulation
+        observe({
+          if (sim_state() == "running") {
+            invalidateLater(100)  # Update every 100ms
 
-        result <- NULL
-        for (i in seq(1, total_steps, by = chunk_size)) {
-          current_step <- min(i + chunk_size - 1, total_steps)
+            # Calculate fake progress based on elapsed time
+            if (!is.null(sim_start_time())) {
+              elapsed <- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+              est_runtime <- input$max_steps / 200  # Rough estimate
+              progress <- min(elapsed / est_runtime, 0.95)
 
-          # Update progress reactive values
-          sim_current_step(current_step)
-
-          # Simulate some walkers completing (rough approximation)
-          approx_completed <- floor(input$n_walkers * current_step / total_steps * 0.8)
-          sim_completed_walkers(approx_completed)
-
-          # Simulate black pixels growing
-          approx_black <- floor(approx_completed * 0.7)
-          sim_black_pixels(approx_black)
-
-          # Allow UI to update
-          Sys.sleep(0.01)  # Brief pause to allow UI refresh
-        }
+              # Update fake counts
+              sim_completed_walkers(floor(input$n_walkers * progress))
+              sim_black_pixels(floor(input$n_walkers * 0.7 * progress))
+            }
+          }
+        })
 
         # Run actual simulation
         result <- run_simulation(
@@ -720,6 +717,10 @@ server <- function(input, output, session) {
           verbose = FALSE,
           validate_percent = 0
         )
+
+        # Update with real values after completion
+        sim_completed_walkers(result$statistics$completed_walkers)
+        sim_black_pixels(result$statistics$black_pixels)
       } else {
         # Native R: run normally
         result <- run_simulation(
@@ -857,18 +858,22 @@ server <- function(input, output, session) {
         # Create custom plot with better visibility
         grid_size <- result$parameters$grid_size
 
-        # Create plot with light gray background
-        par(bg = "gray98")
+        # Create plot with gray background for contrast
+        par(bg = "gray70")
         plot(1, type = "n", xlim = c(1, grid_size), ylim = c(1, grid_size),
              xlab = "X", ylab = "Y",
              main = paste(length(walker_indices), "Selected Walker Paths (by termination order)"),
-             asp = 1)
+             asp = 1, col.main = "black", col.lab = "black", col.axis = "black")
 
-        # Add light grid
-        grid(nx = grid_size, ny = grid_size, col = "gray85", lty = 1, lwd = 0.5)
+        # Add darker grid for visibility
+        grid(nx = grid_size, ny = grid_size, col = "gray50", lty = 1, lwd = 0.5)
 
-        # Use high contrast colors
-        path_colors <- grDevices::rainbow(length(filtered_walkers), s = 1, v = 0.6, alpha = 0.8)
+        # Use VERY HIGH contrast colors - avoid light colors
+        # Use distinct colors that will show on gray background
+        distinct_colors <- c("red", "blue", "darkgreen", "purple", "orange",
+                           "brown", "pink", "cyan", "magenta", "darkblue",
+                           "darkred", "darkgreen", "black", "yellow", "lime")
+        path_colors <- rep(distinct_colors, length.out = length(filtered_walkers))
 
         # Plot each walker's path
         for (i in seq_along(filtered_walkers)) {
@@ -910,7 +915,7 @@ server <- function(input, output, session) {
     result <- sim_result()
 
     # Set gray background
-    par(bg = "gray98")
+    par(bg = "gray70")
 
     # Defensive check for walkers
     if (is.null(result$walkers) || length(result$walkers) == 0) {
