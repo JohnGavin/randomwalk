@@ -909,32 +909,60 @@ server &lt;- function(input, output, session) {
                            "darkred", "forestgreen", "black", "goldenrod", "darkviolet")
         path_colors &lt;- rep(distinct_colors, length.out = length(filtered_walkers))
 
-        # Plot each walker's path
+        # Collect all paths first, then draw them
+        all_paths &lt;- list()
+        all_starts &lt;- list()
+        all_ends &lt;- list()
+
         for (i in seq_along(filtered_walkers)) {
           walker &lt;- filtered_walkers[[i]]
 
           # Check if path exists and is not empty
           if (!is.null(walker$path) &amp;&amp; length(walker$path) &gt; 0) {
             path_matrix &lt;- do.call(rbind, walker$path)
-
-            # Draw path as dots for WebR compatibility
-            # Lines and segments don't render reliably in WebR/Shinylive
-            if (nrow(path_matrix) &gt; 1) {
-              # Draw all path points as small dots
-              points(path_matrix[, 2], path_matrix[, 1],
-                     pch = 16, col = path_colors[i], cex = 0.8)
-            }
-
-            # Mark start with larger circle
-            points(path_matrix[1, 2], path_matrix[1, 1],
-                   pch = 21, bg = path_colors[i], col = "black", cex = 2, lwd = 2)
+            all_paths[[i]] &lt;- list(
+              x = path_matrix[, 2],
+              y = path_matrix[, 1],
+              col = path_colors[i]
+            )
+            all_starts[[i]] &lt;- list(
+              x = path_matrix[1, 2],
+              y = path_matrix[1, 1],
+              col = path_colors[i]
+            )
           }
 
           # Always mark end position
           if (!is.null(walker$pos)) {
-            # End position with square
-            points(walker$pos[2], walker$pos[1],
-                   pch = 22, bg = path_colors[i], col = "black", cex = 2.5, lwd = 2)
+            all_ends[[i]] &lt;- list(
+              x = walker$pos[2],
+              y = walker$pos[1],
+              col = path_colors[i]
+            )
+          }
+        }
+
+        # Draw all paths
+        for (path_data in all_paths) {
+          if (!is.null(path_data)) {
+            points(path_data$x, path_data$y,
+                   pch = 16, col = path_data$col, cex = 0.8)
+          }
+        }
+
+        # Draw all start positions
+        for (start_data in all_starts) {
+          if (!is.null(start_data)) {
+            points(start_data$x, start_data$y,
+                   pch = 21, bg = start_data$col, col = "black", cex = 2, lwd = 2)
+          }
+        }
+
+        # Draw all end positions
+        for (end_data in all_ends) {
+          if (!is.null(end_data)) {
+            points(end_data$x, end_data$y,
+                   pch = 22, bg = end_data$col, col = "black", cex = 2.5, lwd = 2)
           }
         }
 
@@ -1319,7 +1347,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 </section>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>7c40ba7</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-07</p>
+<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>d6e5801</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-07</p>
 </section>
 
 </main>
