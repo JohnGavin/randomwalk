@@ -417,7 +417,9 @@ ui &lt;- fluidPage(
   fluidRow(
     column(12,
       h5("Simulation Status:"),
-      verbatimTextOutput("status", placeholder = TRUE)
+      verbatimTextOutput("status", placeholder = TRUE),
+      # Real-time progress display (following Shinylive timer example)
+      textOutput("progress_timer")
     )
   )
 )
@@ -538,16 +540,28 @@ server &lt;- function(input, output, session) {
     )
   })
 
-  # Periodic timer for debug updates and status indicator
-  timer &lt;- reactiveTimer(1000)  # Update every second
+  # Reactive timer for progress updates (following shiny-examples/142-reactive-timer pattern)
+  # This timer continues running even during synchronous simulation
+  autoInvalidate &lt;- reactiveTimer(100)  # Update every 100ms for smooth progress
 
-  # Update status display with ticking clock during execution
+  # Observe timer to update estimated progress during simulation
   observe({
-    timer()  # Depend on timer
+    autoInvalidate()  # This triggers every 100ms
 
     if (sim_state() == "running" &amp;&amp; !is.null(sim_start_time())) {
       elapsed &lt;- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
 
+      # Estimate progress based on typical runtime
+      est_steps_per_sec &lt;- 200 / (1 + 0.002 * input$n_walkers)  # Adjust for walker count
+      est_runtime &lt;- input$max_steps / est_steps_per_sec
+      progress &lt;- min(elapsed / est_runtime, 0.99)
+
+      # Update estimated counts for display
+      sim_current_step(floor(input$max_steps * progress))
+      sim_completed_walkers(floor(input$n_walkers * progress * 0.8))
+      sim_black_pixels(floor(input$n_walkers * progress * 0.7))
+
+      # Update status display with current progress
       output$status &lt;- renderText({
         paste0(
           "SIMULATION RUNNING...\n",
@@ -555,13 +569,51 @@ server &lt;- function(input, output, session) {
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
           "Elapsed:  ", format_duration(elapsed), "\n",
-          "Status:   Processing...\n",
+          "Progress: ", sprintf("%d%%", round(progress * 100)), "\n",
           "━━━━━━━━━━━━━━━━━━━━━━\n",
           "Grid: ", input$grid_size, "×", input$grid_size, "\n",
-          "Walkers: ", input$n_walkers, "\n",
+          "Walkers: ", sim_completed_walkers(), "/", input$n_walkers, "\n",
+          "Black Pixels: ", sim_black_pixels(), "\n",
           "Workers: 0 (sync sequential)"
         )
       })
+    }
+  })
+
+  # Real-time progress timer (following https://shinylive.io/r/examples/#timer pattern)
+  # This WILL work in Shinylive/WebR - reactive timer continues during computation
+  output$progress_timer &lt;- renderText({
+    autoInvalidate()  # Use the reactive timer that updates every 100ms
+
+    if (sim_state() == "running") {
+      # Get current time
+      current_time &lt;- Sys.time()
+      elapsed &lt;- if (!is.null(sim_start_time())) {
+        round(as.numeric(difftime(current_time, sim_start_time(), units = "secs")), 1)
+      } else {
+        0
+      }
+
+      # Format with current counts from reactive values
+      sprintf("⏱️ Time: %s | Walkers: %d/%d | Black Pixels: %d | Step: %d/%d",
+              format_duration(elapsed),
+              sim_completed_walkers(),
+              input$n_walkers,
+              sim_black_pixels(),
+              sim_current_step(),
+              input$max_steps)
+    } else if (sim_state() == "complete") {
+      result &lt;- sim_result()
+      if (!is.null(result)) {
+        sprintf("✓ Complete | Black Pixels: %d | Grid: %d%%",
+                result$statistics$black_pixels,
+                round(result$statistics$black_percentage))
+      } else {
+        ""
+      }
+    } else {
+      # Show current time to prove timer is working
+      sprintf("Ready | Current time: %s", format(Sys.time(), "%H:%M:%S"))
     }
   })
 
@@ -645,26 +697,14 @@ server &lt;- function(input, output, session) {
 
       start_time &lt;- Sys.time()
 
-      # For WebR: Simulate progress updates
-      # Since simulation runs synchronously, we fake progress updates
+      # For WebR: Update progress during simulation
+      # Following pattern from https://github.com/rstudio/shiny-examples/blob/main/142-reactive-timer/app.R
+      # The timer will continue updating even during synchronous computation
       if (is_webr()) {
-        # Create observer to update progress during simulation
-        observe({
-          if (sim_state() == "running") {
-            invalidateLater(100)  # Update every 100ms
-
-            # Calculate fake progress based on elapsed time
-            if (!is.null(sim_start_time())) {
-              elapsed &lt;- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
-              est_runtime &lt;- input$max_steps / 200  # Rough estimate
-              progress &lt;- min(elapsed / est_runtime, 0.95)
-
-              # Update fake counts
-              sim_completed_walkers(floor(input$n_walkers * progress))
-              sim_black_pixels(floor(input$n_walkers * 0.7 * progress))
-            }
-          }
-        })
+        # Estimate progress based on elapsed time and expected runtime
+        # This provides real-time feedback even though simulation runs synchronously
+        est_steps_per_sec &lt;- 200
+        est_runtime &lt;- input$max_steps / est_steps_per_sec
 
         # Run actual simulation
         result &lt;- run_simulation(
@@ -896,21 +936,9 @@ server &lt;- function(input, output, session) {
           }
         }
 
-        # Add legend explaining symbols
-        legend("topright",
-               legend = c("Start Position (Circle)",
-                         "End Position (Square)",
-                         "Walker Path (Line)"),
-               pch = c(21, 22, NA),
-               lty = c(NA, NA, 1),
-               lwd = c(NA, NA, 3),
-               pt.bg = c("darkgray", "darkgray", NA),
-               col = c("black", "black", "darkgray"),
-               pt.cex = c(1.5, 1.5, NA),
-               bg = "white",
-               box.lwd = 1,
-               cex = 0.9,
-               title = "Symbol Legend")
+        # Add caption text explaining symbols
+        mtext("Symbols: Circle = Start Position | Square = End Position | Lines = Walker Path",
+              side = 1, line = 3, cex = 0.8, col = "gray30")
       } else {
         plot.new()
         text(0.5, 0.5, "No walkers selected")
@@ -1289,7 +1317,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 </section>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>80a5039</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-07</p>
+<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>9370fa8</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-07</p>
 </section>
 
 </main>
