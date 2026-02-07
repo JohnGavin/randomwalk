@@ -282,6 +282,20 @@ ui <- fluidPage(
         # PAGE 1: Fractal Graph (Black Pixels)
         tabPanel("Fractal Graph",
                  h4("Grid Visualization - Black Pixels"),
+                 # Progress display ABOVE the plot
+                 conditionalPanel(
+                   condition = "output.is_running",
+                   wellPanel(
+                     style = "background-color: #fff3cd; border: 2px solid #ffc107; padding: 10px;",
+                     h4("Simulation Running...", style = "color: #856404; margin: 0;"),
+                     textOutput("progress_text"),
+                     br(),
+                     tags$div(class = "progress",
+                       tags$div(id = "progress_bar", class = "progress-bar progress-bar-striped active",
+                               role = "progressbar", style = "width: 0%")
+                     )
+                   )
+                 ),
                  plotOutput("fractal_plot", height = "600px"),
                  hr(),
                  verbatimTextOutput("fractal_stats")),
@@ -431,6 +445,23 @@ server <- function(input, output, session) {
   })
   outputOptions(output, "is_running", suspendWhenHidden = FALSE)
 
+  # Progress text output
+  output$progress_text <- renderText({
+    if (sim_state() == "running") {
+      invalidateLater(200)  # Update every 200ms
+
+      elapsed <- if (!is.null(sim_start_time())) {
+        as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+      } else {
+        0
+      }
+
+      sprintf("Walkers: %d/%d | Black pixels: %d | Time: %s",
+             sim_completed_walkers(), input$n_walkers,
+             sim_black_pixels(), format_duration(elapsed))
+    }
+  })
+
   # Runtime estimate (WebR performance varies: ~50-500 steps/sec depending on grid size & walker count)
   output$runtime_estimate <- renderUI({
     # Runtime calculation considers BOTH factors:
@@ -519,37 +550,6 @@ server <- function(input, output, session) {
     }
   })
 
-  # Status overlay for real-time updates during simulation
-  output$status_overlay <- renderUI({
-    if (sim_state() == "running") {
-      invalidateLater(100)  # Update every 100ms
-
-      # Get current counts
-      completed_walkers <- sim_completed_walkers()
-      black_pixels <- sim_black_pixels()
-
-      # Calculate elapsed time
-      elapsed <- if (!is.null(sim_start_time())) {
-        as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
-      } else {
-        0
-      }
-
-      tags$div(
-        class = "status-display",
-        style = "display: block !important; visibility: visible !important;",
-        tags$h4("Running...", style = "margin: 0 0 10px 0; color: #ffc107;"),
-        tags$p(sprintf("Walkers: %d / %d", completed_walkers, input$n_walkers),
-               style = "margin: 5px 0;"),
-        tags$p(sprintf("Black pixels: %d", black_pixels),
-               style = "margin: 5px 0;"),
-        tags$p(sprintf("Time: %s", format_duration(elapsed)),
-               style = "margin: 5px 0; font-size: 12px; color: #aaa;")
-      )
-    } else {
-      NULL
-    }
-  })
 
   # Progress display popup (shown during simulation)
   output$progress_display <- renderUI({
@@ -786,6 +786,32 @@ server <- function(input, output, session) {
 
   # PAGE 1: Fractal Graph with arrival time coloring
   output$fractal_plot <- renderPlot({
+    # If simulation is running, show progress in plot
+    if (sim_state() == "running") {
+      invalidateLater(300)  # Update every 300ms
+
+      # Create a simple progress visualization
+      par(bg = "gray70", mar = c(5, 4, 4, 2))
+      plot(1, type = "n", xlim = c(0, 1), ylim = c(0, 1),
+           xlab = "", ylab = "", axes = FALSE,
+           main = "Simulation Running...")
+
+      # Show progress as text in plot
+      text(0.5, 0.7, sprintf("Walkers: %d / %d",
+                            sim_completed_walkers(), input$n_walkers),
+           cex = 2, font = 2)
+      text(0.5, 0.5, sprintf("Black pixels: %d",
+                            sim_black_pixels()),
+           cex = 2, font = 2)
+
+      elapsed <- if (!is.null(sim_start_time())) {
+        as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+      } else { 0 }
+      text(0.5, 0.3, sprintf("Time: %s", format_duration(elapsed)),
+           cex = 1.5)
+      return()
+    }
+
     req(sim_result())
     result <- sim_result()
 
@@ -803,7 +829,7 @@ server <- function(input, output, session) {
     # Override the background color
     p + ggplot2::theme(
       panel.background = ggplot2::element_rect(fill = "gray70", color = NA),
-      plot.background = ggplot2::element_rect(fill = "gray75", color = NA)
+      plot.background = ggplot2::element_rect(fill = "gray70", color = NA)
     )
   })
 
