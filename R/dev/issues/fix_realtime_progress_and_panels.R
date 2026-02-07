@@ -1,103 +1,71 @@
-# Fix: Real-time Progress Updates and Collapsible Panels
-# Date: 2026-02-04
-# Issue: WebR/Shinylive CAN do real-time updates (orbit simulation example)
+#!/usr/bin/env Rscript
+# Fix script for dashboard issues reported by user
+# Date: 2026-02-07
+# Issues addressed:
+#   1. Non-working progress indicators in WebR/Shinylive
+#   2. Walker paths not visible (only showing start/end symbols)
+#   3. Fractal graph background too dark (gray70)
+#   4. Missing legend for walker path symbols
 
+# CHANGES MADE:
+
+# 1. REMOVED NON-WORKING PROGRESS INDICATORS
+#    - Removed conditionalPanel with output.is_running (doesn't work in WebR)
+#    - Removed progress_display and progress_text outputs (WebR runs synchronously)
+#    - Cleaned up unused reactive values for progress tracking
+#    File: vignettes/articles/dashboard_comprehensive.qmd
+
+# 2. FIXED WALKER PATH VISIBILITY
+#    - Replaced lines() function with segments() for better WebR compatibility
+#    - segments() draws individual line segments between consecutive points
+#    - This approach is more reliable in the WebR/Shinylive environment
+#    File: vignettes/articles/dashboard_comprehensive.qmd (line 818-840)
+
+# 3. LIGHTENED FRACTAL GRAPH BACKGROUND
+#    - Changed na.value from "gray70" to "gray85" for empty cells
+#    - Changed panel.background from "gray70" to "gray85"
+#    - Changed plot.background from "gray70" to "white"
+#    - Updated grid lines from "gray50" to "gray60" for subtler appearance
+#    File: R/plot_grid_enhanced.R
+#
+#    - Also updated walker paths plot background from "gray70" to "gray90"
+#    - Updated grid lines from "gray50" to "gray70" with thinner lines
+#    - Updated all distribution plots to use "gray90" background
+#    File: vignettes/articles/dashboard_comprehensive.qmd
+
+# 4. ADDED LEGEND FOR WALKER PATH SYMBOLS
+#    - Added legend in top-right corner explaining:
+#      * Circle (pch=21): Start Position
+#      * Square (pch=22): End Position
+#      * Line: Walker Path
+#    File: vignettes/articles/dashboard_comprehensive.qmd (line 841)
+
+# TEST THE CHANGES:
 library(randomwalk)
 
-cat("==== REAL-TIME PROGRESS UPDATES ====\n")
-cat("Implementation following shinylive orbit simulation pattern:\n")
-cat("https://shinylive.io/py/examples/#orbit-simulation\n\n")
-
-cat("1. Progress Popup Display:\n")
-cat("   - Shows 'Processing step X / Y' during simulation\n")
-cat("   - Updates walker completion count in real-time\n")
-cat("   - Updates black pixel count as simulation progresses\n")
-cat("   - Includes visual progress bar (0-100%)\n")
-cat("   - Refreshes every 100ms for smooth updates\n\n")
-
-cat("2. Button Updates During Simulation:\n")
-cat("   - Format: 'Running... Walkers: X. Black: Y'\n")
-cat("   - Updates every 500ms with current counts\n")
-cat("   - Shows final counts when complete\n\n")
-
-cat("==== COLLAPSIBLE INPUT PANELS ====\n")
-cat("Following orbit example's grouped dropdown pattern:\n\n")
-
-cat("3. Input Organization:\n")
-cat("   Grid Settings (expanded by default):\n")
-cat("     - Grid Size slider\n")
-cat("     - Help text for clarity\n\n")
-
-cat("   Walker Settings (expanded by default):\n")
-cat("     - Number of Walkers slider\n")
-cat("     - Max Steps per Walker slider\n")
-cat("     - Dynamic max walker constraint\n\n")
-
-cat("   Movement Settings (collapsed by default):\n")
-cat("     - Neighborhood selection (4-hood/8-hood)\n")
-cat("     - Boundary behavior (terminate/wrap)\n")
-cat("     - Detailed help text for each option\n\n")
-
-cat("==== CSS STYLING ====\n")
-cat("Added custom CSS for:\n")
-cat("- Collapsible details/summary elements\n")
-cat("- Hover effects on section headers\n")
-cat("- Progress popup overlay styling\n")
-cat("- Progress bar visualization\n\n")
-
-cat("==== KEY TECHNICAL INSIGHTS ====\n")
-cat("1. WebR/Shinylive CAN do real-time updates using invalidateLater()\n")
-cat("2. Progress can be simulated even in sync mode by chunking\n")
-cat("3. UI can refresh during long-running computations\n")
-cat("4. HTML5 details/summary provides native collapsible sections\n\n")
-
-# Demonstrate the progress simulation logic
-cat("==== PROGRESS SIMULATION LOGIC ====\n")
-simulate_progress <- function(total_steps = 1000, n_walkers = 100) {
-  chunk_size <- max(1, floor(total_steps / 20))  # ~20 updates
-
-  cat("Simulating progress in chunks:\n")
-  for (i in seq(1, total_steps, by = chunk_size)) {
-    current_step <- min(i + chunk_size - 1, total_steps)
-
-    # Approximate walker completion (80% by end)
-    approx_completed <- floor(n_walkers * current_step / total_steps * 0.8)
-
-    # Approximate black pixels (70% of completed walkers)
-    approx_black <- floor(approx_completed * 0.7)
-
-    # Progress percentage
-    progress_pct <- round(100 * current_step / total_steps)
-
-    cat(sprintf("  Step %4d/%d: %3d%% | Walkers: %3d | Black: %3d\n",
-               current_step, total_steps, progress_pct,
-               approx_completed, approx_black))
-
-    # In actual dashboard, this triggers UI refresh
-    Sys.sleep(0.05)  # Simulate processing time
-  }
-}
-
-simulate_progress(total_steps = 500, n_walkers = 50)
-
-cat("\n==== IMPLEMENTATION FILES ====\n")
-files <- c(
-  "vignettes/articles/dashboard_comprehensive.qmd",
-  "docs/articles/dashboard_comprehensive.html"
+# Run a test simulation to verify paths are recorded
+set.seed(123)
+result <- run_simulation(
+  grid_size = 50,
+  n_walkers = 20,
+  initial_black_prob = 0.001,
+  neighbor_threshold = 1,
+  max_steps = 1000,
+  boundary = "edge",
+  workers = 0
 )
 
-for (f in files) {
-  if (file.exists(f)) {
-    info <- file.info(f)
-    cat(sprintf("✓ %s (%.1f KB)\n", basename(f), info$size/1024))
-  }
-}
+# Check that paths exist
+cat("Walkers with paths:", sum(sapply(result$walkers, function(w) !is.null(w$path))), "\n")
+cat("Total walkers:", length(result$walkers), "\n")
 
-cat("\n==== CONCLUSION ====\n")
-cat("Successfully implemented real-time progress updates in WebR/Shinylive!\n")
-cat("This corrects my previous false claim about sync mode limitations.\n")
-cat("The dashboard now provides responsive feedback during simulation,\n")
-cat("matching the UX pattern of the orbit simulation example.\n\n")
+# Test the enhanced plot
+p <- plot_grid_enhanced(result)
+print(p)
 
-cat("View updated dashboard at:\n")
-cat("https://johngavin.github.io/randomwalk/articles/dashboard_comprehensive.html\n")
+# To test dashboard:
+# launch_dashboard()
+# 1. Run simulation
+# 2. Check "Fractal Graph" tab - should have light gray background
+# 3. Check "Walker Paths" tab - paths should be visible with legend
+# 4. Verify no progress overlays appear (they've been removed)

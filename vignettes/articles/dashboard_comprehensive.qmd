@@ -264,10 +264,7 @@ ui <- fluidPage(
             uiOutput("run_button_ui")
           )
         )
-      ),
-
-      # Progress display (hidden by default, shown during simulation)
-      uiOutput("progress_display")
+      )
     )
   ),
 
@@ -282,20 +279,6 @@ ui <- fluidPage(
         # PAGE 1: Fractal Graph (Black Pixels)
         tabPanel("Fractal Graph",
                  h4("Grid Visualization - Black Pixels"),
-                 # Progress display ABOVE the plot
-                 conditionalPanel(
-                   condition = "output.is_running",
-                   wellPanel(
-                     style = "background-color: #fff3cd; border: 2px solid #ffc107; padding: 10px;",
-                     h4("Simulation Running...", style = "color: #856404; margin: 0;"),
-                     textOutput("progress_text"),
-                     br(),
-                     tags$div(class = "progress",
-                       tags$div(id = "progress_bar", class = "progress-bar progress-bar-striped active",
-                               role = "progressbar", style = "width: 0%")
-                     )
-                   )
-                 ),
                  plotOutput("fractal_plot", height = "600px"),
                  hr(),
                  verbatimTextOutput("fractal_stats")),
@@ -439,29 +422,6 @@ server <- function(input, output, session) {
   outputOptions(output, "show_sim_params", suspendWhenHidden = FALSE)
   outputOptions(output, "show_move_params", suspendWhenHidden = FALSE)
 
-  # Output for conditional panel to show running indicator
-  output$is_running <- reactive({
-    sim_state() == "running"
-  })
-  outputOptions(output, "is_running", suspendWhenHidden = FALSE)
-
-  # Progress text output
-  output$progress_text <- renderText({
-    if (sim_state() == "running") {
-      invalidateLater(200)  # Update every 200ms
-
-      elapsed <- if (!is.null(sim_start_time())) {
-        as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
-      } else {
-        0
-      }
-
-      sprintf("Walkers: %d/%d | Black pixels: %d | Time: %s",
-             sim_completed_walkers(), input$n_walkers,
-             sim_black_pixels(), format_duration(elapsed))
-    }
-  })
-
   # Runtime estimate (WebR performance varies: ~50-500 steps/sec depending on grid size & walker count)
   output$runtime_estimate <- renderUI({
     # Runtime calculation considers BOTH factors:
@@ -547,42 +507,6 @@ server <- function(input, output, session) {
           "Workers: 0 (sync sequential)"
         )
       })
-    }
-  })
-
-
-  # Progress display popup (shown during simulation)
-  output$progress_display <- renderUI({
-    if (sim_state() == "running") {
-      invalidateLater(100)  # Update every 100ms for smooth progress
-
-      current_step <- sim_current_step()
-      total_steps <- input$max_steps
-      completed_walkers <- sim_completed_walkers()
-      black_pixels <- sim_black_pixels()
-
-      tags$div(
-        class = "progress-popup",
-        tags$h4("Simulation Progress"),
-        tags$p(sprintf("Processing step %d / %d", current_step, total_steps)),
-        tags$p(sprintf("Walkers completed: %d / %d", completed_walkers, input$n_walkers)),
-        tags$p(sprintf("Black pixels: %d", black_pixels)),
-        tags$div(
-          style = "margin-top: 15px;",
-          tags$div(
-            class = "progress",
-            style = "height: 25px; background: #333;",
-            tags$div(
-              class = "progress-bar progress-bar-striped active",
-              style = sprintf("width: %d%%; background: #007bff;",
-                            round(100 * current_step / total_steps)),
-              sprintf("%d%%", round(100 * current_step / total_steps))
-            )
-          )
-        )
-      )
-    } else {
-      NULL
     }
   })
 
@@ -821,16 +745,12 @@ server <- function(input, output, session) {
     req(sum(result$grid == 1) > 0)  # Ensure has black pixels
 
     # Use enhanced plot with color-coded arrival times
-    # Force gray background using ggplot2 theme override
     p <- plot_grid_enhanced(result,
                            quantiles = 5,
                            color_scheme = "viridis")
 
-    # Override the background color
-    p + ggplot2::theme(
-      panel.background = ggplot2::element_rect(fill = "gray70", color = NA),
-      plot.background = ggplot2::element_rect(fill = "gray70", color = NA)
-    )
+    # The plot_grid_enhanced function now uses gray85 background by default
+    p
   })
 
   output$fractal_stats <- renderText({
@@ -873,15 +793,15 @@ server <- function(input, output, session) {
         # Create custom plot with better visibility
         grid_size <- result$parameters$grid_size
 
-        # Create plot with gray background for contrast
-        par(bg = "gray70")
+        # Create plot with light gray background for contrast
+        par(bg = "gray90")
         plot(1, type = "n", xlim = c(1, grid_size), ylim = c(1, grid_size),
              xlab = "X", ylab = "Y",
              main = paste(length(walker_indices), "Selected Walker Paths (by termination order)"),
              asp = 1, col.main = "black", col.lab = "black", col.axis = "black")
 
-        # Add darker grid for visibility
-        grid(nx = grid_size, ny = grid_size, col = "gray50", lty = 1, lwd = 0.5)
+        # Add subtle grid for visibility
+        grid(nx = grid_size, ny = grid_size, col = "gray70", lty = 1, lwd = 0.3)
 
         # Use VERY HIGH contrast colors - avoid light colors
         # Use distinct colors that will show on gray background
@@ -898,9 +818,15 @@ server <- function(input, output, session) {
           if (!is.null(walker$path) && length(walker$path) > 0) {
             path_matrix <- do.call(rbind, walker$path)
 
-            # Draw path with thicker line and solid style
-            lines(path_matrix[, 2], path_matrix[, 1],
-                  col = path_colors[i], lwd = 3, lty = 1)
+            # Draw path as connected segments - more reliable in WebR
+            # Using segments instead of lines() for better WebR compatibility
+            if (nrow(path_matrix) > 1) {
+              for (j in 1:(nrow(path_matrix) - 1)) {
+                segments(x0 = path_matrix[j, 2], y0 = path_matrix[j, 1],
+                        x1 = path_matrix[j+1, 2], y1 = path_matrix[j+1, 1],
+                        col = path_colors[i], lwd = 3)
+              }
+            }
 
             # Mark start with circle
             points(path_matrix[1, 2], path_matrix[1, 1],
@@ -914,6 +840,22 @@ server <- function(input, output, session) {
                    pch = 22, bg = path_colors[i], col = "black", cex = 2.5, lwd = 2)
           }
         }
+
+        # Add legend explaining symbols
+        legend("topright",
+               legend = c("Start Position (Circle)",
+                         "End Position (Square)",
+                         "Walker Path (Line)"),
+               pch = c(21, 22, NA),
+               lty = c(NA, NA, 1),
+               lwd = c(NA, NA, 3),
+               pt.bg = c("darkgray", "darkgray", NA),
+               col = c("black", "black", "darkgray"),
+               pt.cex = c(1.5, 1.5, NA),
+               bg = "white",
+               box.lwd = 1,
+               cex = 0.9,
+               title = "Symbol Legend")
       } else {
         plot.new()
         text(0.5, 0.5, "No walkers selected")
@@ -929,8 +871,8 @@ server <- function(input, output, session) {
     req(sim_result())
     result <- sim_result()
 
-    # Set gray background
-    par(bg = "gray70")
+    # Set light gray background
+    par(bg = "gray90")
 
     # Defensive check for walkers
     if (is.null(result$walkers) || length(result$walkers) == 0) {

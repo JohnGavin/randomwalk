@@ -117,7 +117,7 @@ plot_grid_enhanced <- function(result,
                       color = "gray90", linewidth = 0.05) +
     ggplot2::scale_fill_manual(
       values = colors,
-      na.value = "gray70",  # Gray background for empty cells
+      na.value = "gray85",  # Lighter gray background for empty cells
       guide = "none"  # No legend, using caption instead
     ) +
     ggplot2::coord_fixed() +
@@ -129,10 +129,10 @@ plot_grid_enhanced <- function(result,
     ggplot2::theme_minimal() +
     ggplot2::theme(
       plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 12),
-      panel.grid.major = ggplot2::element_line(color = "gray50", linewidth = 0.25),
+      panel.grid.major = ggplot2::element_line(color = "gray60", linewidth = 0.25),
       panel.grid.minor = ggplot2::element_blank(),
-      panel.background = ggplot2::element_rect(fill = "gray70", color = NA),
-      plot.background = ggplot2::element_rect(fill = "gray70", color = NA),
+      panel.background = ggplot2::element_rect(fill = "gray85", color = NA),
+      plot.background = ggplot2::element_rect(fill = "white", color = NA),
       axis.text = ggplot2::element_blank(),
       axis.ticks = ggplot2::element_blank(),
       plot.margin = ggplot2::margin(10, 10, 40, 10)  # Extra bottom margin for caption
