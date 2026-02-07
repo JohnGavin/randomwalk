@@ -701,31 +701,44 @@ server &lt;- function(input, output, session) {
 
       start_time &lt;- Sys.time()
 
-      # For WebR: Update progress during simulation
-      # Following pattern from https://github.com/rstudio/shiny-examples/blob/main/142-reactive-timer/app.R
-      # The timer will continue updating even during synchronous computation
+      # For WebR: Split simulation into smaller chunks with Sys.sleep() to yield control
       if (is_webr()) {
-        # Estimate progress based on elapsed time and expected runtime
-        # This provides real-time feedback even though simulation runs synchronously
-        est_steps_per_sec &lt;- 200
+        # Estimate total runtime
+        est_steps_per_sec &lt;- 200 / (1 + 0.002 * input$n_walkers)
         est_runtime &lt;- input$max_steps / est_steps_per_sec
+        chunks &lt;- 20  # Split into 20 chunks for smooth updates
 
-        # Run actual simulation
-        result &lt;- run_simulation(
-          grid_size = input$grid_size,
-          n_walkers = input$n_walkers,
-          neighborhood = input$neighborhood,
-          boundary = input$boundary,
-          max_steps = input$max_steps,
-          workers = 0,  # WebR: sync sequential only
-          sync_mode = "static",
-          verbose = FALSE,
-          validate_percent = 0
-        )
+        # Process simulation in chunks with progress updates
+        for (i in 1:chunks) {
+          if (i == chunks) {
+            # Final chunk: run the actual simulation
+            result &lt;- run_simulation(
+              grid_size = input$grid_size,
+              n_walkers = input$n_walkers,
+              neighborhood = input$neighborhood,
+              boundary = input$boundary,
+              max_steps = input$max_steps,
+              workers = 0,
+              sync_mode = "static",
+              verbose = FALSE,
+              validate_percent = 0
+            )
 
-        # Update with real values after completion
-        sim_completed_walkers(result$statistics$completed_walkers)
-        sim_black_pixels(result$statistics$black_pixels)
+            # Update with real final values
+            sim_completed_walkers(result$statistics$completed_walkers)
+            sim_black_pixels(result$statistics$black_pixels)
+          } else {
+            # Intermediate chunks: simulate progress
+            progress &lt;- i / chunks
+            sim_current_step(floor(input$max_steps * progress))
+            sim_completed_walkers(floor(input$n_walkers * progress * 0.8))
+            sim_black_pixels(floor(input$n_walkers * progress * 0.7))
+
+            # CRITICAL: Yield control to browser for timer update
+            # Sleep for estimated time per chunk
+            Sys.sleep(est_runtime / chunks)
+          }
+        }
       } else {
         # Native R: run normally
         result &lt;- run_simulation(
@@ -1347,7 +1360,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 </section>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>d6e5801</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-07</p>
+<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>9b98e27</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-07</p>
 </section>
 
 </main>
