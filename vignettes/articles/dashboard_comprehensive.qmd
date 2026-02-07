@@ -280,6 +280,9 @@ ui <- fluidPage(
         tabPanel("Fractal Graph",
                  h4("Grid Visualization - Black Pixels"),
                  plotOutput("fractal_plot", height = "600px"),
+                 tags$p(style = "margin-top: 10px; color: #666; font-style: italic;",
+                        "Color shows walker arrival order: Dark blue = early arrivals, Light yellow = late arrivals"),
+                 downloadButton("download_fractal", "Download Plot", class = "btn-sm"),
                  hr(),
                  verbatimTextOutput("fractal_stats")),
 
@@ -368,6 +371,11 @@ ui <- fluidPage(
         style = "background: #f0f0f0; padding: 10px; margin-top: 10px; font-family: monospace; font-size: 14px; border: 1px solid #ccc;",
         h5("Live Progress:"),
         verbatimTextOutput("progress_timer")
+      ),
+      # MANDATORY: Dashboard creation timestamp
+      tags$div(
+        style = "margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 11px; color: #666; text-align: right;",
+        paste("Dashboard created:", format(Sys.time(), "%Y-%m-%d %H:%M:%S UTC"))
       )
     )
   )
@@ -820,6 +828,19 @@ server <- function(input, output, session) {
       " (", stats$grid_size^2, " total cells)"
     )
   })
+
+  # Download handler for fractal plot
+  output$download_fractal <- downloadHandler(
+    filename = function() {
+      paste0("fractal_dla_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")
+    },
+    content = function(file) {
+      req(sim_result())
+      result <- sim_result()
+      p <- plot_grid_enhanced(result, quantiles = 5, color_scheme = "viridis")
+      ggplot2::ggsave(file, plot = p, width = 8, height = 8, dpi = 150)
+    }
+  )
 
   # PAGE 2: Walker Paths
   output$paths_plot_first25 <- renderPlot({
@@ -1310,7 +1331,16 @@ shinyApp(ui = ui, server = server)
 #| results: asis
 git_sha <- tryCatch(system("git rev-parse --short HEAD 2>/dev/null", intern = TRUE), error = function(e) "N/A")
 git_sha <- if (length(git_sha) == 0 || git_sha == "") "N/A" else git_sha
-pkg_ver <- tryCatch(as.character(packageVersion("randomwalk")), error = function(e) "N/A")
+
+# More robust version check for WebR environment
+pkg_ver <- tryCatch({
+  if (exists("packageVersion") && requireNamespace("randomwalk", quietly = TRUE)) {
+    as.character(packageVersion("randomwalk"))
+  } else {
+    "2.1.1"  # Hardcoded fallback for WebR
+  }
+}, error = function(e) "2.1.1")
+
 cat(sprintf("**randomwalk** %s | **Git** `%s` | **R** %s | **Built** %s",
-    pkg_ver, git_sha, getRversion(), format(Sys.time(), "%Y-%m-%d")))
+    pkg_ver, git_sha, getRversion(), format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
 ```

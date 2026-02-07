@@ -335,6 +335,9 @@ ui &lt;- fluidPage(
         tabPanel("Fractal Graph",
                  h4("Grid Visualization - Black Pixels"),
                  plotOutput("fractal_plot", height = "600px"),
+                 tags$p(style = "margin-top: 10px; color: #666; font-style: italic;",
+                        "Color shows walker arrival order: Dark blue = early arrivals, Light yellow = late arrivals"),
+                 downloadButton("download_fractal", "Download Plot", class = "btn-sm"),
                  hr(),
                  verbatimTextOutput("fractal_stats")),
 
@@ -423,6 +426,11 @@ ui &lt;- fluidPage(
         style = "background: #f0f0f0; padding: 10px; margin-top: 10px; font-family: monospace; font-size: 14px; border: 1px solid #ccc;",
         h5("Live Progress:"),
         verbatimTextOutput("progress_timer")
+      ),
+      # MANDATORY: Dashboard creation timestamp
+      tags$div(
+        style = "margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 11px; color: #666; text-align: right;",
+        paste("Dashboard created:", format(Sys.time(), "%Y-%m-%d %H:%M:%S UTC"))
       )
     )
   )
@@ -875,6 +883,19 @@ server &lt;- function(input, output, session) {
       " (", stats$grid_size^2, " total cells)"
     )
   })
+
+  # Download handler for fractal plot
+  output$download_fractal &lt;- downloadHandler(
+    filename = function() {
+      paste0("fractal_dla_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")
+    },
+    content = function(file) {
+      req(sim_result())
+      result &lt;- sim_result()
+      p &lt;- plot_grid_enhanced(result, quantiles = 5, color_scheme = "viridis")
+      ggplot2::ggsave(file, plot = p, width = 8, height = 8, dpi = 150)
+    }
+  )
 
   # PAGE 2: Walker Paths
   output$paths_plot_first25 &lt;- renderPlot({
@@ -1360,7 +1381,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 </section>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>9b98e27</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-07</p>
+<p><strong>randomwalk</strong> 2.1.1 | <strong>Git</strong> <code>45d8313</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-07 20:55:28</p>
 </section>
 
 </main>
