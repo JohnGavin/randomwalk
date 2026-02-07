@@ -419,7 +419,11 @@ ui &lt;- fluidPage(
       h5("Simulation Status:"),
       verbatimTextOutput("status", placeholder = TRUE),
       # Real-time progress display (following Shinylive timer example)
-      textOutput("progress_timer")
+      tags$div(
+        style = "background: #f0f0f0; padding: 10px; margin-top: 10px; font-family: monospace; font-size: 14px; border: 1px solid #ccc;",
+        h5("Live Progress:"),
+        verbatimTextOutput("progress_timer")
+      )
     )
   )
 )
@@ -888,8 +892,8 @@ server &lt;- function(input, output, session) {
         # Create custom plot with better visibility
         grid_size &lt;- result$parameters$grid_size
 
-        # Create plot with light gray background for contrast
-        par(bg = "gray90")
+        # Create plot with gray background for contrast
+        par(bg = "gray80")
         plot(1, type = "n", xlim = c(1, grid_size), ylim = c(1, grid_size),
              xlab = "X", ylab = "Y",
              main = paste(length(walker_indices), "Selected Walker Paths (by termination order)"),
@@ -913,17 +917,15 @@ server &lt;- function(input, output, session) {
           if (!is.null(walker$path) &amp;&amp; length(walker$path) &gt; 0) {
             path_matrix &lt;- do.call(rbind, walker$path)
 
-            # Draw path as connected segments - more reliable in WebR
-            # Using segments instead of lines() for better WebR compatibility
+            # Draw path as dots for WebR compatibility
+            # Lines and segments don't render reliably in WebR/Shinylive
             if (nrow(path_matrix) &gt; 1) {
-              for (j in 1:(nrow(path_matrix) - 1)) {
-                segments(x0 = path_matrix[j, 2], y0 = path_matrix[j, 1],
-                        x1 = path_matrix[j+1, 2], y1 = path_matrix[j+1, 1],
-                        col = path_colors[i], lwd = 3)
-              }
+              # Draw all path points as small dots
+              points(path_matrix[, 2], path_matrix[, 1],
+                     pch = 16, col = path_colors[i], cex = 0.8)
             }
 
-            # Mark start with circle
+            # Mark start with larger circle
             points(path_matrix[1, 2], path_matrix[1, 1],
                    pch = 21, bg = path_colors[i], col = "black", cex = 2, lwd = 2)
           }
@@ -937,7 +939,7 @@ server &lt;- function(input, output, session) {
         }
 
         # Add caption text explaining symbols
-        mtext("Symbols: Circle = Start Position | Square = End Position | Lines = Walker Path",
+        mtext("Symbols: Circle = Start Position | Square = End Position | Dots = Walker Path",
               side = 1, line = 3, cex = 0.8, col = "gray30")
       } else {
         plot.new()
@@ -954,8 +956,8 @@ server &lt;- function(input, output, session) {
     req(sim_result())
     result &lt;- sim_result()
 
-    # Set light gray background
-    par(bg = "gray90")
+    # Set gray background
+    par(bg = "gray80")
 
     # Defensive check for walkers
     if (is.null(result$walkers) || length(result$walkers) == 0) {
@@ -1317,7 +1319,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 </section>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>9370fa8</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-07</p>
+<p><strong>randomwalk</strong> N/A | <strong>Git</strong> <code>7c40ba7</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-07</p>
 </section>
 
 </main>
