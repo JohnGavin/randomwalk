@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Random Walks Dashboard - Direct Shinylive</title>
+    <meta charset="utf-8">
+    <style>
+        body { margin: 20px; font-family: Arial, sans-serif; }
+        h1 { color: #333; }
+        #info { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Random Walks Dashboard - Working Timer Demo</h1>
+
+    <div id="info">
+        <p><strong>This demonstrates timer-based progress DOES work in WebR/Shinylive.</strong></p>
+        <p>The clock below updates every 100ms. Click "Run Simulation" to see progress tracking.</p>
+    </div>
+
+    <iframe
+        src="https://shinylive.io/r/app/#code=NobwRAdghgtgpmAXGKAHVA6ASmANGAYwHsIAXOMpMAGwEsAbAVwCdSoAKAZxAA84ACAXzjEUAbnDE4AQyxF+cABbwA5nACWWPmACOpAIJFSACQbwpyeAGVJg6cvIBzBBAIyAlNd4wATiwD08JQARAAqfnDB3nC+yBQe8BQAPgASfMQUfn5hXj5gCfCpAAourmFg-rwU8AD6Ffk5hSVlANoA6s0tbZ3dJQC6pABmpAAW5RWNze2sHV09ff2DwyUzM4tr6zOzc6sLy6sb2ztbu9vJZyenpxdX11dnAMo0DDSk5AAe5CKiZgCucKz0nA4nFEcEuuHs5BI8GcNiEKzWGy2Ox0+0Mx3YF2uGNueKOBOOJy050JJl4-HocE8LGEuGchJEZPiAWCYUiABovJRbHZ4bh7Jw+AwBdDYZdSMl0gwApQIJQuAZONh5CA7vBJZxyAA6LzSkWq+XwQi8BQ2ORSGgCOCUUpQXgMAGUAD0pAIvHCpEoY0mABYRkRaQBKWl0hlMkQstlQVUazXavUzXjyfGaOD2jGCIE+YiXZXJB5PVLPOBkfTpq5XMW3cVPCXpOB-a78UxY4wQOCCCEQSoUGFGhhmeGh8ORy0xiixyPxyGJ5Np2MJ3O5nP5wuyYjEAD6SoAlBeWOLdtLUq7dh6ve9-WA5I7XgIEGo2LhtdQqJRFBXcxz05xcAWTLJnQAIgALKQmWrFdDwAVi9R0vT9M0bw9M9fQEWh5ApeMUC5cJ+TgMtyx4JkCxINiOMLCs6yodEgAAEKE7ckLA8N5wqHRJhzOMEzIlMw3jRMTGbdFs1zfNJlE-hhJOXBiEWOAVHgXYWIkCRAx4nhqAQOBkmYOByGo-lJQUY04A0rStJ0Pg4AgCArHI5E8HBLxZlGeFEUvZZkS1eFbOISyqGslFLFsohHPYCBqyQOBCHIdZ3AQOAVL5aLVRZDkcA0K1nQSh5vRGCKS1KCLVWizLkFir12ngaruGE0TKokfgrHgOqjVS+qquq7rmuio10UxeNlzXRgUL6gakpGjqVsy3aCXIxiiPOo7aDOs70iO06xsu86HsO275te66vte97Yr+j65r-eaQfWz7lqgKgNzCnVEu2iGyJpMiqUsAgfQoCgaE0mZuGcyLotSzLsuyzUJsFGJyF0TAJjc+AMCxnbSDgdJ8BYCBeHzeCy3LBGyxLOsGyJBtoOJPn8CUOQxUk8l+v4E9BN0s5Vx4cI5CqGAjQzLMAQBZMU2BUFw1IqFYXhJFJQsBXUUVAiqJorLkk1AwlDgKrauRHWLEsejJzYudOJEvjxJnNJJOkmSx13fT5zkxTSGUyBCEOXBaHgdqAAUeBYRz8igOQ4AzCAqNPTVQagcGQbByHHr4MGYV4gXhb1hOHK3WrBeFquLu5P4VGQ8pnQYIwkGZgAmLgCByCArE09yzc+egAHJhLb7p0TQfb07wUnSnJOBuEqNhsBi2L0oKq6SqVJWsrVqrcryvJJdcGWiAQOXOHKBXL2K0rd6hBr0VGcQQfvx+JoW38jvfqbBvWnAP9tCVNUmZ5JOgROZRMj55Bui0Og6AcCIBEAAGnIaYvBzywKQBABA9oOh8HKFQEQJA+gQEgLA8YUYoyRlWNsKAyMCg8H0P7CgqZ8xNgQKwLgxCRAgPKJLKhNBqJ-iVoIihOisGRjkWoqRQTCgqJBPw7AgjpBgJEOIsh9CME0OTHAKRyYaEUMoXQaiCgdGERIehQjKHyAMWQyhhBAJCLULwqxGBaCKJHJcBx4BXHuM8cgcQ7igkJjCR4pxbjQlRJCR0yJISCJxISR41xgj4lZIMcYlJgicnpKPO0KMDxBBCGGEwzI+DFJ2mvAMQRQimTlOtJkCgEkEy8HzE-Z0lB0iLPxlUpI+T4CFP0OoJsnS1G9IFhsOAOwJiJJoLsUUABZOA9VzRfkJJgbA0xZjyPUFodQjBiFQRFGhDC4x4TwUxKiFCNi7G9ViSzfpqKSzgRweheEqJlJotwhi1SmLsXGRlOFOGGFMQGNclipbT6A-ILNPl4VxTRfGlLXFgPBD5H0yKQppVwSVPhFVuFrJ5SVMSAqSqRX2YzF5YodXKopRsih-yKGULBRhGhBj5V0pjES6MHShVyu4aMsgEDyBSrUMypV0zRmuDMEQcgJlJUTGhRQqhMAyAMOhTYXF8w8X4ptQmJFaEUJxixdS7FnzCh4vpW1elHUOpdUIvww14DJnJL8fkjC-VxNwm0N-OpJcPKPwXm7ZMPdE6tNYG3Hpdd01G3xpmIu6sUy0xLu05JlTqQ0isdWxQ7Sgzu2zK1DZHaU1bONrTftfa96xKCQE8tESkkJLQMO4B46p2ztvKNIA8hAA"
+        width="100%"
+        height="800"
+        frameborder="0">
+    </iframe>
+
+    <p><small>This iframe loads directly from shinylive.io and includes a working reactive timer that updates every 100ms.</small></p>
+</body>
+</html>
