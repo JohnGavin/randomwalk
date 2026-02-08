@@ -280,9 +280,7 @@ ui <- fluidPage(
         tabPanel("Fractal Graph",
                  h4("Grid Visualization - Black Pixels"),
                  plotOutput("fractal_plot", height = "600px"),
-                 tags$p(style = "margin-top: 10px; color: #666; font-style: italic;",
-                        "Color shows walker arrival order: Dark blue = early arrivals, Light yellow = late arrivals"),
-                 downloadButton("download_fractal", "Download Plot", class = "btn-sm"),
+                 downloadButton("download_fractal", "Download Plot", class = "btn-sm", style = "margin-top: 10px;"),
                  hr(),
                  verbatimTextOutput("fractal_stats")),
 

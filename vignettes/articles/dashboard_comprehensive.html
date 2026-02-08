@@ -335,9 +335,7 @@ ui &lt;- fluidPage(
         tabPanel("Fractal Graph",
                  h4("Grid Visualization - Black Pixels"),
                  plotOutput("fractal_plot", height = "600px"),
-                 tags$p(style = "margin-top: 10px; color: #666; font-style: italic;",
-                        "Color shows walker arrival order: Dark blue = early arrivals, Light yellow = late arrivals"),
-                 downloadButton("download_fractal", "Download Plot", class = "btn-sm"),
+                 downloadButton("download_fractal", "Download Plot", class = "btn-sm", style = "margin-top: 10px;"),
                  hr(),
                  verbatimTextOutput("fractal_stats")),
 
@@ -1428,7 +1426,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 </section>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> 2.1.1 | <strong>Git</strong> <code>62b7a4f</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-08 11:33:27</p>
+<p><strong>randomwalk</strong> 2.1.1 | <strong>Git</strong> <code>dd44855</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-08 12:20:36</p>
 </section>
 
 </main>
