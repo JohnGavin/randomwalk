@@ -138,7 +138,8 @@ plot_grid_enhanced <- function(result,
       plot.margin = ggplot2::margin(10, 10, 40, 10)  # Extra bottom margin for caption
     )
 
-  # Move ALL text to caption, remove from plot
+  # Calculate caption text but don't add to plot - let dashboard display it
+  caption_text <- ""
   if (length(black_arrivals) > 0 && quantiles > 1) {
     # Calculate walker statistics for each quantile
     quantile_stats <- sapply(1:quantiles, function(q) {
@@ -149,12 +150,9 @@ plot_grid_enhanced <- function(result,
       "Color indicates arrival order: darkest = earliest arrivals (center), lightest = latest arrivals (periphery)\nQuantile distribution: %s",
       paste(sprintf("Q%d: %d pixels", 1:quantiles, quantile_stats), collapse = ", ")
     )
-
-    p <- p + ggplot2::labs(caption = caption_text) +
-      ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0.5, size = 9,
-                                                          color = "gray40",
-                                                          margin = ggplot2::margin(t = 10)))
   }
 
+  # Return plot with caption text as an attribute
+  attr(p, "caption") <- caption_text
   return(p)
 }

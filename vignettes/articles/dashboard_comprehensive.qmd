@@ -280,6 +280,8 @@ ui <- fluidPage(
         tabPanel("Fractal Graph",
                  h4("Grid Visualization - Black Pixels"),
                  plotOutput("fractal_plot", height = "600px"),
+                 tags$p(style = "margin-top: 10px; margin-bottom: 10px; color: #666; font-style: italic; text-align: center;",
+                        textOutput("fractal_caption", inline = TRUE)),
                  downloadButton("download_fractal", "Download Plot", class = "btn-sm", style = "margin-top: 10px;"),
                  hr(),
                  verbatimTextOutput("fractal_stats")),
@@ -771,8 +773,28 @@ server <- function(input, output, session) {
                            quantiles = 5,
                            color_scheme = "viridis")
 
-    # The plot_grid_enhanced function now uses gray85 background by default
+    # Store the plot for caption extraction
+    # The plot_grid_enhanced function returns plot with caption as attribute
     p
+  })
+
+  # Display the caption separately
+  output$fractal_caption <- renderText({
+    req(sim_result())
+    result <- sim_result()
+
+    # Generate the plot to get the caption
+    p <- plot_grid_enhanced(result,
+                           quantiles = 5,
+                           color_scheme = "viridis")
+
+    # Extract and return the caption
+    caption <- attr(p, "caption")
+    if (!is.null(caption) && caption != "") {
+      caption
+    } else {
+      ""
+    }
   })
 
   output$fractal_stats <- renderText({
