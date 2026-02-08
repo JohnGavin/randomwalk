@@ -1,0 +1,200 @@
+---
+title: "Timer Test Dashboard - FIXED"
+format:
+  html:
+    embed-resources: false
+filters:
+  - shinylive
+---
+
+# Fixed Timer Implementation (Non-Blocking)
+
+This version uses the crew pattern: start a task, then poll for progress without blocking.
+
+```{shinylive-r}
+#| standalone: true
+#| viewerHeight: 600
+
+library(shiny)
+
+ui <- fluidPage(
+  titlePanel("Non-Blocking Timer Test - Updates Every 100ms"),
+
+  sidebarLayout(
+    sidebarPanel(
+      h4("Controls"),
+      actionButton("start_sim", "Start 10-Second Task", class = "btn-primary"),
+      actionButton("stop_sim", "Stop Task", class = "btn-danger"),
+      hr(),
+      h4("Clock (updates every 100ms):"),
+      verbatimTextOutput("clock"),
+      h4("Task Progress:"),
+      verbatimTextOutput("progress"),
+      h4("Debug Info:"),
+      verbatimTextOutput("debug")
+    ),
+
+    mainPanel(
+      h4("Real-Time Progress Visualization"),
+      plotOutput("test_plot"),
+      hr(),
+      h4("Key Difference from Broken Version:"),
+      tags$ul(
+        tags$li("No Sys.sleep() blocking the UI thread"),
+        tags$li("Uses invalidateLater() to schedule periodic checks"),
+        tags$li("Progress calculated from elapsed time, not loops")
+      ),
+      hr(),
+      tags$div(
+        style = "font-size: 11px; color: #666;",
+        paste("Dashboard created:", format(Sys.time(), "%Y-%m-%d %H:%M:%S UTC"))
+      )
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  # Reactive values for task state
+  values <- reactiveValues(
+    task_state = "idle",
+    task_start = NULL,
+    task_duration = 10,  # 10 second task
+    debug_msg = "Ready to start"
+  )
+
+  # Clock updates every 100ms regardless of task state
+  observe({
+    invalidateLater(100)  # Schedule next update
+    output$clock <- renderText({
+      format(Sys.time(), "%H:%M:%S.%OS1")
+    })
+  })
+
+  # Task progress monitor - THIS IS THE KEY PATTERN
+  observe({
+    # Only run when task is active
+    if (values$task_state == "running") {
+      invalidateLater(100)  # Check again in 100ms
+
+      # Calculate progress based on elapsed time
+      if (!is.null(values$task_start)) {
+        elapsed <- as.numeric(difftime(Sys.time(), values$task_start, units = "secs"))
+
+        # Check if task should complete
+        if (elapsed >= values$task_duration) {
+          values$task_state <- "complete"
+          values$debug_msg <- paste("Completed at:", format(Sys.time(), "%H:%M:%S.%OS1"))
+        } else {
+          # Update debug message with current progress
+          values$debug_msg <- sprintf("Running... %.1f/%.0f seconds",
+                                    elapsed, values$task_duration)
+        }
+      }
+    }
+  })
+
+  # Start button - NON-BLOCKING
+  observeEvent(input$start_sim, {
+    values$task_state <- "running"
+    values$task_start <- Sys.time()
+    values$debug_msg <- paste("Started at:", format(Sys.time(), "%H:%M:%S.%OS1"))
+    # NO SLEEP! NO LOOP! Just set the state and let the observe() handle updates
+  })
+
+  # Stop button
+  observeEvent(input$stop_sim, {
+    values$task_state <- "stopped"
+    values$debug_msg <- paste("Stopped at:", format(Sys.time(), "%H:%M:%S.%OS1"))
+  })
+
+  # Progress display
+  output$progress <- renderText({
+    if (values$task_state == "idle") {
+      "Status: IDLE\nClick button to start"
+    } else if (values$task_state == "running" && !is.null(values$task_start)) {
+      elapsed <- as.numeric(difftime(Sys.time(), values$task_start, units = "secs"))
+      progress_pct <- min(100, (elapsed / values$task_duration) * 100)
+      sprintf("Status: RUNNING\nElapsed: %.1f seconds\nProgress: %.0f%%",
+              elapsed, progress_pct)
+    } else if (values$task_state == "complete") {
+      elapsed <- as.numeric(difftime(Sys.time(), values$task_start, units = "secs"))
+      sprintf("Status: COMPLETE\nTotal time: %.1f seconds", elapsed)
+    } else if (values$task_state == "stopped") {
+      "Status: STOPPED\nTask cancelled"
+    } else {
+      "Status: INITIALIZING..."
+    }
+  })
+
+  # Debug output
+  output$debug <- renderText({
+    values$debug_msg
+  })
+
+  # Plot updates in real-time
+  output$test_plot <- renderPlot({
+    # This re-renders based on reactivity
+    if (values$task_state == "idle") {
+      plot(1, type = "n", main = "Waiting to start...",
+           xlab = "", ylab = "", axes = FALSE)
+      text(1, 1, "Click 'Start' to begin", cex = 2)
+    } else if (values$task_state == "running" && !is.null(values$task_start)) {
+      elapsed <- as.numeric(difftime(Sys.time(), values$task_start, units = "secs"))
+      progress_pct <- min(100, (elapsed / values$task_duration) * 100)
+
+      # Animated progress bar
+      barplot(progress_pct, ylim = c(0, 100),
+              main = sprintf("Progress: %.0f%% (%.1fs / %.0fs)",
+                           progress_pct, elapsed, values$task_duration),
+              col = "steelblue",
+              border = "darkblue",
+              names.arg = "")
+
+      # Add time markers
+      abline(h = seq(0, 100, 20), col = "gray80", lty = 2)
+    } else if (values$task_state == "complete") {
+      barplot(100, ylim = c(0, 100),
+              main = "Task Complete!",
+              col = "green",
+              border = "darkgreen",
+              names.arg = "")
+      text(0.7, 50, "✓", cex = 5, col = "white")
+    } else if (values$task_state == "stopped") {
+      elapsed <- as.numeric(difftime(Sys.time(), values$task_start, units = "secs"))
+      progress_pct <- min(100, (elapsed / values$task_duration) * 100)
+      barplot(progress_pct, ylim = c(0, 100),
+              main = sprintf("Stopped at %.0f%%", progress_pct),
+              col = "orange",
+              border = "darkorange",
+              names.arg = "")
+    }
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+## Comparison: Broken vs Fixed
+
+| Aspect | Broken Version | Fixed Version (crew pattern) |
+|--------|---------------|---------------------------|
+| **Event Handler** | `for` loop with `Sys.sleep()` | Just sets state and exits |
+| **Progress Updates** | Blocked for 10 seconds | Updates every 100ms via `observe()` |
+| **UI Responsiveness** | Frozen during task | Fully responsive throughout |
+| **Clock Display** | Stops ticking | Continues updating |
+| **User Control** | Cannot stop once started | Can stop anytime |
+
+## Key Lessons
+
+1. **Never use `Sys.sleep()` in Shiny event handlers** - It blocks the entire UI thread
+2. **Use `invalidateLater()` for periodic updates** - This schedules re-execution without blocking
+3. **Calculate progress from elapsed time** - Don't rely on loop iterations
+4. **Separate task initiation from monitoring** - Start the task, then poll for progress
+
+## How This Applies to the Main Dashboard
+
+The simulation should:
+1. Start with a state change (e.g., `sim_running <- TRUE`)
+2. Use `observe()` with `invalidateLater()` to check progress periodically
+3. Update walker counts based on elapsed time or iteration count
+4. Never block with `Sys.sleep()` or long loops

@@ -881,42 +881,56 @@ server <- function(input, output, session) {
         # Add subtle grid for visibility
         grid(nx = grid_size, ny = grid_size, col = "gray70", lty = 1, lwd = 0.3)
 
-        # Use VERY HIGH contrast colors - avoid light colors
-        # Use distinct colors that will show on gray background
+        # Create STABLE color mapping based on termination order (not position)
         distinct_colors <- c("red", "blue", "darkgreen", "purple", "orange",
-                           "brown", "pink", "cyan", "magenta", "darkblue",
+                           "brown", "deeppink", "darkcyan", "darkmagenta", "darkblue",
                            "darkred", "forestgreen", "black", "goldenrod", "darkviolet")
-        path_colors <- rep(distinct_colors, length.out = length(filtered_walkers))
 
-        # Collect all paths first, then draw them
+        # Map each walker to a consistent color based on their termination order
+        # This ensures walker #20 always gets the same color regardless of selection
+        color_map <- list()
+        for (i in seq_along(walkers_ordered)) {
+          term_order <- walkers_ordered[[i]]$termination_order
+          # Use modulo to cycle through colors if more walkers than colors
+          color_index <- ((term_order - 1) %% length(distinct_colors)) + 1
+          color_map[[as.character(term_order)]] <- distinct_colors[color_index]
+        }
+
+        # Collect all paths with STABLE colors
         all_paths <- list()
         all_starts <- list()
         all_ends <- list()
 
         for (i in seq_along(filtered_walkers)) {
           walker <- filtered_walkers[[i]]
+          # Get stable color for this walker based on termination order
+          walker_color <- color_map[[as.character(walker$termination_order)]]
 
           # Check if path exists and is not empty
           if (!is.null(walker$path) && length(walker$path) > 0) {
             path_matrix <- do.call(rbind, walker$path)
-            all_paths[[i]] <- list(
+            # Use walker termination order as key to ensure uniqueness
+            key <- paste0("walker_", walker$termination_order)
+
+            all_paths[[key]] <- list(
               x = path_matrix[, 2],
               y = path_matrix[, 1],
-              col = path_colors[i]
+              col = walker_color
             )
-            all_starts[[i]] <- list(
+            all_starts[[key]] <- list(
               x = path_matrix[1, 2],
               y = path_matrix[1, 1],
-              col = path_colors[i]
+              col = walker_color
             )
           }
 
           # Always mark end position
           if (!is.null(walker$pos)) {
-            all_ends[[i]] <- list(
+            key <- paste0("walker_", walker$termination_order)
+            all_ends[[key]] <- list(
               x = walker$pos[2],
               y = walker$pos[1],
-              col = path_colors[i]
+              col = walker_color
             )
           }
         }

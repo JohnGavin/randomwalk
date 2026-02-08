@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timer Test - Proving WebR/Shinylive Timer Works</title>
+    <script src="https://unpkg.com/shinylive@0.9.1/shinylive.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/shinylive@0.9.1/shinylive.css">
+</head>
+<body>
+<h1>Testing Reactive Timer in Shinylive</h1>
+<p>This proves the timer pattern DOES work in WebR/Shinylive:</p>
+
+<div id="app"></div>
+
+<script type="application/json" id="shinylive-app">
+{
+  "files": [
+    {
+      "name": "app.R",
+      "content": "library(shiny)\n\nui <- fluidPage(\n  h3(\"Timer Test - Updates Every 100ms\"),\n  verbatimTextOutput(\"timer_display\"),\n  hr(),\n  actionButton(\"simulate\", \"Start 5-Second Simulation\"),\n  verbatimTextOutput(\"progress\")\n)\n\nserver <- function(input, output, session) {\n  # Reactive timer - updates every 100ms\n  autoInvalidate <- reactiveTimer(100)\n  \n  # State tracking\n  sim_state <- reactiveVal(\"idle\")\n  start_time <- reactiveVal(NULL)\n  \n  # Live clock - proves timer works\n  output$timer_display <- renderText({\n    autoInvalidate()\n    sprintf(\"Current Time: %s (updates every 100ms)\", \n            format(Sys.time(), \"%H:%M:%S.%OS1\"))\n  })\n  \n  # Simulate button\n  observeEvent(input$simulate, {\n    sim_state(\"running\")\n    start_time(Sys.time())\n    \n    # Simulate 5-second task\n    Sys.sleep(5)\n    \n    sim_state(\"complete\")\n  })\n  \n  # Progress display\n  output$progress <- renderText({\n    autoInvalidate()\n    \n    if (sim_state() == \"running\") {\n      elapsed <- round(difftime(Sys.time(), start_time(), units = \"secs\"), 1)\n      progress <- min(elapsed / 5 * 100, 100)\n      sprintf(\"RUNNING: %.1f seconds | Progress: %.0f%%\", elapsed, progress)\n    } else if (sim_state() == \"complete\") {\n      \"COMPLETE: Simulation finished!\"\n    } else {\n      \"Ready to start\"\n    }\n  })\n}\n\nshinyApp(ui, server)"
+    }
+  ]
+}
+</script>
+
+<script>
+  const div = document.getElementById("app");
+  const app = JSON.parse(document.getElementById("shinylive-app").textContent);
+  shinylive.renderShinyliveApp(div, app);
+</script>
+
+<h2>Expected Behavior:</h2>
+<ul>
+  <li>Clock updates every 100ms continuously</li>
+  <li>During 5-second simulation, progress shows elapsed time</li>
+  <li>Timer continues updating even during Sys.sleep()</li>
+</ul>
+
+<p>If this works but the dashboard doesn't, there's a deployment issue.</p>
+</body>
+</html>

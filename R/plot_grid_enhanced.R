@@ -117,7 +117,7 @@ plot_grid_enhanced <- function(result,
                       color = "gray90", linewidth = 0.05) +
     ggplot2::scale_fill_manual(
       values = colors,
-      na.value = "gray85",  # Lighter gray background for empty cells
+      na.value = "gray60",  # Gray background for empty cells matching plot background
       guide = "none"  # No legend, using caption instead
     ) +
     ggplot2::coord_fixed() +
@@ -129,16 +129,16 @@ plot_grid_enhanced <- function(result,
     ggplot2::theme_minimal() +
     ggplot2::theme(
       plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 12),
-      panel.grid.major = ggplot2::element_line(color = "gray60", linewidth = 0.25),
+      panel.grid.major = ggplot2::element_line(color = "gray50", linewidth = 0.25),
       panel.grid.minor = ggplot2::element_blank(),
-      panel.background = ggplot2::element_rect(fill = "gray85", color = NA),
-      plot.background = ggplot2::element_rect(fill = "gray85", color = NA),
-      axis.text = ggplot2::element_blank(),
-      axis.ticks = ggplot2::element_blank(),
+      panel.background = ggplot2::element_rect(fill = "gray60", color = NA),
+      plot.background = ggplot2::element_rect(fill = "gray60", color = NA),
+      axis.text = ggplot2::element_text(color = "black", size = 8),  # Show axis numbers
+      axis.ticks = ggplot2::element_line(color = "black", linewidth = 0.3),  # Show tick marks
       plot.margin = ggplot2::margin(10, 10, 40, 10)  # Extra bottom margin for caption
     )
 
-  # Add caption with color explanation
+  # Move ALL text to caption, remove from plot
   if (length(black_arrivals) > 0 && quantiles > 1) {
     # Calculate walker statistics for each quantile
     quantile_stats <- sapply(1:quantiles, function(q) {
