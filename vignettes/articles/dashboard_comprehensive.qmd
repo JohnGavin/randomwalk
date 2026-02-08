@@ -408,6 +408,11 @@ server <- function(input, output, session) {
   sim_completed_walkers <- reactiveVal(0)  # Track completed walkers
   sim_black_pixels <- reactiveVal(0)  # Track black pixels
 
+  # Reactive values for non-blocking simulation
+  sim_chunk <- reactiveVal(0)
+  sim_chunks_total <- reactiveVal(1)
+  sim_est_runtime <- reactiveVal(0)
+
   # Reactive values for collapsible panels
   show_sim_params <- reactiveVal(FALSE)
   show_move_params <- reactiveVal(FALSE)
@@ -620,157 +625,185 @@ server <- function(input, output, session) {
   })
 
 
-  # Run simulation when button clicked
+  # Run simulation when button clicked - NON-BLOCKING PATTERN
   observeEvent(input$run_sim, {
-    # Update state to running
+    # Initialize state (NO BLOCKING!)
     sim_state("running")
     sim_start_time(Sys.time())
     sim_count(sim_count() + 1)
 
     output$status <- renderText({
       paste0(
-        "SIMULATION RUNNING...\n",
+        "SIMULATION STARTING...\n",
         "Run #", sim_count(), "\n",
         "Grid: ", input$grid_size, "×", input$grid_size, "\n",
         "Walkers: ", input$n_walkers, "\n",
         "Workers: 0 (sync sequential)\n",
         "Started: ", format(sim_start_time(), "%H:%M:%S"), "\n",
-        "Status: Processing..."
+        "Status: Initializing..."
       )
     })
 
-    tryCatch({
-      # Validate walker count doesn't exceed 70% of grid
-      max_allowed <- floor(0.7 * input$grid_size^2)
-      if (input$n_walkers > max_allowed) {
-        stop(sprintf("Too many walkers (%d) for grid size %dx%d. Maximum allowed: %d (70%% of grid pixels)",
-                     input$n_walkers, input$grid_size, input$grid_size, max_allowed))
-      }
-
-      # Reset progress tracking
-      sim_current_step(0)
-      sim_completed_walkers(0)
-      sim_black_pixels(0)
-
-      start_time <- Sys.time()
-
-      # For WebR: Split simulation into smaller chunks with Sys.sleep() to yield control
-      if (is_webr()) {
-        # Estimate total runtime
-        est_steps_per_sec <- 200 / (1 + 0.002 * input$n_walkers)
-        est_runtime <- input$max_steps / est_steps_per_sec
-        chunks <- 20  # Split into 20 chunks for smooth updates
-
-        # Process simulation in chunks with progress updates
-        for (i in 1:chunks) {
-          if (i == chunks) {
-            # Final chunk: run the actual simulation
-            result <- run_simulation(
-              grid_size = input$grid_size,
-              n_walkers = input$n_walkers,
-              neighborhood = input$neighborhood,
-              boundary = input$boundary,
-              max_steps = input$max_steps,
-              workers = 0,
-              sync_mode = "static",
-              verbose = FALSE,
-              validate_percent = 0
-            )
-
-            # Update with real final values
-            sim_completed_walkers(result$statistics$completed_walkers)
-            sim_black_pixels(result$statistics$black_pixels)
-          } else {
-            # Intermediate chunks: simulate progress
-            progress <- i / chunks
-            sim_current_step(floor(input$max_steps * progress))
-            sim_completed_walkers(floor(input$n_walkers * progress * 0.8))
-            sim_black_pixels(floor(input$n_walkers * progress * 0.7))
-
-            # CRITICAL: Yield control to browser for timer update
-            # Sleep for estimated time per chunk
-            Sys.sleep(est_runtime / chunks)
-          }
-        }
-      } else {
-        # Native R: run normally
-        result <- run_simulation(
-          grid_size = input$grid_size,
-          n_walkers = input$n_walkers,
-          neighborhood = input$neighborhood,
-          boundary = input$boundary,
-          max_steps = input$max_steps,
-          workers = 0,
-          sync_mode = "static",
-          verbose = FALSE,
-          validate_percent = 0
-        )
-      }
-
-      end_time <- Sys.time()
-      elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
-
-      # Update state variables
-      sim_state("complete")
-      sim_end_time(end_time)
-      sim_result(result)
-
-      # Re-enable the button
-      updateActionButton(session, "run_sim",
-                        label = "Run Simulation",
-                        disabled = FALSE)
-
-      # Browser console logging for WebR diagnostics (Issue #157)
-      message(sprintf("\n=== SIMULATION COMPLETE ==="))
-      message(sprintf("Grid size: %dx%d", input$grid_size, input$grid_size))
-      message(sprintf("Walkers: %d", input$n_walkers))
-      message(sprintf("Black pixels: %d", sum(result$grid == 1)))
-      message(sprintf("Elapsed time: %s", format_duration(elapsed)))
-
-      # NOTE: find_isolated_pixels() check removed due to performance impact
-      # Even "once after simulation" was too slow in reactive context
-      # See Issue #166 for async validation approach
-      message(sprintf("==========================\n"))
-
-      output$status <- renderText({
-        paste0(
-          "SIMULATION COMPLETE\n",
-          "Run #", sim_count(), "\n",
-          "━━━━━━━━━━━━━━━━━━━━━━\n",
-          "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
-          "Finished: ", format(sim_end_time(), "%H:%M:%S"), "\n",
-          "Elapsed:  ", format_duration(elapsed), "\n",
-          "━━━━━━━━━━━━━━━━━━━━━━\n",
-          "Backend: synchronous (WebR browser)\n",
-          "Black Pixels: ", sum(result$grid == 1), "\n",
-          "Walkers: ", input$n_walkers, " completed"
-        )
-      })
-
-    }, error = function(e) {
+    # Validate walker count
+    max_allowed <- floor(0.7 * input$grid_size^2)
+    if (input$n_walkers > max_allowed) {
       sim_state("error")
-      sim_end_time(Sys.time())
-
-      # Re-enable the button
-      updateActionButton(session, "run_sim",
-                        label = "Run Simulation",
-                        disabled = FALSE)
-
       output$status <- renderText({
-        paste0(
-          "SIMULATION ERROR\n",
-          "Run #", sim_count(), "\n",
-          "━━━━━━━━━━━━━━━━━━━━━━\n",
-          "Error: ", e$message, "\n",
-          "━━━━━━━━━━━━━━━━━━━━━━\n",
-          "Troubleshooting:\n",
-          "- Check JavaScript console (F12)\n",
-          "- Verify randomwalk package loaded\n",
-          "- Check workers setting (0-4)\n",
-          "- See WIKI_SHINYLIVE_LESSONS_LEARNED.md"
-        )
+        sprintf("ERROR: Too many walkers (%d) for grid size %dx%d.\nMaximum allowed: %d (70%% of grid pixels)",
+                input$n_walkers, input$grid_size, input$grid_size, max_allowed)
       })
-    })
+      return()
+    }
+
+    # Reset progress tracking
+    sim_current_step(0)
+    sim_completed_walkers(0)
+    sim_black_pixels(0)
+
+    # Calculate runtime estimate
+    est_steps_per_sec <- 200 / (1 + 0.002 * input$n_walkers)
+    sim_est_runtime(input$max_steps / est_steps_per_sec)
+
+    # Initialize chunked execution for WebR
+    if (is_webr()) {
+      sim_chunks_total(20)  # 20 chunks for smooth updates
+      sim_chunk(0)
+    } else {
+      sim_chunks_total(1)   # Single chunk for native R
+      sim_chunk(0)
+    }
+    # DON'T RUN SIMULATION HERE - let observe() handle it!
+  })
+
+  # Non-blocking simulation observer (crew pattern)
+  observe({
+    # Only run when simulation is active and not complete
+    if (sim_state() == "running" && sim_chunk() < sim_chunks_total()) {
+
+      if (is_webr() && sim_chunk() < sim_chunks_total() - 1) {
+        # WebR: Simulate progress for intermediate chunks
+        invalidateLater(sim_est_runtime() * 1000 / sim_chunks_total())  # ms per chunk
+
+        # Update chunk counter
+        sim_chunk(sim_chunk() + 1)
+        progress <- sim_chunk() / sim_chunks_total()
+
+        # Update simulated progress
+        sim_current_step(floor(input$max_steps * progress))
+        sim_completed_walkers(floor(input$n_walkers * progress * 0.8))
+        sim_black_pixels(floor(input$n_walkers * progress * 0.7))
+
+        # Update status with progress bar
+        output$status <- renderText({
+          elapsed <- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+          bar_width <- 20
+          filled <- round(progress * bar_width)
+          paste0(
+            "SIMULATION RUNNING...\n",
+            "Run #", sim_count(), "\n",
+            "Progress: ", round(progress * 100), "%\n",
+            "━", strrep("━", filled), strrep(" ", bar_width - filled), "┃\n",
+            "Elapsed: ", format_duration(elapsed), "\n",
+            "Est. remaining: ", format_duration(max(0, sim_est_runtime() - elapsed)), "\n",
+            "━━━━━━━━━━━━━━━━━━━━━━\n",
+            "Walkers: ", sim_completed_walkers(), "/", input$n_walkers, "\n",
+            "Black pixels: ", sim_black_pixels()
+          )
+        })
+
+      } else {
+        # Final chunk: run actual simulation
+        # Mark this as the final chunk to prevent re-execution
+        sim_chunk(sim_chunks_total())
+
+        tryCatch({
+          # Show running message
+          output$status <- renderText({
+            paste0(
+              "SIMULATION RUNNING...\n",
+              "Run #", sim_count(), "\n",
+              "Progress: 95%\n",
+              "━━━━━━━━━━━━━━━━━━━━━━\n",
+              "Running final calculation...\n",
+              "Please wait..."
+            )
+          })
+
+          result <- run_simulation(
+            grid_size = input$grid_size,
+            n_walkers = input$n_walkers,
+            neighborhood = input$neighborhood,
+            boundary = input$boundary,
+            max_steps = input$max_steps,
+            workers = 0,
+            sync_mode = "static",
+            verbose = FALSE,
+            validate_percent = 0
+          )
+
+          # Store result
+          sim_result(result)
+          sim_completed_walkers(result$statistics$completed_walkers)
+          sim_black_pixels(result$statistics$black_pixels)
+          sim_current_step(input$max_steps)
+
+          # Mark complete
+          sim_state("complete")
+          sim_end_time(Sys.time())
+
+          # Calculate elapsed time
+          elapsed <- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
+
+          # Re-enable the button
+          updateActionButton(session, "run_sim",
+                            label = "Run Simulation",
+                            disabled = FALSE)
+
+          # Browser console logging for WebR diagnostics
+          message(sprintf("\n=== SIMULATION COMPLETE ==="))
+          message(sprintf("Grid size: %dx%d", input$grid_size, input$grid_size))
+          message(sprintf("Walkers: %d", input$n_walkers))
+          message(sprintf("Black pixels: %d", sum(result$grid == 1)))
+          message(sprintf("Elapsed time: %s", format_duration(elapsed)))
+
+          message(sprintf("==========================\n"))
+
+          output$status <- renderText({
+            paste0(
+              "SIMULATION COMPLETE\n",
+              "Run #", sim_count(), "\n",
+              "━━━━━━━━━━━━━━━━━━━━━━\n",
+              "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
+              "Finished: ", format(sim_end_time(), "%H:%M:%S"), "\n",
+              "Elapsed:  ", format_duration(elapsed), "\n",
+              "━━━━━━━━━━━━━━━━━━━━━━\n",
+              "Backend: synchronous (WebR browser)\n",
+              "Black Pixels: ", result$statistics$black_pixels, "\n",
+              "Walkers: ", result$statistics$completed_walkers, " completed"
+            )
+          })
+
+        }, error = function(e) {
+          sim_state("error")
+          sim_end_time(Sys.time())
+
+          # Re-enable the button
+          updateActionButton(session, "run_sim",
+                            label = "Run Simulation",
+                            disabled = FALSE)
+
+          output$status <- renderText({
+            paste0(
+              "SIMULATION ERROR\n",
+              "━━━━━━━━━━━━━━━━━━━━━━\n",
+              "Error: ", conditionMessage(e), "\n",
+              "━━━━━━━━━━━━━━━━━━━━━━\n",
+              "Please try again with different parameters."
+            )
+          })
+        })
+      }
+    }
   })
 
   # PAGE 1: Fractal Graph with arrival time coloring
