@@ -133,9 +133,10 @@ run_simulation <- function(grid_size = 10,
   grid <- initialize_grid(grid_size)
 
   # Create walkers
-  # PERF: Only store paths for first 20 and last 20 walkers (Issue #172)
+  # PERF: Only store paths for first 200 and last 200 walkers (Issue #172)
   # This avoids O(n²) path list growth for walkers we won't visualize
-  path_count <- 20L  # Number of paths to store from start and end
+  # Increased from 20 to 200 to better support dashboard path visualization
+  path_count <- 200L  # Number of paths to store from start and end
   walker_positions <- generate_walker_positions(n_walkers, grid)
   walkers <- lapply(seq_along(walker_positions), function(i) {
     # Store path only for first 20 or last 20 walkers
