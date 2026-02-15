@@ -1,247 +1,102 @@
-# Current Focus: Critical CI/CD Issues - RESOLVED ✅
+# Current Focus: Dashboard Improvements & CI Issues
 
 ## Active Branch
 main
 
-## Session Status: ✅ THREE CRITICAL ISSUES FIXED (2025-12-23)
+## Session Status: Dashboard fixes committed (2025-02-15)
 
-All critical blockers (#92, #111, #115) have been resolved and pushed to main.
-
----
-
-## Session Summary (2025-12-23)
-
-### 🎯 Objectives Completed
-
-**Issue #92**: ✅ Fix cachix push strategy (CLOSED)
-**Issue #111**: ✅ Add R CMD check to CI (CLOSED)
-**Issue #115**: ✅ Rationalize open PRs (CLOSED - All PRs merged!)
-
-### 📊 Results
-
-| Issue | Before | After | Status |
-|-------|--------|-------|--------|
-| #92 | Inconsistent cachix push | Selective push only randomwalk | ✅ FIXED |
-| #111 | No R CMD check in CI | New workflow added | ✅ FIXED |
-| #115 | "11 open PRs" (Dec 9) | ZERO open PRs | ✅ RESOLVED |
+Latest changes pushed to main:
+- Fixed fractal plot caption display
+- Removed fake chunking simulation
+- Verified walker path color stability
 
 ---
 
-## What Was Accomplished ✅
+## Current Open Issues (5 total)
 
-### 1. ✅ Fixed Issue #92: Cachix Push Strategy
+### High Priority - CI Issues
+1. **#187** - BUG: Tests fail in Code Coverage CI environment
+   - Coverage generation fails due to test failures in CI
+   - Needs investigation of test environment differences
 
-**Problem**: Inconsistent cachix behavior between workflows
-- `tests-r-via-nix.yaml`: Selective push (CORRECT) ✅
-- `nix-builder.yaml`: Pushed ALL dependencies (WRONG) ❌
+2. **#177** - CI: Re-enable R-universe test workflow when quota allows
+   - R-universe workflow disabled due to quota limits
+   - Monitor and re-enable when quota resets
 
-**Root Cause**:
-```bash
-# nix-builder.yaml was doing:
-nix-store -qR --include-outputs result | cachix push johngavin
-# This pushed randomwalk + ALL R dependencies (wasteful!)
-```
+### Enhancement Issues
+3. **#68** - Support three dashboard versions (sync, async-pre-nanonext, async-nanonext)
+   - Multi-version dashboard support
+   - Medium-term enhancement
 
-**Solution Applied**:
-```yaml
-# Updated to selective push (matching tests-r-via-nix.yaml):
-nix-store -qR --include-outputs result | \
-  grep -E 'randomwalk' | \
-  cachix push johngavin
-```
+4. **#60** - Improve validation visibility and control in dashboard
+   - Better validation feedback for users
+   - Dashboard UX improvement
 
-**Benefits**:
-- ✅ Only randomwalk pushed to johngavin cache
-- ✅ All R dependencies from rstats-on-nix cache
-- ✅ Optimal cache storage usage
-- ✅ Consistent behavior across workflows
-
-**Obsolete Branch**: Marked `fix-issue-92-cachix-skip-push` as obsolete (wrong approach)
-
-### 2. ✅ Fixed Issue #111: Add R CMD Check Workflow
-
-**Problem**: No R CMD check running in CI
-
-**Current Strategy Confirmed**:
-- ✅ Build pkgdown locally (avoids bslib/Nix issues)
-- ✅ Deploy pre-built docs/ to GitHub Pages
-- ❌ Need R CMD check in CI (NOW ADDED)
-- ❌ Do NOT rebuild pkgdown in CI (intentional)
-
-**Solution**: Created new `.github/workflows/r-cmd-check.yaml`
-- Runs R CMD check via Nix
-- Uses cachix for fast builds
-- Uploads check results on failure
-- Does NOT rebuild pkgdown site
-
-### 3. ✅ Resolved Issue #115: PR Management
-
-**Problem**: CURRENT_WORK.md (Dec 9) listed "11 open PRs needing review"
-
-**Discovery**: Used GITHUB_PAT to query GitHub API
-
-**Result**: **ZERO open PRs!** All 11 PRs have been merged! 🎉
-
-Recent merged PRs:
-- #139: Fix Issue #15 (MERGED 2025-12-19)
-- #137: Fix #136 async vignette (MERGED 2025-12-18)
-- #135: Fix #134 version bumping (MERGED 2025-12-18)
-- #133: Fix #132 disable vignettes (MERGED 2025-12-18)
-- #128, #126, #120, #119, #114, #113, #112... (all merged)
+5. **#56** - Page for survival curve for number of steps to event
+   - New visualization feature
+   - Statistical analysis enhancement
 
 ---
 
-## Files Modified
+## Recently Completed
 
-### Workflows
-- ✅ `.github/workflows/nix-builder.yaml` - Selective cachix push
-- ✅ `.github/workflows/r-cmd-check.yaml` - NEW workflow for R CMD check
+### Dashboard Fixes (2025-02-15)
+- ✅ Fixed fractal plot caption (now displays below plot, not in footer)
+- ✅ Removed fake chunking (was showing misleading 0-95% progress)
+- ✅ Verified walker path color stability (all 23 tests passing)
+- ✅ Pushed changes to GitHub
 
-### Documentation
-- ✅ `R/dev/fixes/fix_issue_92_cachix_strategy.R` - Comprehensive documentation
-- ✅ `.claude/CURRENT_WORK.md` - This file (updated)
-
-### Branch Management
-- ✅ `fix-issue-92-cachix-skip-push` - Marked obsolete with .BRANCH_OBSOLETE.md
-
----
-
-## Commits Made
-
-```
-d75eaff Fix #92: Use selective cachix push (only randomwalk, not R deps)
-92771ca Fix #111: Add R CMD check workflow (without pkgdown rebuild)
-fc4fc6b Mark branch as obsolete - wrong cachix strategy (on fix-issue-92 branch)
-```
-
----
-
-## Current Open Issues: 28 Total
-
-**From GitHub API query (2025-12-23)**:
-
-### High Priority Issues
-1. **#138** - Add shell.nix for users (non-developers)
-2. **#131** - Retrospective: Workflow violation - WASM async investigation
-3. **#130** - Switch entirely to mirai, remove crew dependency (enhancement)
-4. **#124** - Optimize vignette simulation parameters
-5. **#121** - Implementation Plan: Fix Website Rebuild & Pre-built Vignette Deployment
-6. **#118** - Shinylive App Not Running in dashboard.html
-7. **#115** - Rationalize and Consolidate Open Pull Requests *(CAN CLOSE - NO OPEN PRS)*
-
-### Documentation & Enhancement Issues
-8. **#103** - Restore embedded Shinylive app in dashboard.html
-9. **#102** - Fix 404 on dashboard_async URL
-10. **#101** - Fix dynamic_broadcasting.html content
-11. **#96** - DOCS: Update README with nanonext examples
-12. **#91** - Optimize CI/CD Build Times: Reduce from 20 min to 5-8 min
-13. **#89** - Document Dynamic Broadcasting Algorithm
-14. **#88** - Update simulation parameters to demonstrate scalability
-15. **#87** - Update async dashboard wiki with comparison
-16. **#86** - Fix: Home page sections and wiki links need updating
-17. **#85** - Fix: Missing vignettes and broken links on pkgdown
-18. **#84** - Chore: Reorganize R/setup/ files
-19. **#78** - Automate nix file regeneration when DESCRIPTION changes
-20. **#76** - Fix README badges and broken vignette links
-21. **#69** - Enable persistent caching for targets in CI/CD
-22. **#68** - Support three dashboard versions
-23. **#66** - defensive programming examples
-24. **#60** - Improve validation visibility and control
-25. **#57** - Non-blocking event display latest statistics
-26. **#56** - Page for survival curve
-27. **#50** - Vignette: Create targets pipeline with nested parallelism
-28. **#48** - Wiki: Show fractal similarity workers=0 vs workers=1
-
----
-
-## Correct Cachix Strategy (Documented)
-
-```
-┌────────────────────────────────────────────────────┐
-│ Cache Priority Order (CORRECT):                   │
-├────────────────────────────────────────────────────┤
-│ 1. rstats-on-nix (READ-ONLY)  - All R packages   │
-│ 2. johngavin      (READ-WRITE) - ONLY randomwalk  │
-└────────────────────────────────────────────────────┘
-
-Workflow:
-  Local: Build → Test → Push only randomwalk to johngavin
-  CI: Pull from rstats-on-nix (R packages) + johngavin (randomwalk)
-```
+### Previously Closed Issues
+- ✅ #118 - Shinylive App Not Running (CLOSED)
+- ✅ #103 - Restore embedded Shinylive app (CLOSED)
+- ✅ #102 - Fix 404 on dashboard_async URL (CLOSED)
+- ✅ #92 - Fix cachix push strategy (CLOSED)
+- ✅ #111 - Add R CMD check to CI (CLOSED)
+- ✅ #115 - Rationalize open PRs (CLOSED)
 
 ---
 
 ## Next Session Priorities
 
-### Quick Wins (Can close immediately)
-1. **#115** - Close issue (NO open PRs, all merged!)
+### Quick Wins
+1. **#177** - Check R-universe quota status and re-enable if possible
 
-### High-Value Tasks (1-2 hours each)
-2. **#102** - Fix dashboard_async 404
-3. **#101** - Fix dynamic_broadcasting.html content
-4. **#96** - Update README with nanonext examples
-5. **#86** - Fix home page sections and wiki links
-6. **#76** - Fix README badges and broken vignette links
+### Investigation Needed
+2. **#187** - Debug CI test failures in coverage workflow
+   - Compare local vs CI test environments
+   - Check for environment-specific issues
 
-### Medium-Term (3-6 hours each)
-7. **#91** - Optimize CI/CD build times (5-8 min target)
-8. **#78** - Automate nix file regeneration
-9. **#84** - Reorganize R/setup/ files
-10. **#89** - Document Dynamic Broadcasting Algorithm
-
-### Advanced Features (6+ hours)
-11. **#130** - Switch entirely to mirai (remove crew)
-12. **#121** - Implementation Plan: Website rebuild
-13. **#68** - Support three dashboard versions
-14. **#50** - Vignette: targets pipeline with nested parallelism
+### Medium-Term
+3. **#68** - Plan three dashboard version support
+4. **#60** - Design validation visibility improvements
+5. **#56** - Implement survival curve visualization
 
 ---
 
-## Blockers
-**None** - All critical issues resolved!
+## Key Files Modified Recently
+
+### Dashboard
+- `R/plot_grid_enhanced.R` - Caption now returned as attribute
+- `vignettes/articles/dashboard_comprehensive.qmd` - Removed chunking, added caption display
+
+### Test Suite
+- `R/dev/issues/test_walker_color_stability.R` - New color stability test
 
 ---
 
-## Key Learnings
+## Cachix Strategy (Reminder)
 
-### 1. Cachix Strategy
-- **Selective push is critical**: Only push project-specific packages
-- **Cache hierarchy matters**: rstats-on-nix first, johngavin second
-- **Grep filtering works**: `nix-store ... | grep randomwalk | cachix push`
-
-### 2. CI/CD Workflow
-- **Build locally, deploy in CI**: Avoids bslib/Nix compatibility issues
-- **R CMD check in CI**: Catches errors without rebuilding site
-- **Pre-built vignettes**: Faster CI, consistent rendering
-
-### 3. GitHub Access
-- **GITHUB_PAT works**: Can query GitHub API via gh CLI
-- **PR status**: All recent PRs merged, no backlog
-- **Issue tracking**: 28 open issues, well-categorized
-
-### 4. Branch Management
-- **Mark obsolete branches**: Prevents confusion for future contributors
-- **Document rationale**: Explain why approach was wrong
+```
+┌────────────────────────────────────────────────────┐
+│ Cache Priority Order:                              │
+├────────────────────────────────────────────────────┤
+│ 1. rstats-on-nix (READ-ONLY)  - All R packages    │
+│ 2. johngavin      (READ-WRITE) - ONLY randomwalk  │
+└────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Reference Files
-
-**Session Documentation**:
-- `R/dev/fixes/fix_issue_92_cachix_strategy.R` (detailed fix log)
-- `.claude/CURRENT_WORK.md` (this file)
-
-**Workflow Files**:
-- `.github/workflows/nix-builder.yaml` (updated)
-- `.github/workflows/r-cmd-check.yaml` (NEW)
-- `.github/workflows/tests-r-via-nix.yaml` (reference for correct approach)
-
-**Obsolete Branches**:
-- `fix-issue-92-cachix-skip-push` (marked obsolete with .BRANCH_OBSOLETE.md)
-
----
-
-**Last Updated**: 2025-12-23
-**Current Status**: ✅ All critical blockers resolved
-**Next Action**: Pick from "Next Session Priorities" above
-**Commits**: 3 commits pushed to main + 1 to obsolete branch
+**Last Updated**: 2025-02-15
+**Current Status**: Dashboard fixes committed, CI issues need investigation
+**Next Action**: Investigate #187 (CI test failures) or check #177 (R-universe quota)
