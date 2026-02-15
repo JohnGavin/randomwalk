@@ -76,3 +76,16 @@
 ^demos/
 ^\.deploy-trigger$
 ^nix-shell-root$
+
+# Temporary analysis and test artifacts (Issue #172 path fix session)
+^BLOCKING_SIMULATION_ANALYSIS\.md$
+^CREW_TIMER_ANALYSIS\.md$
+^dashboard_comprehensive_fixed\.R$
+^dashboard_fixed_nonblocking\.R$
+^test_fractal_plot\.png$
+^test_plot_walker_paths\.pdf$
+^test_shinylive_direct\.html$
+^test_timer\.html$
+^test_walker_paths_analysis\.md$
+^timer_comparison_analysis\.md$
+^walker_paths_debug\.pdf$
