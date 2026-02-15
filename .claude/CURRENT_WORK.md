@@ -3,25 +3,20 @@
 ## Active Branch
 main
 
-## Session Status: Dashboard fixes committed (2025-02-15)
+## Session Status: CI issues fixed (2026-02-15)
 
 Latest changes pushed to main:
 - Fixed fractal plot caption display
 - Removed fake chunking simulation
 - Verified walker path color stability
+- **Fixed #187**: Changed test-plotting.R to use sync mode (workers=0)
+- **Fixed #177**: Re-enabled R-universe workflow
 
 ---
 
-## Current Open Issues (5 total)
+## Current Open Issues (3 total)
 
-### High Priority - CI Issues
-1. **#187** - BUG: Tests fail in Code Coverage CI environment
-   - Coverage generation fails due to test failures in CI
-   - Needs investigation of test environment differences
-
-2. **#177** - CI: Re-enable R-universe test workflow when quota allows
-   - R-universe workflow disabled due to quota limits
-   - Monitor and re-enable when quota resets
+### Enhancement Issues
 
 ### Enhancement Issues
 3. **#68** - Support three dashboard versions (sync, async-pre-nanonext, async-nanonext)
@@ -39,6 +34,12 @@ Latest changes pushed to main:
 ---
 
 ## Recently Completed
+
+### CI Fixes (2026-02-15)
+- ✅ #187 - Fixed CI test failures: test-plotting.R now uses sync mode (workers=0)
+  - Root cause: tests used async mode but crew/nanonext not installed in CI
+  - Fix: Change workers=1 to workers=0 (plotting tests don't need async)
+- ✅ #177 - Re-enabled R-universe test workflow
 
 ### Dashboard Fixes (2025-02-15)
 - ✅ Fixed fractal plot caption (now displays below plot, not in footer)
@@ -58,18 +59,10 @@ Latest changes pushed to main:
 
 ## Next Session Priorities
 
-### Quick Wins
-1. **#177** - Check R-universe quota status and re-enable if possible
-
-### Investigation Needed
-2. **#187** - Debug CI test failures in coverage workflow
-   - Compare local vs CI test environments
-   - Check for environment-specific issues
-
 ### Medium-Term
-3. **#68** - Plan three dashboard version support
-4. **#60** - Design validation visibility improvements
-5. **#56** - Implement survival curve visualization
+1. **#68** - Plan three dashboard version support
+2. **#60** - Design validation visibility improvements
+3. **#56** - Implement survival curve visualization
 
 ---
 
@@ -80,6 +73,7 @@ Latest changes pushed to main:
 - `vignettes/articles/dashboard_comprehensive.qmd` - Removed chunking, added caption display
 
 ### Test Suite
+- `tests/testthat/test-plotting.R` - Changed workers=1 to workers=0 (fix #187)
 - `R/dev/issues/test_walker_color_stability.R` - New color stability test
 
 ---
@@ -97,6 +91,6 @@ Latest changes pushed to main:
 
 ---
 
-**Last Updated**: 2025-02-15
-**Current Status**: Dashboard fixes committed, CI issues need investigation
-**Next Action**: Investigate #187 (CI test failures) or check #177 (R-universe quota)
+**Last Updated**: 2026-02-15
+**Current Status**: CI issues fixed (#177, #187), all workflows running
+**Next Action**: Monitor CI to confirm fix, then work on enhancement issues (#68, #60, #56)
