@@ -259,18 +259,9 @@ check_termination_cached <- function(walker, black_pixels, neighborhood,
       walker$active <- FALSE
       walker$termination_reason <- "black_neighbor"
 
-      # DEBUG: Write to file
-      debug_dir <- "/tmp"
-      debug_file <- file.path(debug_dir, sprintf("randomwalk_worker_debug_%d.txt", walker$id))
-      cat(sprintf("Walker %d at (%d, %d) found black neighbor at (%d, %d). Cache has %d pixels: %s\n",
-                  walker$id, walker$pos[1], walker$pos[2],
-                  neighbor_pos[1], neighbor_pos[2],
-                  length(black_pixels), paste(names(black_pixels), collapse=", ")),
-          file = debug_file, append = TRUE)
-
-      # Also log via logger
+      # Log termination via logger (no file writing - cross-platform safe)
       logger::log_debug(
-        "Walker {walker$id} at ({walker$pos[1]}, {walker$pos[2]}) found black neighbor at ({neighbor_pos[1]}, {neighbor_pos[2]}) in cache with {length(black_pixels)} pixels: {paste(names(black_pixels), collapse=', ')}"
+        "Walker {walker$id} at ({walker$pos[1]}, {walker$pos[2]}) found black neighbor at ({neighbor_pos[1]}, {neighbor_pos[2]}) in cache with {length(black_pixels)} pixels"
       )
       return(walker)
     }
