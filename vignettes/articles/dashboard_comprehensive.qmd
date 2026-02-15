@@ -284,7 +284,15 @@ ui <- fluidPage(
                         textOutput("fractal_caption", inline = TRUE)),
                  downloadButton("download_fractal", "Download Plot", class = "btn-sm", style = "margin-top: 10px;"),
                  hr(),
-                 verbatimTextOutput("fractal_stats")),
+                 verbatimTextOutput("fractal_stats"),
+                 hr(),
+                 h5("Simulation Status:"),
+                 verbatimTextOutput("status", placeholder = TRUE),
+                 tags$div(
+                   style = "background: #f0f0f0; padding: 10px; margin-top: 10px; font-family: monospace; font-size: 14px; border: 1px solid #ccc;",
+                   h5("Live Progress:"),
+                   verbatimTextOutput("progress_timer")
+                 )),
 
         # PAGE 2: Walker Paths (First 25 and Last 25)
         tabPanel("Walker Paths",
@@ -297,7 +305,7 @@ ui <- fluidPage(
                      sliderInput("last_n_paths", "Last N to terminate:",
                                 min = 0, max = 50, value = 5, step = 1))
                  ),
-                 helpText("Select walkers by termination order. Paths stored for first/last 200 walkers by ID."),
+                 helpText("Select walkers by termination order. Paths stored for first/last 2000 walkers by ID."),
                  plotOutput("paths_plot_first25", height = "500px")),
 
         # PAGE 3: Distributions (Path Lengths by Termination Reason)
@@ -309,10 +317,19 @@ ui <- fluidPage(
                  plotOutput("dist_by_reason", height = "300px"),
                  h5("By Termination Reason")),
 
-        # PAGE 4: Statistics
+        # PAGE 4: Statistics - Quartile Analysis
         tabPanel("Statistics",
-                 h4("Comprehensive Simulation Statistics"),
-                 verbatimTextOutput("stats_comprehensive")),
+                 h4("Quartile-Based Statistics"),
+                 helpText("Path length distributions partitioned by termination order quartiles (Q1=earliest terminators, Q4=latest)"),
+                 hr(),
+                 h5("Path Length by Termination Quartile"),
+                 plotOutput("stats_quartile_boxplot", height = "350px"),
+                 hr(),
+                 h5("Histogram Panels by Quartile"),
+                 plotOutput("stats_quartile_histograms", height = "400px"),
+                 hr(),
+                 h5("Summary Statistics by Quartile"),
+                 verbatimTextOutput("stats_quartile_summary")),
 
         # PAGE 5: Survival Curve
         tabPanel("Survival Curve",
@@ -362,7 +379,15 @@ ui <- fluidPage(
                  verbatimTextOutput("debug_backend"),
                  hr(),
                  h5("Periodic Updates"),
-                 verbatimTextOutput("debug_periodic")),
+                 verbatimTextOutput("debug_periodic"),
+                 hr(),
+                 h5("Simulation Status:"),
+                 verbatimTextOutput("status_debug", placeholder = TRUE),
+                 tags$div(
+                   style = "background: #f0f0f0; padding: 10px; margin-top: 10px; font-family: monospace; font-size: 14px; border: 1px solid #ccc;",
+                   h5("Live Progress:"),
+                   verbatimTextOutput("progress_timer_debug")
+                 )),
 
         # PAGE 6: Notes
         tabPanel("Notes",
@@ -393,27 +418,7 @@ ui <- fluidPage(
                  tags$a(href="https://github.com/JohnGavin/randomwalk", "GitHub"))
       ) # End of tabs
     ) # End of column
-  ), # End of fluidRow
-
-  # Status output at bottom of page
-  hr(),
-  fluidRow(
-    column(12,
-      h5("Simulation Status:"),
-      verbatimTextOutput("status", placeholder = TRUE),
-      # Real-time progress display (following Shinylive timer example)
-      tags$div(
-        style = "background: #f0f0f0; padding: 10px; margin-top: 10px; font-family: monospace; font-size: 14px; border: 1px solid #ccc;",
-        h5("Live Progress:"),
-        verbatimTextOutput("progress_timer")
-      ),
-      # MANDATORY: Dashboard creation timestamp
-      tags$div(
-        style = "margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 11px; color: #666; text-align: right;",
-        paste("Dashboard created:", format(Sys.time(), "%Y-%m-%d %H:%M:%S UTC"))
-      )
-    )
-  )
+  ) # End of fluidRow
 )
 
 # ============================================================================
@@ -606,6 +611,50 @@ server <- function(input, output, session) {
     } else {
       # Show current time to prove timer is working
       sprintf("Ready | Current time: %s", format(Sys.time(), "%H:%M:%S"))
+    }
+  })
+
+  # Duplicate outputs for Debug tab (Shiny requires unique output IDs)
+  output$status_debug <- renderText({
+    # Mirror the status output
+    if (sim_state() == "running") {
+      paste0(
+        "SIMULATION RUNNING...\n",
+        "Run #", sim_count(), "\n",
+        "Started: ", format(sim_start_time(), "%H:%M:%S")
+      )
+    } else if (sim_state() == "complete" && !is.null(sim_result())) {
+      result <- sim_result()
+      paste0(
+        "SIMULATION COMPLETE\n",
+        "Run #", sim_count(), "\n",
+        "Black pixels: ", result$statistics$black_pixels, "\n",
+        "Elapsed: ", format_duration(result$statistics$elapsed_time_secs)
+      )
+    } else if (sim_state() == "error") {
+      "SIMULATION ERROR"
+    } else {
+      "Ready to run simulation..."
+    }
+  })
+
+  output$progress_timer_debug <- renderText({
+    autoInvalidate()  # Use the reactive timer
+    if (sim_state() == "running") {
+      elapsed <- if (!is.null(sim_start_time())) {
+        round(as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs")), 1)
+      } else { 0 }
+      sprintf("⏱️ Time: %s | Walkers: %d/%d | Black: %d",
+              format_duration(elapsed),
+              sim_completed_walkers(), input$n_walkers,
+              sim_black_pixels())
+    } else if (sim_state() == "complete" && !is.null(sim_result())) {
+      result <- sim_result()
+      sprintf("✓ Complete | Black: %d | Grid: %d%%",
+              result$statistics$black_pixels,
+              round(result$statistics$black_percentage))
+    } else {
+      sprintf("Ready | %s", format(Sys.time(), "%H:%M:%S"))
     }
   })
 
@@ -1142,101 +1191,139 @@ server <- function(input, output, session) {
     })
   })
 
-  # PAGE 4: Statistics
-  output$stats_comprehensive <- renderText({
+  # PAGE 4: Statistics - Quartile-based Analysis
+  # Helper function to prepare quartile data
+  get_quartile_data <- reactive({
     req(sim_result())
     result <- sim_result()
 
-    # Defensive check for statistics
-    if (is.null(result$statistics)) {
-      return("No statistics available. Run a simulation first.")
+    # Extract steps and termination order
+    steps <- sapply(result$walkers, function(w) w$steps)
+    term_order <- sapply(result$walkers, function(w) w$termination_order)
+
+    # Create data frame
+    df <- data.frame(
+      steps = steps,
+      termination_order = term_order,
+      stringsAsFactors = FALSE
+    )
+
+    # Assign quartiles based on termination order
+    df$quartile <- cut(df$termination_order,
+                       breaks = quantile(df$termination_order, probs = c(0, 0.25, 0.5, 0.75, 1)),
+                       labels = c("Q1 (First 25%)", "Q2 (25-50%)", "Q3 (50-75%)", "Q4 (Last 25%)"),
+                       include.lowest = TRUE)
+    df
+  })
+
+  # Boxplot by quartile
+  output$stats_quartile_boxplot <- renderPlot({
+    req(sim_result())
+    df <- get_quartile_data()
+
+    if (is.null(df) || nrow(df) < 4) {
+      plot.new()
+      text(0.5, 0.5, "Need at least 4 walkers for quartile analysis", cex = 1.2, col = "gray")
+      return()
     }
 
-    stats <- result$statistics
-
-    # Safely extract values with defaults - improved version
-    safe_get <- function(x, default = 0) {
-      tryCatch({
-        if (is.null(x)) return(default)
-        if (length(x) == 0) return(default)
-        if (!is.atomic(x)) return(default)
-        # Ensure single value for calculations
-        if (length(x) > 1) return(x[1])
-        return(as.numeric(x))
-      }, error = function(e) {
-        default
-      })
-    }
-
-    # Calculate std dev safely
-    std_dev <- tryCatch({
-      path_lengths <- sapply(result$walkers, function(w) {
-        if (!is.null(w$path) && is.matrix(w$path)) nrow(w$path) else NA
-      })
-      path_lengths <- as.numeric(path_lengths[!is.na(path_lengths)])
-      if (length(path_lengths) > 1) {
-        sd(path_lengths)
-      } else {
-        0
-      }
-    }, error = function(e) 0)
-
-    # Extract grid size safely
-    grid_size <- safe_get(stats$grid_size, default = 0)
-    black_pixels <- safe_get(stats$black_pixels, default = 0)
-    black_pct <- safe_get(stats$black_percentage, default = 0)
-    total_walkers <- safe_get(stats$total_walkers, default = 1)
-    completed_walkers <- safe_get(stats$completed_walkers, default = 0)
-    total_steps <- safe_get(stats$total_steps, default = 0)
-    elapsed_time <- safe_get(stats$elapsed_time_secs, default = 0.001)
-
-    # Build output with error handling
     tryCatch({
-      paste0(
-        "=== GRID STATISTICS ===\n",
-        "Grid Size: ", grid_size, "×", grid_size, "\n",
-        "Total Cells: ", grid_size^2, "\n",
-        "Black Pixels: ", black_pixels,
-        sprintf(" (%.2f%%)\n", black_pct),
-        "White Pixels: ", grid_size^2 - black_pixels,
-        sprintf(" (%.2f%%)\n", 100 - black_pct),
-        "\n=== WALKER STATISTICS ===\n",
-        "Total Walkers: ", total_walkers, "\n",
-        "Completed: ", completed_walkers, "\n",
-        "Success Rate: ",
-        sprintf("%.1f%%", 100 * completed_walkers / max(total_walkers, 1)), "\n",
-        "\n=== STEP STATISTICS ===\n",
-        "Total Steps: ", total_steps, "\n",
-        "Min Steps: ", safe_get(stats$min_steps, 0), "\n",
-        "Max Steps: ", safe_get(stats$max_steps, 0), "\n",
-        "Mean Steps: ", sprintf("%.1f", safe_get(stats$mean_steps, 0)), "\n",
-        "Median Steps: ", safe_get(stats$median_steps, 0), "\n",
-        "Std Dev: ", sprintf("%.1f", std_dev), "\n",
-        "\n=== PERFORMANCE ===\n",
-        "Elapsed Time: ", format_duration(elapsed_time), "\n",
-        "Steps per Second: ",
-        sprintf("%.0f", total_steps / max(elapsed_time, 0.001)), "\n",
-        "\n=== TERMINATION REASONS ===\n",
-        if (!is.null(stats$termination_reasons) && length(stats$termination_reasons) > 0) {
-          tryCatch({
-            reasons_vec <- as.numeric(stats$termination_reasons)
-            reasons_names <- names(stats$termination_reasons)
-            if (is.null(reasons_names)) reasons_names <- paste0("Reason_", seq_along(reasons_vec))
-            paste(sprintf("  %s: %d (%.1f%%)",
-                          reasons_names,
-                          reasons_vec,
-                          100 * reasons_vec / max(total_walkers, 1)),
-                  collapse = "\n")
-          }, error = function(e) {
-            "  Error formatting termination reasons"
-          })
-        } else {
-          "  No data available"
-        }
+      print(
+        ggplot(df, aes(x = quartile, y = steps, fill = quartile)) +
+          geom_boxplot(alpha = 0.7, outlier.shape = 21) +
+          geom_jitter(width = 0.15, alpha = 0.3, size = 1) +
+          scale_fill_brewer(palette = "Blues") +
+          labs(
+            title = "Path Length Distribution by Termination Quartile",
+            subtitle = "Q1 = earliest terminators, Q4 = latest terminators",
+            x = "Termination Quartile",
+            y = "Path Length (steps)"
+          ) +
+          theme_minimal(base_size = 12) +
+          theme(legend.position = "none",
+                axis.text.x = element_text(angle = 15, hjust = 1))
       )
     }, error = function(e) {
-      paste0("Error displaying statistics:\n", e$message)
+      plot.new()
+      text(0.5, 0.5, paste0("Error: ", e$message), cex = 1, col = "red")
     })
+  })
+
+  # Histogram panels by quartile
+  output$stats_quartile_histograms <- renderPlot({
+    req(sim_result())
+    df <- get_quartile_data()
+
+    if (is.null(df) || nrow(df) < 4) {
+      plot.new()
+      text(0.5, 0.5, "Need at least 4 walkers for quartile analysis", cex = 1.2, col = "gray")
+      return()
+    }
+
+    tryCatch({
+      print(
+        ggplot(df, aes(x = steps, fill = quartile)) +
+          geom_histogram(bins = 20, alpha = 0.8, color = "white") +
+          facet_wrap(~ quartile, scales = "free_y", ncol = 2) +
+          scale_fill_brewer(palette = "Blues") +
+          labs(
+            title = "Path Length Histograms by Termination Quartile",
+            x = "Path Length (steps)",
+            y = "Count"
+          ) +
+          theme_minimal(base_size = 11) +
+          theme(legend.position = "none",
+                strip.text = element_text(face = "bold"))
+      )
+    }, error = function(e) {
+      plot.new()
+      text(0.5, 0.5, paste0("Error: ", e$message), cex = 1, col = "red")
+    })
+  })
+
+  # Summary statistics by quartile
+  output$stats_quartile_summary <- renderPrint({
+    req(sim_result())
+    df <- get_quartile_data()
+
+    if (is.null(df) || nrow(df) < 4) {
+      cat("Need at least 4 walkers for quartile analysis\n")
+      return()
+    }
+
+    cat("=== QUARTILE SUMMARY STATISTICS ===\n\n")
+
+    for (q in levels(df$quartile)) {
+      q_data <- df[df$quartile == q, ]
+      cat(sprintf("%s (n=%d):\n", q, nrow(q_data)))
+      cat(sprintf("  Min:    %d steps\n", min(q_data$steps)))
+      cat(sprintf("  Q1:     %d steps\n", as.integer(quantile(q_data$steps, 0.25))))
+      cat(sprintf("  Median: %d steps\n", as.integer(median(q_data$steps))))
+      cat(sprintf("  Q3:     %d steps\n", as.integer(quantile(q_data$steps, 0.75))))
+      cat(sprintf("  Max:    %d steps\n", max(q_data$steps)))
+      cat(sprintf("  Mean:   %.1f steps\n", mean(q_data$steps)))
+      cat(sprintf("  SD:     %.1f steps\n", sd(q_data$steps)))
+      cat("\n")
+    }
+
+    # Overall comparison
+    cat("=== QUARTILE COMPARISON ===\n\n")
+    means <- tapply(df$steps, df$quartile, mean)
+    cat("Mean steps by quartile:\n")
+    for (i in seq_along(means)) {
+      cat(sprintf("  %s: %.1f\n", names(means)[i], means[i]))
+    }
+
+    # Trend indicator
+    if (means[4] < means[1]) {
+      cat("\n⬇️ DECREASING TREND: Later walkers survive fewer steps\n")
+      cat(sprintf("   (Q4 mean %.0f%% of Q1 mean)\n", 100 * means[4] / means[1]))
+    } else if (means[4] > means[1]) {
+      cat("\n⬆️ INCREASING TREND: Later walkers survive more steps\n")
+      cat(sprintf("   (Q4 mean %.0f%% of Q1 mean)\n", 100 * means[4] / means[1]))
+    } else {
+      cat("\n➡️ FLAT: No clear trend across quartiles\n")
+    }
   })
 
   # ============================================================================
