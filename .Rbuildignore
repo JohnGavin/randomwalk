@@ -75,3 +75,4 @@
 ^demos$
 ^demos/
 ^\.deploy-trigger$
+^nix-shell-root$

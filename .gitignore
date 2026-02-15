@@ -35,3 +35,4 @@ R/setup/fix_issue_134.R
 
 # Symlinked from llm repo - not tracked here
 AGENTS.md
+nix-shell-root

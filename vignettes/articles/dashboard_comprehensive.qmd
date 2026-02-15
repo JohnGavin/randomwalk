@@ -314,7 +314,42 @@ ui <- fluidPage(
                  h4("Comprehensive Simulation Statistics"),
                  verbatimTextOutput("stats_comprehensive")),
 
-        # PAGE 5: Debug Info
+        # PAGE 5: Survival Curve
+        tabPanel("Survival Curve",
+                 h4("Walker Survival Analysis"),
+
+                 # Interactive slider for step threshold
+                 sliderInput("survival_step", "Show survival at step:",
+                             min = 0, max = 1000, value = 500, step = 50),
+                 helpText("Drag to see what proportion of walkers survived to this step"),
+
+                 # Main survival curve plot
+                 plotOutput("survival_curve", height = "400px"),
+
+                 hr(),
+
+                 # Competing risks breakdown
+                 h5("Termination by Reason"),
+                 plotOutput("termination_breakdown", height = "250px"),
+
+                 hr(),
+
+                 # Summary statistics
+                 verbatimTextOutput("survival_stats"),
+
+                 hr(),
+
+                 # Hypothesis Testing Section
+                 h4("Hypothesis Test: Survival Decay"),
+                 tags$p("Tests whether later walkers terminate faster as black pixels accumulate."),
+
+                 # Hypothesis plot
+                 plotOutput("hypothesis_plot", height = "350px"),
+
+                 # Hypothesis statistics
+                 verbatimTextOutput("hypothesis_stats")),
+
+        # PAGE 6: Debug Info (renumbered from PAGE 5)
         tabPanel("Debug",
                  h4("Debug Information"),
                  h5("Package Versions"),
@@ -1204,7 +1239,292 @@ server <- function(input, output, session) {
     })
   })
 
-  # PAGE 5: Debug - Versions
+  # ============================================================================
+  # PAGE 5: Survival Curve - Server Logic
+  # ============================================================================
+
+  # Dynamic slider max based on actual max steps in data
+  observe({
+    req(sim_result())
+    result <- sim_result()
+    max_step <- max(sapply(result$walkers, function(w) w$steps))
+    updateSliderInput(session, "survival_step",
+                      max = max_step,
+                      value = min(input$survival_step, max_step))
+  })
+
+  # Survival curve plot (Kaplan-Meier style)
+  output$survival_curve <- renderPlot({
+    req(sim_result())
+    result <- sim_result()
+
+    # Build survival data
+    steps <- sapply(result$walkers, function(w) w$steps)
+    n_total <- length(steps)
+
+    # Calculate survival proportion at each unique step value
+    unique_steps <- sort(unique(steps))
+    survival_at_step <- sapply(unique_steps, function(s) {
+      sum(steps > s) / n_total
+    })
+
+    # Current slider position
+    current_step <- input$survival_step
+    current_survival <- sum(steps > current_step) / n_total
+
+    # Plot using ggplot2
+    df <- data.frame(step = unique_steps, survival = survival_at_step)
+
+    ggplot(df, aes(x = step, y = survival)) +
+      geom_step(color = "steelblue", linewidth = 1.2) +
+      geom_vline(xintercept = current_step, linetype = "dashed", color = "red") +
+      geom_point(aes(x = current_step, y = current_survival),
+                 color = "red", size = 3) +
+      annotate("text", x = current_step, y = min(current_survival + 0.08, 1),
+               label = sprintf("%.1f%% alive", current_survival * 100),
+               color = "red", hjust = 0, size = 4) +
+      labs(
+        title = "Walker Survival Curve",
+        subtitle = sprintf("Red line: step %d (%.1f%% still walking)",
+                           current_step, current_survival * 100),
+        x = "Steps",
+        y = "Proportion Surviving"
+      ) +
+      scale_y_continuous(labels = scales::percent_format(), limits = c(0, 1)) +
+      theme_minimal(base_size = 14) +
+      theme(
+        plot.title = element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5, color = "gray40")
+      )
+  })
+
+  # Termination breakdown by reason
+  output$termination_breakdown <- renderPlot({
+    req(sim_result())
+    result <- sim_result()
+
+    reasons <- sapply(result$walkers, function(w) w$termination_reason)
+    reason_counts <- table(reasons)
+
+    df <- data.frame(
+      reason = names(reason_counts),
+      count = as.integer(reason_counts)
+    )
+    df$pct <- df$count / sum(df$count) * 100
+
+    # Color mapping for different termination reasons
+    color_map <- c(
+      "black_neighbor" = "steelblue",
+      "hit_boundary" = "orange",
+      "max_steps" = "gray50",
+      "touched_black" = "darkblue"
+    )
+
+    # Create fill colors vector matching data
+    df$fill_color <- ifelse(df$reason %in% names(color_map),
+                            color_map[df$reason],
+                            "gray70")
+
+    ggplot(df, aes(x = reorder(reason, -count), y = count, fill = reason)) +
+      geom_col() +
+      geom_text(aes(label = sprintf("%.1f%%", pct)), vjust = -0.5, size = 3.5) +
+      scale_fill_manual(values = color_map, na.value = "gray70") +
+      labs(
+        title = "How Walkers Terminated",
+        x = "Termination Reason",
+        y = "Count"
+      ) +
+      theme_minimal(base_size = 12) +
+      theme(
+        legend.position = "none",
+        axis.text.x = element_text(angle = 30, hjust = 1),
+        plot.title = element_text(hjust = 0.5, face = "bold")
+      )
+  })
+
+  # Survival statistics text
+  output$survival_stats <- renderPrint({
+    req(sim_result())
+    result <- sim_result()
+
+    steps <- sapply(result$walkers, function(w) w$steps)
+
+    cat("=== SURVIVAL STATISTICS ===\n\n")
+    cat(sprintf("Total walkers: %d\n", length(steps)))
+    cat(sprintf("Median survival: %d steps\n", median(steps)))
+    cat(sprintf("Mean survival: %.1f steps\n", mean(steps)))
+    cat(sprintf("25th percentile: %d steps\n", as.integer(quantile(steps, 0.25))))
+    cat(sprintf("75th percentile: %d steps\n", as.integer(quantile(steps, 0.75))))
+    cat("\n")
+    cat("At current slider position:\n")
+    current_survival <- sum(steps > input$survival_step)
+    cat(sprintf("  %d walkers (%.1f%%) survived past step %d\n",
+                current_survival,
+                current_survival / length(steps) * 100,
+                input$survival_step))
+  })
+
+  # Hypothesis test: Exponential decay vs constant survival
+  output$hypothesis_plot <- renderPlot({
+    req(sim_result())
+    result <- sim_result()
+
+    # Build survival data with termination order
+    survdat <- data.frame(
+      order = sapply(result$walkers, function(w) {
+        if (!is.null(w$termination_order)) w$termination_order else NA
+      }),
+      steps = sapply(result$walkers, function(w) w$steps)
+    )
+
+    # Remove NA orders (if termination_order not available)
+    survdat <- survdat[!is.na(survdat$order), ]
+
+    if (nrow(survdat) < 10) {
+      # Not enough data for hypothesis testing
+      plot.new()
+      text(0.5, 0.5, "Need at least 10 walkers with termination order for hypothesis test",
+           cex = 1.2, col = "gray")
+      return()
+    }
+
+    survdat <- survdat[order(survdat$order), ]
+
+    # Fit models
+    # H0: Constant survival (intercept only)
+    null_model <- lm(steps ~ 1, data = survdat)
+
+    # H1: Linear decay
+    linear_model <- lm(steps ~ order, data = survdat)
+
+    # H1b: Log-linear decay (exponential relationship)
+    survdat$log_steps <- log(survdat$steps + 1)  # +1 to handle steps=0
+    decay_model <- lm(log_steps ~ order, data = survdat)
+
+    # Calculate predictions
+    survdat$null_pred <- fitted(null_model)
+    survdat$decay_pred <- exp(fitted(decay_model))
+
+    # Model comparison using F-test
+    anova_result <- tryCatch({
+      anova(null_model, linear_model)
+    }, error = function(e) NULL)
+
+    if (is.null(anova_result)) {
+      p_value <- 1
+      f_stat <- 0
+    } else {
+      f_stat <- anova_result$F[2]
+      p_value <- anova_result$`Pr(>F)`[2]
+      if (is.na(p_value)) p_value <- 1
+    }
+
+    # Coefficient from decay model (negative = decay)
+    decay_coef <- coef(decay_model)[2]
+    half_life <- ifelse(decay_coef < 0, -log(2) / decay_coef, NA)
+
+    # Plot
+    ggplot(survdat, aes(x = order, y = steps)) +
+      geom_point(alpha = 0.4, size = 1.5, color = "gray40") +
+      geom_hline(yintercept = mean(survdat$steps), color = "blue",
+                 linetype = "dashed", linewidth = 1) +
+      geom_line(aes(y = decay_pred), color = "red", linewidth = 1.2) +
+      annotate("text", x = max(survdat$order) * 0.65, y = max(survdat$steps) * 0.9,
+               label = sprintf("H0 (constant): mean = %.0f steps\nH1 (decay): half-life = %.0f walkers\np-value = %.4f",
+                               mean(survdat$steps),
+                               ifelse(is.na(half_life), Inf, half_life),
+                               p_value),
+               hjust = 0, size = 3.5,
+               color = ifelse(p_value < 0.05, "red", "blue")) +
+      labs(
+        title = "Hypothesis Test: Does Survival Time Decay?",
+        subtitle = ifelse(p_value < 0.05,
+                          "REJECT H0: Later walkers survive fewer steps (exponential decay)",
+                          "FAIL TO REJECT H0: Survival time is approximately constant"),
+        x = "Walker Termination Order (chronological)",
+        y = "Steps Survived",
+        caption = "Blue dashed: H0 (constant mean) | Red curve: H1 (exponential decay)"
+      ) +
+      theme_minimal(base_size = 12) +
+      theme(
+        plot.title = element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5,
+                                     color = ifelse(p_value < 0.05, "red", "blue"))
+      )
+  })
+
+  # Hypothesis test summary text
+  output$hypothesis_stats <- renderPrint({
+    req(sim_result())
+    result <- sim_result()
+
+    # Build survival data with termination order
+    survdat <- data.frame(
+      order = sapply(result$walkers, function(w) {
+        if (!is.null(w$termination_order)) w$termination_order else NA
+      }),
+      steps = sapply(result$walkers, function(w) w$steps)
+    )
+
+    survdat <- survdat[!is.na(survdat$order), ]
+
+    if (nrow(survdat) < 10) {
+      cat("Insufficient data for hypothesis testing.\n")
+      cat("Need at least 10 walkers with termination_order field.\n")
+      return()
+    }
+
+    # Fit models
+    null_model <- lm(steps ~ 1, data = survdat)
+    linear_model <- lm(steps ~ order, data = survdat)
+    survdat$log_steps <- log(survdat$steps + 1)
+    decay_model <- lm(log_steps ~ order, data = survdat)
+
+    # Model comparison
+    anova_result <- tryCatch({
+      anova(null_model, linear_model)
+    }, error = function(e) NULL)
+
+    cat("=== HYPOTHESIS TEST: SURVIVAL DECAY ===\n\n")
+    cat("H0: Survival time is constant (no effect of termination order)\n")
+    cat("H1: Survival time decays geometrically as simulation progresses\n\n")
+
+    cat("--- Linear Model (steps ~ order) ---\n")
+    cat(sprintf("Intercept: %.1f steps\n", coef(linear_model)[1]))
+    cat(sprintf("Slope: %.3f steps per walker\n", coef(linear_model)[2]))
+    cat(sprintf("R-squared: %.4f\n", summary(linear_model)$r.squared))
+
+    cat("\n--- Log-Linear Model (log(steps) ~ order) ---\n")
+    decay_coef <- coef(decay_model)[2]
+    cat(sprintf("Decay coefficient: %.6f\n", decay_coef))
+    if (decay_coef < 0) {
+      half_life <- -log(2) / decay_coef
+      cat(sprintf("Half-life: %.1f walkers (time for median survival to halve)\n", half_life))
+    } else {
+      cat("No decay detected (positive or zero coefficient)\n")
+    }
+
+    cat("\n--- Model Comparison (F-test) ---\n")
+    if (!is.null(anova_result)) {
+      f_stat <- anova_result$F[2]
+      p_value <- anova_result$`Pr(>F)`[2]
+      cat(sprintf("F-statistic: %.2f\n", ifelse(is.na(f_stat), 0, f_stat)))
+      cat(sprintf("p-value: %.4f\n", ifelse(is.na(p_value), 1, p_value)))
+
+      if (!is.na(p_value) && p_value < 0.05) {
+        cat("\n*** CONCLUSION: REJECT H0 ***\n")
+        cat("Evidence supports exponential/geometric decay of survival time.\n")
+        cat("Later walkers encounter black pixels faster.\n")
+      } else {
+        cat("\n*** CONCLUSION: FAIL TO REJECT H0 ***\n")
+        cat("No significant evidence for decay in survival time.\n")
+      }
+    } else {
+      cat("Unable to compute F-test.\n")
+    }
+  })
+
+  # PAGE 6: Debug - Versions
   output$debug_versions <- renderText({
     paste0(
       "=== PACKAGE VERSIONS ===\n",

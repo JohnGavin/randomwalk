@@ -59,7 +59,7 @@ system_pkgs <- c(
 
 # Generate default.nix
 rix(
-  date = "2025-10-27",  # Same as original for consistency
+  date = "2026-01-05",  # Uses R 4.5.2 - matches cachix pre-built binaries
   r_pkgs = r_pkgs,
   system_pkgs = system_pkgs,
   git_pkgs = NULL,
