@@ -24,7 +24,7 @@ jobs:
   # Build webR binaries (needed for Shinylive dashboards)
   build-webr:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - name: Checkout
         uses: actions/checkout@v4
