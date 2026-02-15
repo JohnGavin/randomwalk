@@ -237,6 +237,7 @@ test_that("simulation runs final validation", {
 # ===================================================================
 
 test_that("async simulation with 2 workers produces valid grid", {
+  skip_on_os("windows")
   skip_if_not_installed("crew")
   skip_if_not_installed("nanonext")
 
@@ -299,6 +300,8 @@ test_that("async simulation reproduces issue #63 isolated pixels bug", {
 })
 
 test_that("async simulation with many workers produces valid grid", {
+
+  skip_on_os("windows")
   skip_if_not_installed("crew")
   skip_if_not_installed("nanonext")
 

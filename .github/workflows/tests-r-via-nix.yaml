@@ -15,6 +15,7 @@ permissions:
 jobs:
   devtools_test:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
     strategy:
       matrix:
         # macOS runner commented out to reduce CI time and costs

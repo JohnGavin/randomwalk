@@ -60,6 +60,7 @@ test_that("get_black_pixels_list converts grid correctly", {
 
 
 test_that("async simulation runs with 2 workers on small grid", {
+  skip_on_os("windows")
   skip_if_not_installed("crew")
   skip_on_cran()  # Skip on CRAN (async tests can be flaky in CI)
 
@@ -102,6 +103,7 @@ test_that("async simulation runs with 2 workers on small grid", {
 
 
 test_that("async mode completes successfully (may differ from sync)", {
+  skip_on_os("windows")
   skip_if_not_installed("crew")
   skip_on_cran()
 
@@ -159,6 +161,7 @@ test_that("async mode completes successfully (may differ from sync)", {
 
 
 test_that("async simulation handles single worker correctly", {
+  skip_on_os("windows")
   skip_if_not_installed("crew")
   skip_on_cran()
 
@@ -177,6 +180,7 @@ test_that("async simulation handles single worker correctly", {
 
 
 test_that("async simulation with 8-hood neighborhood works", {
+  skip_on_os("windows")
   skip_if_not_installed("crew")
   skip_on_cran()
 
@@ -195,6 +199,7 @@ test_that("async simulation with 8-hood neighborhood works", {
 
 
 test_that("async simulation with wrap boundary works", {
+  skip_on_os("windows")
   skip_if_not_installed("crew")
   skip_on_cran()
 

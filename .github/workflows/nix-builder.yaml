@@ -15,6 +15,7 @@ jobs:
   run-x86_64-linux:
     name: nix builder for Ubuntu
     runs-on: ubuntu-22.04
+    timeout-minutes: 5
     steps:
     - uses: actions/checkout@v4
 
