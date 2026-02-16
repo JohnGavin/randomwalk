@@ -277,7 +277,7 @@ run_simulation <- function(grid_size = 10,
 
           # Periodic validation based on completed walker count
           if (validate_percent > 0 && completed_count %% validate_interval == 0) {
-            logger::log_trace("Running optimized grid validation at {completed_count}/{n_walkers} walkers ({round(completed_count/n_walkers*100, 1)}%)")
+            logger::log_info("Validation checkpoint: {completed_count}/{n_walkers} walkers ({round(completed_count/n_walkers*100, 1)}%)")
             validate_no_isolated_pixels(
               grid = grid,
               neighborhood = neighborhood,
@@ -530,7 +530,7 @@ run_simulation_async <- function(grid, walkers, n_workers, neighborhood,
 
         # Periodic validation based on completed count
         if (validate_percent > 0 && n_completed %% validate_interval == 0) {
-          logger::log_trace("Running grid validation at {n_completed}/{n_total} walkers ({round(n_completed/n_total*100, 1)}%)")
+          logger::log_info("Validation checkpoint: {n_completed}/{n_total} walkers ({round(n_completed/n_total*100, 1)}%)")
           validate_no_isolated_pixels(
             grid,
             neighborhood = neighborhood,

@@ -252,6 +252,32 @@ ui <- fluidPage(
         )
       ),
 
+      wellPanel(
+        actionButton("toggle_validation_params", "▶ Advanced Settings",
+                    style = "background: none; border: none; font-weight: bold; font-size: 16px; padding: 0; margin-bottom: 10px;"),
+        conditionalPanel(
+          condition = "output.show_validation_params",
+          fluidRow(
+            column(4,
+              selectInput("sync_mode", "Sync Mode:",
+                         choices = c("static", "chunked"),
+                         selected = "static"),
+              helpText("static: Frozen snapshots (~5% collision). chunked: Batched updates (~15% collision)")
+            ),
+            column(4,
+              checkboxInput("validate_strict", "Strict Validation",
+                           value = FALSE),
+              helpText("ON: Stop on isolated pixel. OFF: Warn and continue")
+            ),
+            column(4,
+              sliderInput("validate_percent", "Validation %:",
+                         min = 0, max = 20, value = 5, step = 1),
+              helpText("Check every N% of walkers (0 = off)")
+            )
+          )
+        )
+      ),
+
       # Runtime Estimate and Run Button (always visible)
       wellPanel(
         style = "background-color: #f0f8ff; margin-top: 15px;",
@@ -389,26 +415,32 @@ ui <- fluidPage(
                    verbatimTextOutput("progress_timer_debug")
                  )),
 
-        # PAGE 6: Notes
+        # PAGE 7: Notes
         tabPanel("Notes",
                  h4("About This Dashboard"),
                  tags$p("Interactive random walk simulation via WebR/Shinylive."),
                  hr(),
-                 h5("Browser Mode"),
-                 tags$p("Runs in ", strong("sync sequential mode"), " (workers=0)."),
-                 tags$p("Async parallel (workers > 0) requires native R with crew."),
+                 h5("Execution Modes"),
+                 tags$p("This browser dashboard runs in ", strong("sync sequential mode"), " (workers=0)."),
+                 tags$p("For async parallel execution (workers > 0), use native R with crew/nanonext."),
                  hr(),
-                 h5("Sync Modes (Native R)"),
+                 h5("Sync Mode Options (Advanced Settings)"),
                  tags$ul(
-                   tags$li(strong("static:"), " Frozen snapshots (~5% collision)"),
-                   tags$li(strong("chunked:"), " Batched updates (~15% collision) - RECOMMENDED"),
-                   tags$li(tags$em("dynamic/mirai_dynamic:"), " DEPRECATED")
+                   tags$li(strong("static:"), " Walkers use frozen grid snapshots. Lower collision rate (~5%). Faster but less realistic."),
+                   tags$li(strong("chunked:"), " Grid updated in batches. Higher collision rate (~15%). More realistic pattern.")
+                 ),
+                 tags$p(tags$em("Tip: Use 'chunked' for more interesting fractal patterns.")),
+                 hr(),
+                 h5("Validation Options (Advanced Settings)"),
+                 tags$ul(
+                   tags$li(strong("Strict Validation:"), " Stop immediately if isolated pixel detected."),
+                   tags$li(strong("Validation %:"), " Check for isolated pixels every N% of walkers.")
                  ),
                  hr(),
-                 h5("Limitations"),
+                 h5("Browser Limitations"),
                  tags$ul(
-                   tags$li("Browser: sync sequential only (~400 steps/sec)"),
-                   tags$li("First load: 15-30s (downloads)"),
+                   tags$li("Single-threaded execution (~400 steps/sec)"),
+                   tags$li("First load: 15-30s (WebR package downloads)"),
                    tags$li("Recommended: grid ≤100, walkers ≤500, steps ≤1000"),
                    tags$li("For larger simulations, use native R with crew")
                  ),
@@ -451,6 +483,7 @@ server <- function(input, output, session) {
   # Reactive values for collapsible panels
   show_sim_params <- reactiveVal(FALSE)
   show_move_params <- reactiveVal(FALSE)
+  show_validation_params <- reactiveVal(FALSE)
 
   # Toggle simulation parameters panel
   observeEvent(input$toggle_sim_params, {
@@ -470,11 +503,22 @@ server <- function(input, output, session) {
                       label = ifelse(!current, "▼ Movement Settings", "▶ Movement Settings"))
   })
 
+  # Toggle validation settings panel
+  observeEvent(input$toggle_validation_params, {
+    current <- show_validation_params()
+    show_validation_params(!current)
+    # Update button text
+    updateActionButton(session, "toggle_validation_params",
+                      label = ifelse(!current, "▼ Validation Settings", "▶ Validation Settings"))
+  })
+
   # Output for conditional panels
   output$show_sim_params <- reactive({ show_sim_params() })
   output$show_move_params <- reactive({ show_move_params() })
+  output$show_validation_params <- reactive({ show_validation_params() })
   outputOptions(output, "show_sim_params", suspendWhenHidden = FALSE)
   outputOptions(output, "show_move_params", suspendWhenHidden = FALSE)
+  outputOptions(output, "show_validation_params", suspendWhenHidden = FALSE)
 
   # Runtime estimate (WebR performance varies: ~50-500 steps/sec depending on grid size & walker count)
   output$runtime_estimate <- renderUI({
@@ -748,9 +792,10 @@ server <- function(input, output, session) {
         boundary = input$boundary,
         max_steps = input$max_steps,
         workers = 0,
-        sync_mode = "static",
+        sync_mode = input$sync_mode,
         verbose = FALSE,
-        validate_percent = 0
+        validate_percent = input$validate_percent,
+        validate_strict = input$validate_strict
       )
 
       # Store result
