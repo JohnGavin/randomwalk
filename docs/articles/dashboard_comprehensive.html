@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.34">
+<meta name="generator" content="quarto-1.8.26">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -27,14 +27,15 @@ ul.task-list li input[type="checkbox"] {
 <script src="dashboard_comprehensive_files/libs/clipboard/clipboard.min.js"></script>
 <script src="dashboard_comprehensive_files/libs/quarto-html/quarto.js" type="module"></script>
 <script src="dashboard_comprehensive_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="dashboard_comprehensive_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="dashboard_comprehensive_files/libs/quarto-html/popper.min.js"></script>
 <script src="dashboard_comprehensive_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="dashboard_comprehensive_files/libs/quarto-html/anchor.min.js"></script>
 <link href="dashboard_comprehensive_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="dashboard_comprehensive_files/libs/quarto-html/quarto-syntax-highlighting-c8ad9e5dbd60b7b70b38521ab19b7da4.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="dashboard_comprehensive_files/libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="dashboard_comprehensive_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="dashboard_comprehensive_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="dashboard_comprehensive_files/libs/bootstrap/bootstrap-b232414f0569882df4359abfb7cfba3f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="dashboard_comprehensive_files/libs/bootstrap/bootstrap-5aeb795fb1f1a222a51c230a0084b391.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <meta name="shinylive:serviceworker_dir" content="../..">
 <script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/load-shinylive-sw.js" type="module"></script>
 <script src="dashboard_comprehensive_files/libs/quarto-contrib/shinylive-0.9.1/shinylive/run-python-blocks.js" type="module"></script>
@@ -307,6 +308,32 @@ ui &lt;- fluidPage(
         )
       ),
 
+      wellPanel(
+        actionButton("toggle_validation_params", "▶ Advanced Settings",
+                    style = "background: none; border: none; font-weight: bold; font-size: 16px; padding: 0; margin-bottom: 10px;"),
+        conditionalPanel(
+          condition = "output.show_validation_params",
+          fluidRow(
+            column(4,
+              selectInput("sync_mode", "Sync Mode:",
+                         choices = c("static", "chunked"),
+                         selected = "static"),
+              helpText("static: Frozen snapshots (~5% collision). chunked: Batched updates (~15% collision)")
+            ),
+            column(4,
+              checkboxInput("validate_strict", "Strict Validation",
+                           value = FALSE),
+              helpText("ON: Stop on isolated pixel. OFF: Warn and continue")
+            ),
+            column(4,
+              sliderInput("validate_percent", "Validation %:",
+                         min = 0, max = 20, value = 5, step = 1),
+              helpText("Check every N% of walkers (0 = off)")
+            )
+          )
+        )
+      ),
+
       # Runtime Estimate and Run Button (always visible)
       wellPanel(
         style = "background-color: #f0f8ff; margin-top: 15px;",
@@ -335,9 +362,19 @@ ui &lt;- fluidPage(
         tabPanel("Fractal Graph",
                  h4("Grid Visualization - Black Pixels"),
                  plotOutput("fractal_plot", height = "600px"),
+                 tags$p(style = "margin-top: 10px; margin-bottom: 10px; color: #666; font-style: italic; text-align: center;",
+                        textOutput("fractal_caption", inline = TRUE)),
                  downloadButton("download_fractal", "Download Plot", class = "btn-sm", style = "margin-top: 10px;"),
                  hr(),
-                 verbatimTextOutput("fractal_stats")),
+                 verbatimTextOutput("fractal_stats"),
+                 hr(),
+                 h5("Simulation Status:"),
+                 verbatimTextOutput("status", placeholder = TRUE),
+                 tags$div(
+                   style = "background: #f0f0f0; padding: 10px; margin-top: 10px; font-family: monospace; font-size: 14px; border: 1px solid #ccc;",
+                   h5("Live Progress:"),
+                   verbatimTextOutput("progress_timer")
+                 )),
 
         # PAGE 2: Walker Paths (First 25 and Last 25)
         tabPanel("Walker Paths",
@@ -345,12 +382,12 @@ ui &lt;- fluidPage(
                  fluidRow(
                    column(6,
                      sliderInput("first_n_paths", "First N to terminate:",
-                                min = 0, max = 20, value = 5, step = 1)),
+                                min = 0, max = 50, value = 5, step = 1)),
                    column(6,
                      sliderInput("last_n_paths", "Last N to terminate:",
-                                min = 0, max = 20, value = 5, step = 1))
+                                min = 0, max = 50, value = 5, step = 1))
                  ),
-                 helpText("Select walkers by termination order (chronological), not ID (max 40 total)"),
+                 helpText("Select walkers by termination order. Paths stored for first/last 2000 walkers by ID."),
                  plotOutput("paths_plot_first25", height = "500px")),
 
         # PAGE 3: Distributions (Path Lengths by Termination Reason)
@@ -362,12 +399,56 @@ ui &lt;- fluidPage(
                  plotOutput("dist_by_reason", height = "300px"),
                  h5("By Termination Reason")),
 
-        # PAGE 4: Statistics
+        # PAGE 4: Statistics - Quartile Analysis
         tabPanel("Statistics",
-                 h4("Comprehensive Simulation Statistics"),
-                 verbatimTextOutput("stats_comprehensive")),
+                 h4("Quartile-Based Statistics"),
+                 helpText("Path length distributions partitioned by termination order quartiles (Q1=earliest terminators, Q4=latest)"),
+                 hr(),
+                 h5("Path Length by Termination Quartile"),
+                 plotOutput("stats_quartile_boxplot", height = "350px"),
+                 hr(),
+                 h5("Histogram Panels by Quartile"),
+                 plotOutput("stats_quartile_histograms", height = "400px"),
+                 hr(),
+                 h5("Summary Statistics by Quartile"),
+                 verbatimTextOutput("stats_quartile_summary")),
 
-        # PAGE 5: Debug Info
+        # PAGE 5: Survival Curve
+        tabPanel("Survival Curve",
+                 h4("Walker Survival Analysis"),
+
+                 # Interactive slider for step threshold
+                 sliderInput("survival_step", "Show survival at step:",
+                             min = 0, max = 1000, value = 500, step = 50),
+                 helpText("Drag to see what proportion of walkers survived to this step"),
+
+                 # Main survival curve plot
+                 plotOutput("survival_curve", height = "400px"),
+
+                 hr(),
+
+                 # Competing risks breakdown
+                 h5("Termination by Reason"),
+                 plotOutput("termination_breakdown", height = "250px"),
+
+                 hr(),
+
+                 # Summary statistics
+                 verbatimTextOutput("survival_stats"),
+
+                 hr(),
+
+                 # Hypothesis Testing Section
+                 h4("Hypothesis Test: Survival Decay"),
+                 tags$p("Tests whether later walkers terminate faster as black pixels accumulate."),
+
+                 # Hypothesis plot
+                 plotOutput("hypothesis_plot", height = "350px"),
+
+                 # Hypothesis statistics
+                 verbatimTextOutput("hypothesis_stats")),
+
+        # PAGE 6: Debug Info (renumbered from PAGE 5)
         tabPanel("Debug",
                  h4("Debug Information"),
                  h5("Package Versions"),
@@ -380,28 +461,42 @@ ui &lt;- fluidPage(
                  verbatimTextOutput("debug_backend"),
                  hr(),
                  h5("Periodic Updates"),
-                 verbatimTextOutput("debug_periodic")),
+                 verbatimTextOutput("debug_periodic"),
+                 hr(),
+                 h5("Simulation Status:"),
+                 verbatimTextOutput("status_debug", placeholder = TRUE),
+                 tags$div(
+                   style = "background: #f0f0f0; padding: 10px; margin-top: 10px; font-family: monospace; font-size: 14px; border: 1px solid #ccc;",
+                   h5("Live Progress:"),
+                   verbatimTextOutput("progress_timer_debug")
+                 )),
 
-        # PAGE 6: Notes
+        # PAGE 7: Notes
         tabPanel("Notes",
                  h4("About This Dashboard"),
                  tags$p("Interactive random walk simulation via WebR/Shinylive."),
                  hr(),
-                 h5("Browser Mode"),
-                 tags$p("Runs in ", strong("sync sequential mode"), " (workers=0)."),
-                 tags$p("Async parallel (workers &gt; 0) requires native R with crew."),
+                 h5("Execution Modes"),
+                 tags$p("This browser dashboard runs in ", strong("sync sequential mode"), " (workers=0)."),
+                 tags$p("For async parallel execution (workers &gt; 0), use native R with crew/nanonext."),
                  hr(),
-                 h5("Sync Modes (Native R)"),
+                 h5("Sync Mode Options (Advanced Settings)"),
                  tags$ul(
-                   tags$li(strong("static:"), " Frozen snapshots (~5% collision)"),
-                   tags$li(strong("chunked:"), " Batched updates (~15% collision) - RECOMMENDED"),
-                   tags$li(tags$em("dynamic/mirai_dynamic:"), " DEPRECATED")
+                   tags$li(strong("static:"), " Walkers use frozen grid snapshots. Lower collision rate (~5%). Faster but less realistic."),
+                   tags$li(strong("chunked:"), " Grid updated in batches. Higher collision rate (~15%). More realistic pattern.")
+                 ),
+                 tags$p(tags$em("Tip: Use 'chunked' for more interesting fractal patterns.")),
+                 hr(),
+                 h5("Validation Options (Advanced Settings)"),
+                 tags$ul(
+                   tags$li(strong("Strict Validation:"), " Stop immediately if isolated pixel detected."),
+                   tags$li(strong("Validation %:"), " Check for isolated pixels every N% of walkers.")
                  ),
                  hr(),
-                 h5("Limitations"),
+                 h5("Browser Limitations"),
                  tags$ul(
-                   tags$li("Browser: sync sequential only (~400 steps/sec)"),
-                   tags$li("First load: 15-30s (downloads)"),
+                   tags$li("Single-threaded execution (~400 steps/sec)"),
+                   tags$li("First load: 15-30s (WebR package downloads)"),
                    tags$li("Recommended: grid ≤100, walkers ≤500, steps ≤1000"),
                    tags$li("For larger simulations, use native R with crew")
                  ),
@@ -411,27 +506,7 @@ ui &lt;- fluidPage(
                  tags$a(href="https://github.com/JohnGavin/randomwalk", "GitHub"))
       ) # End of tabs
     ) # End of column
-  ), # End of fluidRow
-
-  # Status output at bottom of page
-  hr(),
-  fluidRow(
-    column(12,
-      h5("Simulation Status:"),
-      verbatimTextOutput("status", placeholder = TRUE),
-      # Real-time progress display (following Shinylive timer example)
-      tags$div(
-        style = "background: #f0f0f0; padding: 10px; margin-top: 10px; font-family: monospace; font-size: 14px; border: 1px solid #ccc;",
-        h5("Live Progress:"),
-        verbatimTextOutput("progress_timer")
-      ),
-      # MANDATORY: Dashboard creation timestamp
-      tags$div(
-        style = "margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 11px; color: #666; text-align: right;",
-        paste("Dashboard created:", format(Sys.time(), "%Y-%m-%d %H:%M:%S UTC"))
-      )
-    )
-  )
+  ) # End of fluidRow
 )
 
 # ============================================================================
@@ -461,14 +536,10 @@ server &lt;- function(input, output, session) {
   sim_completed_walkers &lt;- reactiveVal(0)  # Track completed walkers
   sim_black_pixels &lt;- reactiveVal(0)  # Track black pixels
 
-  # Reactive values for non-blocking simulation
-  sim_chunk &lt;- reactiveVal(0)
-  sim_chunks_total &lt;- reactiveVal(1)
-  sim_est_runtime &lt;- reactiveVal(0)
-
   # Reactive values for collapsible panels
   show_sim_params &lt;- reactiveVal(FALSE)
   show_move_params &lt;- reactiveVal(FALSE)
+  show_validation_params &lt;- reactiveVal(FALSE)
 
   # Toggle simulation parameters panel
   observeEvent(input$toggle_sim_params, {
@@ -488,11 +559,22 @@ server &lt;- function(input, output, session) {
                       label = ifelse(!current, "▼ Movement Settings", "▶ Movement Settings"))
   })
 
+  # Toggle validation settings panel
+  observeEvent(input$toggle_validation_params, {
+    current &lt;- show_validation_params()
+    show_validation_params(!current)
+    # Update button text
+    updateActionButton(session, "toggle_validation_params",
+                      label = ifelse(!current, "▼ Validation Settings", "▶ Validation Settings"))
+  })
+
   # Output for conditional panels
   output$show_sim_params &lt;- reactive({ show_sim_params() })
   output$show_move_params &lt;- reactive({ show_move_params() })
+  output$show_validation_params &lt;- reactive({ show_validation_params() })
   outputOptions(output, "show_sim_params", suspendWhenHidden = FALSE)
   outputOptions(output, "show_move_params", suspendWhenHidden = FALSE)
+  outputOptions(output, "show_validation_params", suspendWhenHidden = FALSE)
 
   # Runtime estimate (WebR performance varies: ~50-500 steps/sec depending on grid size &amp; walker count)
   output$runtime_estimate &lt;- renderUI({
@@ -632,6 +714,50 @@ server &lt;- function(input, output, session) {
     }
   })
 
+  # Duplicate outputs for Debug tab (Shiny requires unique output IDs)
+  output$status_debug &lt;- renderText({
+    # Mirror the status output
+    if (sim_state() == "running") {
+      paste0(
+        "SIMULATION RUNNING...\n",
+        "Run #", sim_count(), "\n",
+        "Started: ", format(sim_start_time(), "%H:%M:%S")
+      )
+    } else if (sim_state() == "complete" &amp;&amp; !is.null(sim_result())) {
+      result &lt;- sim_result()
+      paste0(
+        "SIMULATION COMPLETE\n",
+        "Run #", sim_count(), "\n",
+        "Black pixels: ", result$statistics$black_pixels, "\n",
+        "Elapsed: ", format_duration(result$statistics$elapsed_time_secs)
+      )
+    } else if (sim_state() == "error") {
+      "SIMULATION ERROR"
+    } else {
+      "Ready to run simulation..."
+    }
+  })
+
+  output$progress_timer_debug &lt;- renderText({
+    autoInvalidate()  # Use the reactive timer
+    if (sim_state() == "running") {
+      elapsed &lt;- if (!is.null(sim_start_time())) {
+        round(as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs")), 1)
+      } else { 0 }
+      sprintf("⏱️ Time: %s | Walkers: %d/%d | Black: %d",
+              format_duration(elapsed),
+              sim_completed_walkers(), input$n_walkers,
+              sim_black_pixels())
+    } else if (sim_state() == "complete" &amp;&amp; !is.null(sim_result())) {
+      result &lt;- sim_result()
+      sprintf("✓ Complete | Black: %d | Grid: %d%%",
+              result$statistics$black_pixels,
+              round(result$statistics$black_percentage))
+    } else {
+      sprintf("Ready | %s", format(Sys.time(), "%H:%M:%S"))
+    }
+  })
+
   # Render button with walker/pixel counts
   output$run_button_ui &lt;- renderUI({
     if (sim_state() == "running") {
@@ -678,22 +804,22 @@ server &lt;- function(input, output, session) {
   })
 
 
-  # Run simulation when button clicked - NON-BLOCKING PATTERN
+  # Run simulation when button clicked
   observeEvent(input$run_sim, {
-    # Initialize state (NO BLOCKING!)
+    # Initialize state
     sim_state("running")
     sim_start_time(Sys.time())
     sim_count(sim_count() + 1)
 
     output$status &lt;- renderText({
       paste0(
-        "SIMULATION STARTING...\n",
+        "SIMULATION RUNNING...\n",
         "Run #", sim_count(), "\n",
         "Grid: ", input$grid_size, "×", input$grid_size, "\n",
         "Walkers: ", input$n_walkers, "\n",
         "Workers: 0 (sync sequential)\n",
         "Started: ", format(sim_start_time(), "%H:%M:%S"), "\n",
-        "Status: Initializing..."
+        "Status: Processing..."
       )
     })
 
@@ -713,151 +839,83 @@ server &lt;- function(input, output, session) {
     sim_completed_walkers(0)
     sim_black_pixels(0)
 
-    # Calculate runtime estimate
-    est_steps_per_sec &lt;- 200 / (1 + 0.002 * input$n_walkers)
-    sim_est_runtime(input$max_steps / est_steps_per_sec)
+    # Run the simulation
+    tryCatch({
+      result &lt;- run_simulation(
+        grid_size = input$grid_size,
+        n_walkers = input$n_walkers,
+        neighborhood = input$neighborhood,
+        boundary = input$boundary,
+        max_steps = input$max_steps,
+        workers = 0,
+        sync_mode = input$sync_mode,
+        verbose = FALSE,
+        validate_percent = input$validate_percent,
+        validate_strict = input$validate_strict
+      )
 
-    # Initialize chunked execution for WebR
-    if (is_webr()) {
-      sim_chunks_total(20)  # 20 chunks for smooth updates
-      sim_chunk(0)
-    } else {
-      sim_chunks_total(1)   # Single chunk for native R
-      sim_chunk(0)
-    }
-    # DON'T RUN SIMULATION HERE - let observe() handle it!
+      # Store result
+      sim_result(result)
+      sim_completed_walkers(result$statistics$completed_walkers)
+      sim_black_pixels(result$statistics$black_pixels)
+      sim_current_step(input$max_steps)
+
+      # Mark complete
+      sim_state("complete")
+      sim_end_time(Sys.time())
+
+      # Calculate elapsed time
+      elapsed &lt;- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
+
+      # Re-enable the button
+      updateActionButton(session, "run_sim",
+                        label = "Run Simulation",
+                        disabled = FALSE)
+
+      # Browser console logging for WebR diagnostics
+      message(sprintf("\n=== SIMULATION COMPLETE ==="))
+      message(sprintf("Grid size: %dx%d", input$grid_size, input$grid_size))
+      message(sprintf("Walkers: %d", input$n_walkers))
+      message(sprintf("Black pixels: %d", sum(result$grid == 1)))
+      message(sprintf("Elapsed time: %s", format_duration(elapsed)))
+      message(sprintf("==========================\n"))
+
+      output$status &lt;- renderText({
+        paste0(
+          "SIMULATION COMPLETE\n",
+          "Run #", sim_count(), "\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
+          "Finished: ", format(sim_end_time(), "%H:%M:%S"), "\n",
+          "Elapsed:  ", format_duration(elapsed), "\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Backend: synchronous (WebR browser)\n",
+          "Black Pixels: ", result$statistics$black_pixels, "\n",
+          "Walkers: ", result$statistics$completed_walkers, " completed"
+        )
+      })
+
+    }, error = function(e) {
+      sim_state("error")
+      sim_end_time(Sys.time())
+
+      # Re-enable the button
+      updateActionButton(session, "run_sim",
+                        label = "Run Simulation",
+                        disabled = FALSE)
+
+      output$status &lt;- renderText({
+        paste0(
+          "SIMULATION ERROR\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Error: ", conditionMessage(e), "\n",
+          "━━━━━━━━━━━━━━━━━━━━━━\n",
+          "Please try again with different parameters."
+        )
+      })
+    })
   })
 
-  # Non-blocking simulation observer (crew pattern)
-  observe({
-    # Only run when simulation is active and not complete
-    if (sim_state() == "running" &amp;&amp; sim_chunk() &lt; sim_chunks_total()) {
-
-      if (is_webr() &amp;&amp; sim_chunk() &lt; sim_chunks_total() - 1) {
-        # WebR: Simulate progress for intermediate chunks
-        invalidateLater(sim_est_runtime() * 1000 / sim_chunks_total())  # ms per chunk
-
-        # Update chunk counter
-        sim_chunk(sim_chunk() + 1)
-        progress &lt;- sim_chunk() / sim_chunks_total()
-
-        # Update simulated progress
-        sim_current_step(floor(input$max_steps * progress))
-        sim_completed_walkers(floor(input$n_walkers * progress * 0.8))
-        sim_black_pixels(floor(input$n_walkers * progress * 0.7))
-
-        # Update status with progress bar
-        output$status &lt;- renderText({
-          elapsed &lt;- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
-          bar_width &lt;- 20
-          filled &lt;- round(progress * bar_width)
-          paste0(
-            "SIMULATION RUNNING...\n",
-            "Run #", sim_count(), "\n",
-            "Progress: ", round(progress * 100), "%\n",
-            "━", strrep("━", filled), strrep(" ", bar_width - filled), "┃\n",
-            "Elapsed: ", format_duration(elapsed), "\n",
-            "Est. remaining: ", format_duration(max(0, sim_est_runtime() - elapsed)), "\n",
-            "━━━━━━━━━━━━━━━━━━━━━━\n",
-            "Walkers: ", sim_completed_walkers(), "/", input$n_walkers, "\n",
-            "Black pixels: ", sim_black_pixels()
-          )
-        })
-
-      } else {
-        # Final chunk: run actual simulation
-        # Mark this as the final chunk to prevent re-execution
-        sim_chunk(sim_chunks_total())
-
-        tryCatch({
-          # Show running message
-          output$status &lt;- renderText({
-            paste0(
-              "SIMULATION RUNNING...\n",
-              "Run #", sim_count(), "\n",
-              "Progress: 95%\n",
-              "━━━━━━━━━━━━━━━━━━━━━━\n",
-              "Running final calculation...\n",
-              "Please wait..."
-            )
-          })
-
-          result &lt;- run_simulation(
-            grid_size = input$grid_size,
-            n_walkers = input$n_walkers,
-            neighborhood = input$neighborhood,
-            boundary = input$boundary,
-            max_steps = input$max_steps,
-            workers = 0,
-            sync_mode = "static",
-            verbose = FALSE,
-            validate_percent = 0
-          )
-
-          # Store result
-          sim_result(result)
-          sim_completed_walkers(result$statistics$completed_walkers)
-          sim_black_pixels(result$statistics$black_pixels)
-          sim_current_step(input$max_steps)
-
-          # Mark complete
-          sim_state("complete")
-          sim_end_time(Sys.time())
-
-          # Calculate elapsed time
-          elapsed &lt;- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
-
-          # Re-enable the button
-          updateActionButton(session, "run_sim",
-                            label = "Run Simulation",
-                            disabled = FALSE)
-
-          # Browser console logging for WebR diagnostics
-          message(sprintf("\n=== SIMULATION COMPLETE ==="))
-          message(sprintf("Grid size: %dx%d", input$grid_size, input$grid_size))
-          message(sprintf("Walkers: %d", input$n_walkers))
-          message(sprintf("Black pixels: %d", sum(result$grid == 1)))
-          message(sprintf("Elapsed time: %s", format_duration(elapsed)))
-
-          message(sprintf("==========================\n"))
-
-          output$status &lt;- renderText({
-            paste0(
-              "SIMULATION COMPLETE\n",
-              "Run #", sim_count(), "\n",
-              "━━━━━━━━━━━━━━━━━━━━━━\n",
-              "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
-              "Finished: ", format(sim_end_time(), "%H:%M:%S"), "\n",
-              "Elapsed:  ", format_duration(elapsed), "\n",
-              "━━━━━━━━━━━━━━━━━━━━━━\n",
-              "Backend: synchronous (WebR browser)\n",
-              "Black Pixels: ", result$statistics$black_pixels, "\n",
-              "Walkers: ", result$statistics$completed_walkers, " completed"
-            )
-          })
-
-        }, error = function(e) {
-          sim_state("error")
-          sim_end_time(Sys.time())
-
-          # Re-enable the button
-          updateActionButton(session, "run_sim",
-                            label = "Run Simulation",
-                            disabled = FALSE)
-
-          output$status &lt;- renderText({
-            paste0(
-              "SIMULATION ERROR\n",
-              "━━━━━━━━━━━━━━━━━━━━━━\n",
-              "Error: ", conditionMessage(e), "\n",
-              "━━━━━━━━━━━━━━━━━━━━━━\n",
-              "Please try again with different parameters."
-            )
-          })
-        })
-      }
-    }
-  })
 
   # PAGE 1: Fractal Graph with arrival time coloring
   output$fractal_plot &lt;- renderPlot({
@@ -900,8 +958,28 @@ server &lt;- function(input, output, session) {
                            quantiles = 5,
                            color_scheme = "viridis")
 
-    # The plot_grid_enhanced function now uses gray85 background by default
+    # Store the plot for caption extraction
+    # The plot_grid_enhanced function returns plot with caption as attribute
     p
+  })
+
+  # Display the caption separately
+  output$fractal_caption &lt;- renderText({
+    req(sim_result())
+    result &lt;- sim_result()
+
+    # Generate the plot to get the caption
+    p &lt;- plot_grid_enhanced(result,
+                           quantiles = 5,
+                           color_scheme = "viridis")
+
+    # Extract and return the caption
+    caption &lt;- attr(p, "caption")
+    if (!is.null(caption) &amp;&amp; caption != "") {
+      caption
+    } else {
+      ""
+    }
   })
 
   output$fractal_stats &lt;- renderText({
@@ -1214,104 +1292,427 @@ server &lt;- function(input, output, session) {
     })
   })
 
-  # PAGE 4: Statistics
-  output$stats_comprehensive &lt;- renderText({
+  # PAGE 4: Statistics - Quartile-based Analysis
+  # Helper function to prepare quartile data
+  get_quartile_data &lt;- reactive({
     req(sim_result())
     result &lt;- sim_result()
 
-    # Defensive check for statistics
-    if (is.null(result$statistics)) {
-      return("No statistics available. Run a simulation first.")
+    # Extract steps and termination order
+    steps &lt;- sapply(result$walkers, function(w) w$steps)
+    term_order &lt;- sapply(result$walkers, function(w) w$termination_order)
+
+    # Create data frame
+    df &lt;- data.frame(
+      steps = steps,
+      termination_order = term_order,
+      stringsAsFactors = FALSE
+    )
+
+    # Assign quartiles based on termination order
+    df$quartile &lt;- cut(df$termination_order,
+                       breaks = quantile(df$termination_order, probs = c(0, 0.25, 0.5, 0.75, 1)),
+                       labels = c("Q1 (First 25%)", "Q2 (25-50%)", "Q3 (50-75%)", "Q4 (Last 25%)"),
+                       include.lowest = TRUE)
+    df
+  })
+
+  # Boxplot by quartile
+  output$stats_quartile_boxplot &lt;- renderPlot({
+    req(sim_result())
+    df &lt;- get_quartile_data()
+
+    if (is.null(df) || nrow(df) &lt; 4) {
+      plot.new()
+      text(0.5, 0.5, "Need at least 4 walkers for quartile analysis", cex = 1.2, col = "gray")
+      return()
     }
 
-    stats &lt;- result$statistics
-
-    # Safely extract values with defaults - improved version
-    safe_get &lt;- function(x, default = 0) {
-      tryCatch({
-        if (is.null(x)) return(default)
-        if (length(x) == 0) return(default)
-        if (!is.atomic(x)) return(default)
-        # Ensure single value for calculations
-        if (length(x) &gt; 1) return(x[1])
-        return(as.numeric(x))
-      }, error = function(e) {
-        default
-      })
-    }
-
-    # Calculate std dev safely
-    std_dev &lt;- tryCatch({
-      path_lengths &lt;- sapply(result$walkers, function(w) {
-        if (!is.null(w$path) &amp;&amp; is.matrix(w$path)) nrow(w$path) else NA
-      })
-      path_lengths &lt;- as.numeric(path_lengths[!is.na(path_lengths)])
-      if (length(path_lengths) &gt; 1) {
-        sd(path_lengths)
-      } else {
-        0
-      }
-    }, error = function(e) 0)
-
-    # Extract grid size safely
-    grid_size &lt;- safe_get(stats$grid_size, default = 0)
-    black_pixels &lt;- safe_get(stats$black_pixels, default = 0)
-    black_pct &lt;- safe_get(stats$black_percentage, default = 0)
-    total_walkers &lt;- safe_get(stats$total_walkers, default = 1)
-    completed_walkers &lt;- safe_get(stats$completed_walkers, default = 0)
-    total_steps &lt;- safe_get(stats$total_steps, default = 0)
-    elapsed_time &lt;- safe_get(stats$elapsed_time_secs, default = 0.001)
-
-    # Build output with error handling
     tryCatch({
-      paste0(
-        "=== GRID STATISTICS ===\n",
-        "Grid Size: ", grid_size, "×", grid_size, "\n",
-        "Total Cells: ", grid_size^2, "\n",
-        "Black Pixels: ", black_pixels,
-        sprintf(" (%.2f%%)\n", black_pct),
-        "White Pixels: ", grid_size^2 - black_pixels,
-        sprintf(" (%.2f%%)\n", 100 - black_pct),
-        "\n=== WALKER STATISTICS ===\n",
-        "Total Walkers: ", total_walkers, "\n",
-        "Completed: ", completed_walkers, "\n",
-        "Success Rate: ",
-        sprintf("%.1f%%", 100 * completed_walkers / max(total_walkers, 1)), "\n",
-        "\n=== STEP STATISTICS ===\n",
-        "Total Steps: ", total_steps, "\n",
-        "Min Steps: ", safe_get(stats$min_steps, 0), "\n",
-        "Max Steps: ", safe_get(stats$max_steps, 0), "\n",
-        "Mean Steps: ", sprintf("%.1f", safe_get(stats$mean_steps, 0)), "\n",
-        "Median Steps: ", safe_get(stats$median_steps, 0), "\n",
-        "Std Dev: ", sprintf("%.1f", std_dev), "\n",
-        "\n=== PERFORMANCE ===\n",
-        "Elapsed Time: ", format_duration(elapsed_time), "\n",
-        "Steps per Second: ",
-        sprintf("%.0f", total_steps / max(elapsed_time, 0.001)), "\n",
-        "\n=== TERMINATION REASONS ===\n",
-        if (!is.null(stats$termination_reasons) &amp;&amp; length(stats$termination_reasons) &gt; 0) {
-          tryCatch({
-            reasons_vec &lt;- as.numeric(stats$termination_reasons)
-            reasons_names &lt;- names(stats$termination_reasons)
-            if (is.null(reasons_names)) reasons_names &lt;- paste0("Reason_", seq_along(reasons_vec))
-            paste(sprintf("  %s: %d (%.1f%%)",
-                          reasons_names,
-                          reasons_vec,
-                          100 * reasons_vec / max(total_walkers, 1)),
-                  collapse = "\n")
-          }, error = function(e) {
-            "  Error formatting termination reasons"
-          })
-        } else {
-          "  No data available"
-        }
+      print(
+        ggplot(df, aes(x = quartile, y = steps, fill = quartile)) +
+          geom_boxplot(alpha = 0.7, outlier.shape = 21) +
+          geom_jitter(width = 0.15, alpha = 0.3, size = 1) +
+          scale_fill_brewer(palette = "Blues") +
+          labs(
+            title = "Path Length Distribution by Termination Quartile",
+            subtitle = "Q1 = earliest terminators, Q4 = latest terminators",
+            x = "Termination Quartile",
+            y = "Path Length (steps)"
+          ) +
+          theme_minimal(base_size = 12) +
+          theme(legend.position = "none",
+                axis.text.x = element_text(angle = 15, hjust = 1))
       )
     }, error = function(e) {
-      paste0("Error displaying statistics:\n", e$message)
+      plot.new()
+      text(0.5, 0.5, paste0("Error: ", e$message), cex = 1, col = "red")
     })
   })
 
-  # PAGE 5: Debug - Versions
+  # Histogram panels by quartile
+  output$stats_quartile_histograms &lt;- renderPlot({
+    req(sim_result())
+    df &lt;- get_quartile_data()
+
+    if (is.null(df) || nrow(df) &lt; 4) {
+      plot.new()
+      text(0.5, 0.5, "Need at least 4 walkers for quartile analysis", cex = 1.2, col = "gray")
+      return()
+    }
+
+    tryCatch({
+      print(
+        ggplot(df, aes(x = steps, fill = quartile)) +
+          geom_histogram(bins = 20, alpha = 0.8, color = "white") +
+          facet_wrap(~ quartile, scales = "free_y", ncol = 2) +
+          scale_fill_brewer(palette = "Blues") +
+          labs(
+            title = "Path Length Histograms by Termination Quartile",
+            x = "Path Length (steps)",
+            y = "Count"
+          ) +
+          theme_minimal(base_size = 11) +
+          theme(legend.position = "none",
+                strip.text = element_text(face = "bold"))
+      )
+    }, error = function(e) {
+      plot.new()
+      text(0.5, 0.5, paste0("Error: ", e$message), cex = 1, col = "red")
+    })
+  })
+
+  # Summary statistics by quartile
+  output$stats_quartile_summary &lt;- renderPrint({
+    req(sim_result())
+    df &lt;- get_quartile_data()
+
+    if (is.null(df) || nrow(df) &lt; 4) {
+      cat("Need at least 4 walkers for quartile analysis\n")
+      return()
+    }
+
+    cat("=== QUARTILE SUMMARY STATISTICS ===\n\n")
+
+    for (q in levels(df$quartile)) {
+      q_data &lt;- df[df$quartile == q, ]
+      cat(sprintf("%s (n=%d):\n", q, nrow(q_data)))
+      cat(sprintf("  Min:    %d steps\n", min(q_data$steps)))
+      cat(sprintf("  Q1:     %d steps\n", as.integer(quantile(q_data$steps, 0.25))))
+      cat(sprintf("  Median: %d steps\n", as.integer(median(q_data$steps))))
+      cat(sprintf("  Q3:     %d steps\n", as.integer(quantile(q_data$steps, 0.75))))
+      cat(sprintf("  Max:    %d steps\n", max(q_data$steps)))
+      cat(sprintf("  Mean:   %.1f steps\n", mean(q_data$steps)))
+      cat(sprintf("  SD:     %.1f steps\n", sd(q_data$steps)))
+      cat("\n")
+    }
+
+    # Overall comparison
+    cat("=== QUARTILE COMPARISON ===\n\n")
+    means &lt;- tapply(df$steps, df$quartile, mean)
+    cat("Mean steps by quartile:\n")
+    for (i in seq_along(means)) {
+      cat(sprintf("  %s: %.1f\n", names(means)[i], means[i]))
+    }
+
+    # Trend indicator
+    if (means[4] &lt; means[1]) {
+      cat("\n⬇️ DECREASING TREND: Later walkers survive fewer steps\n")
+      cat(sprintf("   (Q4 mean %.0f%% of Q1 mean)\n", 100 * means[4] / means[1]))
+    } else if (means[4] &gt; means[1]) {
+      cat("\n⬆️ INCREASING TREND: Later walkers survive more steps\n")
+      cat(sprintf("   (Q4 mean %.0f%% of Q1 mean)\n", 100 * means[4] / means[1]))
+    } else {
+      cat("\n➡️ FLAT: No clear trend across quartiles\n")
+    }
+  })
+
+  # ============================================================================
+  # PAGE 5: Survival Curve - Server Logic
+  # ============================================================================
+
+  # Dynamic slider max based on actual max steps in data
+  observe({
+    req(sim_result())
+    result &lt;- sim_result()
+    max_step &lt;- max(sapply(result$walkers, function(w) w$steps))
+    updateSliderInput(session, "survival_step",
+                      max = max_step,
+                      value = min(input$survival_step, max_step))
+  })
+
+  # Survival curve plot (Kaplan-Meier style)
+  output$survival_curve &lt;- renderPlot({
+    req(sim_result())
+    result &lt;- sim_result()
+
+    # Build survival data
+    steps &lt;- sapply(result$walkers, function(w) w$steps)
+    n_total &lt;- length(steps)
+
+    # Calculate survival proportion at each unique step value
+    unique_steps &lt;- sort(unique(steps))
+    survival_at_step &lt;- sapply(unique_steps, function(s) {
+      sum(steps &gt; s) / n_total
+    })
+
+    # Current slider position
+    current_step &lt;- input$survival_step
+    current_survival &lt;- sum(steps &gt; current_step) / n_total
+
+    # Plot using ggplot2
+    df &lt;- data.frame(step = unique_steps, survival = survival_at_step)
+
+    ggplot(df, aes(x = step, y = survival)) +
+      geom_step(color = "steelblue", linewidth = 1.2) +
+      geom_vline(xintercept = current_step, linetype = "dashed", color = "red") +
+      geom_point(aes(x = current_step, y = current_survival),
+                 color = "red", size = 3) +
+      annotate("text", x = current_step, y = min(current_survival + 0.08, 1),
+               label = sprintf("%.1f%% alive", current_survival * 100),
+               color = "red", hjust = 0, size = 4) +
+      labs(
+        title = "Walker Survival Curve",
+        subtitle = sprintf("Red line: step %d (%.1f%% still walking)",
+                           current_step, current_survival * 100),
+        x = "Steps",
+        y = "Proportion Surviving"
+      ) +
+      scale_y_continuous(labels = scales::percent_format(), limits = c(0, 1)) +
+      theme_minimal(base_size = 14) +
+      theme(
+        plot.title = element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5, color = "gray40")
+      )
+  })
+
+  # Termination breakdown by reason
+  output$termination_breakdown &lt;- renderPlot({
+    req(sim_result())
+    result &lt;- sim_result()
+
+    reasons &lt;- sapply(result$walkers, function(w) w$termination_reason)
+    reason_counts &lt;- table(reasons)
+
+    df &lt;- data.frame(
+      reason = names(reason_counts),
+      count = as.integer(reason_counts)
+    )
+    df$pct &lt;- df$count / sum(df$count) * 100
+
+    # Color mapping for different termination reasons
+    color_map &lt;- c(
+      "black_neighbor" = "steelblue",
+      "hit_boundary" = "orange",
+      "max_steps" = "gray50",
+      "touched_black" = "darkblue"
+    )
+
+    # Create fill colors vector matching data
+    df$fill_color &lt;- ifelse(df$reason %in% names(color_map),
+                            color_map[df$reason],
+                            "gray70")
+
+    ggplot(df, aes(x = reorder(reason, -count), y = count, fill = reason)) +
+      geom_col() +
+      geom_text(aes(label = sprintf("%.1f%%", pct)), vjust = -0.5, size = 3.5) +
+      scale_fill_manual(values = color_map, na.value = "gray70") +
+      labs(
+        title = "How Walkers Terminated",
+        x = "Termination Reason",
+        y = "Count"
+      ) +
+      theme_minimal(base_size = 12) +
+      theme(
+        legend.position = "none",
+        axis.text.x = element_text(angle = 30, hjust = 1),
+        plot.title = element_text(hjust = 0.5, face = "bold")
+      )
+  })
+
+  # Survival statistics text
+  output$survival_stats &lt;- renderPrint({
+    req(sim_result())
+    result &lt;- sim_result()
+
+    steps &lt;- sapply(result$walkers, function(w) w$steps)
+
+    cat("=== SURVIVAL STATISTICS ===\n\n")
+    cat(sprintf("Total walkers: %d\n", length(steps)))
+    cat(sprintf("Median survival: %d steps\n", median(steps)))
+    cat(sprintf("Mean survival: %.1f steps\n", mean(steps)))
+    cat(sprintf("25th percentile: %d steps\n", as.integer(quantile(steps, 0.25))))
+    cat(sprintf("75th percentile: %d steps\n", as.integer(quantile(steps, 0.75))))
+    cat("\n")
+    cat("At current slider position:\n")
+    current_survival &lt;- sum(steps &gt; input$survival_step)
+    cat(sprintf("  %d walkers (%.1f%%) survived past step %d\n",
+                current_survival,
+                current_survival / length(steps) * 100,
+                input$survival_step))
+  })
+
+  # Hypothesis test: Exponential decay vs constant survival
+  output$hypothesis_plot &lt;- renderPlot({
+    req(sim_result())
+    result &lt;- sim_result()
+
+    # Build survival data with termination order
+    survdat &lt;- data.frame(
+      order = sapply(result$walkers, function(w) {
+        if (!is.null(w$termination_order)) w$termination_order else NA
+      }),
+      steps = sapply(result$walkers, function(w) w$steps)
+    )
+
+    # Remove NA orders (if termination_order not available)
+    survdat &lt;- survdat[!is.na(survdat$order), ]
+
+    if (nrow(survdat) &lt; 10) {
+      # Not enough data for hypothesis testing
+      plot.new()
+      text(0.5, 0.5, "Need at least 10 walkers with termination order for hypothesis test",
+           cex = 1.2, col = "gray")
+      return()
+    }
+
+    survdat &lt;- survdat[order(survdat$order), ]
+
+    # Fit models
+    # H0: Constant survival (intercept only)
+    null_model &lt;- lm(steps ~ 1, data = survdat)
+
+    # H1: Linear decay
+    linear_model &lt;- lm(steps ~ order, data = survdat)
+
+    # H1b: Log-linear decay (exponential relationship)
+    survdat$log_steps &lt;- log(survdat$steps + 1)  # +1 to handle steps=0
+    decay_model &lt;- lm(log_steps ~ order, data = survdat)
+
+    # Calculate predictions
+    survdat$null_pred &lt;- fitted(null_model)
+    survdat$decay_pred &lt;- exp(fitted(decay_model))
+
+    # Model comparison using F-test
+    anova_result &lt;- tryCatch({
+      anova(null_model, linear_model)
+    }, error = function(e) NULL)
+
+    if (is.null(anova_result)) {
+      p_value &lt;- 1
+      f_stat &lt;- 0
+    } else {
+      f_stat &lt;- anova_result$F[2]
+      p_value &lt;- anova_result$`Pr(&gt;F)`[2]
+      if (is.na(p_value)) p_value &lt;- 1
+    }
+
+    # Coefficient from decay model (negative = decay)
+    decay_coef &lt;- coef(decay_model)[2]
+    half_life &lt;- ifelse(decay_coef &lt; 0, -log(2) / decay_coef, NA)
+
+    # Plot
+    ggplot(survdat, aes(x = order, y = steps)) +
+      geom_point(alpha = 0.4, size = 1.5, color = "gray40") +
+      geom_hline(yintercept = mean(survdat$steps), color = "blue",
+                 linetype = "dashed", linewidth = 1) +
+      geom_line(aes(y = decay_pred), color = "red", linewidth = 1.2) +
+      annotate("text", x = max(survdat$order) * 0.65, y = max(survdat$steps) * 0.9,
+               label = sprintf("H0 (constant): mean = %.0f steps\nH1 (decay): half-life = %.0f walkers\np-value = %.4f",
+                               mean(survdat$steps),
+                               ifelse(is.na(half_life), Inf, half_life),
+                               p_value),
+               hjust = 0, size = 3.5,
+               color = ifelse(p_value &lt; 0.05, "red", "blue")) +
+      labs(
+        title = "Hypothesis Test: Does Survival Time Decay?",
+        subtitle = ifelse(p_value &lt; 0.05,
+                          "REJECT H0: Later walkers survive fewer steps (exponential decay)",
+                          "FAIL TO REJECT H0: Survival time is approximately constant"),
+        x = "Walker Termination Order (chronological)",
+        y = "Steps Survived",
+        caption = "Blue dashed: H0 (constant mean) | Red curve: H1 (exponential decay)"
+      ) +
+      theme_minimal(base_size = 12) +
+      theme(
+        plot.title = element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5,
+                                     color = ifelse(p_value &lt; 0.05, "red", "blue"))
+      )
+  })
+
+  # Hypothesis test summary text
+  output$hypothesis_stats &lt;- renderPrint({
+    req(sim_result())
+    result &lt;- sim_result()
+
+    # Build survival data with termination order
+    survdat &lt;- data.frame(
+      order = sapply(result$walkers, function(w) {
+        if (!is.null(w$termination_order)) w$termination_order else NA
+      }),
+      steps = sapply(result$walkers, function(w) w$steps)
+    )
+
+    survdat &lt;- survdat[!is.na(survdat$order), ]
+
+    if (nrow(survdat) &lt; 10) {
+      cat("Insufficient data for hypothesis testing.\n")
+      cat("Need at least 10 walkers with termination_order field.\n")
+      return()
+    }
+
+    # Fit models
+    null_model &lt;- lm(steps ~ 1, data = survdat)
+    linear_model &lt;- lm(steps ~ order, data = survdat)
+    survdat$log_steps &lt;- log(survdat$steps + 1)
+    decay_model &lt;- lm(log_steps ~ order, data = survdat)
+
+    # Model comparison
+    anova_result &lt;- tryCatch({
+      anova(null_model, linear_model)
+    }, error = function(e) NULL)
+
+    cat("=== HYPOTHESIS TEST: SURVIVAL DECAY ===\n\n")
+    cat("H0: Survival time is constant (no effect of termination order)\n")
+    cat("H1: Survival time decays geometrically as simulation progresses\n\n")
+
+    cat("--- Linear Model (steps ~ order) ---\n")
+    cat(sprintf("Intercept: %.1f steps\n", coef(linear_model)[1]))
+    cat(sprintf("Slope: %.3f steps per walker\n", coef(linear_model)[2]))
+    cat(sprintf("R-squared: %.4f\n", summary(linear_model)$r.squared))
+
+    cat("\n--- Log-Linear Model (log(steps) ~ order) ---\n")
+    decay_coef &lt;- coef(decay_model)[2]
+    cat(sprintf("Decay coefficient: %.6f\n", decay_coef))
+    if (decay_coef &lt; 0) {
+      half_life &lt;- -log(2) / decay_coef
+      cat(sprintf("Half-life: %.1f walkers (time for median survival to halve)\n", half_life))
+    } else {
+      cat("No decay detected (positive or zero coefficient)\n")
+    }
+
+    cat("\n--- Model Comparison (F-test) ---\n")
+    if (!is.null(anova_result)) {
+      f_stat &lt;- anova_result$F[2]
+      p_value &lt;- anova_result$`Pr(&gt;F)`[2]
+      cat(sprintf("F-statistic: %.2f\n", ifelse(is.na(f_stat), 0, f_stat)))
+      cat(sprintf("p-value: %.4f\n", ifelse(is.na(p_value), 1, p_value)))
+
+      if (!is.na(p_value) &amp;&amp; p_value &lt; 0.05) {
+        cat("\n*** CONCLUSION: REJECT H0 ***\n")
+        cat("Evidence supports exponential/geometric decay of survival time.\n")
+        cat("Later walkers encounter black pixels faster.\n")
+      } else {
+        cat("\n*** CONCLUSION: FAIL TO REJECT H0 ***\n")
+        cat("No significant evidence for decay in survival time.\n")
+      }
+    } else {
+      cat("Unable to compute F-test.\n")
+    }
+  })
+
+  # PAGE 6: Debug - Versions
   output$debug_versions &lt;- renderText({
     paste0(
       "=== PACKAGE VERSIONS ===\n",
@@ -1426,7 +1827,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 </section>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> 2.1.1 | <strong>Git</strong> <code>dd44855</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-08 12:20:36</p>
+<p><strong>randomwalk</strong> 2.1.1 | <strong>Git</strong> <code>a068466</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-02-16 14:40:06</p>
 </section>
 
 </main>
@@ -1482,13 +1883,14 @@ shinyApp(ui = ui, server = server)</code></pre>
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
