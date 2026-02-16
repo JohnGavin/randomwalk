@@ -1,80 +1,78 @@
-# Current Focus: Dashboard Improvements & CI Issues
+# Current Focus: All Issues Resolved
 
 ## Active Branch
 main
 
-## Session Status: CI issues fixed (2026-02-15)
+## Session Status: All open issues closed (2026-02-16)
 
-Latest changes pushed to main:
-- Fixed fractal plot caption display
-- Removed fake chunking simulation
-- Verified walker path color stability
-- **Fixed #187**: Changed test-plotting.R to use sync mode (workers=0)
-- **Fixed #177**: Re-enabled R-universe workflow
+All three open issues have been resolved:
+
+### Closed Today
+
+1. **#56 - Survival Curve** (was already implemented)
+   - Kaplan-Meier style survival curve
+   - Interactive slider for step threshold
+   - Termination breakdown by reason
+   - Hypothesis test (exponential decay vs constant)
+
+2. **#60 - Validation Visibility**
+   - Changed periodic validation from log_trace to log_info
+   - Added "Advanced Settings" panel with:
+     - Strict Validation toggle
+     - Validation % slider
+   - Validation checkpoints now visible in console/logs
+
+3. **#68 - Dashboard Versions** (revised scope)
+   - Added sync_mode selector (static vs chunked)
+   - Updated Notes tab with clear mode documentation
+   - Explained WebR limitations (no async possible in browser)
+
+### Wiki Consolidation (Also Completed)
+
+- Consolidated randomwalk wiki into llm wiki
+- Deleted 7 generic pages from randomwalk wiki
+- Added Cachix CLI reference to llm wiki (with correct commands)
+- Fixed incorrect cachix commands (`cachix cache --info` doesn't exist)
 
 ---
 
-## Current Open Issues (3 total)
+## Current Open Issues
 
-### Enhancement Issues
-
-### Enhancement Issues
-3. **#68** - Support three dashboard versions (sync, async-pre-nanonext, async-nanonext)
-   - Multi-version dashboard support
-   - Medium-term enhancement
-
-4. **#60** - Improve validation visibility and control in dashboard
-   - Better validation feedback for users
-   - Dashboard UX improvement
-
-5. **#56** - Page for survival curve for number of steps to event
-   - New visualization feature
-   - Statistical analysis enhancement
+**None!** All issues are resolved.
 
 ---
 
 ## Recently Completed
 
-### CI Fixes (2026-02-15)
-- ✅ #187 - Fixed CI test failures: test-plotting.R now uses sync mode (workers=0)
-  - Root cause: tests used async mode but crew/nanonext not installed in CI
-  - Fix: Change workers=1 to workers=0 (plotting tests don't need async)
-- ✅ #177 - Re-enabled R-universe test workflow
+### Session 2026-02-16
+- ✅ Wiki consolidation (randomwalk → llm)
+- ✅ #56 - Survival Curve (verified already implemented)
+- ✅ #60 - Validation visibility improvements
+- ✅ #68 - Dashboard sync_mode selector
 
-### Dashboard Fixes (2025-02-15)
-- ✅ Fixed fractal plot caption (now displays below plot, not in footer)
-- ✅ Removed fake chunking (was showing misleading 0-95% progress)
-- ✅ Verified walker path color stability (all 23 tests passing)
-- ✅ Pushed changes to GitHub
-
-### Previously Closed Issues
-- ✅ #118 - Shinylive App Not Running (CLOSED)
-- ✅ #103 - Restore embedded Shinylive app (CLOSED)
-- ✅ #102 - Fix 404 on dashboard_async URL (CLOSED)
-- ✅ #92 - Fix cachix push strategy (CLOSED)
-- ✅ #111 - Add R CMD check to CI (CLOSED)
-- ✅ #115 - Rationalize open PRs (CLOSED)
+### Previous Sessions
+- ✅ #187 - Fixed CI test failures
+- ✅ #177 - Re-enabled R-universe workflow
+- ✅ Windows async test fixes (tempdir())
+- ✅ Dashboard UI improvements
 
 ---
 
-## Next Session Priorities
+## Key Files Modified Today
 
-### Medium-Term
-1. **#68** - Plan three dashboard version support
-2. **#60** - Design validation visibility improvements
-3. **#56** - Implement survival curve visualization
-
----
-
-## Key Files Modified Recently
+### R Package
+- `R/simulation.R` - Changed log_trace to log_info for validation
 
 ### Dashboard
-- `R/plot_grid_enhanced.R` - Caption now returned as attribute
-- `vignettes/articles/dashboard_comprehensive.qmd` - Removed chunking, added caption display
+- `vignettes/articles/dashboard_comprehensive.qmd`:
+  - Added "Advanced Settings" panel
+  - Added sync_mode selector
+  - Added validation controls
+  - Updated Notes tab
 
-### Test Suite
-- `tests/testthat/test-plotting.R` - Changed workers=1 to workers=0 (fix #187)
-- `R/dev/issues/test_walker_color_stability.R` - New color stability test
+### Wiki
+- llm wiki: Added Cachix CLI reference
+- randomwalk wiki: Consolidated to 4 pages (project-specific only)
 
 ---
 
@@ -91,6 +89,6 @@ Latest changes pushed to main:
 
 ---
 
-**Last Updated**: 2026-02-15
-**Current Status**: CI issues fixed (#177, #187), all workflows running
-**Next Action**: Monitor CI to confirm fix, then work on enhancement issues (#68, #60, #56)
+**Last Updated**: 2026-02-16
+**Current Status**: All issues closed
+**Next Action**: Package is ready for use. Consider adding new features or addressing any user feedback.
