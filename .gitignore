@@ -27,6 +27,16 @@ install_deps.R
 merge_pr.sh
 .envrc
 
+# Test/debug output files
+test_*.png
+test_*.pdf
+test_*.html
+test_*.md
+*_debug.pdf
+timer_test_*
+vignettes/articles/timer_test_*
+docs/articles/timer_test_*
+
 # Nix artifacts
 result
 $WRAPPER_SCRIPT
@@ -36,3 +46,5 @@ R/setup/fix_issue_134.R
 # Symlinked from llm repo - not tracked here
 AGENTS.md
 nix-shell-root
+
+**/*.quarto_ipynb
