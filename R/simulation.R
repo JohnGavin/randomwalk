@@ -133,18 +133,24 @@ run_simulation <- function(grid_size = 10,
   grid <- initialize_grid(grid_size)
 
   # Create walkers
-  # PERF: Only store paths for first 2000 and last 2000 walkers (Issue #172)
-  # This avoids O(n²) path list growth for walkers we won't visualize
-  # Increased from 200 to 2000 to better support dashboard path visualization
-  path_count <- 2000L  # Number of paths to store from start and end
+  # Store paths for ALL walkers initially - we'll clear non-essential paths
+  # at the end based on TERMINATION ORDER (not launch ID)
+  # This fixes the mismatch where dashboard selects by termination order
+  # but paths were stored by launch ID
   walker_positions <- generate_walker_positions(n_walkers, grid)
   walkers <- lapply(seq_along(walker_positions), function(i) {
-    # Store path only for first 20 or last 20 walkers
-    store_path <- (i <= path_count) || (i > n_walkers - path_count)
-    create_walker(i, walker_positions[[i]], grid_size, store_path = store_path)
+    create_walker(i, walker_positions[[i]], grid_size, store_path = TRUE)
   })
 
-  logger::log_info("Created {n_walkers} walkers (storing paths for {min(n_walkers, 2 * path_count)})")
+  # Path collection by TERMINATION ORDER (not launch ID)
+
+  # Stores paths for first 20 and last 20 to TERMINATE
+  path_limit <- 20L
+  first_terminators <- integer(0)  # Walker IDs of first 20 to terminate
+  last_terminators <- integer(path_limit)  # Circular buffer for last 20
+  last_buffer_idx <- 0L  # Current position in circular buffer
+
+  logger::log_info("Created {n_walkers} walkers (will retain paths for first/last {path_limit} by termination order)")
 
   # Choose async or sync mode
   if (workers > 0) {
@@ -271,6 +277,16 @@ run_simulation <- function(grid_size = 10,
           if (is.null(walker$termination_order)) {
             termination_counter <- termination_counter + 1
             walker$termination_order <- termination_counter
+
+            # Track for path retention by termination order
+            if (length(first_terminators) < path_limit) {
+              # Still collecting first 20
+              first_terminators <- c(first_terminators, walker$id)
+            }
+
+            # Circular buffer for last 20 (overwrites oldest)
+            last_buffer_idx <- ((termination_counter - 1L) %% path_limit) + 1L
+            last_terminators[last_buffer_idx] <- walker$id
           }
           newly_inactive <- c(newly_inactive, i)
           completed_count <- completed_count + 1
@@ -327,6 +343,22 @@ run_simulation <- function(grid_size = 10,
       walkers = walkers,
       step_count = step_count
     )
+
+    # Keep paths only for first/last 20 by termination order
+    # This matches what the dashboard selects (first/last N to terminate)
+    paths_to_keep <- unique(c(first_terminators, last_terminators[last_terminators > 0]))
+
+    paths_cleared <- 0L
+    for (i in seq_along(walkers)) {
+      if (!(walkers[[i]]$id %in% paths_to_keep)) {
+        walkers[[i]]$path <- NULL
+        walkers[[i]]$store_path <- FALSE
+        paths_cleared <- paths_cleared + 1L
+      }
+    }
+
+    logger::log_info("Retained paths for {length(paths_to_keep)} walkers (first/last {path_limit} by termination order)")
+    logger::log_debug("Cleared {paths_cleared} paths to save memory")
 
     # Collect statistics
     walker_steps <- sapply(walkers, function(w) w$steps)

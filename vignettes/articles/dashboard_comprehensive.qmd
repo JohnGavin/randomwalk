@@ -323,16 +323,22 @@ ui <- fluidPage(
         # PAGE 2: Walker Paths (First 25 and Last 25)
         tabPanel("Walker Paths",
                  h4("Walker Trajectories"),
+                 tags$p(style = "color: #555; margin-bottom: 10px;",
+                   "Shows walker trajectories from start (circle) to termination (square). ",
+                   "Colors are stable - same walker keeps same color when adjusting slider."
+                 ),
                  fluidRow(
                    column(6,
                      sliderInput("first_n_paths", "First N to terminate:",
-                                min = 0, max = 50, value = 5, step = 1)),
+                                min = 0, max = 20, value = 5, step = 1)),
                    column(6,
                      sliderInput("last_n_paths", "Last N to terminate:",
-                                min = 0, max = 50, value = 5, step = 1))
+                                min = 0, max = 20, value = 5, step = 1))
                  ),
-                 helpText("Select walkers by termination order. Paths stored for first/last 2000 walkers by ID."),
-                 plotOutput("paths_plot_first25", height = "500px")),
+                 helpText("Select walkers by termination order. Paths stored for first/last 20 terminators."),
+                 plotOutput("paths_plot_first25", height = "500px"),
+                 tags$p(style = "margin-top: 10px; color: #666; font-style: italic; text-align: center;",
+                        textOutput("paths_caption", inline = TRUE))),
 
         # PAGE 3: Distributions (Path Lengths by Termination Reason)
         tabPanel("Distributions",
@@ -346,6 +352,17 @@ ui <- fluidPage(
         # PAGE 4: Statistics - Quartile Analysis
         tabPanel("Statistics",
                  h4("Quartile-Based Statistics"),
+                 tags$div(
+                   style = "background-color: #f5f5f5; padding: 10px; margin-bottom: 15px; border-radius: 5px;",
+                   tags$p(strong("Terminology:")),
+                   tags$ul(
+                     tags$li(strong("Launch sequence (ID):"), " Order walkers were created (1, 2, ..., N)"),
+                     tags$li(strong("Termination sequence:"), " Order walkers died (first to hit black = #1)"),
+                     tags$li(strong("Path length (steps):"), " How many steps a walker took before terminating")
+                   ),
+                   tags$p("See ", tags$a(href = "#", onclick = "Shiny.setInputValue('tabs', 'Notes');", "Notes tab"),
+                          " for details on memory-efficient quartile calculation.")
+                 ),
                  helpText("Path length distributions partitioned by termination order quartiles (Q1=earliest terminators, Q4=latest)"),
                  hr(),
                  h5("Path Length by Termination Quartile"),
@@ -353,6 +370,12 @@ ui <- fluidPage(
                  hr(),
                  h5("Histogram Panels by Quartile"),
                  plotOutput("stats_quartile_histograms", height = "400px"),
+                 hr(),
+                 h5("Distribution Shape Comparison"),
+                 fluidRow(
+                   column(6, plotOutput("stats_violin", height = "300px")),
+                   column(6, plotOutput("stats_trend", height = "300px"))
+                 ),
                  hr(),
                  h5("Summary Statistics by Quartile"),
                  verbatimTextOutput("stats_quartile_summary")),
@@ -420,10 +443,68 @@ ui <- fluidPage(
                  h4("About This Dashboard"),
                  tags$p("Interactive random walk simulation via WebR/Shinylive."),
                  hr(),
+
+                 h5("Sequence Terminology"),
+                 tags$div(
+                   style = "background-color: #f0f8ff; padding: 12px; border-radius: 5px; margin-bottom: 15px;",
+                   tags$p(strong("Launch Sequence (Walker ID):"), " Order walkers are created (1, 2, ..., N)"),
+                   tags$p(strong("Termination Sequence:"), " Order walkers stop moving (first to die = order 1)"),
+                   tags$p(style = "font-style: italic; color: #666;",
+                          "These often differ! Walker ID 10 might terminate last (order 1000).")
+                 ),
+
+                 tags$table(style = "width: 100%; border-collapse: collapse; margin-bottom: 15px;",
+                   tags$thead(
+                     tags$tr(style = "background-color: #e8e8e8;",
+                       tags$th(style = "padding: 8px; border: 1px solid #ddd;", "Sequence"),
+                       tags$th(style = "padding: 8px; border: 1px solid #ddd;", "Pros"),
+                       tags$th(style = "padding: 8px; border: 1px solid #ddd;", "Cons"),
+                       tags$th(style = "padding: 8px; border: 1px solid #ddd;", "Best For")
+                     )
+                   ),
+                   tags$tbody(
+                     tags$tr(
+                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Launch (ID)"),
+                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Known at creation; memory-efficient"),
+                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Arbitrary ordering"),
+                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Memory-constrained sims")
+                     ),
+                     tags$tr(
+                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Termination"),
+                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Meaningful; reveals patterns"),
+                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Unknown until end"),
+                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Statistical analysis")
+                     )
+                   )
+                 ),
+                 hr(),
+
+                 h5("Memory-Efficient Quartile Calculation"),
+                 tags$div(
+                   style = "background-color: #f5f5f5; padding: 12px; border-radius: 5px; margin-bottom: 15px;",
+                   tags$p(strong("Key Insight:"), " Quartiles do NOT require full paths!"),
+                   tags$p("Each walker stores only: ", tags$code("id, steps, termination_reason, termination_order")),
+                   tags$pre(style = "background-color: #fff; padding: 8px; border-radius: 3px; font-size: 12px;",
+                     "df$quartile <- cut(df$termination_order,\n  breaks = quantile(df$termination_order, probs = c(0, 0.25, 0.5, 0.75, 1)),\n  labels = c(\"Q1\", \"Q2\", \"Q3\", \"Q4\"),\n  include.lowest = TRUE)"
+                   ),
+                   tags$p(style = "font-size: 12px; color: #666;",
+                          "Uses O(4 bytes) per walker, not O(thousands) for paths.")
+                 ),
+                 hr(),
+
+                 h5("Path Storage Strategy"),
+                 tags$p(strong("Current Approach (Launch ID):"), " Store paths for first/last 2000 walkers BY LAUNCH ID."),
+                 tags$p("This is memory-efficient but means path visualization shows walkers by creation order, not termination order."),
+                 tags$p(style = "color: #666; font-style: italic;",
+                        "Future: Option E (chunked disk storage) would stream paths to parquet files, enabling retrieval by termination order. ",
+                        "Not available in WebR due to arrow/parquet limitations in WASM."),
+                 hr(),
+
                  h5("Execution Modes"),
                  tags$p("This browser dashboard runs in ", strong("sync sequential mode"), " (workers=0)."),
                  tags$p("For async parallel execution (workers > 0), use native R with crew/nanonext."),
                  hr(),
+
                  h5("Sync Mode Options (Advanced Settings)"),
                  tags$ul(
                    tags$li(strong("static:"), " Walkers use frozen grid snapshots. Lower collision rate (~5%). Faster but less realistic."),
@@ -431,12 +512,14 @@ ui <- fluidPage(
                  ),
                  tags$p(tags$em("Tip: Use 'chunked' for more interesting fractal patterns.")),
                  hr(),
+
                  h5("Validation Options (Advanced Settings)"),
                  tags$ul(
                    tags$li(strong("Strict Validation:"), " Stop immediately if isolated pixel detected."),
                    tags$li(strong("Validation %:"), " Check for isolated pixels every N% of walkers.")
                  ),
                  hr(),
+
                  h5("Browser Limitations"),
                  tags$ul(
                    tags$li("Single-threaded execution (~400 steps/sec)"),
@@ -445,6 +528,7 @@ ui <- fluidPage(
                    tags$li("For larger simulations, use native R with crew")
                  ),
                  hr(),
+
                  tags$a(href="https://johngavin.github.io/randomwalk/", "Documentation"),
                  tags$span(" | "),
                  tags$a(href="https://github.com/JohnGavin/randomwalk", "GitHub"))
@@ -980,9 +1064,9 @@ server <- function(input, output, session) {
         grid_size <- result$parameters$grid_size
 
         # Create plot with gray background for contrast
-        par(bg = "gray80")
+        par(bg = "gray70")
         plot(1, type = "n", xlim = c(1, grid_size), ylim = c(1, grid_size),
-             xlab = "X", ylab = "Y",
+             xlab = "", ylab = "",
              main = paste(length(walker_indices), "Selected Walker Paths (by termination order)"),
              asp = 1, col.main = "black", col.lab = "black", col.axis = "black")
 
@@ -1067,9 +1151,7 @@ server <- function(input, output, session) {
           }
         }
 
-        # Add caption text explaining symbols
-        mtext("Symbols: Circle = Start Position | Square = End Position | Dots = Walker Path",
-              side = 1, line = 3, cex = 0.8, col = "gray30")
+        # Caption moved to separate textOutput below plot
       } else {
         plot.new()
         text(0.5, 0.5, "No walkers selected")
@@ -1080,13 +1162,18 @@ server <- function(input, output, session) {
     }
   })
 
+  # Caption for Walker Paths plot
+  output$paths_caption <- renderText({
+    "Symbols: Circle = Start | Square = End | Dots = Path. Colors by termination order."
+  })
+
   # PAGE 3: Distributions
   output$dist_overall <- renderPlot({
     req(sim_result())
     result <- sim_result()
 
     # Set gray background
-    par(bg = "gray80")
+    par(bg = "gray70")
 
     # Defensive check for walkers
     if (is.null(result$walkers) || length(result$walkers) == 0) {
@@ -1228,7 +1315,9 @@ server <- function(input, output, session) {
                x = "Termination Reason",
                y = "Path Length (steps)") +
           theme_minimal() +
-          theme(legend.position = "none")
+          theme(legend.position = "none",
+                panel.background = element_rect(fill = "gray70"),
+                plot.background = element_rect(fill = "gray70"))
       )
     }, error = function(e) {
       plot.new()
@@ -1274,10 +1363,9 @@ server <- function(input, output, session) {
 
     tryCatch({
       print(
-        ggplot(df, aes(x = quartile, y = steps, fill = quartile)) +
-          geom_boxplot(alpha = 0.7, outlier.shape = 21) +
+        ggplot(df, aes(x = quartile, y = steps)) +
+          geom_boxplot(fill = "steelblue", alpha = 0.7, outlier.shape = 21) +
           geom_jitter(width = 0.15, alpha = 0.3, size = 1) +
-          scale_fill_brewer(palette = "Blues") +
           labs(
             title = "Path Length Distribution by Termination Quartile",
             subtitle = "Q1 = earliest terminators, Q4 = latest terminators",
@@ -1286,7 +1374,9 @@ server <- function(input, output, session) {
           ) +
           theme_minimal(base_size = 12) +
           theme(legend.position = "none",
-                axis.text.x = element_text(angle = 15, hjust = 1))
+                axis.text.x = element_text(angle = 15, hjust = 1),
+                panel.background = element_rect(fill = "gray70"),
+                plot.background = element_rect(fill = "gray70"))
       )
     }, error = function(e) {
       plot.new()
@@ -1307,10 +1397,9 @@ server <- function(input, output, session) {
 
     tryCatch({
       print(
-        ggplot(df, aes(x = steps, fill = quartile)) +
-          geom_histogram(bins = 20, alpha = 0.8, color = "white") +
+        ggplot(df, aes(x = steps)) +
+          geom_histogram(bins = 20, fill = "steelblue", alpha = 0.8, color = "white") +
           facet_wrap(~ quartile, scales = "free_y", ncol = 2) +
-          scale_fill_brewer(palette = "Blues") +
           labs(
             title = "Path Length Histograms by Termination Quartile",
             x = "Path Length (steps)",
@@ -1318,7 +1407,89 @@ server <- function(input, output, session) {
           ) +
           theme_minimal(base_size = 11) +
           theme(legend.position = "none",
-                strip.text = element_text(face = "bold"))
+                strip.text = element_text(face = "bold"),
+                panel.background = element_rect(fill = "gray70"),
+                plot.background = element_rect(fill = "gray70"))
+      )
+    }, error = function(e) {
+      plot.new()
+      text(0.5, 0.5, paste0("Error: ", e$message), cex = 1, col = "red")
+    })
+  })
+
+  # Violin plot for distribution shape comparison
+  output$stats_violin <- renderPlot({
+    req(sim_result())
+    df <- get_quartile_data()
+
+    if (is.null(df) || nrow(df) < 4) {
+      plot.new()
+      text(0.5, 0.5, "Need at least 4 walkers", cex = 1.2, col = "gray")
+      return()
+    }
+
+    tryCatch({
+      print(
+        ggplot(df, aes(x = quartile, y = steps)) +
+          geom_violin(fill = "steelblue", alpha = 0.6, trim = FALSE) +
+          geom_boxplot(width = 0.15, fill = "white", alpha = 0.8) +
+          labs(
+            title = "Distribution Shape by Quartile",
+            x = "Termination Quartile",
+            y = "Path Length (steps)"
+          ) +
+          theme_minimal(base_size = 11) +
+          theme(axis.text.x = element_text(angle = 15, hjust = 1),
+                panel.background = element_rect(fill = "gray70"),
+                plot.background = element_rect(fill = "gray70"))
+      )
+    }, error = function(e) {
+      plot.new()
+      text(0.5, 0.5, paste0("Error: ", e$message), cex = 1, col = "red")
+    })
+  })
+
+  # Trend plot showing mean/median across quartiles
+  output$stats_trend <- renderPlot({
+    req(sim_result())
+    df <- get_quartile_data()
+
+    if (is.null(df) || nrow(df) < 4) {
+      plot.new()
+      text(0.5, 0.5, "Need at least 4 walkers", cex = 1.2, col = "gray")
+      return()
+    }
+
+    tryCatch({
+      # Calculate summary statistics by quartile
+      summary_df <- do.call(rbind, lapply(levels(df$quartile), function(q) {
+        q_data <- df[df$quartile == q, ]
+        data.frame(
+          quartile = q,
+          mean_steps = mean(q_data$steps),
+          median_steps = median(q_data$steps),
+          q_num = match(q, levels(df$quartile))
+        )
+      }))
+
+      print(
+        ggplot(summary_df, aes(x = q_num)) +
+          geom_line(aes(y = mean_steps, color = "Mean"), linewidth = 1.2) +
+          geom_point(aes(y = mean_steps, color = "Mean"), size = 3) +
+          geom_line(aes(y = median_steps, color = "Median"), linewidth = 1.2, linetype = "dashed") +
+          geom_point(aes(y = median_steps, color = "Median"), size = 3) +
+          scale_x_continuous(breaks = 1:4, labels = c("Q1", "Q2", "Q3", "Q4")) +
+          scale_color_manual(values = c("Mean" = "steelblue", "Median" = "darkred")) +
+          labs(
+            title = "Path Length Trend Across Quartiles",
+            x = "Termination Quartile",
+            y = "Path Length (steps)",
+            color = "Statistic"
+          ) +
+          theme_minimal(base_size = 11) +
+          theme(legend.position = "bottom",
+                panel.background = element_rect(fill = "gray70"),
+                plot.background = element_rect(fill = "gray70"))
       )
     }, error = function(e) {
       plot.new()
@@ -1426,7 +1597,9 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 14) +
       theme(
         plot.title = element_text(hjust = 0.5, face = "bold"),
-        plot.subtitle = element_text(hjust = 0.5, color = "gray40")
+        plot.subtitle = element_text(hjust = 0.5, color = "gray40"),
+        panel.background = element_rect(fill = "gray70"),
+        plot.background = element_rect(fill = "gray70")
       )
   })
 
@@ -1470,7 +1643,9 @@ server <- function(input, output, session) {
       theme(
         legend.position = "none",
         axis.text.x = element_text(angle = 30, hjust = 1),
-        plot.title = element_text(hjust = 0.5, face = "bold")
+        plot.title = element_text(hjust = 0.5, face = "bold"),
+        panel.background = element_rect(fill = "gray70"),
+        plot.background = element_rect(fill = "gray70")
       )
   })
 
@@ -1496,7 +1671,7 @@ server <- function(input, output, session) {
                 input$survival_step))
   })
 
-  # Hypothesis test: Exponential decay vs constant survival
+  # Hypothesis test: Geometric vs Exponential decay models
   output$hypothesis_plot <- renderPlot({
     req(sim_result())
     result <- sim_result()
@@ -1522,66 +1697,58 @@ server <- function(input, output, session) {
 
     survdat <- survdat[order(survdat$order), ]
 
-    # Fit models
-    # H0: Constant survival (intercept only)
-    null_model <- lm(steps ~ 1, data = survdat)
+    # H0: Geometric decay model
+    # Geometric: P(survive n steps) = (1-p)^n, E[steps] = (1-p)/p
+    # Fit p via method of moments: p_hat = 1 / (1 + mean(steps))
+    geom_p <- 1 / (1 + mean(survdat$steps))
+    # Predicted mean at each order position (linear decay in expected value)
+    survdat$geom_pred <- (1 / geom_p) * (1 - survdat$order / max(survdat$order) * 0.5)
 
-    # H1: Linear decay
-    linear_model <- lm(steps ~ order, data = survdat)
+    # H1: Exponential decay model
+    # E[steps | order] = a * exp(-lambda * order)
+    survdat$log_steps <- log(survdat$steps + 1)
+    exp_model <- lm(log_steps ~ order, data = survdat)
+    survdat$exp_pred <- exp(fitted(exp_model))
 
-    # H1b: Log-linear decay (exponential relationship)
-    survdat$log_steps <- log(survdat$steps + 1)  # +1 to handle steps=0
-    decay_model <- lm(log_steps ~ order, data = survdat)
+    # Non-parametric: Kolmogorov-Smirnov tests
+    geom_ks <- tryCatch({
+      ks.test(survdat$steps, function(x) pgeom(x, prob = geom_p))
+    }, error = function(e) list(p.value = 0, statistic = 1))
 
-    # Calculate predictions
-    survdat$null_pred <- fitted(null_model)
-    survdat$decay_pred <- exp(fitted(decay_model))
+    exp_rate <- 1 / mean(survdat$steps)
+    exp_ks <- tryCatch({
+      ks.test(survdat$steps, function(x) pexp(x, rate = exp_rate))
+    }, error = function(e) list(p.value = 0, statistic = 1))
 
-    # Model comparison using F-test
-    anova_result <- tryCatch({
-      anova(null_model, linear_model)
-    }, error = function(e) NULL)
-
-    if (is.null(anova_result)) {
-      p_value <- 1
-      f_stat <- 0
-    } else {
-      f_stat <- anova_result$F[2]
-      p_value <- anova_result$`Pr(>F)`[2]
-      if (is.na(p_value)) p_value <- 1
-    }
-
-    # Coefficient from decay model (negative = decay)
-    decay_coef <- coef(decay_model)[2]
-    half_life <- ifelse(decay_coef < 0, -log(2) / decay_coef, NA)
+    # Determine which model fits better (higher p-value = better fit)
+    geom_better <- geom_ks$p.value > exp_ks$p.value
 
     # Plot
     ggplot(survdat, aes(x = order, y = steps)) +
       geom_point(alpha = 0.4, size = 1.5, color = "gray40") +
-      geom_hline(yintercept = mean(survdat$steps), color = "blue",
-                 linetype = "dashed", linewidth = 1) +
-      geom_line(aes(y = decay_pred), color = "red", linewidth = 1.2) +
-      annotate("text", x = max(survdat$order) * 0.65, y = max(survdat$steps) * 0.9,
-               label = sprintf("H0 (constant): mean = %.0f steps\nH1 (decay): half-life = %.0f walkers\np-value = %.4f",
-                               mean(survdat$steps),
-                               ifelse(is.na(half_life), Inf, half_life),
-                               p_value),
+      geom_line(aes(y = geom_pred), color = "blue", linewidth = 1.2, linetype = "dashed") +
+      geom_line(aes(y = exp_pred), color = "red", linewidth = 1.2) +
+      annotate("text", x = max(survdat$order) * 0.6, y = max(survdat$steps) * 0.9,
+               label = sprintf("H0 Geometric: KS p=%.3f\nH1 Exponential: KS p=%.3f\nBetter fit: %s",
+                               geom_ks$p.value, exp_ks$p.value,
+                               ifelse(geom_better, "Geometric", "Exponential")),
                hjust = 0, size = 3.5,
-               color = ifelse(p_value < 0.05, "red", "blue")) +
+               color = ifelse(geom_better, "blue", "red")) +
       labs(
-        title = "Hypothesis Test: Does Survival Time Decay?",
-        subtitle = ifelse(p_value < 0.05,
-                          "REJECT H0: Later walkers survive fewer steps (exponential decay)",
-                          "FAIL TO REJECT H0: Survival time is approximately constant"),
-        x = "Walker Termination Order (chronological)",
+        title = "Survival Decay: Geometric vs Exponential",
+        subtitle = sprintf("Best fit: %s model (higher KS p-value = better fit)",
+                           ifelse(geom_better, "Geometric (H0)", "Exponential (H1)")),
+        x = "Walker Termination Order",
         y = "Steps Survived",
-        caption = "Blue dashed: H0 (constant mean) | Red curve: H1 (exponential decay)"
+        caption = "Blue dashed: Geometric (H0) | Red solid: Exponential (H1)"
       ) +
       theme_minimal(base_size = 12) +
       theme(
+        panel.background = element_rect(fill = "gray70"),
+        plot.background = element_rect(fill = "gray70"),
         plot.title = element_text(hjust = 0.5, face = "bold"),
         plot.subtitle = element_text(hjust = 0.5,
-                                     color = ifelse(p_value < 0.05, "red", "blue"))
+                                     color = ifelse(geom_better, "blue", "red"))
       )
   })
 
@@ -1606,53 +1773,50 @@ server <- function(input, output, session) {
       return()
     }
 
-    # Fit models
-    null_model <- lm(steps ~ 1, data = survdat)
-    linear_model <- lm(steps ~ order, data = survdat)
+    cat("=== HYPOTHESIS TEST: GEOMETRIC vs EXPONENTIAL DECAY ===\n\n")
+    cat("H0 (Geometric): Step counts follow a geometric distribution\n")
+    cat("H1 (Exponential): Step counts follow an exponential distribution\n\n")
+
+    # Geometric model
+    geom_p <- 1 / (1 + mean(survdat$steps))
+    cat("--- Geometric Model (H0) ---\n")
+    cat(sprintf("Estimated p: %.4f\n", geom_p))
+    cat(sprintf("Expected mean: %.1f steps\n", (1 - geom_p) / geom_p))
+
+    # Exponential model
+    exp_rate <- 1 / mean(survdat$steps)
     survdat$log_steps <- log(survdat$steps + 1)
-    decay_model <- lm(log_steps ~ order, data = survdat)
+    exp_model <- lm(log_steps ~ order, data = survdat)
 
-    # Model comparison
-    anova_result <- tryCatch({
-      anova(null_model, linear_model)
-    }, error = function(e) NULL)
+    cat("\n--- Exponential Model (H1) ---\n")
+    cat(sprintf("Rate parameter (lambda): %.6f\n", exp_rate))
+    cat(sprintf("Expected mean: %.1f steps\n", 1 / exp_rate))
+    cat(sprintf("Decay coefficient: %.6f\n", coef(exp_model)[2]))
 
-    cat("=== HYPOTHESIS TEST: SURVIVAL DECAY ===\n\n")
-    cat("H0: Survival time is constant (no effect of termination order)\n")
-    cat("H1: Survival time decays geometrically as simulation progresses\n\n")
+    # KS tests
+    geom_ks <- tryCatch({
+      ks.test(survdat$steps, function(x) pgeom(x, prob = geom_p))
+    }, error = function(e) list(p.value = 0, statistic = 1))
 
-    cat("--- Linear Model (steps ~ order) ---\n")
-    cat(sprintf("Intercept: %.1f steps\n", coef(linear_model)[1]))
-    cat(sprintf("Slope: %.3f steps per walker\n", coef(linear_model)[2]))
-    cat(sprintf("R-squared: %.4f\n", summary(linear_model)$r.squared))
+    exp_ks <- tryCatch({
+      ks.test(survdat$steps, function(x) pexp(x, rate = exp_rate))
+    }, error = function(e) list(p.value = 0, statistic = 1))
 
-    cat("\n--- Log-Linear Model (log(steps) ~ order) ---\n")
-    decay_coef <- coef(decay_model)[2]
-    cat(sprintf("Decay coefficient: %.6f\n", decay_coef))
-    if (decay_coef < 0) {
-      half_life <- -log(2) / decay_coef
-      cat(sprintf("Half-life: %.1f walkers (time for median survival to halve)\n", half_life))
+    cat("\n--- Kolmogorov-Smirnov Tests ---\n")
+    cat(sprintf("Geometric KS statistic: %.4f, p-value: %.4f\n",
+                geom_ks$statistic, geom_ks$p.value))
+    cat(sprintf("Exponential KS statistic: %.4f, p-value: %.4f\n",
+                exp_ks$statistic, exp_ks$p.value))
+
+    geom_better <- geom_ks$p.value > exp_ks$p.value
+
+    cat("\n=== CONCLUSION ===\n")
+    if (geom_better) {
+      cat("GEOMETRIC model fits better (higher KS p-value)\n")
+      cat("This suggests step counts are discrete with constant termination probability.\n")
     } else {
-      cat("No decay detected (positive or zero coefficient)\n")
-    }
-
-    cat("\n--- Model Comparison (F-test) ---\n")
-    if (!is.null(anova_result)) {
-      f_stat <- anova_result$F[2]
-      p_value <- anova_result$`Pr(>F)`[2]
-      cat(sprintf("F-statistic: %.2f\n", ifelse(is.na(f_stat), 0, f_stat)))
-      cat(sprintf("p-value: %.4f\n", ifelse(is.na(p_value), 1, p_value)))
-
-      if (!is.na(p_value) && p_value < 0.05) {
-        cat("\n*** CONCLUSION: REJECT H0 ***\n")
-        cat("Evidence supports exponential/geometric decay of survival time.\n")
-        cat("Later walkers encounter black pixels faster.\n")
-      } else {
-        cat("\n*** CONCLUSION: FAIL TO REJECT H0 ***\n")
-        cat("No significant evidence for decay in survival time.\n")
-      }
-    } else {
-      cat("Unable to compute F-test.\n")
+      cat("EXPONENTIAL model fits better (higher KS p-value)\n")
+      cat("This suggests step counts follow continuous decay with time.\n")
     }
   })
 
