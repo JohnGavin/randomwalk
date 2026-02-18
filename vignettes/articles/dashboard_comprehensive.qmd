@@ -335,7 +335,7 @@ ui <- fluidPage(
                      sliderInput("last_n_paths", "Last N to terminate:",
                                 min = 0, max = 20, value = 5, step = 1))
                  ),
-                 helpText("Select walkers by termination order. Paths stored for first/last 20 terminators."),
+                 helpText("Paths stored for first/last 20 BLACK_NEIGHBOR terminators (walkers that found the fractal, not boundary walkers)."),
                  plotOutput("paths_plot_first25", height = "500px"),
                  tags$p(style = "margin-top: 10px; color: #666; font-style: italic; text-align: center;",
                         textOutput("paths_caption", inline = TRUE))),
@@ -1808,15 +1808,34 @@ server <- function(input, output, session) {
     cat(sprintf("Exponential KS statistic: %.4f, p-value: %.4f\n",
                 exp_ks$statistic, exp_ks$p.value))
 
-    geom_better <- geom_ks$p.value > exp_ks$p.value
+    # Significance threshold
+    alpha <- 0.05
 
     cat("\n=== CONCLUSION ===\n")
-    if (geom_better) {
-      cat("GEOMETRIC model fits better (higher KS p-value)\n")
-      cat("This suggests step counts are discrete with constant termination probability.\n")
+
+    # Check if BOTH models are rejected (p < alpha)
+    geom_rejected <- geom_ks$p.value < alpha
+    exp_rejected <- exp_ks$p.value < alpha
+
+    if (geom_rejected && exp_rejected) {
+      cat("NEITHER model fits well (both p-values < 0.05)\n")
+      cat("The step distribution may be more complex than geometric or exponential.\n")
+      cat("Consider: mixture models, heavy-tailed distributions, or spatial effects.\n")
+    } else if (!geom_rejected && !exp_rejected) {
+      # Both acceptable - compare which is better
+      if (geom_ks$p.value > exp_ks$p.value) {
+        cat("GEOMETRIC model fits better (p=", round(geom_ks$p.value, 4), ")\n")
+        cat("Step counts suggest discrete process with constant termination probability.\n")
+      } else {
+        cat("EXPONENTIAL model fits better (p=", round(exp_ks$p.value, 4), ")\n")
+        cat("Step counts suggest continuous decay process.\n")
+      }
+    } else if (!geom_rejected) {
+      cat("GEOMETRIC model fits (p=", round(geom_ks$p.value, 4), ")\n")
+      cat("Exponential model rejected (p=", round(exp_ks$p.value, 4), ")\n")
     } else {
-      cat("EXPONENTIAL model fits better (higher KS p-value)\n")
-      cat("This suggests step counts follow continuous decay with time.\n")
+      cat("EXPONENTIAL model fits (p=", round(exp_ks$p.value, 4), ")\n")
+      cat("Geometric model rejected (p=", round(geom_ks$p.value, 4), ")\n")
     }
   })
 

@@ -143,14 +143,17 @@ run_simulation <- function(grid_size = 10,
   })
 
   # Path collection by TERMINATION ORDER (not launch ID)
+  # IMPORTANT: Only track walkers that terminate due to BLACK_NEIGHBOR
+  # Boundary walkers (hit_boundary) are not interesting for visualization
+  # because they have short paths and don't contribute to the fractal
 
-  # Stores paths for first 20 and last 20 to TERMINATE
+  # Stores paths for first 20 and last 20 BLACK_NEIGHBOR terminators
   path_limit <- 20L
-  first_terminators <- integer(0)  # Walker IDs of first 20 to terminate
-  last_terminators <- integer(path_limit)  # Circular buffer for last 20
-  last_buffer_idx <- 0L  # Current position in circular buffer
+  first_black_terminators <- integer(0)  # Walker IDs of first 20 black_neighbor terminators
+  last_black_terminators <- integer(path_limit)  # Circular buffer for last 20
+  black_terminator_count <- 0L  # Count of black_neighbor terminations
 
-  logger::log_info("Created {n_walkers} walkers (will retain paths for first/last {path_limit} by termination order)")
+  logger::log_info("Created {n_walkers} walkers (will retain paths for first/last {path_limit} black_neighbor terminators)")
 
   # Choose async or sync mode
   if (workers > 0) {
@@ -278,15 +281,20 @@ run_simulation <- function(grid_size = 10,
             termination_counter <- termination_counter + 1
             walker$termination_order <- termination_counter
 
-            # Track for path retention by termination order
-            if (length(first_terminators) < path_limit) {
-              # Still collecting first 20
-              first_terminators <- c(first_terminators, walker$id)
-            }
+            # Track for path retention - ONLY black_neighbor terminators
+            # Boundary walkers have short uninteresting paths
+            if (walker$termination_reason == "black_neighbor") {
+              black_terminator_count <- black_terminator_count + 1L
 
-            # Circular buffer for last 20 (overwrites oldest)
-            last_buffer_idx <- ((termination_counter - 1L) %% path_limit) + 1L
-            last_terminators[last_buffer_idx] <- walker$id
+              if (length(first_black_terminators) < path_limit) {
+                # Still collecting first 20 black_neighbor terminators
+                first_black_terminators <- c(first_black_terminators, walker$id)
+              }
+
+              # Circular buffer for last 20 black_neighbor terminators
+              last_buffer_idx <- ((black_terminator_count - 1L) %% path_limit) + 1L
+              last_black_terminators[last_buffer_idx] <- walker$id
+            }
           }
           newly_inactive <- c(newly_inactive, i)
           completed_count <- completed_count + 1
@@ -344,9 +352,13 @@ run_simulation <- function(grid_size = 10,
       step_count = step_count
     )
 
-    # Keep paths only for first/last 20 by termination order
-    # This matches what the dashboard selects (first/last N to terminate)
-    paths_to_keep <- unique(c(first_terminators, last_terminators[last_terminators > 0]))
+    # Keep paths only for first/last 20 BLACK_NEIGHBOR terminators
+    # These are the interesting paths that contribute to the fractal
+    # Boundary terminators have short uninteresting paths
+    paths_to_keep <- unique(c(
+      first_black_terminators,
+      last_black_terminators[last_black_terminators > 0]
+    ))
 
     paths_cleared <- 0L
     for (i in seq_along(walkers)) {
@@ -357,7 +369,8 @@ run_simulation <- function(grid_size = 10,
       }
     }
 
-    logger::log_info("Retained paths for {length(paths_to_keep)} walkers (first/last {path_limit} by termination order)")
+    logger::log_info("Retained paths for {length(paths_to_keep)} walkers (first/last {path_limit} black_neighbor terminators)")
+    logger::log_info("Total black_neighbor terminations: {black_terminator_count}")
     logger::log_debug("Cleared {paths_cleared} paths to save memory")
 
     # Collect statistics
