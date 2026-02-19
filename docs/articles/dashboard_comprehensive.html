@@ -1969,8 +1969,8 @@ server &lt;- function(input, output, session) {
 
   # PAGE 5: Debug - Periodic Updates
   output$debug_periodic &lt;- renderText({
-    # Depend on timer to update every second
-    timer()
+    # Depend on timer to update every 100ms
+    autoInvalidate()
 
     # Enhanced debug info during execution
     state_info &lt;- switch(sim_state(),
