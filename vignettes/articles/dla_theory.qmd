@@ -1,6 +1,10 @@
 ---
 title: "Diffusion-Limited Aggregation Theory"
 description: "Mathematical foundations and physical principles of DLA fractal formation"
+format:
+  html:
+    toc: true
+    toc-depth: 3
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{DLA Theory}
@@ -10,39 +14,56 @@ vignette: >
 
 # Introduction to Diffusion-Limited Aggregation
 
-Diffusion-Limited Aggregation (DLA) is a process whereby particles undergoing Brownian motion cluster together to form aggregates of particles. This model was introduced by T.A. Witten Jr. and L.M. Sander in 1981 [1] and has since become a paradigm for understanding fractal growth phenomena in nature.
+[Diffusion-Limited Aggregation](https://en.wikipedia.org/wiki/Diffusion-limited_aggregation) (DLA) is a process whereby particles undergoing [Brownian motion](https://en.wikipedia.org/wiki/Brownian_motion) cluster together to form aggregates of particles. This model was introduced by T.A. Witten Jr. and L.M. Sander in 1981^[Witten Jr, T. A., & Sander, L. M. (1981). [Diffusion-limited aggregation, a kinetic critical phenomenon](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.47.1400). *Physical Review Letters*, 47(19), 1400.] and has since become a paradigm for understanding [fractal](https://en.wikipedia.org/wiki/Fractal) growth phenomena in nature.
 
 ## Mathematical Foundations
 
 ### Random Walk Process
 
-The foundation of DLA is the random walk, where particles move according to:
+The foundation of DLA is the [random walk](https://en.wikipedia.org/wiki/Random_walk), where particles move according to:
 
-$$\mathbf{r}(t+1) = \mathbf{r}(t) + \mathbf{\xi}(t)$$
+$$\mathbf{r}(t+1) = \mathbf{r}(t) + \boldsymbol{\xi}(t)$$
 
-where $\mathbf{\xi}(t)$ is a random displacement vector chosen uniformly from the neighboring lattice sites.
+where:
+
+- $\mathbf{r}(t)$ is the **position vector** of the particle at discrete time step $t$
+- $\boldsymbol{\xi}(t)$ is a **random displacement vector** chosen uniformly from the neighboring lattice sites (e.g., in 2D with 4-connectivity: up, down, left, right)
 
 ### Fractal Dimension
 
-DLA clusters exhibit fractal geometry with a characteristic dimension $D_f \approx 1.71$ in 2D [2]. The mass (number of particles) scales with radius as:
+DLA clusters exhibit [fractal geometry](https://en.wikipedia.org/wiki/Fractal_dimension) with a characteristic dimension $D_f \approx 1.71$ in 2D.^[Meakin, P. (1983). [Formation of fractal clusters and networks by irreversible diffusion-limited aggregation](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.51.1119). *Physical Review Letters*, 51(13), 1119.] The mass (number of particles) scales with radius as:
 
 $$M(R) \sim R^{D_f}$$
 
-This sub-quadratic scaling means DLA clusters are less dense than compact objects but more space-filling than linear structures.
+where:
+
+- $M(R)$ is the **mass** (total number of particles) within radius $R$
+- $R$ is the **radial distance** from the cluster center
+- $D_f$ is the **fractal dimension** ($\approx 1.71$ for 2D DLA)
+- $\sim$ denotes **scaling behavior** (proportionality in the asymptotic limit)
+
+This sub-quadratic scaling ($D_f < 2$) means DLA clusters are less dense than compact objects ($D_f = 2$) but more space-filling than linear structures ($D_f = 1$).
 
 ### Growth Probability Distribution
 
-The probability of a walker sticking at position $\mathbf{r}$ is proportional to the local electric field in the equivalent electrostatic problem:
+The probability of a walker sticking at position $\mathbf{r}$ is proportional to the local electric field in the equivalent electrostatic problem:^[Halsey, T. C. (2000). [Diffusion-limited aggregation: a model for pattern formation](https://doi.org/10.1063/1.1333284). *Physics Today*, 53(11), 36-41.]
 
 $$P(\mathbf{r}) \propto |\nabla \phi(\mathbf{r})|^\eta$$
 
-where $\phi$ satisfies Laplace's equation $\nabla^2 \phi = 0$ with appropriate boundary conditions, and $\eta$ is the growth exponent [3].
+where:
+
+- $P(\mathbf{r})$ is the **growth probability** at position $\mathbf{r}$
+- $\nabla$ is the **gradient operator** (in 2D: $\nabla = \left(\frac{\partial}{\partial x}, \frac{\partial}{\partial y}\right)$), measuring the rate and direction of change
+- $\phi(\mathbf{r})$ is the **scalar potential field** satisfying [Laplace's equation](https://en.wikipedia.org/wiki/Laplace%27s_equation) $\nabla^2 \phi = 0$
+- $\nabla^2$ is the **Laplacian operator** (in 2D: $\nabla^2 = \frac{\partial^2}{\partial x^2} + \frac{\partial^2}{\partial y^2}$)
+- $\eta$ is the **growth exponent** controlling how strongly tips are favored ($\eta = 1$ for standard DLA)
+- $|\cdot|$ denotes the **magnitude** of the gradient vector
 
 ## Physical Principles
 
 ### Screening Effect
 
-A key feature of DLA is the "screening effect" or "shadowing" - particles are more likely to attach to protruding tips than to deep fjords. This occurs because:
+A key feature of DLA is the "[screening effect](https://github.com/JohnGavin/randomwalk/wiki/DLA-Theory#screening-effect)" or "shadowing" - particles are more likely to attach to protruding tips than to deep fjords. This occurs because:
 
 1. Random walkers approaching from infinity have higher probability of encountering outer branches
 2. Inner regions are "screened" by outer growth
@@ -50,9 +71,10 @@ A key feature of DLA is the "screening effect" or "shadowing" - particles are mo
 
 ### Universality
 
-DLA exhibits universal behavior independent of microscopic details:
+DLA exhibits [universal behavior](https://en.wikipedia.org/wiki/Universality_(dynamical_systems)) independent of microscopic details:
+
 - The fractal dimension remains $D_f \approx 1.71$ across different lattices
-- Growth patterns show self-similarity across scales
+- Growth patterns show [self-similarity](https://en.wikipedia.org/wiki/Self-similarity) across scales
 - Statistical properties are robust to variations in the random walk rules
 
 ## Applications in Nature
@@ -60,16 +82,16 @@ DLA exhibits universal behavior independent of microscopic details:
 DLA patterns appear in numerous physical systems:
 
 ### Electrodeposition
-Metal ions in solution undergo random motion until depositing on an electrode, creating dendritic patterns similar to DLA [4].
+Metal ions in solution undergo random motion until depositing on an electrode, creating dendritic patterns similar to DLA.^[Brady, R. M., & Ball, R. C. (1984). [Fractal growth of copper electrodeposits](https://www.nature.com/articles/309225a0). *Nature*, 309(5965), 225-229.]
 
 ### Bacterial Colonies
-Some bacteria colonies grow in DLA-like patterns when nutrients are limited and cells must search for resources [5].
+Some bacteria colonies grow in DLA-like patterns when nutrients are limited and cells must search for resources.^[Ben-Jacob, E., & Garik, P. (1990). [The formation of patterns in non-equilibrium growth](https://www.nature.com/articles/343523a0). *Nature*, 343(6258), 523-530.]
 
 ### Lightning and Dielectric Breakdown
-Electrical discharge paths follow DLA-like patterns as charge carriers seek the path of least resistance [6].
+Electrical discharge paths follow DLA-like patterns as charge carriers seek the path of least resistance.^[Niemeyer, L., Pietronero, L., & Wiesmann, H. J. (1984). [Fractal dimension of dielectric breakdown](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.52.1033). *Physical Review Letters*, 52(12), 1033.]
 
 ### Mineral Deposition
-Manganese oxide dendrites and other mineral formations show DLA characteristics [7].
+Manganese oxide dendrites and other mineral formations show DLA characteristics.^[Chopard, B., Herrmann, H. J., & Vicsek, T. (1991). [Structure and growth mechanism of mineral dendrites](https://www.nature.com/articles/353409a0). *Nature*, 353(6343), 409-412.]
 
 ## Computational Considerations
 
@@ -84,6 +106,7 @@ The naive DLA algorithm has time complexity $O(N^2)$ for $N$ particles. Optimiza
 ### Noise Reduction
 
 DLA clusters show significant variation due to their stochastic nature. Techniques for analysis include:
+
 - Averaging over multiple realizations
 - Measuring ensemble properties (fractal dimension, density profiles)
 - Using larger clusters to reduce finite-size effects
@@ -91,13 +114,13 @@ DLA clusters show significant variation due to their stochastic nature. Techniqu
 ## Connection to Other Models
 
 ### Eden Model
-Unlike DLA where particles undergo random walks, the Eden model grows by randomly selecting perimeter sites. Eden clusters are compact with $D_f = 2$ [8].
+Unlike DLA where particles undergo random walks, the [Eden model](https://en.wikipedia.org/wiki/Eden_growth_model) grows by randomly selecting perimeter sites. Eden clusters are compact with $D_f = 2$.^[Eden, M. (1961). A two-dimensional growth process. *Proceedings of the Fourth Berkeley Symposium on Mathematical Statistics and Probability*, 4, 223-239.]
 
 ### Ballistic Aggregation
-Particles move in straight lines rather than random walks, producing more compact, less branched structures [9].
+Particles move in straight lines rather than random walks, producing more compact, less branched structures.^[Vold, M. J. (1963). [Computer simulation of floc formation in a colloidal suspension](https://doi.org/10.1016/0095-8522(63)90061-8). *Journal of Colloid Science*, 18(7), 684-695.]
 
 ### Reaction-Limited Aggregation
-Particles must attempt attachment multiple times before sticking, leading to more compact growth [10].
+Particles must attempt attachment multiple times before sticking, leading to more compact growth.^[Meakin, P., & Family, F. (1987). [Structure and dynamics of reaction-limited aggregation](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.36.5498). *Physical Review A*, 36(11), 5498.]
 
 ## Quantitative Analysis
 
@@ -106,13 +129,20 @@ The average density $\rho(r)$ as a function of distance from the center follows:
 
 $$\rho(r) \sim r^{D_f - d}$$
 
-where $d$ is the embedding dimension (2 for planar DLA).
+where:
+
+- $\rho(r)$ is the **local density** (particles per unit area) at radial distance $r$
+- $r$ is the **radial distance** from the cluster center
+- $D_f$ is the **fractal dimension** ($\approx 1.71$ for 2D DLA)
+- $d$ is the **embedding dimension** (2 for planar DLA, 3 for 3D DLA)
+
+Since $D_f - d < 0$ for DLA, density decreases with distance from the center.
 
 ### Growth Site Distribution
-The distribution of growth probabilities follows a multifractal spectrum, characterized by the generalized dimensions $D_q$ [11].
+The distribution of growth probabilities follows a [multifractal](https://en.wikipedia.org/wiki/Multifractal_system) spectrum, characterized by the generalized dimensions $D_q$.^[Halsey, T. C., Jensen, M. H., Kadanoff, L. P., Procaccia, I., & Shraiman, B. I. (1986). [Fractal measures and their singularities](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.33.1141). *Physical Review A*, 33(2), 1141.]
 
 ### Harmonic Measure
-The growth probability distribution is related to the harmonic measure on the cluster boundary, connecting DLA to potential theory [12].
+The growth probability distribution is related to the [harmonic measure](https://en.wikipedia.org/wiki/Harmonic_measure) on the cluster boundary, connecting DLA to potential theory.^[Hastings, M. B., & Levitov, L. S. (1998). [Laplacian growth as one-dimensional turbulence](https://www.sciencedirect.com/science/article/pii/S0167278997001594). *Physica D*, 116(1-2), 244-252.]
 
 ## Open Questions
 
@@ -122,32 +152,6 @@ Despite extensive study, several aspects of DLA remain incompletely understood:
 2. **Noise effects**: The role of lattice anisotropy and finite-size effects on pattern formation
 3. **Three-dimensional DLA**: Less studied than 2D, with $D_f \approx 2.5$ in 3D
 4. **Multi-particle DLA**: Behavior when multiple particles aggregate simultaneously
-
-## References
-
-[1] Witten Jr, T. A., & Sander, L. M. (1981). [Diffusion-limited aggregation, a kinetic critical phenomenon](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.47.1400). Physical Review Letters, 47(19), 1400.
-
-[2] Meakin, P. (1983). [Formation of fractal clusters and networks by irreversible diffusion-limited aggregation](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.51.1119). Physical Review Letters, 51(13), 1119.
-
-[3] Halsey, T. C. (2000). [Diffusion-limited aggregation: a model for pattern formation](https://doi.org/10.1063/1.1333284). Physics Today, 53(11), 36-41.
-
-[4] Brady, R. M., & Ball, R. C. (1984). [Fractal growth of copper electrodeposits](https://www.nature.com/articles/309225a0). Nature, 309(5965), 225-229.
-
-[5] Ben-Jacob, E., & Garik, P. (1990). [The formation of patterns in non-equilibrium growth](https://www.nature.com/articles/343523a0). Nature, 343(6258), 523-530.
-
-[6] Niemeyer, L., Pietronero, L., & Wiesmann, H. J. (1984). [Fractal dimension of dielectric breakdown](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.52.1033). Physical Review Letters, 52(12), 1033.
-
-[7] Chopard, B., Herrmann, H. J., & Vicsek, T. (1991). [Structure and growth mechanism of mineral dendrites](https://www.nature.com/articles/353409a0). Nature, 353(6343), 409-412.
-
-[8] Eden, M. (1961). A two-dimensional growth process. Proceedings of the Fourth Berkeley Symposium on Mathematical Statistics and Probability, 4, 223-239.
-
-[9] Vold, M. J. (1963). [Computer simulation of floc formation in a colloidal suspension](https://doi.org/10.1016/0095-8522(63)90061-8). Journal of Colloid Science, 18(7), 684-695.
-
-[10] Meakin, P., & Family, F. (1987). [Structure and dynamics of reaction-limited aggregation](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.36.5498). Physical Review A, 36(11), 5498.
-
-[11] Halsey, T. C., Jensen, M. H., Kadanoff, L. P., Procaccia, I., & Shraiman, B. I. (1986). [Fractal measures and their singularities](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.33.1141). Physical Review A, 33(2), 1141.
-
-[12] Hastings, M. B., & Levitov, L. S. (1998). [Laplacian growth as one-dimensional turbulence](https://www.sciencedirect.com/science/article/pii/S0167278997001594). Physica D, 116(1-2), 244-252.
 
 ## Further Reading
 
