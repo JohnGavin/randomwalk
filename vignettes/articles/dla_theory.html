@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Mathematical foundations and physical principles of DLA fractal formation">
+<meta name="description" content="Understanding DLA fractal formation for simulation enthusiasts">
 
 <title>Diffusion-Limited Aggregation Theory</title>
 <style>
@@ -79,43 +79,40 @@ window.Quarto = {
   <ul>
   <li><a href="#introduction-to-diffusion-limited-aggregation" id="toc-introduction-to-diffusion-limited-aggregation" class="nav-link active" data-scroll-target="#introduction-to-diffusion-limited-aggregation">Introduction to Diffusion-Limited Aggregation</a>
   <ul class="collapse">
-  <li><a href="#mathematical-foundations" id="toc-mathematical-foundations" class="nav-link" data-scroll-target="#mathematical-foundations">Mathematical Foundations</a>
+  <li><a href="#how-it-works-the-simple-version" id="toc-how-it-works-the-simple-version" class="nav-link" data-scroll-target="#how-it-works-the-simple-version">How It Works (The Simple Version)</a>
   <ul class="collapse">
+  <li><a href="#the-basic-algorithm" id="toc-the-basic-algorithm" class="nav-link" data-scroll-target="#the-basic-algorithm">The Basic Algorithm</a></li>
   <li><a href="#random-walk-process" id="toc-random-walk-process" class="nav-link" data-scroll-target="#random-walk-process">Random Walk Process</a></li>
+  </ul></li>
+  <li><a href="#why-do-we-get-fractals" id="toc-why-do-we-get-fractals" class="nav-link" data-scroll-target="#why-do-we-get-fractals">Why Do We Get Fractals?</a>
+  <ul class="collapse">
+  <li><a href="#the-screening-effect" id="toc-the-screening-effect" class="nav-link" data-scroll-target="#the-screening-effect">The Screening Effect</a></li>
   <li><a href="#fractal-dimension" id="toc-fractal-dimension" class="nav-link" data-scroll-target="#fractal-dimension">Fractal Dimension</a></li>
-  <li><a href="#growth-probability-distribution" id="toc-growth-probability-distribution" class="nav-link" data-scroll-target="#growth-probability-distribution">Growth Probability Distribution</a></li>
   </ul></li>
-  <li><a href="#physical-principles" id="toc-physical-principles" class="nav-link" data-scroll-target="#physical-principles">Physical Principles</a>
+  <li><a href="#patterns-in-nature" id="toc-patterns-in-nature" class="nav-link" data-scroll-target="#patterns-in-nature">Patterns in Nature</a>
   <ul class="collapse">
-  <li><a href="#screening-effect" id="toc-screening-effect" class="nav-link" data-scroll-target="#screening-effect">Screening Effect</a></li>
-  <li><a href="#universality" id="toc-universality" class="nav-link" data-scroll-target="#universality">Universality</a></li>
-  </ul></li>
-  <li><a href="#applications-in-nature" id="toc-applications-in-nature" class="nav-link" data-scroll-target="#applications-in-nature">Applications in Nature</a>
-  <ul class="collapse">
-  <li><a href="#electrodeposition" id="toc-electrodeposition" class="nav-link" data-scroll-target="#electrodeposition">Electrodeposition</a></li>
+  <li><a href="#lightning-and-sparks" id="toc-lightning-and-sparks" class="nav-link" data-scroll-target="#lightning-and-sparks">Lightning and Sparks</a></li>
+  <li><a href="#frost-and-ice-crystals" id="toc-frost-and-ice-crystals" class="nav-link" data-scroll-target="#frost-and-ice-crystals">Frost and Ice Crystals</a></li>
+  <li><a href="#mineral-dendrites" id="toc-mineral-dendrites" class="nav-link" data-scroll-target="#mineral-dendrites">Mineral Dendrites</a></li>
   <li><a href="#bacterial-colonies" id="toc-bacterial-colonies" class="nav-link" data-scroll-target="#bacterial-colonies">Bacterial Colonies</a></li>
-  <li><a href="#lightning-and-dielectric-breakdown" id="toc-lightning-and-dielectric-breakdown" class="nav-link" data-scroll-target="#lightning-and-dielectric-breakdown">Lightning and Dielectric Breakdown</a></li>
-  <li><a href="#mineral-deposition" id="toc-mineral-deposition" class="nav-link" data-scroll-target="#mineral-deposition">Mineral Deposition</a></li>
   </ul></li>
-  <li><a href="#computational-considerations" id="toc-computational-considerations" class="nav-link" data-scroll-target="#computational-considerations">Computational Considerations</a>
+  <li><a href="#coding-tips" id="toc-coding-tips" class="nav-link" data-scroll-target="#coding-tips">Coding Tips</a>
   <ul class="collapse">
-  <li><a href="#algorithmic-efficiency" id="toc-algorithmic-efficiency" class="nav-link" data-scroll-target="#algorithmic-efficiency">Algorithmic Efficiency</a></li>
-  <li><a href="#noise-reduction" id="toc-noise-reduction" class="nav-link" data-scroll-target="#noise-reduction">Noise Reduction</a></li>
+  <li><a href="#making-it-fast" id="toc-making-it-fast" class="nav-link" data-scroll-target="#making-it-fast">Making It Fast</a></li>
+  <li><a href="#making-it-pretty" id="toc-making-it-pretty" class="nav-link" data-scroll-target="#making-it-pretty">Making It Pretty</a></li>
   </ul></li>
-  <li><a href="#connection-to-other-models" id="toc-connection-to-other-models" class="nav-link" data-scroll-target="#connection-to-other-models">Connection to Other Models</a>
+  <li><a href="#interactive-resources" id="toc-interactive-resources" class="nav-link" data-scroll-target="#interactive-resources">Interactive Resources</a>
   <ul class="collapse">
-  <li><a href="#eden-model" id="toc-eden-model" class="nav-link" data-scroll-target="#eden-model">Eden Model</a></li>
-  <li><a href="#ballistic-aggregation" id="toc-ballistic-aggregation" class="nav-link" data-scroll-target="#ballistic-aggregation">Ballistic Aggregation</a></li>
-  <li><a href="#reaction-limited-aggregation" id="toc-reaction-limited-aggregation" class="nav-link" data-scroll-target="#reaction-limited-aggregation">Reaction-Limited Aggregation</a></li>
+  <li><a href="#try-it-yourself" id="toc-try-it-yourself" class="nav-link" data-scroll-target="#try-it-yourself">Try It Yourself</a></li>
+  <li><a href="#watch-it-explained" id="toc-watch-it-explained" class="nav-link" data-scroll-target="#watch-it-explained">Watch It Explained</a></li>
+  <li><a href="#code-examples" id="toc-code-examples" class="nav-link" data-scroll-target="#code-examples">Code Examples</a></li>
   </ul></li>
-  <li><a href="#quantitative-analysis" id="toc-quantitative-analysis" class="nav-link" data-scroll-target="#quantitative-analysis">Quantitative Analysis</a>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further Reading</a>
   <ul class="collapse">
-  <li><a href="#density-profile" id="toc-density-profile" class="nav-link" data-scroll-target="#density-profile">Density Profile</a></li>
-  <li><a href="#growth-site-distribution" id="toc-growth-site-distribution" class="nav-link" data-scroll-target="#growth-site-distribution">Growth Site Distribution</a></li>
-  <li><a href="#harmonic-measure" id="toc-harmonic-measure" class="nav-link" data-scroll-target="#harmonic-measure">Harmonic Measure</a></li>
+  <li><a href="#books-accessible" id="toc-books-accessible" class="nav-link" data-scroll-target="#books-accessible">Books (Accessible)</a></li>
+  <li><a href="#websites" id="toc-websites" class="nav-link" data-scroll-target="#websites">Websites</a></li>
+  <li><a href="#academic-for-the-curious" id="toc-academic-for-the-curious" class="nav-link" data-scroll-target="#academic-for-the-curious">Academic (For The Curious)</a></li>
   </ul></li>
-  <li><a href="#open-questions" id="toc-open-questions" class="nav-link" data-scroll-target="#open-questions">Open Questions</a></li>
-  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further Reading</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -129,7 +126,7 @@ window.Quarto = {
 
 <div>
   <div class="description">
-    Mathematical foundations and physical principles of DLA fractal formation
+    Understanding DLA fractal formation for simulation enthusiasts
   </div>
 </div>
 
@@ -148,166 +145,156 @@ window.Quarto = {
 
 <section id="introduction-to-diffusion-limited-aggregation" class="level1">
 <h1>Introduction to Diffusion-Limited Aggregation</h1>
-<p><a href="https://en.wikipedia.org/wiki/Diffusion-limited_aggregation">Diffusion-Limited Aggregation</a> (DLA) is a process whereby particles undergoing <a href="https://en.wikipedia.org/wiki/Brownian_motion">Brownian motion</a> cluster together to form aggregates of particles. This model was introduced by T.A. Witten Jr.&nbsp;and L.M. Sander in 1981<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> and has since become a paradigm for understanding <a href="https://en.wikipedia.org/wiki/Fractal">fractal</a> growth phenomena in nature.</p>
-<section id="mathematical-foundations" class="level2">
-<h2 class="anchored" data-anchor-id="mathematical-foundations">Mathematical Foundations</h2>
+<p><a href="https://en.wikipedia.org/wiki/Diffusion-limited_aggregation">Diffusion-Limited Aggregation</a> (DLA) is a process whereby particles undergoing random motion cluster together to form beautiful branching patterns. Think of it like frost forming on a window, or lightning branching across the sky.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<section id="how-it-works-the-simple-version" class="level2">
+<h2 class="anchored" data-anchor-id="how-it-works-the-simple-version">How It Works (The Simple Version)</h2>
+<section id="the-basic-algorithm" class="level3">
+<h3 class="anchored" data-anchor-id="the-basic-algorithm">The Basic Algorithm</h3>
+<ol type="1">
+<li><strong>Start with a seed</strong> - Place one “stuck” particle in the center</li>
+<li><strong>Release a walker</strong> - Start a new particle at a random position far from the cluster</li>
+<li><strong>Random walk</strong> - The particle moves randomly (up/down/left/right)</li>
+<li><strong>Stick on contact</strong> - When it touches an existing particle, it sticks and becomes part of the cluster</li>
+<li><strong>Repeat</strong> - Release more walkers until you have a beautiful fractal</li>
+</ol>
+<p>This is beautifully explained in <a href="https://natureofcode.com/fractals/">The Nature of Code, Chapter 7</a> by Daniel Shiffman.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
+</section>
 <section id="random-walk-process" class="level3">
 <h3 class="anchored" data-anchor-id="random-walk-process">Random Walk Process</h3>
 <p>The foundation of DLA is the <a href="https://en.wikipedia.org/wiki/Random_walk">random walk</a>, where particles move according to:</p>
 <p><span class="math display">\[\mathbf{r}(t+1) = \mathbf{r}(t) + \boldsymbol{\xi}(t)\]</span></p>
 <p>where:</p>
 <ul>
-<li><span class="math inline">\(\mathbf{r}(t)\)</span> is the <strong>position vector</strong> of the particle at discrete time step <span class="math inline">\(t\)</span></li>
-<li><span class="math inline">\(\boldsymbol{\xi}(t)\)</span> is a <strong>random displacement vector</strong> chosen uniformly from the neighboring lattice sites (e.g., in 2D with 4-connectivity: up, down, left, right)</li>
+<li><span class="math inline">\(\mathbf{r}(t)\)</span> is the <strong>position</strong> of the particle at time step <span class="math inline">\(t\)</span></li>
+<li><span class="math inline">\(\boldsymbol{\xi}(t)\)</span> is a <strong>random step</strong> - pick one of: up, down, left, or right</li>
 </ul>
+<p>If you want to code this yourself, <a href="https://www.redblobgames.com/articles/probability/damage-rolls.html">Red Blob Games has an excellent interactive tutorial</a> on random number generation for games.<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></p>
+</section>
+</section>
+<section id="why-do-we-get-fractals" class="level2">
+<h2 class="anchored" data-anchor-id="why-do-we-get-fractals">Why Do We Get Fractals?</h2>
+<section id="the-screening-effect" class="level3">
+<h3 class="anchored" data-anchor-id="the-screening-effect">The Screening Effect</h3>
+<p>The key insight is <strong>screening</strong> (or “shadowing”):<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></p>
+<ul>
+<li>Particles approaching from far away are more likely to hit the <strong>tips</strong> of branches</li>
+<li>The <strong>inner regions</strong> are protected/screened by outer growth</li>
+<li>This creates a positive feedback: tips grow faster, creating more tips</li>
+</ul>
+<p>It’s like how the tallest tree in a forest catches the most sunlight - the outer branches “screen” the inner ones.</p>
 </section>
 <section id="fractal-dimension" class="level3">
 <h3 class="anchored" data-anchor-id="fractal-dimension">Fractal Dimension</h3>
-<p>DLA clusters exhibit <a href="https://en.wikipedia.org/wiki/Fractal_dimension">fractal geometry</a> with a characteristic dimension <span class="math inline">\(D_f \approx 1.71\)</span> in 2D.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> The mass (number of particles) scales with radius as:</p>
+<p>DLA clusters have a <strong>fractal dimension</strong> of about <span class="math inline">\(D_f \approx 1.71\)</span> in 2D. What does this mean?</p>
 <p><span class="math display">\[M(R) \sim R^{D_f}\]</span></p>
 <p>where:</p>
 <ul>
-<li><span class="math inline">\(M(R)\)</span> is the <strong>mass</strong> (total number of particles) within radius <span class="math inline">\(R\)</span></li>
-<li><span class="math inline">\(R\)</span> is the <strong>radial distance</strong> from the cluster center</li>
-<li><span class="math inline">\(D_f\)</span> is the <strong>fractal dimension</strong> (<span class="math inline">\(\approx 1.71\)</span> for 2D DLA)</li>
-<li><span class="math inline">\(\sim\)</span> denotes <strong>scaling behavior</strong> (proportionality in the asymptotic limit)</li>
+<li><span class="math inline">\(M(R)\)</span> = number of particles within distance <span class="math inline">\(R\)</span> from center</li>
+<li><span class="math inline">\(D_f \approx 1.71\)</span> = the fractal dimension</li>
 </ul>
-<p>This sub-quadratic scaling (<span class="math inline">\(D_f &lt; 2\)</span>) means DLA clusters are less dense than compact objects (<span class="math inline">\(D_f = 2\)</span>) but more space-filling than linear structures (<span class="math inline">\(D_f = 1\)</span>).</p>
-</section>
-<section id="growth-probability-distribution" class="level3">
-<h3 class="anchored" data-anchor-id="growth-probability-distribution">Growth Probability Distribution</h3>
-<p>The probability of a walker sticking at position <span class="math inline">\(\mathbf{r}\)</span> is proportional to the local electric field in the equivalent electrostatic problem:<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></p>
-<p><span class="math display">\[P(\mathbf{r}) \propto |\nabla \phi(\mathbf{r})|^\eta\]</span></p>
-<p>where:</p>
+<p>This means DLA patterns are:</p>
 <ul>
-<li><span class="math inline">\(P(\mathbf{r})\)</span> is the <strong>growth probability</strong> at position <span class="math inline">\(\mathbf{r}\)</span></li>
-<li><span class="math inline">\(\nabla\)</span> is the <strong>gradient operator</strong> (in 2D: <span class="math inline">\(\nabla = \left(\frac{\partial}{\partial x}, \frac{\partial}{\partial y}\right)\)</span>), measuring the rate and direction of change</li>
-<li><span class="math inline">\(\phi(\mathbf{r})\)</span> is the <strong>scalar potential field</strong> satisfying <a href="https://en.wikipedia.org/wiki/Laplace%27s_equation">Laplace’s equation</a> <span class="math inline">\(\nabla^2 \phi = 0\)</span></li>
-<li><span class="math inline">\(\nabla^2\)</span> is the <strong>Laplacian operator</strong> (in 2D: <span class="math inline">\(\nabla^2 = \frac{\partial^2}{\partial x^2} + \frac{\partial^2}{\partial y^2}\)</span>)</li>
-<li><span class="math inline">\(\eta\)</span> is the <strong>growth exponent</strong> controlling how strongly tips are favored (<span class="math inline">\(\eta = 1\)</span> for standard DLA)</li>
-<li><span class="math inline">\(|\cdot|\)</span> denotes the <strong>magnitude</strong> of the gradient vector</li>
+<li><strong>More space-filling than a line</strong> (<span class="math inline">\(D_f = 1\)</span>)</li>
+<li><strong>Less dense than a solid disk</strong> (<span class="math inline">\(D_f = 2\)</span>)</li>
+<li><strong>Roughly 85% of the way from line to disk</strong> (1.71/2 ≈ 0.85)</li>
 </ul>
+<p>For a deeper dive into measuring fractal dimension, see <a href="http://paulbourke.net/fractals/dla/">Paul Bourke’s excellent fractal resources</a>.<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></p>
 </section>
 </section>
-<section id="physical-principles" class="level2">
-<h2 class="anchored" data-anchor-id="physical-principles">Physical Principles</h2>
-<section id="screening-effect" class="level3">
-<h3 class="anchored" data-anchor-id="screening-effect">Screening Effect</h3>
-<p>A key feature of DLA is the “<a href="https://github.com/JohnGavin/randomwalk/wiki/DLA-Theory#screening-effect">screening effect</a>” or “shadowing” - particles are more likely to attach to protruding tips than to deep fjords. This occurs because:</p>
-<ol type="1">
-<li>Random walkers approaching from infinity have higher probability of encountering outer branches</li>
-<li>Inner regions are “screened” by outer growth</li>
-<li>This positive feedback creates the characteristic branching structure</li>
-</ol>
+<section id="patterns-in-nature" class="level2">
+<h2 class="anchored" data-anchor-id="patterns-in-nature">Patterns in Nature</h2>
+<p>DLA-like patterns appear everywhere in nature:</p>
+<section id="lightning-and-sparks" class="level3">
+<h3 class="anchored" data-anchor-id="lightning-and-sparks">Lightning and Sparks</h3>
+<p>Electrical discharges follow DLA-like paths as charge seeks the path of least resistance.<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></p>
 </section>
-<section id="universality" class="level3">
-<h3 class="anchored" data-anchor-id="universality">Universality</h3>
-<p>DLA exhibits <a href="https://en.wikipedia.org/wiki/Universality_(dynamical_systems)">universal behavior</a> independent of microscopic details:</p>
-<ul>
-<li>The fractal dimension remains <span class="math inline">\(D_f \approx 1.71\)</span> across different lattices</li>
-<li>Growth patterns show <a href="https://en.wikipedia.org/wiki/Self-similarity">self-similarity</a> across scales</li>
-<li>Statistical properties are robust to variations in the random walk rules</li>
-</ul>
+<section id="frost-and-ice-crystals" class="level3">
+<h3 class="anchored" data-anchor-id="frost-and-ice-crystals">Frost and Ice Crystals</h3>
+<p>Ice forming on windows creates branching patterns similar to DLA.<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></p>
 </section>
-</section>
-<section id="applications-in-nature" class="level2">
-<h2 class="anchored" data-anchor-id="applications-in-nature">Applications in Nature</h2>
-<p>DLA patterns appear in numerous physical systems:</p>
-<section id="electrodeposition" class="level3">
-<h3 class="anchored" data-anchor-id="electrodeposition">Electrodeposition</h3>
-<p>Metal ions in solution undergo random motion until depositing on an electrode, creating dendritic patterns similar to DLA.<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></p>
+<section id="mineral-dendrites" class="level3">
+<h3 class="anchored" data-anchor-id="mineral-dendrites">Mineral Dendrites</h3>
+<p>Manganese oxide patterns in rocks look remarkably like DLA simulations.<a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a></p>
 </section>
 <section id="bacterial-colonies" class="level3">
 <h3 class="anchored" data-anchor-id="bacterial-colonies">Bacterial Colonies</h3>
-<p>Some bacteria colonies grow in DLA-like patterns when nutrients are limited and cells must search for resources.<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></p>
-</section>
-<section id="lightning-and-dielectric-breakdown" class="level3">
-<h3 class="anchored" data-anchor-id="lightning-and-dielectric-breakdown">Lightning and Dielectric Breakdown</h3>
-<p>Electrical discharge paths follow DLA-like patterns as charge carriers seek the path of least resistance.<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></p>
-</section>
-<section id="mineral-deposition" class="level3">
-<h3 class="anchored" data-anchor-id="mineral-deposition">Mineral Deposition</h3>
-<p>Manganese oxide dendrites and other mineral formations show DLA characteristics.<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></p>
+<p>Some bacteria grow in DLA patterns when nutrients are scarce and they must “search” for food.<a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a></p>
 </section>
 </section>
-<section id="computational-considerations" class="level2">
-<h2 class="anchored" data-anchor-id="computational-considerations">Computational Considerations</h2>
-<section id="algorithmic-efficiency" class="level3">
-<h3 class="anchored" data-anchor-id="algorithmic-efficiency">Algorithmic Efficiency</h3>
-<p>The naive DLA algorithm has time complexity <span class="math inline">\(O(N^2)\)</span> for <span class="math inline">\(N\)</span> particles. Optimizations include:</p>
+<section id="coding-tips" class="level2">
+<h2 class="anchored" data-anchor-id="coding-tips">Coding Tips</h2>
+<section id="making-it-fast" class="level3">
+<h3 class="anchored" data-anchor-id="making-it-fast">Making It Fast</h3>
+<p>The naive algorithm is slow. Here are optimization tricks used in practice:<a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a></p>
 <ol type="1">
-<li><strong>Off-lattice launching</strong>: Start walkers from a circle around the cluster</li>
-<li><strong>Variable step sizes</strong>: Use larger steps far from the cluster</li>
-<li><strong>Killing radius</strong>: Terminate walkers that wander too far</li>
+<li><strong>Launch from a circle</strong> - Don’t start walkers too far away</li>
+<li><strong>Variable step sizes</strong> - Take big steps when far from cluster, small steps when close</li>
+<li><strong>Kill distant walkers</strong> - If a particle wanders too far, restart it</li>
 </ol>
 </section>
-<section id="noise-reduction" class="level3">
-<h3 class="anchored" data-anchor-id="noise-reduction">Noise Reduction</h3>
-<p>DLA clusters show significant variation due to their stochastic nature. Techniques for analysis include:</p>
+<section id="making-it-pretty" class="level3">
+<h3 class="anchored" data-anchor-id="making-it-pretty">Making It Pretty</h3>
+<p>To get publication-quality images:<a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a></p>
 <ul>
-<li>Averaging over multiple realizations</li>
-<li>Measuring ensemble properties (fractal dimension, density profiles)</li>
-<li>Using larger clusters to reduce finite-size effects</li>
+<li>Use many particles (10,000+)</li>
+<li>Color by arrival order or branch depth</li>
+<li>Add slight randomness to stick positions (off-lattice DLA)</li>
+<li>Try different launch patterns (line, circle, point)</li>
 </ul>
 </section>
 </section>
-<section id="connection-to-other-models" class="level2">
-<h2 class="anchored" data-anchor-id="connection-to-other-models">Connection to Other Models</h2>
-<section id="eden-model" class="level3">
-<h3 class="anchored" data-anchor-id="eden-model">Eden Model</h3>
-<p>Unlike DLA where particles undergo random walks, the <a href="https://en.wikipedia.org/wiki/Eden_growth_model">Eden model</a> grows by randomly selecting perimeter sites. Eden clusters are compact with <span class="math inline">\(D_f = 2\)</span>.<a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a></p>
-</section>
-<section id="ballistic-aggregation" class="level3">
-<h3 class="anchored" data-anchor-id="ballistic-aggregation">Ballistic Aggregation</h3>
-<p>Particles move in straight lines rather than random walks, producing more compact, less branched structures.<a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a></p>
-</section>
-<section id="reaction-limited-aggregation" class="level3">
-<h3 class="anchored" data-anchor-id="reaction-limited-aggregation">Reaction-Limited Aggregation</h3>
-<p>Particles must attempt attachment multiple times before sticking, leading to more compact growth.<a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a></p>
-</section>
-</section>
-<section id="quantitative-analysis" class="level2">
-<h2 class="anchored" data-anchor-id="quantitative-analysis">Quantitative Analysis</h2>
-<section id="density-profile" class="level3">
-<h3 class="anchored" data-anchor-id="density-profile">Density Profile</h3>
-<p>The average density <span class="math inline">\(\rho(r)\)</span> as a function of distance from the center follows:</p>
-<p><span class="math display">\[\rho(r) \sim r^{D_f - d}\]</span></p>
-<p>where:</p>
+<section id="interactive-resources" class="level2">
+<h2 class="anchored" data-anchor-id="interactive-resources">Interactive Resources</h2>
+<section id="try-it-yourself" class="level3">
+<h3 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h3>
 <ul>
-<li><span class="math inline">\(\rho(r)\)</span> is the <strong>local density</strong> (particles per unit area) at radial distance <span class="math inline">\(r\)</span></li>
-<li><span class="math inline">\(r\)</span> is the <strong>radial distance</strong> from the cluster center</li>
-<li><span class="math inline">\(D_f\)</span> is the <strong>fractal dimension</strong> (<span class="math inline">\(\approx 1.71\)</span> for 2D DLA)</li>
-<li><span class="math inline">\(d\)</span> is the <strong>embedding dimension</strong> (2 for planar DLA, 3 for 3D DLA)</li>
+<li><a href="https://ciphrd.com/2019/10/27/diffusion-limited-aggregation-dla/"><strong>DLA Simulator</strong></a> - Adjust parameters in real-time</li>
+<li><a href="https://observablehq.com/@mbostock/diffusion-limited-aggregation"><strong>Observable Notebook</strong></a> - Interactive JavaScript DLA by Mike Bostock<a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a></li>
+<li><a href="https://www.shadertoy.com/view/4dSBz1"><strong>Shadertoy DLA</strong></a> - GPU-accelerated DLA in your browser</li>
 </ul>
-<p>Since <span class="math inline">\(D_f - d &lt; 0\)</span> for DLA, density decreases with distance from the center.</p>
 </section>
-<section id="growth-site-distribution" class="level3">
-<h3 class="anchored" data-anchor-id="growth-site-distribution">Growth Site Distribution</h3>
-<p>The distribution of growth probabilities follows a <a href="https://en.wikipedia.org/wiki/Multifractal_system">multifractal</a> spectrum, characterized by the generalized dimensions <span class="math inline">\(D_q\)</span>.<a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a></p>
+<section id="watch-it-explained" class="level3">
+<h3 class="anchored" data-anchor-id="watch-it-explained">Watch It Explained</h3>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=Cl_Gjj80gPE"><strong>Coding Train DLA</strong></a> - Daniel Shiffman codes DLA from scratch</li>
+<li><a href="https://www.youtube.com/watch?v=WFtTdf3I6Ug"><strong>Numberphile: Fractals</strong></a> - General fractal introduction</li>
+<li><a href="https://www.youtube.com/watch?v=gB9n2gHsHN4"><strong>3Blue1Brown: Fractals</strong></a> - Beautiful fractal visualizations</li>
+</ul>
 </section>
-<section id="harmonic-measure" class="level3">
-<h3 class="anchored" data-anchor-id="harmonic-measure">Harmonic Measure</h3>
-<p>The growth probability distribution is related to the <a href="https://en.wikipedia.org/wiki/Harmonic_measure">harmonic measure</a> on the cluster boundary, connecting DLA to potential theory.<a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a></p>
+<section id="code-examples" class="level3">
+<h3 class="anchored" data-anchor-id="code-examples">Code Examples</h3>
+<ul>
+<li><a href="https://editor.p5js.org/codingtrain/sketches/XpS9wGkbB"><strong>p5.js Example</strong></a> - Run in browser, modify instantly</li>
+<li><a href="https://github.com/jasonwebb/morphern-dla"><strong>Python Example</strong></a> - Clean Python implementation<a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a></li>
+<li><a href="https://github.com/fogleman/dlaf"><strong>Rust Example</strong></a> - Fast implementation by Michael Fogleman<a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a></li>
+</ul>
 </section>
-</section>
-<section id="open-questions" class="level2">
-<h2 class="anchored" data-anchor-id="open-questions">Open Questions</h2>
-<p>Despite extensive study, several aspects of DLA remain incompletely understood:</p>
-<ol type="1">
-<li><strong>Exact fractal dimension</strong>: While numerically estimated as <span class="math inline">\(D_f \approx 1.71\)</span>, no analytical derivation exists</li>
-<li><strong>Noise effects</strong>: The role of lattice anisotropy and finite-size effects on pattern formation</li>
-<li><strong>Three-dimensional DLA</strong>: Less studied than 2D, with <span class="math inline">\(D_f \approx 2.5\)</span> in 3D</li>
-<li><strong>Multi-particle DLA</strong>: Behavior when multiple particles aggregate simultaneously</li>
-</ol>
 </section>
 <section id="further-reading" class="level2">
 <h2 class="anchored" data-anchor-id="further-reading">Further Reading</h2>
+<section id="books-accessible" class="level3">
+<h3 class="anchored" data-anchor-id="books-accessible">Books (Accessible)</h3>
 <ul>
-<li>Vicsek, T. (1992). <em>Fractal Growth Phenomena</em>. World Scientific.</li>
-<li>Meakin, P. (1998). <em>Fractals, Scaling and Growth Far from Equilibrium</em>. Cambridge University Press.</li>
-<li><a href="https://en.wikipedia.org/wiki/Diffusion-limited_aggregation">Wikipedia: Diffusion-limited aggregation</a></li>
-<li><a href="http://www.scholarpedia.org/article/Diffusion_limited_aggregation">Scholarpedia: Diffusion-limited aggregation</a></li>
+<li>Shiffman, D. <a href="https://natureofcode.com/">The Nature of Code</a> - Free online, perfect for creative coders</li>
+<li>Prusinkiewicz, P. &amp; Lindenmayer, A. <a href="http://algorithmicbotany.org/papers/abop/abop.pdf">The Algorithmic Beauty of Plants</a> - Free PDF, gorgeous illustrations</li>
 </ul>
+</section>
+<section id="websites" class="level3">
+<h3 class="anchored" data-anchor-id="websites">Websites</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Diffusion-limited_aggregation">Wikipedia: Diffusion-limited aggregation</a></li>
+<li><a href="http://paulbourke.net/fractals/dla/">Paul Bourke’s Fractal Pages</a></li>
+<li><a href="https://softology.pro/tutorials/dla/dla.htm">Softology’s DLA Page</a> - Detailed algorithm explanations</li>
+</ul>
+</section>
+<section id="academic-for-the-curious" class="level3">
+<h3 class="anchored" data-anchor-id="academic-for-the-curious">Academic (For The Curious)</h3>
+<p>If you want to dive deeper into the mathematics:</p>
+<ul>
+<li><a href="http://www.scholarpedia.org/article/Diffusion_limited_aggregation">Scholarpedia: DLA</a> - Peer-reviewed wiki article</li>
+<li><a href="https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.47.1400">Original 1981 paper</a> by Witten &amp; Sander - Where it all started</li>
+</ul>
+</section>
 </section>
 </section>
 
@@ -315,18 +302,20 @@ window.Quarto = {
 <div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
 
 <ol>
-<li id="fn1"><p>Witten Jr, T. A., &amp; Sander, L. M. (1981). <a href="https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.47.1400">Diffusion-limited aggregation, a kinetic critical phenomenon</a>. <em>Physical Review Letters</em>, 47(19), 1400.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn2"><p>Meakin, P. (1983). <a href="https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.51.1119">Formation of fractal clusters and networks by irreversible diffusion-limited aggregation</a>. <em>Physical Review Letters</em>, 51(13), 1119.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn3"><p>Halsey, T. C. (2000). <a href="https://doi.org/10.1063/1.1333284">Diffusion-limited aggregation: a model for pattern formation</a>. <em>Physics Today</em>, 53(11), 36-41.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn4"><p>Brady, R. M., &amp; Ball, R. C. (1984). <a href="https://www.nature.com/articles/309225a0">Fractal growth of copper electrodeposits</a>. <em>Nature</em>, 309(5965), 225-229.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn5"><p>Ben-Jacob, E., &amp; Garik, P. (1990). <a href="https://www.nature.com/articles/343523a0">The formation of patterns in non-equilibrium growth</a>. <em>Nature</em>, 343(6258), 523-530.<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn6"><p>Niemeyer, L., Pietronero, L., &amp; Wiesmann, H. J. (1984). <a href="https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.52.1033">Fractal dimension of dielectric breakdown</a>. <em>Physical Review Letters</em>, 52(12), 1033.<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn7"><p>Chopard, B., Herrmann, H. J., &amp; Vicsek, T. (1991). <a href="https://www.nature.com/articles/353409a0">Structure and growth mechanism of mineral dendrites</a>. <em>Nature</em>, 353(6343), 409-412.<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn8"><p>Eden, M. (1961). A two-dimensional growth process. <em>Proceedings of the Fourth Berkeley Symposium on Mathematical Statistics and Probability</em>, 4, 223-239.<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn9"><p>Vold, M. J. (1963). <a href="https://doi.org/10.1016/0095-8522(63)90061-8">Computer simulation of floc formation in a colloidal suspension</a>. <em>Journal of Colloid Science</em>, 18(7), 684-695.<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn10"><p>Meakin, P., &amp; Family, F. (1987). <a href="https://journals.aps.org/pra/abstract/10.1103/PhysRevA.36.5498">Structure and dynamics of reaction-limited aggregation</a>. <em>Physical Review A</em>, 36(11), 5498.<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn11"><p>Halsey, T. C., Jensen, M. H., Kadanoff, L. P., Procaccia, I., &amp; Shraiman, B. I. (1986). <a href="https://journals.aps.org/pra/abstract/10.1103/PhysRevA.33.1141">Fractal measures and their singularities</a>. <em>Physical Review A</em>, 33(2), 1141.<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn12"><p>Hastings, M. B., &amp; Levitov, L. S. (1998). <a href="https://www.sciencedirect.com/science/article/pii/S0167278997001594">Laplacian growth as one-dimensional turbulence</a>. <em>Physica D</em>, 116(1-2), 244-252.<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn1"><p>For a visual introduction, see <a href="https://www.youtube.com/watch?v=Cl_Gjj80gPE">The Coding Train’s DLA video</a> by Daniel Shiffman, which walks through coding a DLA simulation step by step.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>Shiffman, D. <a href="https://natureofcode.com/">The Nature of Code</a> - Free online book covering simulation techniques including random walks and fractals. Perfect for creative coders.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>Red Blob Games by Amit Patel - Interactive tutorials on game algorithms, pathfinding, and procedural generation. Great resource for understanding random processes visually.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p>For a hands-on explanation, try <a href="https://ciphrd.com/2019/10/27/diffusion-limited-aggregation-dla/">this interactive DLA simulator</a> that lets you adjust parameters and see how they affect the pattern.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>Bourke, P. <a href="http://paulbourke.net/fractals/">Fractal Pages</a> - Comprehensive collection of fractal algorithms with code examples in C. Great practical reference for implementers.<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p>See <a href="https://www.reddit.com/r/woahdude/comments/3b7c5n/lichtenberg_figure_pattern_left_in_grass_after/">this Reddit thread with stunning photos</a> of Lichtenberg figures - lightning scars on grass and wood.<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p>For stunning macro photography of ice crystals, see <a href="http://chaoticmind75.blogspot.com/2013/04/my-technique-for-snowflake-macro.html">Alexey Kljatov’s work</a> - shows the beautiful fractal structure of snowflakes.<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p>The <a href="https://www.mindat.org/gallery.php?min=11636">Mineralogy Database</a> has photos of dendritic minerals that look like frozen fractal simulations.<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p>For lab-grown fractal patterns, see <a href="https://www.sciencedirect.com/topics/biochemistry-genetics-and-molecular-biology/colony-morphology">this gallery of bacterial colony morphology</a> - nature’s own DLA simulations.<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p>For detailed optimization strategies, see <a href="https://www.jasondavies.com/dla/">Jason Davies’ DLA implementation</a> with source code - elegant JavaScript implementation with good performance.<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p>For beautiful DLA visualizations, check out <a href="https://inconvergent.net/generative/">Anders Hoff’s work</a> - stunning generative art using DLA and related algorithms.<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p>Bostock, M. <a href="https://observablehq.com/@mbostock">Observable notebooks</a> - Interactive data visualizations including DLA. Created by the author of D3.js.<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p>Webb, J. <a href="https://github.com/jasonwebb/morphern-dla">Morphogen DLA</a> - Well-documented Python DLA with multiple growth modes. Good starting point for your own experiments.<a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p>Fogleman, M. <a href="https://github.com/fogleman/dlaf">DLA in Rust</a> - High-performance DLA generating millions of particles. Great for large-scale simulations.<a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section></div></main>
 <!-- /main column -->
