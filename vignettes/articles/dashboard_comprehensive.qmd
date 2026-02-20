@@ -34,7 +34,7 @@ filters:
 
 ```{shinylive-r}
 #| standalone: true
-#| viewerHeight: 900
+#| viewerHeight: 1800
 
 # ============================================================================
 # FAST Package Loading (Pre-built webR binaries from GitHub Pages)
