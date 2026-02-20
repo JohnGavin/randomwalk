@@ -464,7 +464,8 @@ grid_size_summary <- termination_summary %>%
 grid_size_summary %>%
   knitr::kable(
     digits = 2,
-    caption = "Overall step statistics by grid size (with normalized columns)"
+    caption = "Overall step statistics by grid size (with normalized columns)",
+    row.names = FALSE
   )
 ```
 
@@ -485,7 +486,8 @@ order_effect_summary <- walker_order_summary %>%
 order_effect_summary %>%
   knitr::kable(
     digits = 1,
-    caption = "Step statistics by walker cohort (averaged across grid sizes and termination reasons)"
+    caption = "Step statistics by walker cohort (averaged across grid sizes and termination reasons)",
+    row.names = FALSE
   )
 
 # Calculate actual percentage difference between first and last deciles
@@ -519,7 +521,8 @@ termination_effect_summary <- termination_summary %>%
 termination_effect_summary %>%
   knitr::kable(
     digits = 3,
-    caption = "Overall statistics by termination reason (across all grid sizes)"
+    caption = "Overall statistics by termination reason (across all grid sizes)",
+    row.names = FALSE
   )
 ```
 
@@ -544,24 +547,36 @@ These patterns provide insights into the dynamics of sequential random walk simu
 
 ## Session Info
 
-```{r session-info}
+::: {.callout-note collapse="true"}
+## Session Information (click to expand)
+
+```{r session-info, echo=FALSE}
 sessionInfo()
 ```
+:::
 
 ## Version Information
 
-```{r version-info}
-#| code-fold: true
-#| code-summary: "Show version details"
+::: {.callout-note collapse="true"}
+## Build Information (click to expand)
 
+```{r version-info, echo=FALSE, results='asis'}
 library(gert)
 library(dplyr)
 
 get_build_info <- function() {
-  tibble::tibble(
+  sha_full <- tryCatch(git_log(max = 1)$commit, error = function(e) NA)
+  sha_short <- if (!is.na(sha_full)) substr(sha_full, 1, 7) else "N/A"
+  sha_link <- if (!is.na(sha_full)) {
+    sprintf("[%s](https://github.com/JohnGavin/randomwalk/commit/%s)", sha_short, sha_full)
+  } else {
+    "N/A"
+  }
+
+ tibble::tibble(
     Component = c("Git Commit", "Branch", "Package Version", "R Version", "Build Time"),
     Value = c(
-      tryCatch(substr(git_log(max = 1)$commit, 1, 7), error = function(e) "N/A"),
+      sha_link,
       tryCatch(git_branch(), error = function(e) "N/A"),
       tryCatch(as.character(packageVersion("randomwalk")), error = function(e) "N/A"),
       R.version.string,
@@ -571,5 +586,6 @@ get_build_info <- function() {
 }
 
 get_build_info() %>%
-  knitr::kable(caption = "Build Information", align = c("l", "l"))
+  knitr::kable(caption = "Build Information", align = c("l", "l"), row.names = FALSE)
 ```
+:::
