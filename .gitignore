@@ -12,12 +12,15 @@ inst/doc
 inst/logs/
 pdfs/
 Rplots.pdf
+tmp/
 
 /.quarto/
 vignettes/.quarto/
 vignettes/*_files/
 vignettes/*.html
+vignettes/articles/*.html
 vignettes/*.bak
+*.bak
 
 # Temporary development files
 inst/old/
@@ -36,6 +39,7 @@ test_*.md
 timer_test_*
 vignettes/articles/timer_test_*
 docs/articles/timer_test_*
+docs/demos/test_*
 
 # Nix artifacts
 result
