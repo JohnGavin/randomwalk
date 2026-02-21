@@ -1,17 +1,19 @@
 ---
 title: "Targets Pipeline: Reproducible Workflows with Nested Parallelism"
 description: "Using targets and crew for scalable, reproducible random walk simulations"
-author: "John Gavin"
-date: today
+author: "randomwalk package"
+date: "`r Sys.Date()`"
 format:
   html:
     toc: true
     toc-depth: 3
     code-fold: show
-    code-tools: true
+    code-summary: "Show code"
+    theme: cosmo
 execute:
   eval: false
   echo: true
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Targets Pipeline: Reproducible Workflows with Nested Parallelism}
   %\VignetteEngine{quarto::html}

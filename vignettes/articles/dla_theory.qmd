@@ -1,10 +1,15 @@
 ---
 title: "Diffusion-Limited Aggregation Theory"
 description: "Understanding DLA fractal formation for simulation enthusiasts"
+author: "randomwalk package"
+date: "`r Sys.Date()`"
 format:
   html:
     toc: true
     toc-depth: 3
+    code-fold: show
+    code-summary: "Show code"
+    theme: cosmo
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{DLA Theory}
