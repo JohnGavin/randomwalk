@@ -666,4 +666,5 @@ list(
   #       theme_minimal()
   #   }
   # )
+  plan_pkgdown()       # pkgdown site build + stage docs/
 )
