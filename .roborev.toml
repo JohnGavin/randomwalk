@@ -1,0 +1,17 @@
+agent = "claude-code"
+review_context_count = 3
+excluded_commit_patterns = ["[skip review]", "docs: rebuild pkgdown", "chore: gitignore"]
+review_reasoning = "standard"
+fix_reasoning = "standard"
+refine_reasoning = "standard"
+fix_min_severity = "medium"
+refine_min_severity = "medium"
+review_guidelines = """
+R package (randomwalk) — random walk simulations. Review for:
+- suppressWarnings(as.*) anti-pattern
+- Missing cli::cli_abort (use instead of stop())
+- set.seed() required for all simulations
+- Numerical stability: use all.equal() not == for doubles
+- Parallel processing: L'Ecuyer-CMRG streams for reproducibility
+- Boundary conditions on grid size and walker count
+"""
