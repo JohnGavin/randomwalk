@@ -2,7 +2,10 @@ url: https://johngavin.github.io/randomwalk/
 
 template:
   bootstrap: 5
+  light-switch: true
   bootswatch: cosmo
+  bslib:
+    preset: shiny
   includes:
     in_header: |
       <meta name="shinylive:serviceworker_dir" content="..">
@@ -28,36 +31,30 @@ home:
 
 navbar:
   structure:
-    left:  [home, reference, articles, news]
+    left:  [home, demos, analysis, docs, reference, news]
     right: [search, github]
   components:
-    articles:
-      text: Articles
+    demos:
+      text: Demos
       menu:
-      # ═══════════════════════════════════════════════════════════
-      # R-SHINYLIVE: Interactive dashboards (run in browser via WebR)
-      # ═══════════════════════════════════════════════════════════
-      - text: "──── Browser Dashboard (WebR) ────"
       - text: Interactive Dashboard
         href: articles/dashboard_comprehensive.html
-      # ═══════════════════════════════════════════════════════════
-      # WEBR: Analysis vignettes using WebR
-      # ═══════════════════════════════════════════════════════════
-      - text: "──── WebR Analysis ────"
       - text: Step Distribution Analysis
         href: articles/step_distribution_analysis.html
-      # ═══════════════════════════════════════════════════════════
-      # BACKGROUND: Project documentation and development info
-      # ═══════════════════════════════════════════════════════════
-      - text: "──── Background & Documentation ────"
-      - text: DLA Theory & Mathematical Foundations
-        href: articles/dla_theory.html
-      - text: Defensive Programming Patterns
-        href: articles/defensive_programming.html
-      - text: Telemetry and Pipeline Performance
-        href: articles/telemetry.html
+    analysis:
+      text: Analysis
+      menu:
       - text: Simulation Profiling
         href: articles/profiling.html
+      - text: Telemetry & Pipeline Performance
+        href: articles/telemetry.html
+      - text: Targets Pipeline
+        href: articles/targets_pipeline.html
+    docs:
+      text: Documentation
+      menu:
+      - text: Defensive Programming Patterns
+        href: articles/defensive_programming.html
 
 footer:
   structure:

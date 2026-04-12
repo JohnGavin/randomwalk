@@ -14,16 +14,80 @@ format:
     embed-resources: false
     include-in-header:
       - text: |
+          <style>
+          /* Outer Quarto page dark mode */
+          body.dark-mode, html.dark-mode {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+          }
+          body.dark-mode h1, body.dark-mode h2, body.dark-mode h3,
+          body.dark-mode p, body.dark-mode li, body.dark-mode code {
+            color: #e0e0e0 !important;
+          }
+          body.dark-mode a { color: #6cb4ee !important; }
+          body.dark-mode .quarto-title, body.dark-mode #title-block-header {
+            color: #e0e0e0 !important;
+          }
+          /* Shinylive iframe inherits dark mode via postMessage */
+          body.dark-mode .shinylive-wrapper,
+          body.dark-mode .shinylive-container {
+            background-color: #1e1e1e !important;
+          }
+          /* Dark mode toggle on outer page */
+          #page-dark-toggle {
+            position: fixed; top: 8px; right: 12px; z-index: 10000;
+            font-size: 20px; background: none; border: 1px solid #888;
+            border-radius: 50%; width: 36px; height: 36px; cursor: pointer;
+            padding: 0; line-height: 34px; text-align: center;
+          }
+          body:not(.dark-mode) #page-dark-toggle { color: #333; }
+          body.dark-mode #page-dark-toggle { color: #eee; border-color: #666; }
+          </style>
           <script>
           // Fix serviceworker_dir meta tag BEFORE Shinylive loads
           (function() {
-            // Find the first meta tag (Quarto's default)
-            const firstMeta = document.querySelector('meta[name="shinylive:serviceworker_dir"]');
-            if (firstMeta) {
-              // Update it to point to current directory
-              firstMeta.setAttribute('content', '.');
+            var firstMeta = document.querySelector('meta[name="shinylive:serviceworker_dir"]');
+            if (firstMeta) firstMeta.setAttribute('content', '.');
+          })();
+          // Dark mode: apply saved preference or OS default immediately
+          (function() {
+            var saved = localStorage.getItem('rw-dark-mode');
+            if (saved === 'true' ||
+                (saved === null && window.matchMedia &&
+                 window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+              document.documentElement.classList.add('dark-mode');
+              document.addEventListener('DOMContentLoaded', function() {
+                document.body.classList.add('dark-mode');
+              });
             }
           })();
+          function togglePageDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            document.documentElement.classList.toggle('dark-mode');
+            var isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('rw-dark-mode', isDark);
+            var btn = document.getElementById('page-dark-toggle');
+            if (btn) btn.textContent = isDark ? '\u2600' : '\u263E';
+            // Propagate to Shinylive iframe
+            var iframes = document.querySelectorAll('iframe');
+            iframes.forEach(function(f) {
+              try {
+                var doc = f.contentDocument || f.contentWindow.document;
+                if (isDark) doc.body.classList.add('dark-mode');
+                else doc.body.classList.remove('dark-mode');
+              } catch(e) {}
+            });
+          }
+          document.addEventListener('DOMContentLoaded', function() {
+            // Insert toggle button
+            var btn = document.createElement('button');
+            btn.id = 'page-dark-toggle';
+            btn.title = 'Toggle dark/light mode';
+            btn.onclick = togglePageDarkMode;
+            var isDark = document.body.classList.contains('dark-mode');
+            btn.textContent = isDark ? '\u2600' : '\u263E';
+            document.body.appendChild(btn);
+          });
           </script>
     resources:
       - shinylive-sw.js
@@ -128,9 +192,107 @@ format_duration <- function(seconds) {
 
 ui <- fluidPage(
 
-  # Add CSS for collapsible panels and progress display
+  # CSS for light/dark themes + collapsible panels + progress
   tags$head(
     tags$style(HTML("
+      /* ── Dark mode ────────────────────────────────────── */
+      body.dark-mode, body.dark-mode * {
+        color: #e0e0e0;
+      }
+      body.dark-mode {
+        background-color: #1e1e1e !important;
+      }
+      body.dark-mode .well {
+        background-color: #2b2b2b;
+        border-color: #444;
+        color: #e0e0e0;
+      }
+      body.dark-mode .btn { color: #fff; }
+      body.dark-mode .btn-primary { background-color: #2a6cb6; border-color: #2a6cb6; }
+      body.dark-mode .btn-success { background-color: #1a7a3a; border-color: #1a7a3a; }
+      body.dark-mode .btn-warning { background-color: #8a6d2b; border-color: #8a6d2b; color: #fff; }
+      body.dark-mode label, body.dark-mode .control-label {
+        color: #e0e0e0 !important;
+      }
+      body.dark-mode .irs--shiny .irs-single,
+      body.dark-mode .irs--shiny .irs-min,
+      body.dark-mode .irs--shiny .irs-max {
+        color: #e0e0e0;
+      }
+      body.dark-mode .form-control,
+      body.dark-mode .selectize-input,
+      body.dark-mode .selectize-dropdown {
+        background-color: #333;
+        color: #e0e0e0;
+        border-color: #555;
+      }
+      body.dark-mode details {
+        background: #2b2b2b;
+        border-color: #444;
+      }
+      body.dark-mode details[open] {
+        background: #333;
+      }
+      body.dark-mode summary {
+        color: #ccc;
+      }
+      body.dark-mode summary:hover {
+        color: #6cb4ee;
+      }
+      body.dark-mode .nav-tabs > li > a {
+        color: #aaa;
+      }
+      body.dark-mode .nav-tabs > li.active > a,
+      body.dark-mode .nav-tabs > li > a:hover {
+        color: #fff;
+        background-color: #333;
+        border-color: #555;
+      }
+      body.dark-mode pre,
+      body.dark-mode .shiny-text-output {
+        background-color: #2b2b2b;
+        color: #e0e0e0;
+        border-color: #444;
+      }
+      body.dark-mode h4, body.dark-mode h5 {
+        color: #e0e0e0;
+      }
+      body.dark-mode .help-block {
+        color: #999;
+      }
+      body.dark-mode table {
+        color: #e0e0e0;
+      }
+      body.dark-mode table th {
+        background-color: #333 !important;
+      }
+      body.dark-mode table td {
+        border-color: #444 !important;
+      }
+      body.dark-mode hr {
+        border-color: #444;
+      }
+      /* Dark mode toggle button */
+      #dark_mode_btn {
+        position: fixed;
+        top: 8px;
+        right: 12px;
+        z-index: 10000;
+        font-size: 20px;
+        background: none;
+        border: 1px solid #888;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        cursor: pointer;
+        padding: 0;
+        line-height: 34px;
+        text-align: center;
+      }
+      body:not(.dark-mode) #dark_mode_btn { color: #333; }
+      body.dark-mode #dark_mode_btn { color: #eee; border-color: #666; }
+
+      /* ── Light mode defaults ──────────────────────────── */
       .timer-display {
         font-size: 24px;
         font-weight: bold;
@@ -189,14 +351,40 @@ ui <- fluidPage(
         min-width: 300px;
         text-align: center;
       }
-
-
-      /* Dark theme for plots */
-      .dark-plot-container {
-        background-color: #2b2b2b;
-        padding: 10px;
-        border-radius: 5px;
+    ")),
+    # Dark mode toggle script
+    tags$script(HTML("
+      document.addEventListener('DOMContentLoaded', function() {
+        // Respect OS preference on first load
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.body.classList.add('dark-mode');
+        }
+        // Restore saved preference
+        if (localStorage.getItem('rw-dark-mode') === 'true') {
+          document.body.classList.add('dark-mode');
+        } else if (localStorage.getItem('rw-dark-mode') === 'false') {
+          document.body.classList.remove('dark-mode');
+        }
+      });
+      function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        var isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('rw-dark-mode', isDark);
+        var btn = document.getElementById('dark_mode_btn');
+        if (btn) btn.textContent = isDark ? '\\u2600' : '\\u263E';
       }
+      // JS-driven batch trigger: R sends 'batch_done' after each batch,
+      // JS waits 50ms (browser renders, handles clicks), then triggers
+      // next batch in R. This guarantees a true yield to the browser
+      // event loop between batches — invalidateLater() alone doesn't
+      // yield the WebR Worker thread.
+      $(document).on('shiny:connected', function() {
+        Shiny.addCustomMessageHandler('batch_done', function(msg) {
+          setTimeout(function() {
+            Shiny.setInputValue('next_batch', Math.random());
+          }, 50);
+        });
+      });
     "))
   ),
 
@@ -442,6 +630,15 @@ ui <- fluidPage(
 
         # PAGE 7: Notes
         tabPanel("Notes",
+                 h4("Tips"),
+                 tags$ul(
+                   tags$li(tags$strong("Larger grid"), " (200-400): More exploration space"),
+                   tags$li(tags$strong("Fewer walkers"), " (100-500): Faster simulation"),
+                   tags$li(tags$strong("8-hood"), ": Diagonal movement for different patterns"),
+                   tags$li(tags$strong("Wrap boundary"), ": Toroidal grid (no edge termination)")
+                 ),
+                 hr(),
+
                  h4("About This Dashboard"),
                  tags$p("Interactive random walk simulation via WebR/Shinylive."),
                  hr(),
@@ -566,6 +763,13 @@ server <- function(input, output, session) {
   sim_completed_walkers <- reactiveVal(0)  # Track completed walkers
   sim_black_pixels <- reactiveVal(0)  # Track black pixels
 
+  # Reactive values for BATCHED simulation state (non-blocking execution)
+  batch_grid <- reactiveVal(NULL)
+  batch_walkers <- reactiveVal(NULL)
+  batch_active <- reactiveVal(NULL)
+  batch_step_count <- reactiveVal(0L)
+  batch_term_counter <- reactiveVal(0L)
+
   # Reactive values for collapsible panels
   show_sim_params <- reactiveVal(FALSE)
   show_move_params <- reactiveVal(FALSE)
@@ -667,91 +871,92 @@ server <- function(input, output, session) {
     )
   })
 
-  # Reactive timer for progress updates (following shiny-examples/142-reactive-timer pattern)
-  # This timer continues running even during synchronous simulation
-  autoInvalidate <- reactiveTimer(100)  # Update every 100ms for smooth progress
+  # Reactive timer for periodic UI refresh (progress display, debug tab)
+  autoInvalidate <- reactiveTimer(500)  # Update displays every 500ms
 
-  # Observe timer to update estimated progress during simulation
-  observe({
-    autoInvalidate()  # This triggers every 100ms
-
+  # Status output — updates reactively as batch_* values change
+  output$status <- renderText({
     if (sim_state() == "running" && !is.null(sim_start_time())) {
       elapsed <- as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
-
-      # Estimate progress based on typical runtime
-      est_steps_per_sec <- 200 / (1 + 0.002 * input$n_walkers)  # Adjust for walker count
-      est_runtime <- input$max_steps / est_steps_per_sec
-      progress <- min(elapsed / est_runtime, 0.99)
-
-      # Update estimated counts for display
-      sim_current_step(floor(input$max_steps * progress))
-      sim_completed_walkers(floor(input$n_walkers * progress * 0.8))
-      sim_black_pixels(floor(input$n_walkers * progress * 0.7))
-
-      # Update status display with current progress
-      output$status <- renderText({
-        paste0(
-          "SIMULATION RUNNING...\n",
-          "Run #", sim_count(), "\n",
-          "━━━━━━━━━━━━━━━━━━━━━━\n",
-          "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
-          "Elapsed:  ", format_duration(elapsed), "\n",
-          "Progress: ", sprintf("%d%%", round(progress * 100)), "\n",
-          "━━━━━━━━━━━━━━━━━━━━━━\n",
-          "Grid: ", input$grid_size, "×", input$grid_size, "\n",
-          "Walkers: ", sim_completed_walkers(), "/", input$n_walkers, "\n",
-          "Black Pixels: ", sim_black_pixels(), "\n",
-          "Workers: 0 (sync sequential)"
-        )
-      })
+      n_active <- length(batch_active())
+      progress <- if (input$n_walkers > 0) {
+        round(100 * sim_completed_walkers() / input$n_walkers)
+      } else 0
+      paste0(
+        "SIMULATION RUNNING...\n",
+        "Run #", sim_count(), "\n",
+        "━━━━━━━━━━━━━━━━━━━━━━\n",
+        "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
+        "Elapsed:  ", format_duration(elapsed), "\n",
+        "Progress: ", progress, "%\n",
+        "━━━━━━━━━━━━━━━━━━━━━━\n",
+        "Grid: ", input$grid_size, "×", input$grid_size, "\n",
+        "Walkers: ", sim_completed_walkers(), "/", input$n_walkers,
+        " (", n_active, " active)\n",
+        "Black Pixels: ", sim_black_pixels(), "\n",
+        "Step: ", sim_current_step(), "\n",
+        "Workers: 0 (batched sequential)"
+      )
+    } else if (sim_state() == "complete" && !is.null(sim_result())) {
+      result <- sim_result()
+      elapsed <- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
+      paste0(
+        "SIMULATION COMPLETE\n",
+        "Run #", sim_count(), "\n",
+        "━━━━━━━━━━━━━━━━━━━━━━\n",
+        "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
+        "Finished: ", format(sim_end_time(), "%H:%M:%S"), "\n",
+        "Elapsed:  ", format_duration(elapsed), "\n",
+        "━━━━━━━━━━━━━━━━━━━━━━\n",
+        "Backend: batched sequential (WebR browser)\n",
+        "Black Pixels: ", result$statistics$black_pixels, "\n",
+        "Walkers: ", result$statistics$completed_walkers, " completed"
+      )
+    } else if (sim_state() == "error") {
+      "SIMULATION ERROR\n━━━━━━━━━━━━━━━━━━━━━━\nPlease try again with different parameters."
+    } else {
+      "Ready to run simulation..."
     }
   })
 
-  # Real-time progress timer (following https://shinylive.io/r/examples/#timer pattern)
-  # This WILL work in Shinylive/WebR - reactive timer continues during computation
+  # Real-time progress timer — now updates accurately because simulation
+  # yields to the event loop between batches (non-blocking execution)
   output$progress_timer <- renderText({
-    autoInvalidate()  # Use the reactive timer that updates every 100ms
+    autoInvalidate()
 
     if (sim_state() == "running") {
-      # Get current time
-      current_time <- Sys.time()
       elapsed <- if (!is.null(sim_start_time())) {
-        round(as.numeric(difftime(current_time, sim_start_time(), units = "secs")), 1)
-      } else {
-        0
-      }
+        round(as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs")), 1)
+      } else { 0 }
 
-      # Format with current counts from reactive values
-      sprintf("⏱️ Time: %s | Walkers: %d/%d | Black Pixels: %d | Step: %d/%d",
+      sprintf("⏱ Time: %s | Walkers: %d/%d | Black: %d | Step: %d",
               format_duration(elapsed),
-              sim_completed_walkers(),
-              input$n_walkers,
-              sim_black_pixels(),
-              sim_current_step(),
-              input$max_steps)
-    } else if (sim_state() == "complete") {
+              sim_completed_walkers(), input$n_walkers,
+              sim_black_pixels(), sim_current_step())
+    } else if (sim_state() == "complete" && !is.null(sim_result())) {
       result <- sim_result()
-      if (!is.null(result)) {
-        sprintf("✓ Complete | Black Pixels: %d | Grid: %d%%",
-                result$statistics$black_pixels,
-                round(result$statistics$black_percentage))
-      } else {
-        ""
-      }
+      sprintf("Done | Black: %d | Grid: %d%%",
+              result$statistics$black_pixels,
+              round(result$statistics$black_percentage))
     } else {
-      # Show current time to prove timer is working
-      sprintf("Ready | Current time: %s", format(Sys.time(), "%H:%M:%S"))
+      sprintf("Ready | %s", format(Sys.time(), "%H:%M:%S"))
     }
   })
 
   # Duplicate outputs for Debug tab (Shiny requires unique output IDs)
   output$status_debug <- renderText({
-    # Mirror the status output
+    autoInvalidate()  # Refresh periodically for elapsed time
     if (sim_state() == "running") {
+      elapsed <- if (!is.null(sim_start_time())) {
+        as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
+      } else { 0 }
       paste0(
         "SIMULATION RUNNING...\n",
         "Run #", sim_count(), "\n",
-        "Started: ", format(sim_start_time(), "%H:%M:%S")
+        "Started: ", format(sim_start_time(), "%H:%M:%S"), "\n",
+        "Elapsed: ", format_duration(elapsed), "\n",
+        "Walkers: ", sim_completed_walkers(), "/", input$n_walkers, "\n",
+        "Black: ", sim_black_pixels(), " | Step: ", sim_current_step()
       )
     } else if (sim_state() == "complete" && !is.null(sim_result())) {
       result <- sim_result()
@@ -791,19 +996,11 @@ server <- function(input, output, session) {
   # Render button with walker/pixel counts
   output$run_button_ui <- renderUI({
     if (sim_state() == "running") {
-      # During simulation, show real-time walker/pixel counts
-      invalidateLater(200)  # Update every 200ms
-
-      elapsed <- if (!is.null(sim_start_time())) {
-        as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
-      } else {
-        0
-      }
-
+      # Reactive values update automatically between batches — no polling needed
       actionButton("run_sim_disabled",
-                   sprintf("Running... W: %d/%d | B: %d | %s",
+                   sprintf("Running... W: %d/%d | B: %d",
                           sim_completed_walkers(), input$n_walkers,
-                          sim_black_pixels(), format_duration(elapsed)),
+                          sim_black_pixels()),
                    class = "btn-warning btn-lg",
                    style = "width: 100%; font-size: 14px;",
                    disabled = TRUE)
@@ -834,143 +1031,245 @@ server <- function(input, output, session) {
   })
 
 
-  # Run simulation when button clicked
+  # Run simulation when button clicked — INITIALIZE only (non-blocking)
   observeEvent(input$run_sim, {
+    # Validate walker count first
+    max_allowed <- floor(0.7 * input$grid_size^2)
+    if (input$n_walkers > max_allowed) {
+      sim_state("error")
+      return()
+    }
+
     # Initialize state
     sim_state("running")
     sim_start_time(Sys.time())
     sim_count(sim_count() + 1)
-
-    output$status <- renderText({
-      paste0(
-        "SIMULATION RUNNING...\n",
-        "Run #", sim_count(), "\n",
-        "Grid: ", input$grid_size, "×", input$grid_size, "\n",
-        "Walkers: ", input$n_walkers, "\n",
-        "Workers: 0 (sync sequential)\n",
-        "Started: ", format(sim_start_time(), "%H:%M:%S"), "\n",
-        "Status: Processing..."
-      )
-    })
-
-    # Validate walker count
-    max_allowed <- floor(0.7 * input$grid_size^2)
-    if (input$n_walkers > max_allowed) {
-      sim_state("error")
-      output$status <- renderText({
-        sprintf("ERROR: Too many walkers (%d) for grid size %dx%d.\nMaximum allowed: %d (70%% of grid pixels)",
-                input$n_walkers, input$grid_size, input$grid_size, max_allowed)
-      })
-      return()
-    }
-
-    # Reset progress tracking
     sim_current_step(0)
     sim_completed_walkers(0)
     sim_black_pixels(0)
 
-    # Run the simulation
+    # Initialize grid and walkers for batched execution
     tryCatch({
-      result <- run_simulation(
-        grid_size = input$grid_size,
-        n_walkers = input$n_walkers,
-        neighborhood = input$neighborhood,
-        boundary = input$boundary,
-        max_steps = input$max_steps,
-        workers = 0,
-        sync_mode = input$sync_mode,
-        verbose = FALSE,
-        validate_percent = input$validate_percent,
-        validate_strict = input$validate_strict
-      )
-
-      # Store result
-      sim_result(result)
-      sim_completed_walkers(result$statistics$completed_walkers)
-      sim_black_pixels(result$statistics$black_pixels)
-      sim_current_step(input$max_steps)
-
-      # Mark complete
-      sim_state("complete")
-      sim_end_time(Sys.time())
-
-      # Calculate elapsed time
-      elapsed <- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
-
-      # Re-enable the button
-      updateActionButton(session, "run_sim",
-                        label = "Run Simulation",
-                        disabled = FALSE)
-
-      # Browser console logging for WebR diagnostics
-      message(sprintf("\n=== SIMULATION COMPLETE ==="))
-      message(sprintf("Grid size: %dx%d", input$grid_size, input$grid_size))
-      message(sprintf("Walkers: %d", input$n_walkers))
-      message(sprintf("Black pixels: %d", sum(result$grid == 1)))
-      message(sprintf("Elapsed time: %s", format_duration(elapsed)))
-      message(sprintf("==========================\n"))
-
-      output$status <- renderText({
-        paste0(
-          "SIMULATION COMPLETE\n",
-          "Run #", sim_count(), "\n",
-          "━━━━━━━━━━━━━━━━━━━━━━\n",
-          "Started:  ", format(sim_start_time(), "%H:%M:%S"), "\n",
-          "Finished: ", format(sim_end_time(), "%H:%M:%S"), "\n",
-          "Elapsed:  ", format_duration(elapsed), "\n",
-          "━━━━━━━━━━━━━━━━━━━━━━\n",
-          "Backend: synchronous (WebR browser)\n",
-          "Black Pixels: ", result$statistics$black_pixels, "\n",
-          "Walkers: ", result$statistics$completed_walkers, " completed"
-        )
+      grid <- initialize_grid(input$grid_size)
+      positions <- generate_walker_positions(input$n_walkers, grid)
+      walkers <- lapply(seq_along(positions), function(i) {
+        # Only store paths for first 20 walkers (memory efficiency)
+        create_walker(i, positions[[i]], input$grid_size, store_path = (i <= 20))
       })
 
+      batch_grid(grid)
+      batch_walkers(walkers)
+      batch_active(seq_len(input$n_walkers))
+      batch_step_count(0L)
+      batch_term_counter(0L)
+    }, error = function(e) {
+      sim_state("error")
+    })
+  })
+
+  # === BATCHED SIMULATION LOOP (non-blocking via JS round-trip) ===
+  #
+  # Architecture: R processes a batch → sends 'batch_done' to JS →
+  # JS waits 50ms (browser renders, handles clicks) → JS sends
+  # 'next_batch' back to R → R processes next batch.
+  #
+  # Why not invalidateLater(): In WebR/Shinylive, invalidateLater()
+  # re-enters the observe() without yielding the Web Worker thread.
+  # The JS main thread never gets a chance to process UI events.
+  # The JS round-trip forces a real yield to the browser event loop.
+  #
+  # Kick off first batch when simulation starts.
+  # Delay 200ms to ensure JS 'batch_done' handler is registered.
+  observe({
+    req(sim_state() == "running")
+    req(!is.null(batch_grid()))
+    invalidateLater(200)  # one-shot: only fires while state == "running"
+    isolate({
+      if (batch_step_count() == 0L) {
+        session$sendCustomMessage("batch_done", list(kick = TRUE))
+      }
+    })
+  })
+
+  # Each batch triggered by JS round-trip
+  observeEvent(input$next_batch, {
+    req(sim_state() == "running")
+    req(!is.null(batch_grid()))
+
+    active <- batch_active()
+    grid <- batch_grid()
+    walkers <- batch_walkers()
+    step_count <- batch_step_count()
+    term_counter <- batch_term_counter()
+    grid_size <- input$grid_size
+    nb <- input$neighborhood    # pre-resolve once (no match.arg per walker)
+    bd <- input$boundary
+    max_steps <- input$max_steps
+    is_4hood <- (nb == "4-hood")
+    is_wrap <- (bd == "wrap")
+
+    # Adaptive: target ~100k walker-step ops per batch.
+    # 200 walkers → 500 steps; 3000 walkers → 33 steps.
+    STEPS_PER_BATCH <- max(5L, as.integer(100000 / max(1L, length(active))))
+
+    tryCatch({
+      for (b in seq_len(STEPS_PER_BATCH)) {
+        if (length(active) == 0L) break
+        step_count <- step_count + 1L
+        newly_inactive <- integer(0)
+
+        for (i in active) {
+          w <- walkers[[i]]
+
+          # === INLINE FAST STEP (no match.arg, no logging, no path) ===
+          r <- w$pos[1]
+          cc <- w$pos[2]
+          if (is_4hood) {
+            d <- sample.int(4L, 1L)
+            np <- switch(d, c(r-1L,cc), c(r+1L,cc), c(r,cc+1L), c(r,cc-1L))
+          } else {
+            d <- sample.int(8L, 1L)
+            np <- switch(d, c(r-1L,cc), c(r+1L,cc), c(r,cc+1L), c(r,cc-1L),
+                            c(r-1L,cc+1L), c(r-1L,cc-1L), c(r+1L,cc+1L), c(r+1L,cc-1L))
+          }
+          if (is_wrap) {
+            np <- c(((np[1]-1L) %% grid_size)+1L, ((np[2]-1L) %% grid_size)+1L)
+          } else if (np[1]<1L || np[1]>grid_size || np[2]<1L || np[2]>grid_size) {
+            w$active <- FALSE; w$termination_reason <- "hit_boundary"
+            w$steps <- w$steps + 1L; w$pos <- np
+            walkers[[i]] <- w
+            if (is.null(w$termination_order)) {
+              term_counter <- term_counter + 1L; w$termination_order <- term_counter
+              walkers[[i]] <- w; newly_inactive <- c(newly_inactive, i)
+            }
+            next
+          }
+          w$pos <- np; w$steps <- w$steps + 1L
+
+          # === INLINE FAST TERMINATION CHECK ===
+          if (grid[np[1], np[2]] == 1L) {
+            w$active <- FALSE; w$termination_reason <- "touched_black"
+          } else if (w$steps >= max_steps) {
+            w$active <- FALSE; w$termination_reason <- "max_steps"
+          } else {
+            # Vectorized black neighbor check
+            nr <- np[1]; nc <- np[2]
+            if (is_4hood) {
+              rows <- c(nr-1L, nr+1L, nr, nr)
+              cols <- c(nc, nc, nc-1L, nc+1L)
+            } else {
+              rows <- c(nr-1L,nr+1L,nr,nr,nr-1L,nr-1L,nr+1L,nr+1L)
+              cols <- c(nc,nc,nc-1L,nc+1L,nc-1L,nc+1L,nc-1L,nc+1L)
+            }
+            valid <- rows>=1L & rows<=grid_size & cols>=1L & cols<=grid_size
+            if (any(valid) && any(grid[cbind(rows[valid],cols[valid])] == 1L)) {
+              w$active <- FALSE; w$termination_reason <- "black_neighbor"
+            }
+          }
+
+          if (!w$active && w$termination_reason == "black_neighbor") {
+            grid[np[1], np[2]] <- 1L
+          }
+          if (!w$active && is.null(w$termination_order)) {
+            term_counter <- term_counter + 1L; w$termination_order <- term_counter
+            newly_inactive <- c(newly_inactive, i)
+          }
+          walkers[[i]] <- w
+        }
+        if (length(newly_inactive) > 0L) {
+          active <- setdiff(active, newly_inactive)
+        }
+      }
+
+      # Update batch state
+      batch_grid(grid)
+      batch_walkers(walkers)
+      batch_active(active)
+      batch_step_count(step_count)
+      batch_term_counter(term_counter)
+
+      # Update progress displays
+      sim_completed_walkers(input$n_walkers - length(active))
+      sim_black_pixels(sum(grid == 1L))
+      sim_current_step(step_count)
+
+      # Complete or request next batch via JS round-trip
+      if (length(active) == 0L) {
+        sim_end_time(Sys.time())
+        walker_steps <- sapply(walkers, function(w) w$steps)
+        elapsed <- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
+
+        result <- list(
+          grid = grid,
+          walkers = walkers,
+          statistics = list(
+            black_pixels = sum(grid == 1L),
+            black_percentage = round(100 * sum(grid == 1L) / (grid_size^2), 2),
+            grid_size = grid_size,
+            total_walkers = input$n_walkers,
+            completed_walkers = input$n_walkers,
+            total_steps = sum(walker_steps),
+            min_steps = min(walker_steps),
+            max_steps = max(walker_steps),
+            mean_steps = mean(walker_steps),
+            median_steps = median(walker_steps),
+            percentile_25 = quantile(walker_steps, 0.25),
+            percentile_75 = quantile(walker_steps, 0.75),
+            elapsed_time_secs = elapsed,
+            termination_reasons = table(sapply(walkers, function(w) w$termination_reason))
+          ),
+          parameters = list(
+            grid_size = grid_size,
+            n_walkers = input$n_walkers,
+            neighborhood = nb,
+            boundary = bd,
+            workers = 0L,
+            max_steps = max_steps
+          )
+        )
+        sim_result(result)
+        sim_state("complete")
+        message(sprintf("=== SIMULATION COMPLETE === Black: %d, Steps: %d, Time: %s",
+                        sum(grid == 1L), step_count, format_duration(elapsed)))
+      } else {
+        # Tell JS we're done with this batch — JS will setTimeout(50)
+        # then send next_batch back, guaranteeing a browser yield.
+        session$sendCustomMessage("batch_done", list(step = step_count))
+      }
     }, error = function(e) {
       sim_state("error")
       sim_end_time(Sys.time())
-
-      # Re-enable the button
-      updateActionButton(session, "run_sim",
-                        label = "Run Simulation",
-                        disabled = FALSE)
-
-      output$status <- renderText({
-        paste0(
-          "SIMULATION ERROR\n",
-          "━━━━━━━━━━━━━━━━━━━━━━\n",
-          "Error: ", conditionMessage(e), "\n",
-          "━━━━━━━━━━━━━━━━━━━━━━\n",
-          "Please try again with different parameters."
-        )
-      })
+      message(sprintf("Simulation error: %s", conditionMessage(e)))
     })
-  })
+  }, ignoreInit = TRUE)
 
 
   # PAGE 1: Fractal Graph with arrival time coloring
   output$fractal_plot <- renderPlot({
-    # If simulation is running, show progress in plot
+    # If simulation is running, show live progress in plot area
     if (sim_state() == "running") {
-      invalidateLater(300)  # Update every 300ms
+      autoInvalidate()  # Refresh with timer
 
-      # Create a simple progress visualization
-      par(bg = "gray70", mar = c(5, 4, 4, 2))
+      par(bg = "gray70", mar = c(2, 2, 3, 2))
       plot(1, type = "n", xlim = c(0, 1), ylim = c(0, 1),
            xlab = "", ylab = "", axes = FALSE,
            main = "Simulation Running...")
 
-      # Show progress as text in plot
-      text(0.5, 0.7, sprintf("Walkers: %d / %d",
-                            sim_completed_walkers(), input$n_walkers),
+      progress_pct <- if (input$n_walkers > 0) {
+        round(100 * sim_completed_walkers() / input$n_walkers)
+      } else 0
+
+      text(0.5, 0.7, sprintf("Walkers: %d / %d (%d%%)",
+                            sim_completed_walkers(), input$n_walkers, progress_pct),
            cex = 2, font = 2)
-      text(0.5, 0.5, sprintf("Black pixels: %d",
-                            sim_black_pixels()),
+      text(0.5, 0.5, sprintf("Black pixels: %d", sim_black_pixels()),
            cex = 2, font = 2)
 
       elapsed <- if (!is.null(sim_start_time())) {
         as.numeric(difftime(Sys.time(), sim_start_time(), units = "secs"))
       } else { 0 }
-      text(0.5, 0.3, sprintf("Time: %s", format_duration(elapsed)),
+      text(0.5, 0.3, sprintf("Time: %s | Step: %d",
+                            format_duration(elapsed), sim_current_step()),
            cex = 1.5)
       return()
     }
@@ -983,14 +1282,19 @@ server <- function(input, output, session) {
     req(nrow(result$grid) > 0)
     req(sum(result$grid == 1) > 0)  # Ensure has black pixels
 
-    # Use enhanced plot with color-coded arrival times
-    p <- plot_grid_enhanced(result,
-                           quantiles = 5,
-                           color_scheme = "viridis")
-
-    # Store the plot for caption extraction
-    # The plot_grid_enhanced function returns plot with caption as attribute
-    p
+    # Use enhanced plot with color-coded arrival times (with device error handling)
+    tryCatch({
+      p <- plot_grid_enhanced(result,
+                             quantiles = 5,
+                             color_scheme = "viridis")
+      p
+    }, error = function(e) {
+      # Fallback for WebR device issues
+      par(bg = "gray70", mar = c(2, 2, 3, 2))
+      image(result$grid, col = c("gray60", "black"),
+            main = sprintf("DLA Fractal: %d black pixels", sum(result$grid == 1)),
+            axes = FALSE)
+    })
   })
 
   # Display the caption separately
@@ -1023,7 +1327,7 @@ server <- function(input, output, session) {
     )
   })
 
-  # Download handler for fractal plot
+  # Download handler for fractal plot (with WebR device fallback)
   output$download_fractal <- downloadHandler(
     filename = function() {
       paste0("fractal_dla_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")
@@ -1032,7 +1336,15 @@ server <- function(input, output, session) {
       req(sim_result())
       result <- sim_result()
       p <- plot_grid_enhanced(result, quantiles = 5, color_scheme = "viridis")
-      ggplot2::ggsave(file, plot = p, width = 8, height = 8, dpi = 150)
+      tryCatch(
+        ggplot2::ggsave(file, plot = p, width = 8, height = 8, dpi = 150),
+        error = function(e) {
+          # Fallback for WebR where png device may not be available
+          grDevices::svg(file, width = 8, height = 8)
+          print(p)
+          grDevices::dev.off()
+        }
+      )
     }
   )
 
@@ -1947,12 +2259,15 @@ server <- function(input, output, session) {
       "Result Available: ", if (is.null(sim_result())) "No" else "Yes", "\n",
       "Active Tab: ", input$tabs, "\n",
       if (sim_state() == "running" && !is.null(sim_start_time())) {
+        n_active <- length(batch_active())
         paste0(
           "\n=== EXECUTION INFO ===\n",
           "Grid Size: ", input$grid_size, "×", input$grid_size, "\n",
-          "Walkers: ", input$n_walkers, "\n",
-          "Workers: 0 (sync sequential)\n",
-          "Backend: synchronous"
+          "Walkers: ", sim_completed_walkers(), "/", input$n_walkers,
+          " (", n_active, " active)\n",
+          "Black Pixels: ", sim_black_pixels(), "\n",
+          "Step: ", sim_current_step(), "\n",
+          "Backend: batched sequential (non-blocking)"
         )
       } else {
         ""
@@ -1967,13 +2282,6 @@ server <- function(input, output, session) {
 
 shinyApp(ui = ui, server = server)
 ```
-
-## Tips
-
-- **Larger grid** (200-400): More exploration space
-- **Fewer walkers** (100-500): Faster simulation
-- **8-hood**: Diagonal movement for different patterns
-- **Wrap boundary**: Toroidal grid (no edge termination)
 
 ## Build Info
 
