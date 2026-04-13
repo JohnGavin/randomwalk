@@ -571,7 +571,8 @@ ui &lt;- fluidPage(
                  plotOutput("fractal_plot", height = "600px"),
                  tags$p(style = "margin-top: 10px; margin-bottom: 10px; color: #666; font-style: italic; text-align: center;",
                         textOutput("fractal_caption", inline = TRUE)),
-                 downloadButton("download_fractal", "Download Plot", class = "btn-sm", style = "margin-top: 10px;"),
+                 tags$p(style = "margin-top: 10px; font-size: 12px; color: #666;",
+                        "Right-click the plot image above to save it."),
                  hr(),
                  verbatimTextOutput("fractal_stats"),
                  hr(),
@@ -1341,26 +1342,8 @@ server &lt;- function(input, output, session) {
     )
   })
 
-  # Download handler for fractal plot (with WebR device fallback)
-  output$download_fractal &lt;- downloadHandler(
-    filename = function() {
-      paste0("fractal_dla_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")
-    },
-    content = function(file) {
-      req(sim_result())
-      result &lt;- sim_result()
-      p &lt;- plot_grid_enhanced(result, quantiles = 5, color_scheme = "viridis")
-      tryCatch(
-        ggplot2::ggsave(file, plot = p, width = 8, height = 8, dpi = 150),
-        error = function(e) {
-          # Fallback for WebR where png device may not be available
-          grDevices::svg(file, width = 8, height = 8)
-          print(p)
-          grDevices::dev.off()
-        }
-      )
-    }
-  )
+  # Note: downloadHandler doesn't work in Shinylive/WebR (no filesystem).
+  # Users can right-click the rendered plot to save it.
 
   # PAGE 2: Walker Paths
   output$paths_plot_first25 &lt;- renderPlot({
@@ -2344,7 +2327,7 @@ server &lt;- function(input, output, session) {
 shinyApp(ui = ui, server = server)</code></pre>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> 2.1.1 | <strong>Git</strong> <code>4367dc6</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-04-13 11:25:29</p>
+<p><strong>randomwalk</strong> 2.1.1 | <strong>Git</strong> <code>d7c8be9</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-04-13 11:45:04</p>
 </section>
 
 </main>
