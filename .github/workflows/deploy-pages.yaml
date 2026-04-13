@@ -46,11 +46,12 @@ jobs:
           path: _site/
           retention-days: 1
 
-  # Deploy pre-built docs + webR binaries
+  # Deploy pre-built docs + webR binaries (if available)
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: build-webr
+    if: always()  # Deploy even if build-webr fails
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -68,12 +69,14 @@ jobs:
           ls -la docs/*.html | head -10
 
       - name: Download webR binaries
+        if: needs.build-webr.result == 'success'
         uses: actions/download-artifact@v4
         with:
           name: webr-repo
           path: webr-temp/
 
       - name: Merge webR binaries into docs
+        if: needs.build-webr.result == 'success'
         run: |
           echo "Merging webR binaries into pre-built docs/"
           cp -r webr-temp/* docs/
