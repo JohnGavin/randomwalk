@@ -583,29 +583,7 @@ ui &lt;- fluidPage(
                    verbatimTextOutput("progress_timer")
                  )),
 
-        # PAGE 2: Walker Paths (First 25 and Last 25)
-        tabPanel("Walker Paths",
-                 h4("Walker Trajectories"),
-                 tags$p(style = "color: #555; margin-bottom: 10px;",
-                   "Shows walker trajectories from start (circle) to termination (square). ",
-                   "Colors are stable - same walker keeps same color when adjusting slider."
-                 ),
-                 fluidRow(
-                   column(6,
-                     sliderInput("first_n_paths", "First N to terminate:",
-                                min = 0, max = 20, value = 5, step = 1)),
-                   column(6,
-                     sliderInput("last_n_paths", "Last N to terminate:",
-                                min = 0, max = 20, value = 5, step = 1))
-                 ),
-                 helpText("Select from walkers that FOUND THE FRACTAL (black_neighbor). ",
-                         "These start from random interior positions. ",
-                         "Boundary walkers (short paths) are excluded."),
-                 plotOutput("paths_plot_first25", height = "500px"),
-                 tags$p(style = "margin-top: 10px; color: #666; font-style: italic; text-align: center;",
-                        textOutput("paths_caption", inline = TRUE))),
-
-        # PAGE 3: Distributions (Path Lengths by Termination Reason)
+        # PAGE 2: Distributions (Path Lengths by Termination Reason)
         tabPanel("Distributions",
                  h4("Path Length Distributions"),
                  plotOutput("dist_overall", height = "300px"),
@@ -614,27 +592,20 @@ ui &lt;- fluidPage(
                  plotOutput("dist_by_reason", height = "300px"),
                  h5("By Termination Reason")),
 
-        # PAGE 4: Statistics - Quartile Analysis
+        # PAGE 4: Statistics - Quintile Analysis
         tabPanel("Statistics",
-                 h4("Quartile-Based Statistics"),
-                 tags$div(
-                   style = "background-color: #f5f5f5; padding: 10px; margin-bottom: 15px; border-radius: 5px;",
-                   tags$p(strong("Terminology:")),
-                   tags$ul(
-                     tags$li(strong("Launch sequence (ID):"), " Order walkers were created (1, 2, ..., N)"),
-                     tags$li(strong("Termination sequence:"), " Order walkers died (first to hit black = #1)"),
-                     tags$li(strong("Path length (steps):"), " How many steps a walker took before terminating")
-                   ),
-                   tags$p("See ", tags$a(href = "#", onclick = "Shiny.setInputValue('tabs', 'Notes');", "Notes tab"),
-                          " for details on memory-efficient quartile calculation.")
-                 ),
-                 helpText("Path length distributions partitioned by termination order quartiles (Q1=earliest terminators, Q4=latest)"),
+                 h4("Quintile-Based Statistics"),
+                 radioButtons("stats_group_by", "Group walkers by:",
+                              choices = c("Termination order" = "termination",
+                                          "Launch order" = "launch"),
+                              selected = "termination", inline = TRUE),
+                 helpText(textOutput("stats_group_desc", inline = TRUE)),
                  hr(),
-                 h5("Path Length by Termination Quartile"),
-                 plotOutput("stats_quartile_boxplot", height = "350px"),
+                 h5("Path Length by Termination Quintile"),
+                 plotOutput("stats_quintile_boxplot", height = "350px"),
                  hr(),
-                 h5("Histogram Panels by Quartile"),
-                 plotOutput("stats_quartile_histograms", height = "400px"),
+                 h5("Histogram Panels by Quintile"),
+                 plotOutput("stats_quintile_histograms", height = "400px"),
                  hr(),
                  h5("Distribution Shape Comparison"),
                  fluidRow(
@@ -642,8 +613,8 @@ ui &lt;- fluidPage(
                    column(6, plotOutput("stats_trend", height = "300px"))
                  ),
                  hr(),
-                 h5("Summary Statistics by Quartile"),
-                 verbatimTextOutput("stats_quartile_summary")),
+                 h5("Summary Statistics by Quintile"),
+                 verbatimTextOutput("stats_quintile_summary")),
 
         # PAGE 5: Survival Curve
         tabPanel("Survival Curve",
@@ -692,6 +663,9 @@ ui &lt;- fluidPage(
                  h5("Backend Information"),
                  verbatimTextOutput("debug_backend"),
                  hr(),
+                 h5("Walker Paths QA"),
+                 verbatimTextOutput("debug_walker_qa"),
+                 hr(),
                  h5("Periodic Updates"),
                  verbatimTextOutput("debug_periodic"),
                  hr(),
@@ -705,102 +679,34 @@ ui &lt;- fluidPage(
 
         # PAGE 7: Notes
         tabPanel("Notes",
+                 h4("About This Dashboard"),
+                 tags$p("Interactive random walk fractal simulation running entirely in your browser via WebR/Shinylive. ",
+                        "No server required — all computation happens in WebAssembly."),
+                 hr(),
+
                  h4("Tips"),
                  tags$ul(
-                   tags$li(tags$strong("Larger grid"), " (200-400): More exploration space"),
+                   tags$li(tags$strong("Larger grid"), " (200-400): More exploration space, slower"),
                    tags$li(tags$strong("Fewer walkers"), " (100-500): Faster simulation"),
-                   tags$li(tags$strong("8-hood"), ": Diagonal movement for different patterns"),
+                   tags$li(tags$strong("8-hood"), ": Diagonal movement creates different fractal patterns"),
                    tags$li(tags$strong("Wrap boundary"), ": Toroidal grid (no edge termination)")
                  ),
                  hr(),
 
-                 h4("About This Dashboard"),
-                 tags$p("Interactive random walk simulation via WebR/Shinylive."),
-                 hr(),
-
-                 h5("Sequence Terminology"),
-                 tags$div(
-                   style = "background-color: #f0f8ff; padding: 12px; border-radius: 5px; margin-bottom: 15px;",
-                   tags$p(strong("Launch Sequence (Walker ID):"), " Order walkers are created (1, 2, ..., N)"),
-                   tags$p(strong("Termination Sequence:"), " Order walkers stop moving (first to die = order 1)"),
-                   tags$p(style = "font-style: italic; color: #666;",
-                          "These often differ! Walker ID 10 might terminate last (order 1000).")
-                 ),
-
-                 tags$table(style = "width: 100%; border-collapse: collapse; margin-bottom: 15px;",
-                   tags$thead(
-                     tags$tr(style = "background-color: #e8e8e8;",
-                       tags$th(style = "padding: 8px; border: 1px solid #ddd;", "Sequence"),
-                       tags$th(style = "padding: 8px; border: 1px solid #ddd;", "Pros"),
-                       tags$th(style = "padding: 8px; border: 1px solid #ddd;", "Cons"),
-                       tags$th(style = "padding: 8px; border: 1px solid #ddd;", "Best For")
-                     )
-                   ),
-                   tags$tbody(
-                     tags$tr(
-                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Launch (ID)"),
-                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Known at creation; memory-efficient"),
-                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Arbitrary ordering"),
-                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Memory-constrained sims")
-                     ),
-                     tags$tr(
-                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Termination"),
-                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Meaningful; reveals patterns"),
-                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Unknown until end"),
-                       tags$td(style = "padding: 8px; border: 1px solid #ddd;", "Statistical analysis")
-                     )
-                   )
-                 ),
-                 hr(),
-
-                 h5("Memory-Efficient Quartile Calculation"),
-                 tags$div(
-                   style = "background-color: #f5f5f5; padding: 12px; border-radius: 5px; margin-bottom: 15px;",
-                   tags$p(strong("Key Insight:"), " Quartiles do NOT require full paths!"),
-                   tags$p("Each walker stores only: ", tags$code("id, steps, termination_reason, termination_order")),
-                   tags$pre(style = "background-color: #fff; padding: 8px; border-radius: 3px; font-size: 12px;",
-                     "df$quartile &lt;- cut(df$termination_order,\n  breaks = quantile(df$termination_order, probs = c(0, 0.25, 0.5, 0.75, 1)),\n  labels = c(\"Q1\", \"Q2\", \"Q3\", \"Q4\"),\n  include.lowest = TRUE)"
-                   ),
-                   tags$p(style = "font-size: 12px; color: #666;",
-                          "Uses O(4 bytes) per walker, not O(thousands) for paths.")
-                 ),
-                 hr(),
-
-                 h5("Path Storage Strategy"),
-                 tags$p(strong("Current Approach (Launch ID):"), " Store paths for first/last 2000 walkers BY LAUNCH ID."),
-                 tags$p("This is memory-efficient but means path visualization shows walkers by creation order, not termination order."),
-                 tags$p(style = "color: #666; font-style: italic;",
-                        "Future: Option E (chunked disk storage) would stream paths to parquet files, enabling retrieval by termination order. ",
-                        "Not available in WebR due to arrow/parquet limitations in WASM."),
-                 hr(),
-
-                 h5("Execution Modes"),
-                 tags$p("This browser dashboard runs in ", strong("sync sequential mode"), " (workers=0)."),
-                 tags$p("For async parallel execution (workers &gt; 0), use native R with crew/nanonext."),
-                 hr(),
-
-                 h5("Sync Mode Options (Advanced Settings)"),
+                 h4("Browser Limitations"),
                  tags$ul(
-                   tags$li(strong("static:"), " Walkers use frozen grid snapshots. Lower collision rate (~5%). Faster but less realistic."),
-                   tags$li(strong("chunked:"), " Grid updated in batches. Higher collision rate (~15%). More realistic pattern.")
-                 ),
-                 tags$p(tags$em("Tip: Use 'chunked' for more interesting fractal patterns.")),
-                 hr(),
-
-                 h5("Validation Options (Advanced Settings)"),
-                 tags$ul(
-                   tags$li(strong("Strict Validation:"), " Stop immediately if isolated pixel detected."),
-                   tags$li(strong("Validation %:"), " Check for isolated pixels every N% of walkers.")
+                   tags$li("Single-threaded WebAssembly execution"),
+                   tags$li("First load: 15-30s (WebR + package downloads)"),
+                   tags$li("Default params (100×100, 200 walkers): ~30s"),
+                   tags$li("Large sims (300×300, 10k walkers): several minutes"),
+                   tags$li("For very large simulations, use native R with crew workers")
                  ),
                  hr(),
 
-                 h5("Browser Limitations"),
-                 tags$ul(
-                   tags$li("Single-threaded execution (~400 steps/sec)"),
-                   tags$li("First load: 15-30s (WebR package downloads)"),
-                   tags$li("Recommended: grid ≤100, walkers ≤500, steps ≤1000"),
-                   tags$li("For larger simulations, use native R with crew")
-                 ),
+                 h5("Vectorized Engine"),
+                 tags$p("The simulation moves ALL active walkers simultaneously using matrix operations ",
+                        "(10-50x faster than per-walker loops). Walker paths are not stored in this mode. ",
+                        "Use native R for path visualization."),
                  hr(),
 
                  tags$a(href="https://johngavin.github.io/randomwalk/", "Documentation"),
@@ -1478,10 +1384,14 @@ server &lt;- function(input, output, session) {
       n_with_paths &lt;- length(walkers_with_paths)
 
       if (n_with_paths == 0) {
-        # No paths stored - show message
         plot.new()
-        text(0.5, 0.5, "No walker paths available.\nPaths are stored for walkers that found the fractal.",
-             cex = 1.2, col = "red")
+        text(0.5, 0.5, paste0(
+          "Walker paths not available in vectorized mode.\n",
+          "The simulation uses matrix operations for speed\n",
+          "(10-50x faster) which don't store individual paths.\n\n",
+          "Walkers: ", n_walkers, " | With paths: 0\n",
+          "Use native R (not WebR) for path visualization."
+        ), cex = 1.0, col = "gray30")
         return()
       }
 
@@ -1768,51 +1678,67 @@ server &lt;- function(input, output, session) {
     })
   })
 
-  # PAGE 4: Statistics - Quartile-based Analysis
-  # Helper function to prepare quartile data
-  get_quartile_data &lt;- reactive({
+  # PAGE 4: Statistics - Quintile-based Analysis
+  # Returns data with both termination and launch quintiles
+  get_quintile_data &lt;- reactive({
     req(sim_result())
     result &lt;- sim_result()
 
-    # Extract steps and termination order
     steps &lt;- sapply(result$walkers, function(w) w$steps)
     term_order &lt;- sapply(result$walkers, function(w) w$termination_order)
+    reasons &lt;- sapply(result$walkers, function(w) w$termination_reason)
+    launch_order &lt;- sapply(result$walkers, function(w) w$id)
 
-    # Create data frame
-    df &lt;- data.frame(
-      steps = steps,
-      termination_order = term_order,
-      stringsAsFactors = FALSE
-    )
+    df &lt;- data.frame(steps = steps, termination_order = term_order,
+                     launch_order = launch_order,
+                     reason = reasons, stringsAsFactors = FALSE)
+    n &lt;- nrow(df)
 
-    # Assign quartiles based on termination order
-    df$quartile &lt;- cut(df$termination_order,
-                       breaks = quantile(df$termination_order, probs = c(0, 0.25, 0.5, 0.75, 1)),
-                       labels = c("Q1 (First 25%)", "Q2 (25-50%)", "Q3 (50-75%)", "Q4 (Last 25%)"),
-                       include.lowest = TRUE)
+    # Termination quintiles
+    df &lt;- df[order(df$termination_order), ]
+    df$term_quintile &lt;- factor(paste0("Q", ceiling(seq_len(n) / n * 5)),
+                               levels = paste0("Q", 1:5))
+
+    # Launch quintiles (walker index IS launch order)
+    df &lt;- df[order(df$launch_order), ]
+    df$launch_quintile &lt;- factor(paste0("Q", ceiling(seq_len(n) / n * 5)),
+                                 levels = paste0("Q", 1:5))
+
+    # Active column based on toggle
+    grp &lt;- input$stats_group_by
+    df$quintile &lt;- if (identical(grp, "launch")) df$launch_quintile else df$term_quintile
     df
   })
 
-  # Boxplot by quartile
-  output$stats_quartile_boxplot &lt;- renderPlot({
+  # Dynamic description based on toggle
+  output$stats_group_desc &lt;- renderText({
+    if (identical(input$stats_group_by, "launch")) {
+      "Q1 = first 20% launched (fewer black pixels on grid), Q5 = last 20% launched (more black pixels)."
+    } else {
+      "Q1 = first 20% to terminate (found black quickly), Q5 = last 20% to terminate (wandered longest)."
+    }
+  })
+
+  # Boxplot by quintile
+  output$stats_quintile_boxplot &lt;- renderPlot({
     req(sim_result())
-    df &lt;- get_quartile_data()
+    df &lt;- get_quintile_data()
 
     if (is.null(df) || nrow(df) &lt; 4) {
       plot.new()
-      text(0.5, 0.5, "Need at least 4 walkers for quartile analysis", cex = 1.2, col = "gray")
+      text(0.5, 0.5, "Need at least 4 walkers for quintile analysis", cex = 1.2, col = "gray")
       return()
     }
 
     tryCatch({
       print(
-        ggplot(df, aes(x = quartile, y = steps)) +
+        ggplot(df, aes(x = quintile, y = steps)) +
           geom_boxplot(fill = "steelblue", alpha = 0.7, outlier.shape = 21) +
           geom_jitter(width = 0.15, alpha = 0.3, size = 1) +
           labs(
-            title = "Path Length Distribution by Termination Quartile",
+            title = "Path Length Distribution by Termination Quintile",
             subtitle = "Q1 = earliest terminators, Q4 = latest terminators",
-            x = "Termination Quartile",
+            x = "Termination Quintile",
             y = "Path Length (steps)"
           ) +
           theme_minimal(base_size = 12) +
@@ -1827,14 +1753,14 @@ server &lt;- function(input, output, session) {
     })
   })
 
-  # Histogram panels by quartile
-  output$stats_quartile_histograms &lt;- renderPlot({
+  # Histogram panels by quintile
+  output$stats_quintile_histograms &lt;- renderPlot({
     req(sim_result())
-    df &lt;- get_quartile_data()
+    df &lt;- get_quintile_data()
 
     if (is.null(df) || nrow(df) &lt; 4) {
       plot.new()
-      text(0.5, 0.5, "Need at least 4 walkers for quartile analysis", cex = 1.2, col = "gray")
+      text(0.5, 0.5, "Need at least 4 walkers for quintile analysis", cex = 1.2, col = "gray")
       return()
     }
 
@@ -1842,9 +1768,9 @@ server &lt;- function(input, output, session) {
       print(
         ggplot(df, aes(x = steps)) +
           geom_histogram(bins = 20, fill = "steelblue", alpha = 0.8, color = "white") +
-          facet_wrap(~ quartile, scales = "free_y", ncol = 2) +
+          facet_wrap(~ quintile, scales = "free_y", ncol = 2) +
           labs(
-            title = "Path Length Histograms by Termination Quartile",
+            title = "Path Length Histograms by Termination Quintile",
             x = "Path Length (steps)",
             y = "Count"
           ) +
@@ -1863,7 +1789,7 @@ server &lt;- function(input, output, session) {
   # Violin plot for distribution shape comparison
   output$stats_violin &lt;- renderPlot({
     req(sim_result())
-    df &lt;- get_quartile_data()
+    df &lt;- get_quintile_data()
 
     if (is.null(df) || nrow(df) &lt; 4) {
       plot.new()
@@ -1873,12 +1799,12 @@ server &lt;- function(input, output, session) {
 
     tryCatch({
       print(
-        ggplot(df, aes(x = quartile, y = steps)) +
+        ggplot(df, aes(x = quintile, y = steps)) +
           geom_violin(fill = "steelblue", alpha = 0.6, trim = FALSE) +
           geom_boxplot(width = 0.15, fill = "white", alpha = 0.8) +
           labs(
-            title = "Distribution Shape by Quartile",
-            x = "Termination Quartile",
+            title = "Distribution Shape by Quintile",
+            x = "Termination Quintile",
             y = "Path Length (steps)"
           ) +
           theme_minimal(base_size = 11) +
@@ -1892,10 +1818,10 @@ server &lt;- function(input, output, session) {
     })
   })
 
-  # Trend plot showing mean/median across quartiles
+  # Trend plot showing mean/median across quintiles
   output$stats_trend &lt;- renderPlot({
     req(sim_result())
-    df &lt;- get_quartile_data()
+    df &lt;- get_quintile_data()
 
     if (is.null(df) || nrow(df) &lt; 4) {
       plot.new()
@@ -1904,14 +1830,14 @@ server &lt;- function(input, output, session) {
     }
 
     tryCatch({
-      # Calculate summary statistics by quartile
-      summary_df &lt;- do.call(rbind, lapply(levels(df$quartile), function(q) {
-        q_data &lt;- df[df$quartile == q, ]
+      # Calculate summary statistics by quintile
+      summary_df &lt;- do.call(rbind, lapply(levels(df$quintile), function(q) {
+        q_data &lt;- df[df$quintile == q, ]
         data.frame(
-          quartile = q,
+          quintile = q,
           mean_steps = mean(q_data$steps),
           median_steps = median(q_data$steps),
-          q_num = match(q, levels(df$quartile))
+          q_num = match(q, levels(df$quintile))
         )
       }))
 
@@ -1921,11 +1847,11 @@ server &lt;- function(input, output, session) {
           geom_point(aes(y = mean_steps, color = "Mean"), size = 3) +
           geom_line(aes(y = median_steps, color = "Median"), linewidth = 1.2, linetype = "dashed") +
           geom_point(aes(y = median_steps, color = "Median"), size = 3) +
-          scale_x_continuous(breaks = 1:4, labels = c("Q1", "Q2", "Q3", "Q4")) +
+          scale_x_continuous(breaks = 1:5, labels = paste0("Q", 1:5)) +
           scale_color_manual(values = c("Mean" = "steelblue", "Median" = "darkred")) +
           labs(
-            title = "Path Length Trend Across Quartiles",
-            x = "Termination Quartile",
+            title = "Path Length Trend Across Quintiles",
+            x = "Termination Quintile",
             y = "Path Length (steps)",
             color = "Statistic"
           ) +
@@ -1940,20 +1866,20 @@ server &lt;- function(input, output, session) {
     })
   })
 
-  # Summary statistics by quartile
-  output$stats_quartile_summary &lt;- renderPrint({
+  # Summary statistics by quintile
+  output$stats_quintile_summary &lt;- renderPrint({
     req(sim_result())
-    df &lt;- get_quartile_data()
+    df &lt;- get_quintile_data()
 
     if (is.null(df) || nrow(df) &lt; 4) {
-      cat("Need at least 4 walkers for quartile analysis\n")
+      cat("Need at least 4 walkers for quintile analysis\n")
       return()
     }
 
     cat("=== QUARTILE SUMMARY STATISTICS ===\n\n")
 
-    for (q in levels(df$quartile)) {
-      q_data &lt;- df[df$quartile == q, ]
+    for (q in levels(df$quintile)) {
+      q_data &lt;- df[df$quintile == q, ]
       cat(sprintf("%s (n=%d):\n", q, nrow(q_data)))
       cat(sprintf("  Min:    %d steps\n", min(q_data$steps)))
       cat(sprintf("  Q1:     %d steps\n", as.integer(quantile(q_data$steps, 0.25))))
@@ -1967,36 +1893,35 @@ server &lt;- function(input, output, session) {
 
     # Overall comparison
     cat("=== QUARTILE COMPARISON ===\n\n")
-    means &lt;- tapply(df$steps, df$quartile, mean)
-    cat("Mean steps by quartile:\n")
+    means &lt;- tapply(df$steps, df$quintile, mean)
+    cat("Mean steps by quintile:\n")
     for (i in seq_along(means)) {
       cat(sprintf("  %s: %.1f\n", names(means)[i], means[i]))
     }
 
     # Trend indicator
-    if (means[4] &lt; means[1]) {
-      cat("\n⬇️ DECREASING TREND: Later walkers survive fewer steps\n")
-      cat(sprintf("   (Q4 mean %.0f%% of Q1 mean)\n", 100 * means[4] / means[1]))
-    } else if (means[4] &gt; means[1]) {
-      cat("\n⬆️ INCREASING TREND: Later walkers survive more steps\n")
-      cat(sprintf("   (Q4 mean %.0f%% of Q1 mean)\n", 100 * means[4] / means[1]))
-    } else {
-      cat("\n➡️ FLAT: No clear trend across quartiles\n")
-    }
+    # Q1 = earliest terminators (found black quickly), Q5 = latest (wandered longest)
+    # Expected: Q5 mean &gt; Q1 mean (later terminators took more steps by definition)
+    cat("\n=== TREND ===\n")
+    cat(sprintf("Q1 (earliest 20%%): mean %.0f steps\n", means[1]))
+    cat(sprintf("Q5 (latest 20%%):   mean %.0f steps\n", means[5]))
+    cat(sprintf("Ratio Q5/Q1: %.1fx\n", means[5] / means[1]))
   })
 
   # ============================================================================
   # PAGE 5: Survival Curve - Server Logic
   # ============================================================================
 
-  # Dynamic slider max based on actual max steps in data
+  # Dynamic slider: max = max steps, default = median (50% survival)
   observe({
     req(sim_result())
     result &lt;- sim_result()
-    max_step &lt;- max(sapply(result$walkers, function(w) w$steps))
+    steps &lt;- sapply(result$walkers, function(w) w$steps)
+    max_step &lt;- max(steps)
+    median_step &lt;- as.integer(median(steps))
     updateSliderInput(session, "survival_step",
                       max = max_step,
-                      value = min(input$survival_step, max_step))
+                      value = median_step)
   })
 
   # Survival curve plot (Kaplan-Meier style)
@@ -2331,6 +2256,34 @@ server &lt;- function(input, output, session) {
     )
   })
 
+  # Walker Paths QA
+  output$debug_walker_qa &lt;- renderText({
+    if (is.null(sim_result())) return("No simulation run yet.")
+    result &lt;- sim_result()
+    walkers &lt;- result$walkers
+    n &lt;- length(walkers)
+    has_path &lt;- sum(sapply(walkers, function(w) !is.null(w$path) &amp;&amp; length(w$path) &gt; 0))
+    reasons &lt;- table(sapply(walkers, function(w) w$termination_reason))
+    steps &lt;- sapply(walkers, function(w) w$steps)
+    orders &lt;- sapply(walkers, function(w) w$termination_order)
+
+    paste0(
+      "=== WALKER PATHS QA ===\n",
+      "Total walkers: ", n, "\n",
+      "With stored paths: ", has_path, " (vectorized mode stores none)\n",
+      "Termination orders assigned: ", sum(orders &gt; 0), "/", n, "\n",
+      "Steps range: ", min(steps), " - ", max(steps), "\n",
+      "Median steps: ", median(steps), "\n",
+      "\n=== TERMINATION REASONS ===\n",
+      paste(sprintf("  %s: %d (%.1f%%)", names(reasons), as.integer(reasons),
+                    100 * as.integer(reasons) / n), collapse = "\n"),
+      "\n\n=== SIMULATION MODE ===\n",
+      "Engine: ", if (has_path &gt; 0) "per-walker (with paths)" else "vectorized (no paths, 10-50x faster)", "\n",
+      "Batch target: 200k walker-ops/batch\n",
+      "JS round-trip delay: 50ms"
+    )
+  })
+
   # PAGE 5: Debug - Periodic Updates
   output$debug_periodic &lt;- renderText({
     # Depend on timer to update every 100ms
@@ -2391,7 +2344,7 @@ server &lt;- function(input, output, session) {
 shinyApp(ui = ui, server = server)</code></pre>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> 2.1.1 | <strong>Git</strong> <code>2840d8d</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-04-13 10:20:31</p>
+<p><strong>randomwalk</strong> 2.1.1 | <strong>Git</strong> <code>4367dc6</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-04-13 11:25:29</p>
 </section>
 
 </main>
