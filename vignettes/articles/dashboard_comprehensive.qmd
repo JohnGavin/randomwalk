@@ -101,88 +101,107 @@ filters:
 #| viewerHeight: 1800
 
 # ============================================================================
-# FAST Package Loading (Pre-built webR binaries from GitHub Pages)
+# Package Loading + Inline Fallbacks for WebR
 # ============================================================================
-# Packages built by GitHub Actions and deployed to GitHub Pages
-# See: https://github.com/JohnGavin/randomwalk/wiki/Shinylive-Lessons-Learned
 
 cat("\n=== DASHBOARD SETUP ===\n")
-cat("Installing packages from GitHub Pages...\n\n")
 
-# Install randomwalk from GitHub Pages (built by deploy-pages.yaml workflow)
-tryCatch({
-  webr::install(
-    "randomwalk",
-    repos = c(
-      "https://johngavin.github.io/randomwalk",  # GitHub Pages webR repo
-      "https://repo.r-wasm.org"                   # Standard webR packages
-    )
-  )
-  cat("✅ randomwalk installed\n")
-}, error = function(e) {
-  cat("❌ ERROR installing randomwalk:", e$message, "\n")
-})
-
-# Load shiny (usually pre-installed)
+# Load shiny (pre-installed in Shinylive)
 library(shiny)
 cat("✅ shiny\n")
 
-# Install ggplot2 dependencies and ggplot2
+# Install and load ggplot2
 tryCatch({
   library(ggplot2)
   cat("✅ ggplot2\n")
 }, error = function(e) {
-  cat("⚠️  ggplot2 not found, installing dependencies...\n")
-  # Install munsell first (required ggplot2 dependency often missing)
+  cat("⚠️  ggplot2 not found, installing...\n")
   webr::install("munsell", repos = "https://repo.r-wasm.org")
-  cat("✅ munsell installed\n")
   webr::install("ggplot2", repos = "https://repo.r-wasm.org")
   library(ggplot2)
-  cat("✅ ggplot2 installed and loaded\n")
+  cat("✅ ggplot2 installed\n")
 })
 
-# Load randomwalk
-tryCatch({
+# Try to load randomwalk package (may fail if WebR binaries not available)
+has_randomwalk <- tryCatch({
+  webr::install("randomwalk", repos = c(
+    "https://johngavin.github.io/randomwalk",
+    "https://repo.r-wasm.org"
+  ))
   library(randomwalk)
   cat("✅ randomwalk (v", as.character(packageVersion("randomwalk")), ")\n", sep = "")
+  TRUE
 }, error = function(e) {
-  cat("❌ ERROR loading randomwalk:", e$message, "\n")
-  cat("Available packages:\n")
-  print(installed.packages()[, c("Package", "Version")])
+  cat("⚠️  randomwalk not available — using inline simulation engine\n")
+  FALSE
 })
 
-cat("\n⚠️  WebR Mode: Synchronous only (workers=0)\n")
-cat("   Reason: mirai/nanonext not available in WebAssembly\n")
-cat("   Note: Async works in native R with crew backend\n")
+# ============================================================================
+# Inline simulation functions (used when package unavailable in WebR)
+# These are minimal versions of initialize_grid() and generate_walker_positions()
+# ============================================================================
+if (!has_randomwalk) {
+  initialize_grid <- function(n, center_black = TRUE) {
+    grid <- matrix(0L, nrow = n, ncol = n)
+    if (center_black) { ctr <- ceiling(n / 2); grid[ctr, ctr] <- 1L }
+    grid
+  }
+  generate_walker_positions <- function(n_walkers, grid, avoid_black = TRUE) {
+    n <- nrow(grid); ctr <- ceiling(n / 2)
+    lapply(seq_len(n_walkers), function(i) {
+      for (attempt in 1:1000) {
+        pos <- c(sample.int(n, 1L), sample.int(n, 1L))
+        if (!all(pos == c(ctr, ctr)) && !(avoid_black && grid[pos[1], pos[2]] == 1L))
+          return(pos)
+      }
+      pos
+    })
+  }
+  # Minimal plot fallback
+  plot_grid_enhanced <- function(result, quantiles = 5, color_scheme = "viridis") {
+    g <- result$grid; n <- nrow(g)
+    df <- expand.grid(x = 1:n, y = 1:n)
+    df$black <- as.vector(g)
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$x, y = .data$y)) +
+      ggplot2::geom_tile(ggplot2::aes(fill = factor(.data$black)),
+                         color = NA, linewidth = 0) +
+      ggplot2::scale_fill_manual(values = c("0" = "gray60", "1" = "black"),
+                                 guide = "none") +
+      ggplot2::coord_fixed() +
+      ggplot2::labs(title = sprintf("DLA Pattern: %d black pixels (%d%% of %dx%d)",
+                                    sum(g == 1L), round(100 * sum(g == 1L) / (n*n)), n, n)) +
+      ggplot2::theme_minimal() +
+      ggplot2::theme(panel.background = ggplot2::element_rect(fill = "gray60", color = NA),
+                     plot.background = ggplot2::element_rect(fill = "gray60", color = NA))
+    attr(p, "caption") <- ""
+    p
+  }
+  cat("✅ Inline simulation engine ready\n")
+}
 
+cat("\n⚠️  WebR Mode: Synchronous only (workers=0)\n")
+cat("   Simulation is fully vectorized for speed\n")
 cat("\n=== SETUP COMPLETE ===\n\n")
 
 # ============================================================================
 # Helper Functions
 # ============================================================================
 
-# WebR environment detection (from Issue #129)
 is_webr <- function() {
   exists(".webr_env", envir = .GlobalEnv) ||
     identical(Sys.getenv("WEBR"), "1")
 }
 
-# Format duration in seconds to mm:ss or hh:mm:ss format
 format_duration <- function(seconds) {
   if (is.null(seconds) || is.na(seconds)) return("00:00")
-
   seconds <- round(seconds)
   if (seconds < 60) {
-    return(sprintf("00:%02d", seconds))
+    sprintf("00:%02d", seconds)
   } else if (seconds < 3600) {
-    mins <- floor(seconds / 60)
-    secs <- seconds %% 60
-    return(sprintf("%02d:%02d", mins, secs))
+    sprintf("%02d:%02d", floor(seconds / 60), seconds %% 60)
   } else {
-    hours <- floor(seconds / 3600)
-    mins <- floor((seconds %% 3600) / 60)
-    secs <- seconds %% 60
-    return(sprintf("%02d:%02d:%02d", hours, mins, secs))
+    sprintf("%02d:%02d:%02d", floor(seconds / 3600),
+            floor((seconds %% 3600) / 60), seconds %% 60)
   }
 }
 
@@ -757,6 +776,7 @@ server <- function(input, output, session) {
   sim_result <- reactiveVal(NULL)
   sim_count <- reactiveVal(0)  # Count total simulations run
   sim_state <- reactiveVal("idle")  # States: idle, running, complete, error
+  sim_error_msg <- reactiveVal("")   # Store actual error message for debugging
   sim_start_time <- reactiveVal(NULL)
   sim_end_time <- reactiveVal(NULL)
   sim_current_step <- reactiveVal(0)  # Track current simulation step
@@ -913,7 +933,8 @@ server <- function(input, output, session) {
         "Walkers: ", result$statistics$completed_walkers, " completed"
       )
     } else if (sim_state() == "error") {
-      "SIMULATION ERROR\n━━━━━━━━━━━━━━━━━━━━━━\nPlease try again with different parameters."
+      paste0("SIMULATION ERROR\n━━━━━━━━━━━━━━━━━━━━━━\n", sim_error_msg(),
+             "\n━━━━━━━━━━━━━━━━━━━━━━\nPlease try again with different parameters.")
     } else {
       "Ready to run simulation..."
     }
@@ -1032,199 +1053,229 @@ server <- function(input, output, session) {
 
 
   # Run simulation when button clicked — INITIALIZE only (non-blocking)
+  # Uses VECTORIZED state: matrices instead of walker lists for 10-50x speed.
   observeEvent(input$run_sim, {
-    # Validate walker count first
     max_allowed <- floor(0.7 * input$grid_size^2)
-    if (input$n_walkers > max_allowed) {
-      sim_state("error")
-      return()
-    }
+    if (input$n_walkers > max_allowed) { sim_state("error"); return() }
 
-    # Initialize state
     sim_state("running")
     sim_start_time(Sys.time())
     sim_count(sim_count() + 1)
-    sim_current_step(0)
-    sim_completed_walkers(0)
-    sim_black_pixels(0)
+    sim_current_step(0); sim_completed_walkers(0); sim_black_pixels(0)
 
-    # Initialize grid and walkers for batched execution
     tryCatch({
-      grid <- initialize_grid(input$grid_size)
-      positions <- generate_walker_positions(input$n_walkers, grid)
-      walkers <- lapply(seq_along(positions), function(i) {
-        # Only store paths for first 20 walkers (memory efficiency)
-        create_walker(i, positions[[i]], input$grid_size, store_path = (i <= 20))
-      })
+      gs <- input$grid_size
+      nw <- input$n_walkers
+      grid <- initialize_grid(gs)
+
+      # Vectorized state: N×2 position matrix + vectors
+      positions <- generate_walker_positions(nw, grid)
+      pos_mat <- do.call(rbind, positions)  # N×2 integer matrix
+      steps_vec <- integer(nw)
+      active_vec <- rep(TRUE, nw)
+      reason_vec <- character(nw)
+      order_vec <- integer(nw)
+
+      # Padded grid for boundary-free neighbor lookups
+      padded <- matrix(0L, nrow = gs + 2L, ncol = gs + 2L)
+      padded[2:(gs+1), 2:(gs+1)] <- grid
 
       batch_grid(grid)
-      batch_walkers(walkers)
-      batch_active(seq_len(input$n_walkers))
+      batch_walkers(list(  # store as vectorized structure
+        pos_mat = pos_mat, steps_vec = steps_vec,
+        active_vec = active_vec, reason_vec = reason_vec,
+        order_vec = order_vec, padded = padded
+      ))
+      batch_active(which(active_vec))
       batch_step_count(0L)
       batch_term_counter(0L)
     }, error = function(e) {
+      sim_error_msg(paste("Init error:", conditionMessage(e)))
+      message(paste("INIT ERROR:", conditionMessage(e)))
       sim_state("error")
     })
   })
 
-  # === BATCHED SIMULATION LOOP (non-blocking via JS round-trip) ===
-  #
-  # Architecture: R processes a batch → sends 'batch_done' to JS →
-  # JS waits 50ms (browser renders, handles clicks) → JS sends
-  # 'next_batch' back to R → R processes next batch.
-  #
-  # Why not invalidateLater(): In WebR/Shinylive, invalidateLater()
-  # re-enters the observe() without yielding the Web Worker thread.
-  # The JS main thread never gets a chance to process UI events.
-  # The JS round-trip forces a real yield to the browser event loop.
-  #
-  # Kick off first batch when simulation starts.
-  # Delay 200ms to ensure JS 'batch_done' handler is registered.
+  # === VECTORIZED BATCHED SIMULATION (non-blocking via JS round-trip) ===
+  # Moves ALL active walkers simultaneously using matrix ops.
+  # ~10-50x faster than per-walker R loops.
   observe({
     req(sim_state() == "running")
     req(!is.null(batch_grid()))
-    invalidateLater(200)  # one-shot: only fires while state == "running"
+    invalidateLater(200)
     isolate({
-      if (batch_step_count() == 0L) {
+      if (batch_step_count() == 0L)
         session$sendCustomMessage("batch_done", list(kick = TRUE))
-      }
     })
   })
 
-  # Each batch triggered by JS round-trip
   observeEvent(input$next_batch, {
     req(sim_state() == "running")
     req(!is.null(batch_grid()))
 
-    active <- batch_active()
     grid <- batch_grid()
-    walkers <- batch_walkers()
+    st <- batch_walkers()  # vectorized state
+    pos_mat <- st$pos_mat; steps_vec <- st$steps_vec
+    active_vec <- st$active_vec; reason_vec <- st$reason_vec
+    order_vec <- st$order_vec; padded <- st$padded
     step_count <- batch_step_count()
     term_counter <- batch_term_counter()
-    grid_size <- input$grid_size
-    nb <- input$neighborhood    # pre-resolve once (no match.arg per walker)
-    bd <- input$boundary
+    gs <- input$grid_size
     max_steps <- input$max_steps
-    is_4hood <- (nb == "4-hood")
-    is_wrap <- (bd == "wrap")
+    is_4hood <- (input$neighborhood == "4-hood")
+    is_wrap <- (input$boundary == "wrap")
 
-    # Adaptive: target ~100k walker-step ops per batch.
-    # 200 walkers → 500 steps; 3000 walkers → 33 steps.
-    STEPS_PER_BATCH <- max(5L, as.integer(100000 / max(1L, length(active))))
+    # Direction deltas (pre-computed)
+    if (is_4hood) {
+      DR <- c(-1L, 1L, 0L, 0L); DC <- c(0L, 0L, 1L, -1L); nd <- 4L
+    } else {
+      DR <- c(-1L,1L,0L,0L,-1L,-1L,1L,1L); DC <- c(0L,0L,1L,-1L,-1L,1L,-1L,1L); nd <- 8L
+    }
+
+    # Adaptive batch: ~200k walker-steps per batch for large sims
+    n_active <- sum(active_vec)
+    STEPS <- max(10L, as.integer(200000 / max(1L, n_active)))
 
     tryCatch({
-      for (b in seq_len(STEPS_PER_BATCH)) {
-        if (length(active) == 0L) break
+      for (b in seq_len(STEPS)) {
+        idx <- which(active_vec)
+        na <- length(idx)
+        if (na == 0L) break
         step_count <- step_count + 1L
-        newly_inactive <- integer(0)
 
-        for (i in active) {
-          w <- walkers[[i]]
+        # 1. Random directions for ALL active walkers (one C call)
+        dirs <- sample.int(nd, na, replace = TRUE)
+        new_r <- pos_mat[idx, 1] + DR[dirs]
+        new_c <- pos_mat[idx, 2] + DC[dirs]
 
-          # === INLINE FAST STEP (no match.arg, no logging, no path) ===
-          r <- w$pos[1]
-          cc <- w$pos[2]
-          if (is_4hood) {
-            d <- sample.int(4L, 1L)
-            np <- switch(d, c(r-1L,cc), c(r+1L,cc), c(r,cc+1L), c(r,cc-1L))
-          } else {
-            d <- sample.int(8L, 1L)
-            np <- switch(d, c(r-1L,cc), c(r+1L,cc), c(r,cc+1L), c(r,cc-1L),
-                            c(r-1L,cc+1L), c(r-1L,cc-1L), c(r+1L,cc+1L), c(r+1L,cc-1L))
+        # 2. Boundary handling (vectorized)
+        if (is_wrap) {
+          new_r <- ((new_r - 1L) %% gs) + 1L
+          new_c <- ((new_c - 1L) %% gs) + 1L
+        } else {
+          oob <- new_r < 1L | new_r > gs | new_c < 1L | new_c > gs
+          if (any(oob)) {
+            oob_idx <- idx[oob]
+            active_vec[oob_idx] <- FALSE
+            reason_vec[oob_idx] <- "hit_boundary"
+            steps_vec[oob_idx] <- steps_vec[oob_idx] + 1L
           }
-          if (is_wrap) {
-            np <- c(((np[1]-1L) %% grid_size)+1L, ((np[2]-1L) %% grid_size)+1L)
-          } else if (np[1]<1L || np[1]>grid_size || np[2]<1L || np[2]>grid_size) {
-            w$active <- FALSE; w$termination_reason <- "hit_boundary"
-            w$steps <- w$steps + 1L; w$pos <- np
-            walkers[[i]] <- w
-            if (is.null(w$termination_order)) {
-              term_counter <- term_counter + 1L; w$termination_order <- term_counter
-              walkers[[i]] <- w; newly_inactive <- c(newly_inactive, i)
-            }
-            next
-          }
-          w$pos <- np; w$steps <- w$steps + 1L
-
-          # === INLINE FAST TERMINATION CHECK ===
-          if (grid[np[1], np[2]] == 1L) {
-            w$active <- FALSE; w$termination_reason <- "touched_black"
-          } else if (w$steps >= max_steps) {
-            w$active <- FALSE; w$termination_reason <- "max_steps"
-          } else {
-            # Vectorized black neighbor check
-            nr <- np[1]; nc <- np[2]
-            if (is_4hood) {
-              rows <- c(nr-1L, nr+1L, nr, nr)
-              cols <- c(nc, nc, nc-1L, nc+1L)
-            } else {
-              rows <- c(nr-1L,nr+1L,nr,nr,nr-1L,nr-1L,nr+1L,nr+1L)
-              cols <- c(nc,nc,nc-1L,nc+1L,nc-1L,nc+1L,nc-1L,nc+1L)
-            }
-            valid <- rows>=1L & rows<=grid_size & cols>=1L & cols<=grid_size
-            if (any(valid) && any(grid[cbind(rows[valid],cols[valid])] == 1L)) {
-              w$active <- FALSE; w$termination_reason <- "black_neighbor"
-            }
-          }
-
-          if (!w$active && w$termination_reason == "black_neighbor") {
-            grid[np[1], np[2]] <- 1L
-          }
-          if (!w$active && is.null(w$termination_order)) {
-            term_counter <- term_counter + 1L; w$termination_order <- term_counter
-            newly_inactive <- c(newly_inactive, i)
-          }
-          walkers[[i]] <- w
+          # Continue with in-bounds walkers
+          inb <- !oob
+          idx <- idx[inb]; new_r <- new_r[inb]; new_c <- new_c[inb]
         }
-        if (length(newly_inactive) > 0L) {
-          active <- setdiff(active, newly_inactive)
+
+        if (length(idx) == 0L) next
+
+        # 3. Update positions + step counts
+        pos_mat[idx, 1] <- new_r
+        pos_mat[idx, 2] <- new_c
+        steps_vec[idx] <- steps_vec[idx] + 1L
+
+        # 4. Check ON black pixel (vectorized grid lookup)
+        on_black <- grid[cbind(new_r, new_c)] == 1L
+        if (any(on_black)) {
+          tb_idx <- idx[on_black]
+          active_vec[tb_idx] <- FALSE
+          reason_vec[tb_idx] <- "touched_black"
+        }
+
+        # 5. Check black NEIGHBOR using padded grid (no bounds checks)
+        still <- idx[!on_black & active_vec[idx]]
+        if (length(still) > 0L) {
+          pr <- pos_mat[still, 1] + 1L  # offset for padding
+          pc <- pos_mat[still, 2] + 1L
+          if (is_4hood) {
+            has_bn <- padded[cbind(pr-1L,pc)] == 1L | padded[cbind(pr+1L,pc)] == 1L |
+                      padded[cbind(pr,pc-1L)] == 1L | padded[cbind(pr,pc+1L)] == 1L
+          } else {
+            has_bn <- padded[cbind(pr-1L,pc)] == 1L | padded[cbind(pr+1L,pc)] == 1L |
+                      padded[cbind(pr,pc-1L)] == 1L | padded[cbind(pr,pc+1L)] == 1L |
+                      padded[cbind(pr-1L,pc-1L)] == 1L | padded[cbind(pr-1L,pc+1L)] == 1L |
+                      padded[cbind(pr+1L,pc-1L)] == 1L | padded[cbind(pr+1L,pc+1L)] == 1L
+          }
+          if (any(has_bn)) {
+            bn_idx <- still[has_bn]
+            active_vec[bn_idx] <- FALSE
+            reason_vec[bn_idx] <- "black_neighbor"
+            # Paint pixels + update padded grid
+            br <- pos_mat[bn_idx, 1]; bc <- pos_mat[bn_idx, 2]
+            grid[cbind(br, bc)] <- 1L
+            padded[cbind(br + 1L, bc + 1L)] <- 1L  # offset for padding
+          }
+        }
+
+        # 6. Max steps check
+        ms_hit <- active_vec[idx] & steps_vec[idx] >= max_steps
+        if (any(ms_hit)) {
+          ms_idx <- idx[ms_hit]
+          active_vec[ms_idx] <- FALSE
+          reason_vec[ms_idx] <- "max_steps"
+        }
+
+        # 7. Assign termination order to newly terminated walkers
+        newly_dead <- idx[!active_vec[idx] & order_vec[idx] == 0L]
+        if (length(newly_dead) > 0L) {
+          new_orders <- seq(term_counter + 1L, term_counter + length(newly_dead))
+          order_vec[newly_dead] <- new_orders
+          term_counter <- term_counter + length(newly_dead)
         }
       }
 
       # Update batch state
       batch_grid(grid)
-      batch_walkers(walkers)
-      batch_active(active)
+      batch_walkers(list(
+        pos_mat = pos_mat, steps_vec = steps_vec,
+        active_vec = active_vec, reason_vec = reason_vec,
+        order_vec = order_vec, padded = padded
+      ))
+      batch_active(which(active_vec))
       batch_step_count(step_count)
       batch_term_counter(term_counter)
 
-      # Update progress displays
-      sim_completed_walkers(input$n_walkers - length(active))
+      n_done <- sum(!active_vec)
+      sim_completed_walkers(n_done)
       sim_black_pixels(sum(grid == 1L))
       sim_current_step(step_count)
 
       # Complete or request next batch via JS round-trip
-      if (length(active) == 0L) {
+      if (all(!active_vec)) {
         sim_end_time(Sys.time())
-        walker_steps <- sapply(walkers, function(w) w$steps)
         elapsed <- as.numeric(difftime(sim_end_time(), sim_start_time(), units = "secs"))
+        nw <- input$n_walkers
+
+        # Build walker list from vectorized state (for downstream plots)
+        walkers <- lapply(seq_len(nw), function(i) {
+          list(id = i, pos = pos_mat[i, ], steps = steps_vec[i],
+               active = FALSE, termination_reason = reason_vec[i],
+               termination_order = order_vec[i],
+               path = NULL, store_path = FALSE)
+        })
 
         result <- list(
           grid = grid,
           walkers = walkers,
           statistics = list(
             black_pixels = sum(grid == 1L),
-            black_percentage = round(100 * sum(grid == 1L) / (grid_size^2), 2),
-            grid_size = grid_size,
-            total_walkers = input$n_walkers,
-            completed_walkers = input$n_walkers,
-            total_steps = sum(walker_steps),
-            min_steps = min(walker_steps),
-            max_steps = max(walker_steps),
-            mean_steps = mean(walker_steps),
-            median_steps = median(walker_steps),
-            percentile_25 = quantile(walker_steps, 0.25),
-            percentile_75 = quantile(walker_steps, 0.75),
+            black_percentage = round(100 * sum(grid == 1L) / (gs^2), 2),
+            grid_size = gs,
+            total_walkers = nw,
+            completed_walkers = nw,
+            total_steps = sum(steps_vec),
+            min_steps = min(steps_vec),
+            max_steps = max(steps_vec),
+            mean_steps = mean(steps_vec),
+            median_steps = median(steps_vec),
+            percentile_25 = quantile(steps_vec, 0.25),
+            percentile_75 = quantile(steps_vec, 0.75),
             elapsed_time_secs = elapsed,
-            termination_reasons = table(sapply(walkers, function(w) w$termination_reason))
+            termination_reasons = table(reason_vec)
           ),
           parameters = list(
-            grid_size = grid_size,
-            n_walkers = input$n_walkers,
-            neighborhood = nb,
-            boundary = bd,
-            workers = 0L,
-            max_steps = max_steps
+            grid_size = gs, n_walkers = nw,
+            neighborhood = input$neighborhood,
+            boundary = input$boundary,
+            workers = 0L, max_steps = max_steps
           )
         )
         sim_result(result)
@@ -1237,9 +1288,10 @@ server <- function(input, output, session) {
         session$sendCustomMessage("batch_done", list(step = step_count))
       }
     }, error = function(e) {
+      sim_error_msg(paste("Batch error:", conditionMessage(e)))
+      message(sprintf("Simulation error: %s", conditionMessage(e)))
       sim_state("error")
       sim_end_time(Sys.time())
-      message(sprintf("Simulation error: %s", conditionMessage(e)))
     })
   }, ignoreInit = TRUE)
 
@@ -2178,7 +2230,7 @@ server <- function(input, output, session) {
   output$debug_versions <- renderText({
     paste0(
       "=== PACKAGE VERSIONS ===\n",
-      "randomwalk: ", packageVersion("randomwalk"), "\n",
+      "randomwalk: ", tryCatch(as.character(packageVersion("randomwalk")), error = function(e) "inline engine"), "\n",
       "shiny: ", packageVersion("shiny"), "\n",
       "ggplot2: ", packageVersion("ggplot2"), "\n",
       if (requireNamespace("mirai", quietly = TRUE)) {
