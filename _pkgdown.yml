@@ -3,7 +3,6 @@ url: https://johngavin.github.io/randomwalk/
 template:
   bootstrap: 5
   light-switch: true
-  bootswatch: cosmo
   bslib:
     preset: shiny
   includes:
