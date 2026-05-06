@@ -463,87 +463,11 @@ ui &lt;- fluidPage(
     "))
   ),
 
-  # TOP SECTION: COLLAPSIBLE PARAMETER GROUPS
+  # TOP SECTION: Run Button (always visible)
   fluidRow(
     column(12,
-      # Use Shiny's wellPanel with conditional rendering for collapsible sections
       wellPanel(
-        actionButton("toggle_sim_params", "▶ Simulation Parameters",
-                    style = "background: none; border: none; font-weight: bold; font-size: 16px; padding: 0; margin-bottom: 10px;"),
-        conditionalPanel(
-          condition = "output.show_sim_params",
-          fluidRow(
-            column(4,
-              h5("Grid Settings"),
-              sliderInput("grid_size", "Grid Size:",
-                          min = 20, max = 400, value = 100, step = 20),
-              helpText("Size of the square grid (pixels per side)")
-            ),
-            column(8,
-              h5("Walker Settings"),
-              sliderInput("n_walkers", "Number of Walkers:",
-                          min = 1, max = 1000, value = 200, step = 50),
-              helpText(HTML("Number of walkers to simulate&lt;br&gt;&lt;em&gt;Max: 70% of grid pixels (updates automatically)&lt;/em&gt;")),
-
-              sliderInput("max_steps", "Max Steps per Walker:",
-                          min = 100, max = 10000, value = 5000, step = 100),
-              helpText("Maximum steps before walker terminates")
-            )
-          )
-        )
-      ),
-
-      wellPanel(
-        actionButton("toggle_move_params", "▶ Movement Settings",
-                    style = "background: none; border: none; font-weight: bold; font-size: 16px; padding: 0; margin-bottom: 10px;"),
-        conditionalPanel(
-          condition = "output.show_move_params",
-          fluidRow(
-            column(6,
-              selectInput("neighborhood", "Neighborhood:",
-                          choices = c("4-hood", "8-hood"),
-                          selected = "4-hood"),
-              helpText("4-hood: up/down/left/right, 8-hood: includes diagonals")
-            ),
-            column(6,
-              selectInput("boundary", "Boundary Behavior:",
-                          choices = c("terminate", "wrap"),
-                          selected = "terminate"),
-              helpText("terminate: stop at edges, wrap: toroidal topology")
-            )
-          )
-        )
-      ),
-
-      wellPanel(
-        actionButton("toggle_validation_params", "▶ Advanced Settings",
-                    style = "background: none; border: none; font-weight: bold; font-size: 16px; padding: 0; margin-bottom: 10px;"),
-        conditionalPanel(
-          condition = "output.show_validation_params",
-          fluidRow(
-            column(4,
-              selectInput("sync_mode", "Sync Mode:",
-                         choices = c("static", "chunked"),
-                         selected = "static"),
-              helpText("static: Frozen snapshots (~5% collision). chunked: Batched updates (~15% collision)")
-            ),
-            column(4,
-              checkboxInput("validate_strict", "Strict Validation",
-                           value = FALSE),
-              helpText("ON: Stop on isolated pixel. OFF: Warn and continue")
-            ),
-            column(4,
-              sliderInput("validate_percent", "Validation %:",
-                         min = 0, max = 20, value = 5, step = 1),
-              helpText("Check every N% of walkers (0 = off)")
-            )
-          )
-        )
-      ),
-
-      # Runtime Estimate and Run Button (always visible)
-      wellPanel(
-        style = "background-color: #f0f8ff; margin-top: 15px;",
+        style = "background-color: #f0f8ff;",
         fluidRow(
           column(6,
             h5("Estimated Runtime:"),
@@ -715,7 +639,89 @@ ui &lt;- fluidPage(
                  tags$a(href="https://github.com/JohnGavin/randomwalk", "GitHub"))
       ) # End of tabs
     ) # End of column
-  ) # End of fluidRow
+  ), # End of fluidRow
+
+  hr(),
+
+  # BOTTOM SECTION: COLLAPSIBLE PARAMETER GROUPS
+  fluidRow(
+    column(12,
+      # Use Shiny's wellPanel with conditional rendering for collapsible sections
+      wellPanel(
+        actionButton("toggle_sim_params", "▶ Simulation Parameters",
+                    style = "background: none; border: none; font-weight: bold; font-size: 16px; padding: 0; margin-bottom: 10px;"),
+        conditionalPanel(
+          condition = "output.show_sim_params",
+          fluidRow(
+            column(4,
+              h5("Grid Settings"),
+              sliderInput("grid_size", "Grid Size:",
+                          min = 20, max = 400, value = 100, step = 20),
+              helpText("Size of the square grid (pixels per side)")
+            ),
+            column(8,
+              h5("Walker Settings"),
+              sliderInput("n_walkers", "Number of Walkers:",
+                          min = 1, max = 1000, value = 200, step = 50),
+              helpText(HTML("Number of walkers to simulate&lt;br&gt;&lt;em&gt;Max: 70% of grid pixels (updates automatically)&lt;/em&gt;")),
+
+              sliderInput("max_steps", "Max Steps per Walker:",
+                          min = 100, max = 10000, value = 5000, step = 100),
+              helpText("Maximum steps before walker terminates")
+            )
+          )
+        )
+      ),
+
+      wellPanel(
+        actionButton("toggle_move_params", "▶ Movement Settings",
+                    style = "background: none; border: none; font-weight: bold; font-size: 16px; padding: 0; margin-bottom: 10px;"),
+        conditionalPanel(
+          condition = "output.show_move_params",
+          fluidRow(
+            column(6,
+              selectInput("neighborhood", "Neighborhood:",
+                          choices = c("4-hood", "8-hood"),
+                          selected = "4-hood"),
+              helpText("4-hood: up/down/left/right, 8-hood: includes diagonals")
+            ),
+            column(6,
+              selectInput("boundary", "Boundary Behavior:",
+                          choices = c("terminate", "wrap"),
+                          selected = "terminate"),
+              helpText("terminate: stop at edges, wrap: toroidal topology")
+            )
+          )
+        )
+      ),
+
+      wellPanel(
+        actionButton("toggle_validation_params", "▶ Advanced Settings",
+                    style = "background: none; border: none; font-weight: bold; font-size: 16px; padding: 0; margin-bottom: 10px;"),
+        conditionalPanel(
+          condition = "output.show_validation_params",
+          fluidRow(
+            column(4,
+              selectInput("sync_mode", "Sync Mode:",
+                         choices = c("static", "chunked"),
+                         selected = "static"),
+              helpText("static: Frozen snapshots (~5% collision). chunked: Batched updates (~15% collision)")
+            ),
+            column(4,
+              checkboxInput("validate_strict", "Strict Validation",
+                           value = FALSE),
+              helpText("ON: Stop on isolated pixel. OFF: Warn and continue")
+            ),
+            column(4,
+              sliderInput("validate_percent", "Validation %:",
+                         min = 0, max = 20, value = 5, step = 1),
+              helpText("Check every N% of walkers (0 = off)")
+            )
+          )
+        )
+      )
+    )
+  ) # End of parameter fluidRow
 )
 
 # ============================================================================
@@ -2327,7 +2333,7 @@ server &lt;- function(input, output, session) {
 shinyApp(ui = ui, server = server)</code></pre>
 <section id="build-info" class="level2">
 <h2 class="anchored" data-anchor-id="build-info">Build Info</h2>
-<p><strong>randomwalk</strong> 2.1.1 | <strong>Git</strong> <code>d7c8be9</code> | <strong>R</strong> 4.5.2 | <strong>Built</strong> 2026-04-13 11:45:04</p>
+<p><strong>randomwalk</strong> <a href="https://github.com/JohnGavin/randomwalk/releases/tag/v2.1.1">2.1.1</a> | <strong>Git</strong> <a href="https://github.com/JohnGavin/randomwalk/commit/507cc3fa7ed3d2424938292f1a673075f13d25d1"><code>507cc3f</code></a> | <strong>R</strong> <a href="https://cran.r-project.org/doc/manuals/r-release/NEWS.html">4.5.2</a> | <strong>Built</strong> 2026-05-06 13:34:18</p>
 </section>
 
 </main>
