@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-05-06
+
+### Completed
+
+- **Dashboard UI reorganization**: Moved Run Simulation button to top of page for
+  immediate visibility. Moved collapsible parameter panels (Simulation Parameters,
+  Movement Settings, Advanced Settings) to bottom after the tabset. Layout now:
+  Run button → Fractal Graph tab → other tabs → Parameters.
+- Rebuilt and deployed `dashboard_comprehensive.html` to GitHub Pages.
+
+### Failed Approaches
+
+- None this session.
+
+### Accuracy / Metrics
+
+- No functional changes, UI layout only.
+
+### Known Limitations
+
+- Same as 2026-04-13 session.
+
+---
+
 ## 2026-04-13
 
 ### Completed
