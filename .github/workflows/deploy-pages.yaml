@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: build-webr
-    if: always()  # Deploy even if build-webr fails
+    if: ${{ !cancelled() }}  # Deploy on success or failure, but not on cancel
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

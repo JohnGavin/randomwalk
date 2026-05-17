@@ -969,7 +969,11 @@ server <- function(input, output, session) {
   # Uses VECTORIZED state: matrices instead of walker lists for 10-50x speed.
   observeEvent(input$run_sim, {
     max_allowed <- floor(0.7 * input$grid_size^2)
-    if (input$n_walkers > max_allowed) { sim_state("error"); return() }
+    if (input$n_walkers > max_allowed) {
+      sim_error_msg(paste0("Too many walkers: ", input$n_walkers,
+                           " exceeds max ", max_allowed))
+      sim_state("error"); return()
+    }
 
     sim_state("running")
     sim_start_time(Sys.time())
@@ -1657,9 +1661,9 @@ server <- function(input, output, session) {
     req(sim_result())
     df <- get_quintile_data()
 
-    if (is.null(df) || nrow(df) < 4) {
+    if (is.null(df) || nrow(df) < 5) {
       plot.new()
-      text(0.5, 0.5, "Need at least 4 walkers for quintile analysis", cex = 1.2, col = "gray")
+      text(0.5, 0.5, "Need at least 5 walkers for quintile analysis", cex = 1.2, col = "gray")
       return()
     }
 
@@ -1670,7 +1674,7 @@ server <- function(input, output, session) {
           geom_jitter(width = 0.15, alpha = 0.3, size = 1) +
           labs(
             title = "Path Length Distribution by Termination Quintile",
-            subtitle = "Q1 = earliest terminators, Q4 = latest terminators",
+            subtitle = "Q1 = earliest terminators, Q5 = latest terminators",
             x = "Termination Quintile",
             y = "Path Length (steps)"
           ) +
@@ -1691,9 +1695,9 @@ server <- function(input, output, session) {
     req(sim_result())
     df <- get_quintile_data()
 
-    if (is.null(df) || nrow(df) < 4) {
+    if (is.null(df) || nrow(df) < 5) {
       plot.new()
-      text(0.5, 0.5, "Need at least 4 walkers for quintile analysis", cex = 1.2, col = "gray")
+      text(0.5, 0.5, "Need at least 5 walkers for quintile analysis", cex = 1.2, col = "gray")
       return()
     }
 
@@ -1809,7 +1813,7 @@ server <- function(input, output, session) {
       return()
     }
 
-    cat("=== QUARTILE SUMMARY STATISTICS ===\n\n")
+    cat("=== QUINTILE SUMMARY STATISTICS ===\n\n")
 
     for (q in levels(df$quintile)) {
       q_data <- df[df$quintile == q, ]
@@ -1825,7 +1829,7 @@ server <- function(input, output, session) {
     }
 
     # Overall comparison
-    cat("=== QUARTILE COMPARISON ===\n\n")
+    cat("=== QUINTILE COMPARISON ===\n\n")
     means <- tapply(df$steps, df$quintile, mean)
     cat("Mean steps by quintile:\n")
     for (i in seq_along(means)) {
@@ -1836,9 +1840,13 @@ server <- function(input, output, session) {
     # Q1 = earliest terminators (found black quickly), Q5 = latest (wandered longest)
     # Expected: Q5 mean > Q1 mean (later terminators took more steps by definition)
     cat("\n=== TREND ===\n")
-    cat(sprintf("Q1 (earliest 20%%): mean %.0f steps\n", means[1]))
-    cat(sprintf("Q5 (latest 20%%):   mean %.0f steps\n", means[5]))
-    cat(sprintf("Ratio Q5/Q1: %.1fx\n", means[5] / means[1]))
+    if (any(is.nan(means)) || means[1] == 0) {
+      cat("Some quintiles are empty — trend unavailable\n")
+    } else {
+      cat(sprintf("Q1 (earliest 20%%): mean %.0f steps\n", means[1]))
+      cat(sprintf("Q5 (latest 20%%):   mean %.0f steps\n", means[5]))
+      cat(sprintf("Ratio Q5/Q1: %.1fx\n", means[5] / means[1]))
+    }
   })
 
   # ============================================================================

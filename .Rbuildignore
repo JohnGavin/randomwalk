@@ -61,6 +61,9 @@
 ^vignettes/README_DISABLED\.md$
 
 # Non-standard top-level documentation files (exclude from package)
+^CLAUDE\.md$
+^CHANGELOG\.md$
+^DEPLOYMENT_TEST\.md$
 ^AGENTS\.md$
 ^CONSOLIDATION_.*\.md$
 ^PLAN_.*\.md$
