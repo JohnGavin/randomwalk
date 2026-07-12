@@ -49,6 +49,7 @@ let
       glibcLocales
       nix
       pandoc
+      qpdf
       quarto
       R
       which;
