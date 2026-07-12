@@ -49,6 +49,7 @@ system_pkgs <- c(
   "gh",          # GitHub CLI
   "quarto",
   "pandoc",
+  "qpdf",        # needed for R CMD check PDF size-reduction check
   "tree"
 ) |>
   unique() |>
