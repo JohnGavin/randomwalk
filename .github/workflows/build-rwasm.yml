@@ -19,7 +19,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build webR binaries
-        uses: r-wasm/actions/build-rwasm@v2
+        # Pinned to v3.0.2 (SHA): v2 pulled rwasm@HEAD each run, whose pkgdepends
+        # resolver aborts on `local::.` with `res_one_row_df: nrow(out) must equal 1`.
+        # v3 bakes a pinned rwasm into the action image. See randomwalk#212.
+        uses: r-wasm/actions/build-rwasm@0f8493df20b6b47d3621f16be81218926a09dad1 # v3.0.2
         with:
           packages: "local::."
           repo-path: _site
